@@ -80,9 +80,9 @@ Below screenshots of GrayLog forms with events from Altprobe
 ![](https://github.com/olegzhr/altprobe/blob/master/img/graylog_inputs.jpg)
 
 ### IDS statistics for HIDS and NIDS:
-![](https://github.com/olegzhr/altprobe/blob/master/img/netflow.jpg)
+![](https://github.com/olegzhr/altprobe/blob/master/img/ids.jpg)
 
 ### Netflow statistics for Ntop nProbe:
-![](https://github.com/olegzhr/altprobe/blob/master/img/ids.jpg)
+![](https://github.com/olegzhr/altprobe/blob/master/img/netflow.jpg)
 
 
