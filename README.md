@@ -79,7 +79,7 @@ Below screenshots of GrayLog forms with events from Altprobe
 ### Graylog settings for Altprobe:
 ![](https://github.com/olegzhr/altprobe/blob/master/img/graylog_inputs.jpg)
 
-### IDS statistics for HIDS and NIDS:
+### IDS statistics for OSSEC and Suricata:
 ![](https://github.com/olegzhr/altprobe/blob/master/img/ids.jpg)
 
 ### Netflow statistics for Ntop nProbe:
