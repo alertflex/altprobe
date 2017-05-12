@@ -16,8 +16,8 @@ sudo bash ./altprobe/scripts/altprobe_install.sh
 For check of installation parameters, see file ``./altprobe/config/sensors-config/preloaded-vars.conf`` 
 
 ```
-git clone -b stable https://github.com/wazuh/ossec-wazuh.git
-cd ossec-wazuh
+git clone -b stable https://github.com/alertflex/wazuh.git
+cd wazuh
 sed -i 's/USE_ZEROMQ?=no/USE_ZEROMQ?=yes/g' ./src/Makefile
 sudo cp ../altprobe/config/sensors-config/preloaded-vars.conf ./etc/
 sudo ./install.sh
