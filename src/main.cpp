@@ -1,18 +1,7 @@
-/**
- * This file is part of Altprobe.
+/* 
+ * File:   main.cpp
+ * Author: Oleg Zharkov
  *
- * Altprobe is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Altprobe is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Altprobe.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -22,180 +11,275 @@
 #include <libdaemon/dpid.h>
 #include <libdaemon/dexec.h>
 
-#include "ossec.h"
-#include "suricata.h"
-#include "ntop.h"
+#include "hids.h"
+#include "nids.h"
+#include "statflow.h"
+#include "statids.h"
+#include "monitor.h"
+#include "flushlog.h"
 
 
-Ossec ossec;
-pthread_t pthread_ossec;
+StatIds statids;
+pthread_t pthread_statids;
 
-void* exit_thread_ossec_arg;
-void exit_thread_ossec(void* arg) { ossec.Close(); }
+void* exit_thread_statids_arg;
+void exit_thread_statids(void* arg) { statids.Close(); }
 
-void * thread_ossec(void *arg) {
+void * thread_statids(void *arg) {
     
-    pthread_cleanup_push(exit_thread_ossec, exit_thread_ossec_arg);
+    pthread_cleanup_push(exit_thread_statids, exit_thread_statids_arg);
     
-    while (ossec.Go()) { }
-    
-    pthread_cleanup_pop(1);
-    pthread_exit(0);
-}
-
-Suricata suri;
-pthread_t pthread_suri;
-
-void* exit_thread_suri_arg;
-void exit_thread_suri(void* arg) { suri.Close(); }
-
-void * thread_suri(void *arg) {
-    
-    pthread_cleanup_push(exit_thread_suri, exit_thread_suri_arg);
-    
-    while (suri.Go()) { }
+    while (statids.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
 }
 
-Ntop ntop;
-pthread_t pthread_ntop;
+StatFlow statflow;
+pthread_t pthread_statflow;
 
-void* exit_thread_ntop_arg;
-void exit_thread_ntop(void* arg) { ntop.Close(); }
+void* exit_thread_statflow_arg;
+void exit_thread_statflow(void* arg) { statflow.Close(); }
 
-void * thread_ntop(void *arg) {
+void * thread_statflow(void *arg) {
     
-    pthread_cleanup_push(exit_thread_ntop, exit_thread_ntop_arg);
+    pthread_cleanup_push(exit_thread_statflow, exit_thread_statflow_arg);
     
-    while (ntop.Go()) { }
+    while (statflow.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
 }
 
+Hids hids;
+pthread_t pthread_hids;
+
+void* exit_thread_hids_arg;
+void exit_thread_hids(void* arg) { hids.Close(); }
+
+void * thread_hids(void *arg) {
+    
+    pthread_cleanup_push(exit_thread_hids, exit_thread_hids_arg);
+    
+    while (hids.Go()) { }
+    
+    pthread_cleanup_pop(1);
+    pthread_exit(0);
+}
+
+Nids nids;
+pthread_t pthread_nids;
+
+void* exit_thread_nids_arg;
+void exit_thread_nids(void* arg) { nids.Close(); }
+
+void * thread_nids(void *arg) {
+    
+    pthread_cleanup_push(exit_thread_nids, exit_thread_nids_arg);
+    
+    while (nids.Go()) { }
+    
+    pthread_cleanup_pop(1);
+    pthread_exit(0);
+}
+
+FlushLog flushlog;
+pthread_t pthread_flushlog;
+
+void* exit_thread_flushlog_arg;
+void exit_thread_flushlog(void* arg) { flushlog.Close(); }
+
+void * thread_flushlog(void *arg) {
+    
+    pthread_cleanup_push(exit_thread_flushlog, exit_thread_flushlog_arg);
+    
+    while (flushlog.Go()) { }
+    
+    pthread_cleanup_pop(1);
+    pthread_exit(0);
+}
+
+
+Monitor mon(&hids, &nids, &flushlog);
+pthread_t pthread_mon;
+
+void* exit_thread_mon_arg;
+void exit_thread_mon(void* arg) { mon.Close(); }
+
+void * thread_mon(void *arg) {
+    
+    pthread_cleanup_push(exit_thread_mon, exit_thread_mon_arg);
+    
+    while (mon.Go()) { }
+    
+    pthread_cleanup_pop(1);
+    pthread_exit(0);
+}
 
 int LoadConfig(void)
 {
-    config_t cfg;
+    //statids
+    if (!statids.GetConfig()) return 0;
     
+    //statflow
+    if (!statflow.GetConfig()) return 0;
     
+    //hids
+    if (!hids.GetConfig()) return 0;
     
-    // read configuration settings
-    config_init(&cfg);
+    //nids
+    if (!nids.GetConfig()) return 0;
     
-    if (!config_read_file(&cfg, CONFIG_FILE)) {
-        daemon_log(LOG_ERR,"Altprobe config file error: %s, at line:%d.\n", config_error_text(&cfg), config_error_line(&cfg));
-        config_destroy(&cfg);
-        
-        return 0;
-    }
-    //ossec
-    if (!ossec.GetConfig(cfg)) {
-        config_destroy(&cfg);
-        return 0;
-    }
+    //log
+    if (!flushlog.GetConfig()) return 0;
     
-    //suri
-    if (!suri.GetConfig(cfg)) {
-        config_destroy(&cfg);
-        return 0;
-    }
+    //monitor
+    if (!mon.GetConfig()) return 0;
     
-    //ntop
-    if (!ntop.GetConfig(cfg)) {
-        config_destroy(&cfg);
-        return 0;
-    }    
-    
-    config_destroy(&cfg);
     return 1;
 }
 
        
-void KillsThreads(void)
-{
-    //ossec
-    if (ossec.GetState()) {
-        pthread_cancel(pthread_ossec);
-        pthread_join(pthread_ossec, NULL);
-    }
-        
-    //suricata
-    if (suri.GetState()) {
-        pthread_cancel(pthread_suri);
-        pthread_join(pthread_suri, NULL);
-    }
-    
-    //ntop
-    if (ntop.GetState()) {
-        pthread_cancel(pthread_ntop);
-        pthread_join(pthread_ntop, NULL); 
-    }
-    
-}
-
 int InitThreads(void)
 {
     int arg = 1;
     
-    //ossec
-    if (ossec.GetState()) {
-        if (!ossec.Open()) {
-            daemon_log(LOG_ERR,"Cannot open OSSEC server.");
+    //statids
+    if (statids.GetStatus()) {
+        if (!statids.Open()) {
+            daemon_log(LOG_ERR,"cannot open ids stat service");
             return 0;
         }
             
-        if (pthread_create(&pthread_ossec, NULL, thread_ossec, &arg)) {
-            daemon_log(LOG_ERR,"Error creating thread for OSSEC.");
+        if (pthread_create(&pthread_statids, NULL, thread_statids, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for ids stat");
             return 0;
         }
     } 
     
-    //suricata
-    if (suri.GetState()) {
-        if (!suri.Open()) {
-            daemon_log(LOG_ERR,"Cannot open Suricata server.");
+    //traffic
+    if (statflow.GetStatus()) {
+        if (!statflow.Open()) {
+            daemon_log(LOG_ERR,"cannot open statflow service");
+            return 0;
+        }
+            
+        if (pthread_create(&pthread_statflow, NULL, thread_statflow, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for statflow");
+            return 0;
+        }
+    } 
+    
+    //hids
+    if (hids.GetStatus()) {
+        if (!hids.Open()) {
+            daemon_log(LOG_ERR,"cannot open OSSEC server");
+            return 0;
+        }
+            
+        if (pthread_create(&pthread_hids, NULL, thread_hids, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for OSSEC");
+            return 0;
+        }
+    } 
+    
+    //nids
+    if (nids.GetStatus()) {
+        if (!nids.Open()) {
+            daemon_log(LOG_ERR,"cannot open Suricata server");
             return 0;
         }
         
-        if (pthread_create(&pthread_suri, NULL, thread_suri, &arg)) {
-            daemon_log(LOG_ERR,"Error creating thread for Suricata.");
+        if (pthread_create(&pthread_nids, NULL, thread_nids, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for Suricata.");
             return 0;
         } 
     }
     
-    //ntop
-    if (ntop.GetState()) {
-        if (!ntop.Open()) {
-            daemon_log(LOG_ERR,"Cannot open Ntop server.");
+    //log
+    if (flushlog.GetStatus()) {
+        if (!flushlog.Open()) {
+            daemon_log(LOG_ERR,"cannot open Log service");
             return 0;
         }
     
-        if (pthread_create(&pthread_ntop, NULL, thread_ntop, &arg)) {
-            daemon_log(LOG_ERR,"Error creating thread for Ntop.");
+        if (pthread_create(&pthread_flushlog, NULL, thread_flushlog, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for Log service");
+            return 0;
+        } 
+    }
+    
+    //monitor
+    if (mon.GetStatus()) {
+        if (!mon.Open()) {
+            daemon_log(LOG_ERR,"cannot open Monitor service");
+            return 0;
+        }
+    
+        if (pthread_create(&pthread_mon, NULL, thread_mon, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for Monitor service");
             return 0;
         } 
     }
     
     return 1;
+}
+
+void KillsThreads(void)
+{
+    //statids
+    if (statids.GetStatus()) {
+        pthread_cancel(pthread_statids);
+        pthread_join(pthread_statids, NULL);
+    }
+    
+    //traffic
+    if (statflow.GetStatus()) {
+        pthread_cancel(pthread_statflow);
+        pthread_join(pthread_statflow, NULL);
+    }
+            
+    //hids
+    if (hids.GetStatus()) {
+        pthread_cancel(pthread_hids);
+        pthread_join(pthread_hids, NULL);
+    }
+        
+    //nids
+    if (nids.GetStatus()) {
+        pthread_cancel(pthread_nids);
+        pthread_join(pthread_nids, NULL);
+    }
+    
+    //log
+    if (flushlog.GetStatus()) {
+        pthread_cancel(pthread_flushlog);
+        pthread_join(pthread_flushlog, NULL); 
+    }
+    
+    //monitor
+    if (mon.GetStatus()) {
+        pthread_cancel(pthread_mon);
+        pthread_join(pthread_mon, NULL); 
+    }
 }
 
 
 int main(int argc, char *argv[]) {
     pid_t pid;
     int ret;
+    
+    
 
     /* Reset signal handlers */
     if (daemon_reset_sigs(-1) < 0) {
-        daemon_log(LOG_ERR, "Failed to reset all signal handlers: %s", strerror(errno));
+        daemon_log(LOG_ERR, "failed to reset all signal handlers: %s", strerror(errno));
         return 1;
     }
 
     /* Unblock signals */
     if (daemon_unblock_sigs(-1) < 0) {
-        daemon_log(LOG_ERR, "Failed to unblock all signals: %s", strerror(errno));
+        daemon_log(LOG_ERR, "failed to unblock all signals: %s", strerror(errno));
         return 1;
     }
 
@@ -206,7 +290,8 @@ int main(int argc, char *argv[]) {
     if (argc == 2) {
         if (!strcmp(argv[1], "start")) {
              if ((pid = daemon_pid_file_is_running()) >= 0)
-                  daemon_log(LOG_ERR, "altprobe is already running with PID file %u", pid);
+                  // daemon_log(LOG_ERR, "AlertFlex collector is already running with PID %u.", pid);
+                  printf( "alertflex collector is already running with PID %u\n", pid);
              else goto start;
              return 0;
         }
@@ -215,30 +300,35 @@ int main(int argc, char *argv[]) {
              /* Kill daemon with SIGTERM */
              /* Check if the new function daemon_pid_file_kill_wait() is available, if it is, use it. */
              if ((ret = daemon_pid_file_kill_wait(SIGTERM, 5)) < 0)
-                  daemon_log(LOG_ERR, "failed to kill altprobe: %s", strerror(errno));
-             else daemon_log(LOG_ERR, "altprobe is stopping");
+                  // daemon_log(LOG_ERR, "Failed to kill AlertFlex collector: %s.", strerror(errno));
+                  printf( "failed to kill alertflex collector: %s\n", strerror(errno));
+             //else daemon_log(LOG_ERR, "AlertFlex collector is stopping.");
+             else printf( "alertflex collector is stopping\n");
              return ret < 0 ? 1 : 0;
         }
         
         if (!strcmp(argv[1], "status")) {                        
              /* Check that the daemon is not rung twice a the same time */
              if ((pid = daemon_pid_file_is_running()) >= 0)
-                  daemon_log(LOG_ERR, "altprobe is running with PID file %u", pid);
-             else daemon_log(LOG_ERR, "altprobe isn't running");
+                  //daemon_log(LOG_ERR, "AlertFlex collector is running with PID %u.", pid);
+                  printf( "alertflex collector is running, process %u\n", pid);
+             //else daemon_log(LOG_ERR, "AlertFlex collector isn't running.");
+             else printf( "alertflex collector isn't running\n");
              return 0;
         }
     }
     
-    daemon_log(LOG_ERR, "usage: ./altprobe {start|stop|status}");
+    // daemon_log(LOG_ERR, "usage: ./afcollector {start|stop|status}");
+    printf( "usage: ./alertflex {start|stop|status}\n");
     return 0;
 
 start:    
     if (!LoadConfig()) return 1;
-    
-    
+    int startup_timer = statids.GetStartupTimer();
+        
     /* Prepare for return value passing from the initialization procedure of the daemon process */
     if (daemon_retval_init() < 0) {
-        daemon_log(LOG_ERR, "Failed to create pipe.");
+        daemon_log(LOG_ERR, "failed to create pipe");
         return 1;
     }
 
@@ -250,15 +340,16 @@ start:
         return 1;
 
     } else if (pid) { /* The parent */
+        
         int ret;
-
-        /* Wait for 20 seconds for the return value passed from the daemon process */
-        if ((ret = daemon_retval_wait(20)) < 0) {
-            daemon_log(LOG_ERR, "Could not receive return value from altprobe process: %s", strerror(errno));
+        
+        /* Wait for timeout in seconds for the return value passed from the daemon process */
+        if ((ret = daemon_retval_wait(startup_timer)) < 0) {
+            daemon_log(LOG_ERR, "could not receive return value from alertflex collector process: %s", strerror(errno));
             return 255;
         }
 
-        daemon_log(ret != 0 ? LOG_ERR : LOG_INFO, "altprobe returned %i as return value", ret);
+        daemon_log(ret != 0 ? LOG_ERR : LOG_INFO, "alertflex collector started with code %i", ret);
         return ret;
 
     } else { /* The daemon */
@@ -267,7 +358,7 @@ start:
 
         /* Close FDs */
         if (daemon_close_all(-1) < 0) {
-            daemon_log(LOG_ERR, "Failed to close all file descriptors: %s", strerror(errno));
+            daemon_log(LOG_ERR, "failed to close all file descriptors: %s", strerror(errno));
 
             /* Send the error condition to the parent process */
             daemon_retval_send(1);
@@ -276,14 +367,14 @@ start:
 
         /* Create the PID file */
         if (daemon_pid_file_create() < 0) {
-            daemon_log(LOG_ERR, "Could not create PID file (%s)", strerror(errno));
+            daemon_log(LOG_ERR, "could not create PID file (%s)", strerror(errno));
             daemon_retval_send(2);
             goto finish;
         }
 
         /* Initialize signal handling */
         if (daemon_signal_init(SIGINT, SIGTERM, SIGQUIT, SIGHUP, SIGUSR1, 0) < 0) {
-            daemon_log(LOG_ERR, "Could not register signal handlers (%s)", strerror(errno));
+            daemon_log(LOG_ERR, "could not register signal handlers (%s)", strerror(errno));
             daemon_retval_send(3);
             goto finish;
         }
@@ -297,7 +388,7 @@ start:
         /* Send OK to parent process */
         daemon_retval_send(0);
 
-        daemon_log(LOG_INFO, "Altprobe sucessfully started.");
+        daemon_log(LOG_INFO, "alertflex collector has been successfully started");
 
         /* Prepare for select() on the signal fd */
         FD_ZERO(&fds);
@@ -314,7 +405,7 @@ start:
                 if (errno == EINTR)
                     continue;
 
-                daemon_log(LOG_ERR, "Select(): %s", strerror(errno));
+                daemon_log(LOG_ERR, "select(): %s", strerror(errno));
                 break;
             }
 
@@ -324,7 +415,7 @@ start:
 
                 /* Get signal */
                 if ((sig = daemon_signal_next()) <= 0) {
-                    daemon_log(LOG_ERR, "Daemon_signal_next() failed: %s", strerror(errno));
+                    daemon_log(LOG_ERR, "daemon_signal_next() failed: %s", strerror(errno));
                     break;
                 }
 
@@ -334,7 +425,7 @@ start:
                     case SIGINT:
                     case SIGQUIT:
                     case SIGTERM:
-                        daemon_log(LOG_WARNING, "Got SIGHUP, SIGINT, SIGQUIT or SIGTERM.");
+                        daemon_log(LOG_WARNING, "got SIGHUP, SIGINT, SIGQUIT or SIGTERM");
                         quit = 1;
                         break;
 
@@ -344,7 +435,7 @@ start:
 
         /* Do a cleanup */
 finish:
-        daemon_log(LOG_INFO, "Exiting...");
+        daemon_log(LOG_INFO, "exiting...");
         KillsThreads();
         daemon_retval_send(255);
         daemon_signal_done();
@@ -353,6 +444,7 @@ finish:
         return 0;
     }
 }
+
 
 
 

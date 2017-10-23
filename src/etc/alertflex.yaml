@@ -1,0 +1,51 @@
+%YAML 1.1
+---
+# Alertflex collector configuration file. In addition to the comments describing
+# the parameters for this file, see project documentation - http://alertflex.org/doc/index.html
+
+# Collector version 0.5
+collector:
+  id: "_node_id"
+  
+  # time difference between collector and controller's, timezones in hours
+  timezone: 0
+  
+  # save events/logs to local path - /var/log/alertflex, if controller isn't available
+  # max size (MB) of the log file, if size more than this value, collector switches to the next log file
+  log_size: 100
+  # error threshold for connection to the controller, if the threshold is exceeded, collector sends events to the local log files
+  # if threshold = 0 then this functionality is off
+  persist_threshold: 10
+  
+  # path to MaxMind Geo DB
+  geodb: "/etc/alertflex/geo/GeoLiteCity.dat"
+    
+  # TIMERS
+  # delay on collector startup in sec (default 30)
+  startup_timer: 30  
+  # sleep delay in milisecond (default 1000)
+  sleep_timer:   1000  
+  # period generation of reports for netflow and IDS statistics in sec, if 0 then this functionality is off (default 300)
+  report_timer: 300  
+  
+# Sources
+hids:
+  # events from Wazuh IDS/OSSEC  (ZeroMQ interface)
+  zmq: "tcp://127.0.0.1:5555"
+
+nids:  
+  # events from Suricata IDS (Redis interface)
+  redis: "127.0.0.1"
+  port: 6379
+
+# Destinantion 
+controller:
+  # send alerts and statistics to Controller (ActiveMQ interface)
+  amq: "tcp://127.0.0.1:61616"
+  key: "none"
+  cert: "none"
+  path: "jms/alertflex/"
+  pwd: "none"
+
+
+

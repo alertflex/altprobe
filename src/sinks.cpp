@@ -1,43 +1,55 @@
-/**
- * This file is part of Altprobe.
+/* 
+ * File:   sinks.h
+ * Author: Oleg Zharkov
  *
- * Altprobe is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Altprobe is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Altprobe.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "sinks.h"
 
-int Sinks::GetConfig(config_t cfg) {
-    //get probe_id name
-    if(!ProbeObject::GetConfig(cfg)) return 0; 
-                        
+int Sinks::config_flag = 0;
+
+int Sinks::ctrl_state = 1;
+int Sinks::ctrl_error_counter = 0;
+
+int Sinks::persist_state = 0;
+int Sinks::persist_threshold = 0;
+
+int Sinks::reports_period = 0;
+
+FileLog Sinks::persist;
+
+std::mutex persist_lock;
+
+int Sinks::GetConfig() {
     
-    mysql.GetConfig(cfg);
-    graylog.GetConfig(cfg);
+    if (config_flag == 0) {
+        config_flag = 1; 
+        
+        if (!CollectorObject::GetConfig()) return 0; 
+        
+        ctrl_state = ctrl.GetConfig();
+        if(ctrl_state == 0) return 0;
     
-    //get status configuration
-    if(!mysql.status && !graylog.status) return 0;
+        ConfigYaml* cy = new ConfigYaml( "collector");
     
+        cy->addKey("report_timer");
+        cy->addKey("persist_threshold");
+        
+        cy->ParsConfig();
+        
+        reports_period = stoi(cy->getParameter("report_timer"));
+        
+        persist_threshold = stoi(cy->getParameter("persist_threshold"));
+        
+     }
+        
     return 1;
 }
 
 
 int Sinks::Open() {
-    if(mysql_state == 1) 
-        if(!mysql.Open()) return 0;
-        
-    if(graylog_state == 1) 
-        if(!graylog.Open()) return 0;
+    if(GetStateCtrl() == 1) 
+        if(!ctrl.Open()) return 0;
     
     return 1;
 }
@@ -45,9 +57,51 @@ int Sinks::Open() {
 
 void Sinks::Close() {
     
-    mysql.Close();
-    mysql_state = 0;
-        
-    graylog.Close();
-    graylog_state = 0;
+    if(persist_state == 1) {
+        persist.Close();
+    }
+    
+    ctrl.Close();
 }
+
+
+void Sinks::SendMessage(Event* e) { 
+        
+    if (!ctrl.SendMessage(e)) CtrlErrorCounter();
+}
+
+void Sinks::SendAlert(void) {
+    
+    alert.CreateAlertUUID();
+    
+    int res = ctrl.SendMessage(&alert);
+        
+    if (!res) CtrlErrorCounter();
+        
+    alert.Reset();
+}
+
+
+void Sinks::CtrlErrorCounter(void) {
+    
+    std::lock_guard<std::mutex> lock(persist_lock);
+    
+    if (ctrl_state != 0) {
+    
+        if ((persist_threshold > 0) && (ctrl_error_counter > persist_threshold)) {
+            SysLog("Connection to controller is closed, because error counter limit has been reached");
+            ctrl_state = 0;
+            if(persist.Open()) {
+                persist_state = 1;
+                SysLog("Collector starts to persist logs to local file");
+            }
+            else SysLog("Collector error, cannot open a local file for persisting of logs");
+        }
+        else {
+            SysLog("Communication error of sending data to controller");
+            ctrl_error_counter++; 
+        }
+    }
+}
+
+

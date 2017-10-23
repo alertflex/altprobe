@@ -1,73 +1,72 @@
-/**
- * This file is part of Altprobe.
+/* 
+ * File:   sinks.h
+ * Author: Oleg Zharkov
  *
- * Altprobe is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Altprobe is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Altprobe.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef SINKS_H
 #define	SINKS_H
 
-#include "mysql.h"
-#include "graylog.h"
+#include "filelog.h"
+#include "controller.h"
+#include "config.h"
 
 
-class Sinks : public ProbeObject {
+class Sinks : public CollectorObject {
 public:
-    // 0 - mysql isn't in use; -1 - mysql has error; 1 - mysql in use
-    int mysql_state;
-    // 0 - udplog isn't in use; -1 - udplog has error; 1 - udplog in use
-    int graylog_state;
+    static int config_flag;
     
+    static int persist_state;
+    static int ctrl_state;
     
-    // DB operations
-    Mysql mysql;
+    static int reports_period;
     
-    // Log operations
-    GrayLog graylog;
+    static int persist_threshold;
+    static int ctrl_error_counter;
     
-    Sinks () {
-        mysql_state = 0;
-        graylog_state = 0;
+    // Local log operations
+    static FileLog persist;
+    
+    // Controller operations
+    Controller ctrl;
+    
+    Alert alert;
+    
+    void Init() {
+        alert.SetEventType(et_alert);
+        alert.Reset();
     }
     
-   int Open();
+    int Open();
     void Close();
     
-    virtual int GetConfig(config_t cfg);
+    virtual int GetConfig();
     
-    int GetStateMysql() { return mysql_state; }
-    int GetStateGraylog() { return graylog_state; }
-    
-    void SetStateMysql(int s) {
-        
-        if (!mysql.status) return;
-        
-        if ((mysql_state == 1) && (s == 1)) return;
-        
-        mysql_state = s; 
+    int GetStateCtrl() { 
+        return ctrl_state;
     }
     
-    void SetStateGraylog(int s) { 
-        
-        if (!graylog.status) return;
-        
-        if ((graylog_state == 1) && (s == 1)) return;
-        
-        graylog_state = s; 
-        
+    
+    
+    int GetReportsPeriod() { 
+        if (GetStateCtrl() != 0) return reports_period; 
+        return 0;
+    };
+    
+    void SendMessage(Event* e);
+    
+    //Send Alert to Controller
+    void SendAlert(void);
+    
+    static int GetStatePersist() { 
+        return persist_state; 
     }
     
+    static void SetStatePersist(int s) { 
+        persist_state = s; 
+    }
+    
+    static void CtrlErrorCounter(void);
 };
 
 #endif	/* SINKS_H */

@@ -1,0 +1,105 @@
+{
+    "filter_name": "test_v01",
+    "ref_id": "nsm_solution",
+    
+    "home_net": [{
+        "network": "192.168.1.0",
+        "netmask": "255.255.255.0"
+    }, {
+        "network": "192.168.101.10",
+        "netmask": "255.255.255.255"
+    }],
+    "sources": { 
+        "hids": {
+            "severity": 2,
+            "log": true,
+            "bw_list": [{ 
+                "event": 4571,
+                "ip": "all",
+                "action": "none",
+                "aggregate": {
+                    "reproduced": 30,
+                    "in_period": 10,
+                    "new_event": 0,
+                    "new_severity": 0,
+                    "new_category": "new users cat 1",
+                    "new_description": "desc of alerts"
+                }
+            }, { 
+                "event": 4572,
+                "ip": "all",
+                "action": "graylog",
+                "aggregate": {
+                    "reproduced": 0,
+                    "in_period": 0,
+                    "new_event": 0,
+                    "new_severity": 0,
+                    "new_category": "new users cat 2",
+                    "new_description": "desc of alerts"
+                }
+            }]
+        },
+        "nids": {
+            "severity": 2,
+            "log": true,
+            "bw_list": [{ 
+                "event": 2200071,
+                "ip": "192.168.101.2",
+                "action": "none",
+                "aggregate": {
+                    "reproduced": 30,
+                    "in_period": 10,
+                    "new_event": 0,
+                    "new_severity": 0,
+                    "new_category": "new users cat 3",
+                    "new_description": "desc of alerts"
+                }
+            }, { 
+                "event": 2200072,
+                "ip": "192.168.101.2",
+                "action": "suppress",
+                "aggregate": {
+                    "reproduced": 30,
+                    "in_period": 10,
+                    "new_event": 0,
+                    "new_severity": 0,
+                    "new_category": "new users cat 4",
+                    "new_description": "desc of alerts"
+                }
+            }]
+        },
+        "traffic": {
+            "top_talkers":  10,
+            "log": true,
+            "thresholds": [{
+                "ip": "192.168.101.2",
+                "appl":"all",
+                "min": 1,
+                "max": 100000,
+                "action": "none",
+                "aggregate": {
+                    "reproduced": 30,
+                    "in_period": 300,
+                    "new_event": 10,
+                    "new_severity": 1,
+                    "new_category": "new users cat 5",
+                    "new_description": "desc of alerts"
+                }
+            }, {
+                "ip": "192.168.1.2",
+                "appl":"dns",
+                "min": 1,
+                "max": 10000,
+                "action": "none",
+                "aggregate": {
+                    "reproduced": 30,
+                    "in_period": 300,
+                    "new_event": 11,
+                    "new_severity": 1,
+                    "new_category": "new users cat 5",
+                    "new_description": "desc of alerts"
+                }
+            }]
+        }
+    }
+}
