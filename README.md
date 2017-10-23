@@ -12,19 +12,14 @@ on all network from the perimeter to the endpoints.
 Alertflex may work as a stand-alone system or as part of a unified security solution. Alertflex provides security event management and 
 services orchestration for open source security applications ( TheHive, Cuckoo Sandbox, MISP, Graylog ).
 
-![](https://github.com/olegzhr/altprobe/blob/master/img/arch.jpg)
+![](https://github.com/olegzhr/altprobe/blob/master/img/arch.png)
 
 ## Requirements
 Altprobe was tested under Ubuntu version 14.04.
 At the moment Altprobe can recognize JSON events from Wazuh HIDS (OSSEC fork) version 2.1 and Suricata NIDS version 4.0
 
 ## Support
-Please [open an issue on GitHub](https://github.com/olegzhr/altprobe/issues) if you'd like to report a bug or request a feature. 
-
-## Old version of Altprobe
-old version of altprobe is available under branch ``old_version``
-
-![](https://github.com/olegzhr/altprobe/blob/master/img/tree.jpg)
+Please [open an issue on GitHub](https://github.com/olegzhr/altprobe/issues) if you'd like to report a bug or request a feature.
 
 If you need to contact the project team, send an email to <info@alertflex.org>.
 
@@ -39,5 +34,8 @@ As a component of the Alertflex project, Altprobe allows integrating Wazuh Host 
 Below, a screenshot of Graylog dashboards for events that were transmitted from IDS via Altprobe.
 
 ![](https://github.com/olegzhr/altprobe/blob/master/img/graylog.jpg)
+
+## Old version of Altprobe
+old version of altprobe is available under branch ``old_version``
 
 
