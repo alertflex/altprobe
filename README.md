@@ -34,7 +34,7 @@ Below, a screenshot of Graylog dashboards for events that were transmitted from 
 
 ![](https://github.com/olegzhr/altprobe/blob/master/img/graylog.jpg)
 
-## Old version of Altprobe
+## Old version of Altprobe (single package with Ntop nProbe support)
 Previous version of altprobe is available under branch ``old_version``
 
 
