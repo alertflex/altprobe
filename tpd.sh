@@ -15,7 +15,7 @@ export INTERFACE=eth0
 export EXTRACT_FILES=no
 
 # if AMQ_PWD=none, ssl connection between collector and controller is disabled
-# NOTE! in case ssl enabled, use AMQ_PWD with same value as in file tpd.sh from controller installation forlder
+# NOTE! in case ssl enabled, use AMQ_PWD with same value as in file tpd.sh from controller installation folder
 export AMQ_PWD=*****
 # NOTE! add hostname/dns name of broker (alertflex controller)
 export AMQ_BROKER=af-ctrl
