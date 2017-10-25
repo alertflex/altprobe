@@ -17,16 +17,16 @@ services orchestration for open source security applications ( TheHive, Cuckoo S
 Altprobe was tested under Ubuntu version 14.04.
 At the moment, Altprobe can recognize JSON events from Wazuh HIDS (OSSEC fork) version 2.1 and Suricata NIDS version 4.0
 
+## Documentation
+<http://alertflex.org/doc/>
+
+## Project Site
+<http://alertflex.org/>
+
 ## Support
 Please [open an issue on GitHub](https://github.com/olegzhr/altprobe/issues) if you'd like to report a bug or request a feature.
 
 If you need to contact the project team, send an email to <info@alertflex.org>.
-
-## Documentation
-<http://alertflex.org/doc/>
-
-## Website
-<http://alertflex.org/>
 
 ## Screenshots
 Altprobe allows integrating Wazuh Host IDS (OSSEC fork) and Suricata Network IDS with Log Management platform Graylog.
