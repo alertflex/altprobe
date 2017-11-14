@@ -137,7 +137,7 @@ install:
 		mkdir /etc/alertflex/geo
 		mv GeoLiteCity.dat /etc/alertflex/geo/
 	fi
-	mkdir /etc/alertflex
+	
 	cp ./etc/filters.json /etc/alertflex
 	cp ./etc/alertflex.yaml /etc/alertflex
 	
