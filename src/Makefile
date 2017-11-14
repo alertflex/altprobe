@@ -130,13 +130,17 @@ install:
 	cp ./scripts/alertflex-stop.sh /usr/local/bin/altprobe-stop
 	cp ./scripts/alertflex-status.sh /usr/local/bin/altprobe-status
 	
+	if [ ! -d "/etc/alertflex" ]; then
+		mkdir /etc/alertflex
+		wget -N http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+		gunzip GeoLiteCity.dat.gz
+		mkdir /etc/alertflex/geo
+		mv GeoLiteCity.dat /etc/alertflex/geo/
+	fi
 	mkdir /etc/alertflex
 	cp ./etc/filters.json /etc/alertflex
 	cp ./etc/alertflex.yaml /etc/alertflex
-	wget -N http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
-	gunzip GeoLiteCity.dat.gz
-	mkdir /etc/alertflex/geo
-	mv GeoLiteCity.dat /etc/alertflex/geo/
+	
 	
 
 # include project implementation makefile
