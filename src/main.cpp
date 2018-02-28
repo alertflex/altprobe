@@ -11,13 +11,15 @@
 #include <libdaemon/dpid.h>
 #include <libdaemon/dexec.h>
 
-#include "hids.h"
-#include "nids.h"
-#include "statflow.h"
+#include "statflows.h"
 #include "statids.h"
-#include "monitor.h"
-#include "flushlog.h"
-
+#include "hids.h"
+#include "metric.h"
+#include "nids.h"
+#include "collector.h"
+#include "remlog.h"
+#include "remstat.h"
+#include "updates.h"
 
 StatIds statids;
 pthread_t pthread_statids;
@@ -35,23 +37,39 @@ void * thread_statids(void *arg) {
     pthread_exit(0);
 }
 
-StatFlow statflow;
-pthread_t pthread_statflow;
+StatFlows statflows;
+pthread_t pthread_statflows;
 
-void* exit_thread_statflow_arg;
-void exit_thread_statflow(void* arg) { statflow.Close(); }
+void* exit_thread_statflows_arg;
+void exit_thread_statflows(void* arg) { statflows.Close(); }
 
-void * thread_statflow(void *arg) {
+void * thread_statflows(void *arg) {
     
-    pthread_cleanup_push(exit_thread_statflow, exit_thread_statflow_arg);
+    pthread_cleanup_push(exit_thread_statflows, exit_thread_statflows_arg);
     
-    while (statflow.Go()) { }
+    while (statflows.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
 }
 
-Hids hids;
+Metric met("metricbeat");
+pthread_t pthread_met;
+
+void* exit_thread_met_arg;
+void exit_thread_met(void* arg) { met.Close(); }
+
+void * thread_met(void *arg) {
+    
+    pthread_cleanup_push(exit_thread_met, exit_thread_met_arg);
+    
+    while (met.Go()) { }
+    
+    pthread_cleanup_pop(1);
+    pthread_exit(0);
+}
+
+Hids hids("ossec");
 pthread_t pthread_hids;
 
 void* exit_thread_hids_arg;
@@ -67,7 +85,7 @@ void * thread_hids(void *arg) {
     pthread_exit(0);
 }
 
-Nids nids;
+Nids nids("suricata");
 pthread_t pthread_nids;
 
 void* exit_thread_nids_arg;
@@ -83,34 +101,66 @@ void * thread_nids(void *arg) {
     pthread_exit(0);
 }
 
-FlushLog flushlog;
-pthread_t pthread_flushlog;
+RemLog remlog;
+pthread_t pthread_remlog;
 
-void* exit_thread_flushlog_arg;
-void exit_thread_flushlog(void* arg) { flushlog.Close(); }
+void* exit_thread_remlog_arg;
+void exit_thread_remlog(void* arg) { remlog.Close(); }
 
-void * thread_flushlog(void *arg) {
+void * thread_remlog(void *arg) {
     
-    pthread_cleanup_push(exit_thread_flushlog, exit_thread_flushlog_arg);
+    pthread_cleanup_push(exit_thread_remlog, exit_thread_remlog_arg);
     
-    while (flushlog.Go()) { }
+    while (remlog.Go()) { }
+    
+    pthread_cleanup_pop(1);
+    pthread_exit(0);
+}
+
+RemStat remstat;
+pthread_t pthread_remstat;
+
+void* exit_thread_remstat_arg;
+void exit_thread_remstat(void* arg) { remstat.Close(); }
+
+void * thread_remstat(void *arg) {
+    
+    pthread_cleanup_push(exit_thread_remstat, exit_thread_remstat_arg);
+    
+    while (remstat.Go()) { }
+    
+    pthread_cleanup_pop(1);
+    pthread_exit(0);
+}
+
+Updates updates;
+pthread_t pthread_updates;
+
+void* exit_thread_updates_arg;
+void exit_thread_updates(void* arg) { updates.Close(); }
+
+void * thread_updates(void *arg) {
+    
+    pthread_cleanup_push(exit_thread_updates, exit_thread_updates_arg);
+    
+    while (updates.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
 }
 
 
-Monitor mon(&hids, &nids, &flushlog);
-pthread_t pthread_mon;
+Collector collr(&hids, &nids, &met, &remlog, &remstat, &statflows, &statids);
+pthread_t pthread_collr;
 
-void* exit_thread_mon_arg;
-void exit_thread_mon(void* arg) { mon.Close(); }
+void* exit_thread_collr_arg;
+void exit_thread_collr(void* arg) { collr.Close(); }
 
-void * thread_mon(void *arg) {
+void * thread_collr(void *arg) {
     
-    pthread_cleanup_push(exit_thread_mon, exit_thread_mon_arg);
+    pthread_cleanup_push(exit_thread_collr, exit_thread_collr_arg);
     
-    while (mon.Go()) { }
+    while (collr.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
@@ -122,7 +172,10 @@ int LoadConfig(void)
     if (!statids.GetConfig()) return 0;
     
     //statflow
-    if (!statflow.GetConfig()) return 0;
+    if (!statflows.GetConfig()) return 0;
+    
+    //metrics
+    if (!met.GetConfig()) return 0;
     
     //hids
     if (!hids.GetConfig()) return 0;
@@ -130,11 +183,17 @@ int LoadConfig(void)
     //nids
     if (!nids.GetConfig()) return 0;
     
-    //log
-    if (!flushlog.GetConfig()) return 0;
+    //remlog
+    if (!remlog.GetConfig()) return 0;
     
-    //monitor
-    if (!mon.GetConfig()) return 0;
+    //remstat
+    if (!remstat.GetConfig()) return 0;
+    
+    // updates
+    if (!updates.GetConfig()) return 0;
+    
+    //collector
+    if (!collr.GetConfig()) return 0;
     
     return 1;
 }
@@ -158,14 +217,27 @@ int InitThreads(void)
     } 
     
     //traffic
-    if (statflow.GetStatus()) {
-        if (!statflow.Open()) {
+    if (statflows.GetStatus()) {
+        if (!statflows.Open()) {
             daemon_log(LOG_ERR,"cannot open statflow service");
             return 0;
         }
             
-        if (pthread_create(&pthread_statflow, NULL, thread_statflow, &arg)) {
+        if (pthread_create(&pthread_statflows, NULL, thread_statflows, &arg)) {
             daemon_log(LOG_ERR,"error creating thread for statflow");
+            return 0;
+        }
+    } 
+    
+    //metrics
+    if (met.GetStatus()) {
+        if (!met.Open()) {
+            daemon_log(LOG_ERR,"cannot open Metrics server");
+            return 0;
+        }
+            
+        if (pthread_create(&pthread_met, NULL, thread_met, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for metrics");
             return 0;
         }
     } 
@@ -196,28 +268,54 @@ int InitThreads(void)
         } 
     }
     
-    //log
-    if (flushlog.GetStatus()) {
-        if (!flushlog.Open()) {
-            daemon_log(LOG_ERR,"cannot open Log service");
+    //remlog
+    if (remlog.GetStatus()) {
+        if (!remlog.Open()) {
+            daemon_log(LOG_ERR,"cannot open RemLog service");
             return 0;
         }
     
-        if (pthread_create(&pthread_flushlog, NULL, thread_flushlog, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for Log service");
+        if (pthread_create(&pthread_remlog, NULL, thread_remlog, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for RemLog service");
             return 0;
         } 
     }
     
-    //monitor
-    if (mon.GetStatus()) {
-        if (!mon.Open()) {
-            daemon_log(LOG_ERR,"cannot open Monitor service");
+    //remstat
+    if (remstat.GetStatus()) {
+        if (!remstat.Open()) {
+            daemon_log(LOG_ERR,"cannot open RemStat service");
             return 0;
         }
     
-        if (pthread_create(&pthread_mon, NULL, thread_mon, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for Monitor service");
+        if (pthread_create(&pthread_remstat, NULL, thread_remstat, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for RemStat service");
+            return 0;
+        } 
+    }
+    
+    // updates
+    if (updates.GetStatus()) {
+        
+        if (!updates.Open()) {
+            daemon_log(LOG_ERR,"cannot open update service");
+            return 0;
+        }
+        if (pthread_create(&pthread_updates, NULL, thread_updates, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for update service");
+            return 0;
+        } 
+    }
+    
+    //collector
+    if (collr.GetStatus()) {
+        if (!collr.Open()) {
+            daemon_log(LOG_ERR,"cannot open monitorint of Collector service");
+            return 0;
+        }
+    
+        if (pthread_create(&pthread_collr, NULL, thread_collr, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for monitoring collector service");
             return 0;
         } 
     }
@@ -234,11 +332,17 @@ void KillsThreads(void)
     }
     
     //traffic
-    if (statflow.GetStatus()) {
-        pthread_cancel(pthread_statflow);
-        pthread_join(pthread_statflow, NULL);
+    if (statflows.GetStatus()) {
+        pthread_cancel(pthread_statflows);
+        pthread_join(pthread_statflows, NULL);
     }
-            
+    
+    //metrics
+    if (met.GetStatus()) {
+        pthread_cancel(pthread_met);
+        pthread_join(pthread_met, NULL);
+    }
+    
     //hids
     if (hids.GetStatus()) {
         pthread_cancel(pthread_hids);
@@ -251,16 +355,28 @@ void KillsThreads(void)
         pthread_join(pthread_nids, NULL);
     }
     
-    //log
-    if (flushlog.GetStatus()) {
-        pthread_cancel(pthread_flushlog);
-        pthread_join(pthread_flushlog, NULL); 
+    //remlog
+    if (remlog.GetStatus()) {
+        pthread_cancel(pthread_remlog);
+        pthread_join(pthread_remlog, NULL); 
     }
     
-    //monitor
-    if (mon.GetStatus()) {
-        pthread_cancel(pthread_mon);
-        pthread_join(pthread_mon, NULL); 
+    //remstat
+    if (remstat.GetStatus()) {
+        pthread_cancel(pthread_remstat);
+        pthread_join(pthread_remstat, NULL); 
+    }
+    
+    // updates
+    if (updates.GetStatus()) {
+        pthread_cancel(pthread_updates);
+        pthread_join(pthread_updates, NULL); 
+    }
+    
+    //collector
+    if (collr.GetStatus()) {
+        pthread_cancel(pthread_collr);
+        pthread_join(pthread_collr, NULL); 
     }
 }
 

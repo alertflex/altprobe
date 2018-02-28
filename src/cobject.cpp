@@ -19,6 +19,7 @@
 
 
 string CollectorObject::node_id;
+string CollectorObject::node_ver;
 int CollectorObject::timezone = 0;
 int CollectorObject::log_size = 0;
 long CollectorObject::gosleep_timer = 0;
@@ -33,7 +34,8 @@ int CollectorObject::GetConfig() {
     ConfigYaml* cy = new ConfigYaml( "collector");
     
     cy->addKey("id");
-    cy->addKey("timezone");
+    cy->addKey("ver");
+    cy->addKey("time_zone");
     cy->addKey("log_size");
     cy->addKey("startup_timer");
     cy->addKey("sleep_timer");
@@ -47,7 +49,14 @@ int CollectorObject::GetConfig() {
         return 0;
     }
     
-    timezone = stoi(cy->getParameter("timezone"));
+    node_ver = cy->getParameter("ver");
+    
+    if (!node_ver.compare("")) {
+        SysLog("config file error: parameter collector ver");
+        return 0;
+    }
+    
+    timezone = stoi(cy->getParameter("time_zone"));
     
     log_size = stoi(cy->getParameter("log_size"));
     if (log_size == 0) log_size = 100;
@@ -185,13 +194,26 @@ unsigned int CollectorObject::GetBufferSize(char* source) {
     return result;
 }
 
+void CollectorObject::ReplaceAll(string& input, const string& from, const string& to) {
+  size_t pos = 0;
+  while ((pos = input.find(from, pos)) != string::npos) {
+    input.replace(pos, from.size(), to);
+    pos += to.size();
+  }
+}
+
+
 void Alert::CreateAlertUUID(void) {
     
     std::stringstream ss;
     
-    boost::uuids::uuid uuid = boost::uuids::random_generator()();
-    ss << uuid; 
-    alert_uuid = ss.str();
+    if (alert_uuid.empty()) {
+    
+        boost::uuids::uuid uuid = boost::uuids::random_generator()();
+        ss << uuid; 
+        alert_uuid = ss.str();
+    }
 }
+
 
 

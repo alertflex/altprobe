@@ -7,8 +7,6 @@
 #ifndef COBJECT_H
 #define	COBJECT_H
 
-#include <mutex>
-
 #include "main.h"
 #include "config.h"
 
@@ -18,14 +16,12 @@ class CollectorObject {
 public:
     //
     static string node_id;
+    static string node_ver;
     static int timezone;
+    static int log_size;
     static long startup_timer;
     static long gosleep_timer;
-    static int log_size;
-    
-    std::mutex m_monitor_counter;
-    unsigned long events_counter;
-    
+            
     char collector_time[OS_DATETIME_SIZE]; 
     
     //Syslog info string
@@ -33,81 +29,50 @@ public:
     
     CollectorObject () {
         node_id.clear();
-        events_counter = 0;
     }
     
     string GetNodeId()  { return node_id; }
     virtual int GetConfig();
-    static void SysLog(char* info);
+    
     string GetNodeTime();
     string GetGraylogFormat();
+    void ReplaceAll(string& input, const string& from, const string& to);
     
     long GetStartupTimer() { return startup_timer; }
     long GetGosleepTimer() { return gosleep_timer; }
     
-    int ValidDigit(char* ip_str);
-    int IsValidIp(string ip);
-    uint32_t IPToUInt(string ip);
-    bool IsIPInRange(string ip, string network, string mask);
-    unsigned int GetBufferSize(char* source);
-    
-    long ResetEventsCounter() {
-        unsigned long r;
-        
-        m_monitor_counter.lock();
-        r = events_counter;
-        events_counter = 0;
-        m_monitor_counter.unlock();
-        
-        return r;
-    }
-    
-    void IncrementEventsCounter() {
-        m_monitor_counter.lock();
-        events_counter++;
-        m_monitor_counter.unlock();
-    }
-    
-    void IncrementEventsCounter(int inc) {
-        m_monitor_counter.lock();
-        events_counter = events_counter + inc;
-        m_monitor_counter.unlock();
-    }
+    static void SysLog(char* info);
+    static int ValidDigit(char* ip_str);
+    static int IsValidIp(string ip);
+    static uint32_t IPToUInt(string ip);
+    static bool IsIPInRange(string ip, string network, string mask);
+    static unsigned int GetBufferSize(char* source);
 };
-
-enum EventType { et_alert, et_nids_srcip, et_nids_dstip, et_hids_hostname, et_hids_location, et_ids_cat, et_ids_event, et_flow_appl, et_flow_countries, et_flow_talkers, et_flow_traffic, et_flow_proto, et_node_monitor, et_log };
 
 class Event {
 public:
-    EventType type;
+    int event_type;
     
     string ref_id;
     
     void Reset() {
         ref_id.clear();
-    }
-    
-    EventType GetEventType() {
-        return type;
-    }
-    
-    void SetEventType(EventType t) {
-        type = t;
+        event_type  = 0;
     }
 };
 
-class Report : public Event {
+class BinData : public Event {
 public:   
-    string info;
+    string data;
     
     void Reset() {
         Event::Reset();
-        
-        info.clear();
+        data.clear();
     }
-        
-    string GetReportInfo() {
-        return info;
+    
+    BinData (string d, int et) {
+        data = d;
+        event_type = et;
     }
 };
 
@@ -133,7 +98,7 @@ public:
     
     void Reset() {
         Event::Reset();
-        
+        event_type = 0;
         alert_uuid.clear();
         source.clear();
         type.clear();

@@ -8,29 +8,30 @@
 #ifndef HIDS_H
 #define	HIDS_H
 
+#include "hiredis.h"
+
 #include "sinks.h"
 #include "ids.h"
 #include "filters.h"
 #include "config.h"
+#include "source.h"
 
 using namespace std;
 
 class OssecRule
 {
 public:
-    int sidid;  /* id attribute -- required*/
+    int id;  /* id attribute -- required*/
     int level;  /* level attribute --required */
-    string comment; /* description in the xml */
-    string cve;
+    string desc; /* description in the xml */
     string info;
         
     std::vector<string> list_cats;
         
     void Reset() {
-        sidid = 0;  /* id attribute -- required*/
+        id = 0;  /* id attribute -- required*/
         level = 0;  /* level attribute --required */
-        comment.clear();
-        cve.clear();
+        desc.clear();
         info.clear();
                 
         list_cats.clear();
@@ -81,13 +82,7 @@ public:
     /* Extracted from the decoders */
     string srcip;
     string dstip;
-    unsigned int srcport;
-    unsigned int dstport;
-    string protocol;
-    string action;
-    string srcuser;
-    string dstuser;
-    
+            
     string datetime;    
     
     
@@ -104,72 +99,41 @@ public:
         /* Extracted from the decoders */
         srcip.clear();
         dstip.clear();
-        srcport = 0;
-        dstport = 0;
-        protocol.clear();
-        action.clear();
-        srcuser.clear();
-        dstuser.clear();
-        
+                
         /* Additional parameters */
         datetime.clear();
     }
 };
 
 
-class Hids : public CollectorObject {
+class Hids : public Source {
 public:
-    int hids_status;
-    
-    // ZeroMQ variables
-    char url[OS_HEADER_SIZE];
-    void* context;
-    void* subscriber;
-    int rc;
-    
-    //JSON string from ossec
-    char payload[OS_PAYLOAD_SIZE];
-    
-    //JSON string for log
-    string logPayload;
-    
     //OSSEC record
     OssecRecord rec;
     
-    // interfaces
-    Sinks sk;
-    FiltersSingleton fs;
-        
-    Hids () {
-        memset(payload, 0, sizeof(payload));
+    
+    Hids (string skey) : Source(skey) {
         rec.Reset();
-        hids_status = 0;
     }
     
-    int Open();
-    void Close(); 
-    
-    virtual int GetConfig();
     int Go();
     
-    int OpenZmq();
-    int ReceiveEvent();
-    void ParsJson ();
+    int ParsJson (char* redis_payload);
+    
     BwList* CheckBwList();
-    void CreateLogPayload();
+    void CreateLog();
     void SendAlert (int s, BwList*  bwl);
-    int PushIdsRecord(BwList* bwl);
-    int GetStatus() {
-        return hids_status;
-    }
+    int PushRecord(BwList* bwl);
     
     void ClearRecords() {
-	memset(payload, 0, sizeof(payload));
-        rec.Reset();
-        logPayload.clear();
+	rec.Reset();
+        jsonPayload.clear();
     }
     
 };
+
+extern boost::lockfree::spsc_queue<string> q_logs_hids;
+extern boost::lockfree::spsc_queue<string> q_compliance;
 
 #endif	/* HIDS_H */
 

@@ -20,7 +20,6 @@
 #include <pthread.h> 
 #include <semaphore.h> 
 #include <signal.h>
-#include <zmq.h>
 #include <yaml.h>
 #include <netdb.h>
 #include <sys/un.h>
@@ -46,10 +45,12 @@
 
 #define BOOST_SPIRIT_THREADSAFE
 #include <boost/lockfree/spsc_queue.hpp>
+#include <boost/thread/shared_mutex.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/foreach.hpp>
 #include <boost/asio.hpp>
+#include <boost/regex.hpp>
 #include <cassert>
 #include <exception>
 #include <iostream>
@@ -73,27 +74,23 @@
 #define IP_SIZE              32      /* IP Address size */
 #define PORT_SIZE            8       /* Port Address size */
 
+#define DELIM "."
+
+#define MSG_VERSION 0
+
+#define ZDATALEN 1024 * 1024
+
 #define BLACKLIST_SIZE       100
 
-#define LOG_QUEUE_SIZE 10000
-#define NETFLOW_QUEUE_SIZE 5000
-#define IDS_QUEUE_SIZE 1000
-
-#define DELIM "."
+#define LOG_QUEUE_SIZE 200000
+#define STAT_QUEUE_SIZE 200000
+#define FLOWS_QUEUE_SIZE 200000
+#define NETSTAT_QUEUE_SIZE 1000
+#define IDS_QUEUE_SIZE 200000
 
 #define CONFIG_FILE "/etc/alertflex/alertflex.yaml"
 #define FILTERS_FILE "/etc/alertflex/filters.json"
 #define PID_FILE "/var/run/alertflex.pid"
 #define DAEMON_NAME "alertflex"
-
-#define MSG_VERSION 0
-
-struct zmq_msg_hdr {
-  char url[32];
-  u_int32_t version;
-  u_int32_t size;
-};
-
-#define ZDATALEN 1024 * 1024
 
 #endif	/* MAIN_H */

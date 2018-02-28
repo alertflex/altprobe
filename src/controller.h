@@ -6,6 +6,8 @@
 #ifndef CONTROLLER_H
 #define	CONTROLLER_H
 
+#include <mutex>
+
 #include "cobject.h"
 
 using namespace activemq::core;
@@ -34,6 +36,7 @@ public:
     Destination* destination;
     MessageProducer* producer;
     bool sessionTransacted;
+    bool connection_status;
     
     Controller () {
         memset(url, 0, sizeof(url));
@@ -46,14 +49,18 @@ public:
         destination = NULL;
         producer = NULL;
         sessionTransacted = false;
+        connection_status = false;
     }
      
     virtual int Open();
+    virtual bool Reset();
     virtual int GetConfig();
     int SendMessage(Event* e);
     virtual void Close();
     
 };
+
+
 
 #endif	/* CONTROLLER_H */
 

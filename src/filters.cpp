@@ -2,7 +2,7 @@
  * File:   filters.h
  * Author: Oleg Zharkov
  */
-
+#include <sys/socket.h>
 #include "filters.h"
 
 namespace bpt = boost::property_tree;
@@ -10,51 +10,28 @@ namespace bpt = boost::property_tree;
 // FS states
 int FiltersSingleton::status = 0;
 
-// Buffer for data
-char* FiltersSingleton::config_data;
-int FiltersSingleton::config_data_len = 0;
-
-// local file settings
-FILE* FiltersSingleton::f;
-char FiltersSingleton::config_file[OS_STRING_SIZE];
-
 Filters FiltersSingleton::filter;
+std::vector<Agent> FiltersSingleton::agents_list;
 
 int FiltersSingleton::GetFiltersConfig() {
     
     if (!status) {
         
-        config_data = (char*) malloc(ZDATALEN * sizeof(char));
-        config_data_len = ZDATALEN;
-    
-        f = fopen(FILTERS_FILE, "r");
-    
-        fseek(f, 0, SEEK_END);
-        config_data_len = ftell(f);
-        fseek(f, 0, SEEK_SET);
         
-        if (config_data_len + 1 > ZDATALEN) {
-            SysLog("Error size for filters config\n");
-            fclose(f);
-            return 0;
-        }
+        ifstream file(FILTERS_FILE);
+        string str; 
         
-        fread(config_data, config_data_len, 1, f); 
-    
-        if (ParsConfig()) {
+        ifstream filters_config;
+        filters_config.open(FILTERS_FILE);
+        stringstream strStream;
+        strStream << filters_config.rdbuf();
+        
+        if (ParsFiltersConfig(strStream.str())) {
             status = 1;
-            
-            fclose(f);
-            free(config_data);
-            
-            return 1;
+            return status;
         }
     
         SysLog("filters file error: error parsing config data\n");
-    
-        fclose(f);
-        free(config_data);
-    
         return 0;
     }
     
@@ -62,19 +39,24 @@ int FiltersSingleton::GetFiltersConfig() {
     
 }
 
+boost::shared_mutex FiltersSingleton::filters_update;
 
-int FiltersSingleton::ParsConfig() {
+int FiltersSingleton::ParsFiltersConfig(string f) {
+    
+    boost::unique_lock<boost::shared_mutex> lock(filters_update);
+    
+    filter.Reset();
     
     try {
                 
-        stringstream ss(config_data);
+        stringstream ss(f);
         
         string id;
         bpt::ptree pt;
         bpt::read_json(ss, pt);
         
         filter.ref_id =  pt.get<string>("ref_id");
-        filter.name =  pt.get<string>("filter_name");
+        filter.desc =  pt.get<string>("filter_desc");
                 
         bpt::ptree home_networks = pt.get_child("home_net");
         BOOST_FOREACH(bpt::ptree::value_type &h_nets, home_networks) {
@@ -83,8 +65,21 @@ int FiltersSingleton::ParsConfig() {
             
             net->network = h_nets.second.get<string>("network");
             net->netmask = h_nets.second.get<string>("netmask");
+            net->alert_suppress = h_nets.second.get<bool>("alert_suppress");
             
             filter.home_nets.push_back(net);
+        }
+        
+        bpt::ptree name_alias = pt.get_child("alias");
+        BOOST_FOREACH(bpt::ptree::value_type &n_alias, name_alias) {
+            
+            Alias* al = new Alias;
+            
+            al->agent_name = n_alias.second.get<string>("agent_name");
+            al->host_name = n_alias.second.get<string>("host_name");
+            al->ip = n_alias.second.get<string>("ip");
+                        
+            filter.alias.push_back(al);
         }
         
         bpt::ptree filters = pt.get_child("sources");
@@ -99,7 +94,7 @@ int FiltersSingleton::ParsConfig() {
             BwList* bwl = new BwList();
             
             bwl->event = hids_list.second.get<int>("event");
-            bwl->ip = hids_list.second.get<string>("ip");
+            bwl->host = hids_list.second.get<string>("agent");
             bwl->action = hids_list.second.get<string>("action");
             
             bwl->agr.reproduced = hids_list.second.get<int>("aggregate.reproduced");  
@@ -122,7 +117,7 @@ int FiltersSingleton::ParsConfig() {
             BwList* bwl = new BwList();
             
             bwl->event = nids_list.second.get<int>("event");
-            bwl->ip = nids_list.second.get<string>("ip");
+            bwl->host = nids_list.second.get<string>("agent");
             bwl->action = nids_list.second.get<string>("action");
             
             bwl->agr.reproduced = nids_list.second.get<int>("aggregate.reproduced");  
@@ -136,20 +131,21 @@ int FiltersSingleton::ParsConfig() {
         }
         
         // NET
-        filter.traffic.log = filters.get<bool>("traffic.log");
-        filter.traffic.top_talkers = filters.get<int>("traffic.top_talkers");
+        filter.traf.log = filters.get<bool>("netflow.log");
+        filter.traf.top_talkers = filters.get<int>("netflow.top_talkers");
         
-        bpt::ptree traffic_th_list = filters.get_child("traffic.thresholds");
+        bpt::ptree traffic_th_list = filters.get_child("netflow.thresholds");
         BOOST_FOREACH(bpt::ptree::value_type &traffic_list, traffic_th_list) {
             
             Threshold* t = new Threshold();
             
-            t->ip = traffic_list.second.get<string>("ip");
-            t->app_proto = traffic_list.second.get<string>("appl");
+            t->host = traffic_list.second.get<string>("network");
+            t->element = traffic_list.second.get<string>("netmask");
+            t->parameter = traffic_list.second.get<string>("appl");
             t->action = traffic_list.second.get<string>("action");
             
-            t->traffic_min = traffic_list.second.get<int>("min");
-            t->traffic_max = traffic_list.second.get<int>("max");
+            t->value_min = traffic_list.second.get<int>("min");
+            t->value_max = traffic_list.second.get<int>("max");
                         
             t->agr.reproduced = traffic_list.second.get<int>("aggregate.reproduced");  
             t->agr.in_period = traffic_list.second.get<int>("aggregate.in_period");  
@@ -158,7 +154,7 @@ int FiltersSingleton::ParsConfig() {
             t->agr.new_category = traffic_list.second.get<string>("aggregate.new_category");
             t->agr.new_description = traffic_list.second.get<string>("aggregate.new_description");
             
-            filter.traffic.th.push_back(t);
+            filter.traf.th.push_back(t);
         }
         
         pt.clear();
@@ -169,6 +165,78 @@ int FiltersSingleton::ParsConfig() {
     } 
     
     return 1;
+}
+
+boost::shared_mutex FiltersSingleton::agents_update;
+
+void FiltersSingleton::UpdateAgentsList(string id, string ip, string name, string status, 
+        string date, string version, string manager, string os_platf, string os_ver, string os_name) {
+    
+    boost::unique_lock<boost::shared_mutex> lock(agents_update);
+    
+    string real_ip = "indef";
+    
+    if (IsValidIp(ip) == -1 || ip.compare("127.0.0.1") == 0) {
+            
+        Alias* al = GetAliasByAgent(name);
+            
+        if (al != NULL) {
+            
+            if (al->ip.compare("indef") != 0) real_ip = al->ip;
+            else {    
+                if (al->host_name.compare("indef") != 0) {
+                
+                    string host_name = al->host_name;
+            
+                    struct hostent *hostaddr = gethostbyname(host_name.c_str());
+        
+                    if (hostaddr != NULL) real_ip = inet_ntoa(*(struct in_addr *)hostaddr->h_addr_list[0]);
+                }
+            }
+        } 
+    }
+    else real_ip = ip;
+        
+    std::vector<Agent>::iterator i, end;    
+    
+    for (i = agents_list.begin(), end = agents_list.end(); i != end; ++i) {
+        if (i->name.compare(name) == 0) {
+            i->ip = real_ip;
+            i->status = status;
+            return;
+        }
+    }
+    
+    agents_list.push_back(Agent(id, ip, name, status, date, version, manager, os_platf, os_ver, os_name));
+    
+}
+
+string FiltersSingleton::GetAgentNameByIP(string ip) {
+    
+    boost::shared_lock<boost::shared_mutex> lock(agents_update);
+    
+    std::vector<Agent>::iterator i, end;
+    
+    for(i = agents_list.begin(), end = agents_list.end(); i != end; ++i) {
+        if (i->ip.compare(ip) == 0) {
+            return i->name;
+        }
+    }
+    
+    return "home_net";
+}
+
+Alias* FiltersSingleton::GetAliasByAgent(string n) {
+    
+    std::vector<Alias*>::iterator i, end;
+    
+    for(i = filter.alias.begin(), end = filter.alias.end(); i != end; ++i) {
+        if ((*i)->agent_name.compare(n) == 0) {
+            return (*i); 
+        }
+    }
+    
+    return NULL;
 }
 
 

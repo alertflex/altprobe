@@ -2,6 +2,7 @@
  * File:  controller.cpp
  * Author: Oleg Zharkov
  *
+ * Created on February 27, 2014, 3:07 PM
  */
 #include <mutex>
 #include <activemq-cpp-3.10.0/cms/Message.h>
@@ -87,15 +88,6 @@ int Controller::GetConfig() {
     return 1;
 }
 
-/*
-Destination: YES
-ConnectionFactory: YES
-Connection: YES
-Session: NO
-MessageProducer: NO
-MessageConsumer: NO
- */
-
 int Controller::Open() {
     
     bool amq_conn = false;
@@ -161,199 +153,111 @@ int Controller::Open() {
         
     } while (!amq_conn);
     
+    connection_status = true;
     return 1;
 }
 
 
 int Controller::SendMessage(Event* e) {
     
+    int msg_type = e->event_type;
+    
     try {
         
-        if (e->GetEventType() == et_log) {
+        if (!msg_type) {
+            
+            // Create an alert
+            string strMsg("Collector message");
+            auto_ptr<TextMessage> message(session->createTextMessage(strMsg));
+            
+            string strProbeId(node_id);
+            message->setStringProperty("node_id", strProbeId);
+            
+            message->setIntProperty("msg_type", 1);
+                
+            string strAlertUuid(((Alert*) e)->alert_uuid);
+            message->setStringProperty("alert_uuid", strAlertUuid);
+                
+            string strRefId(((Alert*) e)->ref_id);
+            message->setStringProperty("ref_id", strRefId);
+                
+            string timeOfEvent = GetNodeTime();
+            message->setStringProperty("time_of_event",timeOfEvent);
+                
+            string strSource(((Alert*) e)->source);
+            message->setStringProperty("source", strSource);
+                
+            string strType(((Alert*) e)->type);
+            message->setStringProperty("type", strType);
+                                
+            message->setIntProperty("event", ((Alert*) e)->event);
+                    
+            message->setIntProperty("severity", ((Alert*) e)->severity);
+                    
+            char cat_string[OS_STRING_SIZE];
+        
+            int j = 0;
+            for (string i : ((Alert*) e)->list_cats) {
+                if ( j < ((Alert*) e)->list_cats.size() - 1) i = i + ", ";
+                if (j == 0) strncpy (cat_string, i.c_str(), i.size() + 1);
+                else strncat (cat_string, i.c_str(), i.size() + 1);
+            
+                j++;    
+            }
+                
+            string strEventCat(cat_string);
+            message->setStringProperty("category", strEventCat);
+                    
+            string strEventDetails(((Alert*) e)->description);
+            message->setStringProperty("description", strEventDetails);
+                
+            string strSrcip(((Alert*) e)->srcip);
+            message->setStringProperty("srcip", strSrcip);
+                
+            string strDstip(((Alert*) e)->dstip);
+            message->setStringProperty("dstip", strDstip);
+                
+            string strHost(((Alert*) e)->hostname);
+            message->setStringProperty("hostname", strHost);
+                
+            string strLoc(((Alert*) e)->location);
+            message->setStringProperty("location", strLoc);
+                
+            string strAct(((Alert*) e)->action);
+            message->setStringProperty("action", strAct);
+                
+            string strStatus(((Alert*) e)->status);
+            message->setStringProperty("status", strStatus);
+                
+            string strInfo(((Alert*) e)->info);
+            message->setStringProperty("info", strInfo);
+                    
+            string strEventJson(((Alert*) e)->event_json);
+            message->setStringProperty("event_json", strEventJson);  
+            
+            producer->send(message.get());
+        
+        }  else {
+            
+            // Create a stats or logs
             BytesMessage* byte_message = session->createBytesMessage();
                 
             string strNodeId(node_id);
             byte_message->setStringProperty("node_id", strNodeId);
             byte_message->setStringProperty("ref_id", "nsm_solution");
-            byte_message->setIntProperty("msg_type", 15);
+            byte_message->setIntProperty("msg_type", msg_type);
                 
             vector<unsigned char> vec;
-            string msg_comp = ((Report*) e)->GetReportInfo();
+            string msg_comp = ((BinData*) e)->data;
             const char* c = msg_comp.c_str();
             for (int i=0; i < msg_comp.size() + 1; i++) vec.push_back(c[i]);
                 
             byte_message->writeBytes(vec);
             producer->send(byte_message);
-            // SysLog("logs sent to ctrl");
-                        
-            byte_message->~BytesMessage();
-            return 1;
+                                    
+            delete byte_message;
         }
         
-        
-        // Create a messages
-        string strMsg("Collector message");
-        auto_ptr<TextMessage> message(session->createTextMessage(strMsg));
-            
-        string strProbeId(node_id);
-        message->setStringProperty("node_id", strProbeId);
-            
-        switch (e->GetEventType()) {
-            case et_alert: {
-                                
-                message->setIntProperty("msg_type", 1);
-                
-                string strAlertUuid(((Alert*) e)->alert_uuid);
-                message->setStringProperty("alert_uuid", strAlertUuid);
-                
-                string strRefId(((Alert*) e)->ref_id);
-                message->setStringProperty("ref_id", strRefId);
-                
-                string timeOfEvent = GetNodeTime();
-                message->setStringProperty("time_of_event",timeOfEvent);
-                
-                string strSource(((Alert*) e)->source);
-                message->setStringProperty("source", strSource);
-                
-                string strType(((Alert*) e)->type);
-                message->setStringProperty("type", strType);
-                                
-                message->setIntProperty("event", ((Alert*) e)->event);
-                    
-                message->setIntProperty("severity", ((Alert*) e)->severity);
-                    
-                char cat_string[OS_STRING_SIZE];
-        
-                int j = 0;
-                for (string i : ((Alert*) e)->list_cats) {
-                    if ( j < ((Alert*) e)->list_cats.size() - 1) i = i + ", ";
-                    if (j == 0) strncpy (cat_string, i.c_str(), i.size() + 1);
-                    else strncat (cat_string, i.c_str(), i.size() + 1);
-            
-                    j++;    
-                }
-                
-                string strEventCat(cat_string);
-                message->setStringProperty("category", strEventCat);
-                    
-                string strEventDetails(((Alert*) e)->description);
-                message->setStringProperty("description", strEventDetails);
-                
-                string strSrcip(((Alert*) e)->srcip);
-                message->setStringProperty("srcip", strSrcip);
-                
-                string strDstip(((Alert*) e)->dstip);
-                message->setStringProperty("dstip", strDstip);
-                
-                string strHost(((Alert*) e)->hostname);
-                message->setStringProperty("hostname", strHost);
-                
-                string strLoc(((Alert*) e)->location);
-                message->setStringProperty("location", strLoc);
-                
-                string strAct(((Alert*) e)->action);
-                message->setStringProperty("action", strAct);
-                
-                string strStatus(((Alert*) e)->status);
-                message->setStringProperty("status", strStatus);
-                
-                string strInfo(((Alert*) e)->info);
-                message->setStringProperty("info", strInfo);
-                    
-                string strEventJson(((Alert*) e)->event_json);
-                message->setStringProperty("event_json", strEventJson);   
-                
-                break;
-            }    
-            case et_nids_srcip: {
-                message->setIntProperty("msg_type", 2);
-                message->setStringProperty("info", ((Report*) e)->GetReportInfo());  
-                //SysLog((char*) e->GetEventInfo().c_str());
-                break;
-            } 
-            
-            case et_nids_dstip: {
-                message->setIntProperty("msg_type", 3);
-                message->setStringProperty("info", ((Report*) e)->GetReportInfo());  
-                //SysLog((char*) e->GetEventInfo().c_str());
-                break;
-            } 
-            
-            case et_hids_hostname: {
-                message->setIntProperty("msg_type", 4);
-                message->setStringProperty("info", ((Report*) e)->GetReportInfo());  
-                //SysLog((char*) e->GetEventInfo().c_str());
-                break;
-            } 
-            
-            case et_hids_location: {
-                message->setIntProperty("msg_type", 5);
-                message->setStringProperty("info", ((Report*) e)->GetReportInfo());  
-                //SysLog((char*) e->GetEventInfo().c_str());
-                break;
-            } 
-            
-            case et_ids_cat: {
-                message->setIntProperty("msg_type", 6);
-                message->setStringProperty("info", ((Report*) e)->GetReportInfo());  
-                //SysLog((char*) e->GetEventInfo().c_str());
-                break;
-            }   
-            
-            case et_ids_event: {
-                message->setIntProperty("msg_type", 7);
-                message->setStringProperty("info", ((Report*) e)->GetReportInfo());  
-                //SysLog((char*) e->GetEventInfo().c_str());
-                break;
-            }   
-            
-            case et_flow_appl: {
-                message->setIntProperty("msg_type", 8);
-                message->setStringProperty("info", ((Report*) e)->GetReportInfo());  
-                //SysLog((char*) e->GetEventInfo().c_str());
-                break;
-            }
-            
-            case et_flow_countries: {
-                message->setIntProperty("msg_type", 9);
-                message->setStringProperty("info", ((Report*) e)->GetReportInfo());  
-                //SysLog((char*) e->GetEventInfo().c_str());
-                break;
-            }
-            
-            case et_flow_talkers: {
-                message->setIntProperty("msg_type", 10);
-                message->setStringProperty("info", ((Report*) e)->GetReportInfo());  
-                //SysLog((char*) e->GetEventInfo().c_str());
-                break;
-            }
-            
-            case et_flow_traffic: {
-                message->setIntProperty("msg_type", 11);
-                message->setStringProperty("info", ((Report*) e)->GetReportInfo());  
-                //SysLog((char*) e->GetEventInfo().c_str());
-                break;
-            }
-            
-            case et_flow_proto: {
-                message->setIntProperty("msg_type", 12);
-                message->setStringProperty("info", ((Report*) e)->GetReportInfo());  
-                //SysLog((char*) e->GetEventInfo().c_str());
-                break;
-            }
-            
-            case et_node_monitor: {
-                message->setIntProperty("msg_type", 13);
-                message->setStringProperty("info", ((Report*) e)->GetReportInfo());  
-                //SysLog((char*) e->GetEventInfo().c_str());
-                break;
-            }
-            
-            default:
-                return 1;
-        }
-            
-        producer->send(message.get());
         
     } catch (CMSException& e) {
         SysLog("ActiveMQ CMS Exception occurred.");
@@ -361,6 +265,89 @@ int Controller::SendMessage(Event* e) {
     }
         
     return 1;
+}
+
+bool Controller::Reset() {
+    
+    try {
+        
+        if (connection_status) {
+                
+            if (connection != NULL) {
+                connection->close();
+                connection = NULL;
+            }
+                
+            if (destination != NULL) {
+                delete destination;
+                destination = NULL;
+            }
+        
+            if (producer != NULL) {
+                delete producer;
+                producer = NULL;
+            }
+                
+            if (session != NULL) {
+                delete session;
+                session = NULL;
+            }
+                
+            connection_status = false;
+        }
+            
+        if (!connection_status) {
+            
+            if (connection == NULL) {
+                
+                // Create a ConnectionFactory
+                string strUrl(url);
+            
+                auto_ptr<ConnectionFactory> connectionFactory(
+                    ConnectionFactory::createCMSConnectionFactory(strUrl));
+                
+                connection = connectionFactory->createConnection();
+                connection->start();
+            }
+            
+            if (session == NULL) {
+        
+                // Create a Session
+                if (this->sessionTransacted) {
+                    session = connection->createSession(Session::SESSION_TRANSACTED);
+                } else {
+                    session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
+                }
+            }
+            
+            if (destination == NULL) {
+                // Create the destination (Topic or Queue)
+                string strQueue(path);
+            
+                strQueue = strQueue + "controller";
+            
+                destination = session->createQueue(strQueue);
+            }
+            
+            if (producer == NULL) {
+                        
+                // Create a MessageProducer from the Session to the Topic or Queue
+                producer = session->createProducer(destination);
+       
+                producer->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
+            }
+            
+            connection_status = true;
+        }
+        
+    } catch (CMSException& e) {
+        SysLog("activeMQ operation error: reset");
+        string str = e.getMessage();
+        const char * c = str.c_str();
+        SysLog((char*) c);
+    }
+    
+    return connection_status;
 }
 
 void Controller::Close() {

@@ -1,11 +1,11 @@
 /* 
- * File:  filelog.h
+ * File:  loclog.h
  * Author: Oleg Zharkov
  *
  */
 
-#ifndef FILELOG_H
-#define	FILELOG_H
+#ifndef LOCLOG_H
+#define	LOCLOG_H
 
 #include <fstream>  
 #include <iostream>
@@ -14,28 +14,35 @@
 #include <boost/range/iterator_range.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/regex.hpp>
+#include <mutex>
 #include "cobject.h"
 
-using namespace std;
 using namespace boost::filesystem;
 
-class FileLog : public CollectorObject {
+class LocLog : public CollectorObject {
 public:
     static string log_path;
     static string file_template;
+    static std::mutex write_lock;
+    
+    static bool state;
     
     int index;
     int counter;
     path open_file_path;
     ofstream ostream;
     
-    FileLog () {
+    LocLog () {
         index = 0;
         counter = 0;
     }
     
     int Open();
     void Close();
+    
+    bool GetState() { return state; }
+    void SetState(bool s) { state = s; }
+    
     int WriteLog(string msg);
         
     int GetNewIndex(int index, string fileName);
@@ -43,7 +50,5 @@ public:
     
 };
 
-extern boost::lockfree::spsc_queue<string> q_log;
-
-#endif	/* FILELOG_H */
+#endif	/* LOCLOG_H */
 

@@ -8,16 +8,13 @@
 #ifndef NIDS_H
 #define	NIDS_H
 
-#include "GeoIP.h"
-#include "GeoIPCity.h"
-#include "hiredis.h"
 
 #include "sinks.h"
 #include "ids.h"
-#include "netflow.h"
+#include "flows.h"
 #include "filters.h"
 #include "config.h"
-
+#include "source.h"
 
 using namespace std;
 
@@ -27,7 +24,6 @@ public:
     string action;
     unsigned int gid;
     unsigned int signature_id;
-    unsigned int rev;
     string signature;
     string category;
     unsigned int severity;
@@ -36,7 +32,6 @@ public:
         action.clear();
         gid = 0;
         signature_id = 0;
-        rev = 0;
         signature.clear();
         category.clear();
         severity = 0;
@@ -68,6 +63,22 @@ public:
     }
 };
 
+class SuricataSsh
+{
+public:
+    string client_sw;
+    string server_sw;
+    string client_proto;
+    string server_proto;
+    
+    void Reset() {
+        client_sw.clear();
+        client_proto.clear();
+        server_sw.clear();
+        server_proto.clear();
+    }
+};
+
 class SuricataNetflow
 {
 public:
@@ -94,24 +105,29 @@ public:
     
     // *** Common fields
     string ref_id;
-    string event_type;
+    int event_type;
     string time_stamp;
     unsigned long flow_id;
-    string in_iface;
+        
+    int src_type;
+    string src_agent;
     string src_ip;
     unsigned int src_port;
+    
+    int dst_type;
+    string dst_agent;
     string dst_ip;
     unsigned int dst_port;
-    string protocol;
-    string payload_printable;
-    unsigned int stream;
-    string datetime; 
-    string hostname; 
     
+    string protocol;
+    string datetime; 
+        
     //  Record  Alert 
     SuricataAlert alert;
-    //  Record  Dns 
+    //  Record  DNS 
     SuricataDns dns;
+    //  Record  SSH 
+    SuricataSsh ssh;
     //  Record  Flow
     SuricataNetflow netflow;
     
@@ -119,106 +135,56 @@ public:
     void Reset() {
         //reset rule class object
         ref_id.clear();
-        event_type.clear();
+        event_type = 0;
         time_stamp.clear();
         flow_id = 0;
-        in_iface.clear();
+        src_type = 0;
+        src_agent.clear();
         src_ip.clear();
         src_port = 0;
+        dst_type = 0;
+        dst_agent.clear();
         dst_ip.clear();
         dst_port = 0;
         protocol.clear();
-        payload_printable.clear();
-        unsigned int stream = 0;
         datetime.clear();
-        hostname.clear();
-        
+                
         alert.Reset();
         dns.Reset();
+        ssh.Reset();
         netflow.Reset();
     }
 };
 
 
-class Nids : public CollectorObject {
+class Nids : public Source {
 public:  
-    
-    int nids_status;
-    
-    static char maxmind_path[OS_BUFFER_SIZE]; 
-    int maxmind_state;
-    GeoIP *gi;
-    string country_code;
-    
-    std::mutex m_net_counter;
-    unsigned long net_events_counter;
-        
-    // Redis config parameters
-    static char host[OS_HEADER_SIZE];
-    static long int port;
-    redisReply *reply;
-    redisContext *c;
-    
-    //JSON string from suricata
-    string logPayload;
     
     //Suricata record
     SuricataRecord rec;
+    int counter_repetition;
     
-    // interfaces
-    Sinks sk;
-    FiltersSingleton fs;
-        
-    Nids () {
+    Nids (string skey) : Source(skey) {
         rec.Reset();
-        nids_status = 0;
-        maxmind_state = 0;
-        net_events_counter = 0;
     }
     
-    int Open();
-    void Close();
-    
-    virtual int GetConfig();
     int Go();
     
     int ParsJson (char* redis_payload);
-    bool CheckTraffic();
-    bool CheckHomeNetwork();
     BwList* CheckBwList();
-    int ReceiveEvent();
     void CreateLogPayload(int r);
     void SendAlert (int s, BwList* bwl);
     int PushIdsRecord(BwList* bwl);
-    void PushFlowRecord();
+    void PushFlowsRecord();
     string CountryByIp(string ip);
         
-    int GetStatus() {
-        return nids_status;
-    }
-    
-    long ResetNetEventsCounter() {
-        unsigned long r;
-        
-        m_net_counter.lock();
-        r = net_events_counter;
-        net_events_counter = 0;
-        m_net_counter.unlock();
-        
-        return r;
-    }
-    
-    void IncrementNetEventsCounter() {
-        m_net_counter.lock();
-        net_events_counter++;
-        m_net_counter.unlock();
-    }
-                
     void ClearRecords() {
         rec.Reset();
-        logPayload.clear();
+        jsonPayload.clear();
     }
 };
+
+extern boost::lockfree::spsc_queue<string> q_logs_nids;
 
 #endif	/* NIDS_H */
 

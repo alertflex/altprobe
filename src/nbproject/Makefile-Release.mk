@@ -36,20 +36,24 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/cobject.o \
+	${OBJECTDIR}/collector.o \
 	${OBJECTDIR}/config.o \
 	${OBJECTDIR}/controller.o \
-	${OBJECTDIR}/filelog.o \
 	${OBJECTDIR}/filters.o \
-	${OBJECTDIR}/flushlog.o \
+	${OBJECTDIR}/flows.o \
 	${OBJECTDIR}/hids.o \
 	${OBJECTDIR}/ids.o \
+	${OBJECTDIR}/loclog.o \
 	${OBJECTDIR}/main.o \
-	${OBJECTDIR}/monitor.o \
-	${OBJECTDIR}/netflow.o \
+	${OBJECTDIR}/metric.o \
 	${OBJECTDIR}/nids.o \
+	${OBJECTDIR}/remlog.o \
+	${OBJECTDIR}/remstat.o \
 	${OBJECTDIR}/sinks.o \
-	${OBJECTDIR}/statflow.o \
-	${OBJECTDIR}/statids.o
+	${OBJECTDIR}/source.o \
+	${OBJECTDIR}/statflows.o \
+	${OBJECTDIR}/statids.o \
+	${OBJECTDIR}/updates.o
 
 
 # C Compiler Flags
@@ -81,6 +85,11 @@ ${OBJECTDIR}/cobject.o: cobject.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/cobject.o cobject.cpp
 
+${OBJECTDIR}/collector.o: collector.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/collector.o collector.cpp
+
 ${OBJECTDIR}/config.o: config.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -91,20 +100,15 @@ ${OBJECTDIR}/controller.o: controller.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/controller.o controller.cpp
 
-${OBJECTDIR}/filelog.o: filelog.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/filelog.o filelog.cpp
-
 ${OBJECTDIR}/filters.o: filters.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/filters.o filters.cpp
 
-${OBJECTDIR}/flushlog.o: flushlog.cpp 
+${OBJECTDIR}/flows.o: flows.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/flushlog.o flushlog.cpp
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/flows.o flows.cpp
 
 ${OBJECTDIR}/hids.o: hids.cpp 
 	${MKDIR} -p ${OBJECTDIR}
@@ -116,40 +120,60 @@ ${OBJECTDIR}/ids.o: ids.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ids.o ids.cpp
 
+${OBJECTDIR}/loclog.o: loclog.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/loclog.o loclog.cpp
+
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
 
-${OBJECTDIR}/monitor.o: monitor.cpp 
+${OBJECTDIR}/metric.o: metric.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/monitor.o monitor.cpp
-
-${OBJECTDIR}/netflow.o: netflow.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/netflow.o netflow.cpp
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/metric.o metric.cpp
 
 ${OBJECTDIR}/nids.o: nids.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/nids.o nids.cpp
 
+${OBJECTDIR}/remlog.o: remlog.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/remlog.o remlog.cpp
+
+${OBJECTDIR}/remstat.o: remstat.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/remstat.o remstat.cpp
+
 ${OBJECTDIR}/sinks.o: sinks.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/sinks.o sinks.cpp
 
-${OBJECTDIR}/statflow.o: statflow.cpp 
+${OBJECTDIR}/source.o: source.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/statflow.o statflow.cpp
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/source.o source.cpp
+
+${OBJECTDIR}/statflows.o: statflows.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/statflows.o statflows.cpp
 
 ${OBJECTDIR}/statids.o: statids.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/statids.o statids.cpp
+
+${OBJECTDIR}/updates.o: updates.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/updates.o updates.cpp
 
 # Subprojects
 .build-subprojects:

@@ -6,7 +6,8 @@
  */
 
 #include "statids.h"
-#include "filters.h"
+
+boost::lockfree::spsc_queue<string> q_stats_ids{STAT_QUEUE_SIZE};
 
 int StatIds::GetConfig() {
     
@@ -16,9 +17,9 @@ int StatIds::GetConfig() {
     //Read filter config
     if(!fs.GetFiltersConfig()) return 0;
     
-    if (sk.GetReportsPeriod() != 0 && sk.GetStateCtrl()) statids_status = 1;
+    if (sk.GetReportsPeriod()) status = 1;
     
-    return 1;
+    return status;
 }
 
 int  StatIds::Open() {
@@ -49,7 +50,9 @@ int StatIds::Go(void) {
             
             if (flush_timer < seconds) {
                 flush_timer = seconds;
+                mem_mon.hids_alerts_list = hids_alerts_list.size();
                 FlushHidsAlert();
+                mem_mon.nids_alerts_list = nids_alerts_list.size();
                 FlushNidsAlert();
             }
         }
@@ -65,44 +68,71 @@ int StatIds::Go(void) {
 
 void StatIds::ProcessStatistic() {
     
-    int counter = 0;
+    counter = 0;
     
-    while (!q_ids.empty()) {
+    while (!q_nids.empty() || !q_hids.empty()) {
         
         IdsRecord rec;
-        q_ids.pop(rec);
         
-        UpdateIdsCategory(rec);
-        UpdateIdsEvent(rec);
-            
-        if (rec.ids_type == 1) {
-            UpdateNidsSrcIp(rec);
-            UpdateNidsDstIp(rec);
-            if(rec.agr.reproduced != 0) UpdateNidsAlerts(rec);
-        } else {
-            UpdateHidsHostname(rec);
-            UpdateHidsLocation(rec);
-            if(rec.agr.reproduced != 0) UpdateHidsAlerts(rec);
+        if (!q_nids.empty()) {
+            q_nids.pop(rec);
+            PushRecord(rec);
         }
         
-        counter = 1;
+        if (!q_hids.empty()) {
+            q_hids.pop(rec);
+            PushRecord(rec);
+        }
     }       
         
-    if (!counter) usleep(GetGosleepTimer());
+    if (!counter) usleep(GetGosleepTimer()*60);
+}
+
+void StatIds::PushRecord(IdsRecord rec) {
+    
+    UpdateIdsCategory(rec);
+    UpdateIdsEvent(rec);
+        
+    if (rec.ids_type == 1) {
+        UpdateFimFile(rec);
+        UpdateFimCause(rec);
+    }
+            
+    if (rec.ids_type == 2) {
+        UpdateHidsHostname(rec);
+        UpdateHidsLocation(rec);
+    }
+        
+    if (rec.ids_type == 1 || rec.ids_type == 2) {
+        if (rec.agr.reproduced != 0) UpdateHidsAlerts(rec);
+    }
+        
+    if (rec.ids_type == 3) {
+        UpdateNidsSrcIp(rec);
+        UpdateNidsDstIp(rec);
+        if(rec.agr.reproduced != 0) UpdateNidsAlerts(rec);
+    } 
+        
+    counter++;
 }
 
 void StatIds::RoutineJob() {
     
+    mem_mon.fim_file = fim_file.size();
+    FlushFimFile();
+    mem_mon.fim_cause = fim_cause.size();
+    FlushFimCause();
+    mem_mon.nids_srcip = nids_srcip.size();
     FlushNidsSrcIp();
-    
+    mem_mon.nids_dstip = nids_dstip.size();
     FlushNidsDstIp();
-    
+    mem_mon.hids_hostname = hids_hostname.size();
     FlushHidsHostname();
-    
+    mem_mon.hids_location = hids_location.size();
     FlushHidsLocation();
-    
+    mem_mon.ids_category = ids_category.size();
     FlushIdsCategory();
-    
+    mem_mon.ids_event = ids_event.size();
     FlushIdsEvent();
 }
 
@@ -118,48 +148,44 @@ void StatIds::UpdateNidsSrcIp(IdsRecord r) {
             }
         }
     }  
-    nids_srcip.push_back(NidsSrcIp(r.ref_id, r.src_ip));
+    nids_srcip.push_back(NidsSrcIp(r.ref_id, r.src_ip, r.hostname));
 }
 
 void StatIds::FlushNidsSrcIp() {
         
-    if (sk.GetStateCtrl()) {
+    string report = "{ \"type\": \"nids_srcip\", \"data\" : [ ";
         
-        report.info = "{ \"nids_srcip\" : [ ";
-        int j = 0;
+    int j = 0;
         
-        std::vector<NidsSrcIp>::iterator i, end;
+    std::vector<NidsSrcIp>::iterator i, end;
         
-        for(i = nids_srcip.begin(), end = nids_srcip.end(); i != end; ++i) {
+    for(i = nids_srcip.begin(), end = nids_srcip.end(); i != end; ++i) {
                     
-            report.info += "{ \"ref_id\": \"";
-            report.info += i->ref_id;
+        report += "{ \"ref_id\": \"";
+        report += i->ref_id;
             
-            report.info += "\", \"ip\": \"";
-            report.info += i->ip;
+        report += "\", \"ip\": \"";
+        report += i->ip;
             
-            report.info += "\", \"counter\": ";
-            report.info += std::to_string(i->counter);
+        report += "\", \"agent\": \"";
+        report += i->agent;
             
-            report.info += ", \"time_of_survey\": \"";
-            report.info += GetNodeTime();
-            report.info += "\" }";
+        report += "\", \"counter\": ";
+        report += std::to_string(i->counter);
             
-            if ( j < nids_srcip.size() - 1) { 
-                report.info += ", "; 
-                j++;
-            }
+        report += ", \"time_of_survey\": \"";
+        report += GetNodeTime();
+        report += "\" }";
+            
+        if ( j < nids_srcip.size() - 1) { 
+            report += ", "; 
+            j++;
         }
-        report.info += " ] }";
-        
-        report.SetEventType(et_nids_srcip);
-        
-        sk.SendMessage(&report);
-        
-        report.info.clear();
     }
+    report += " ] }";
+        
+    q_stats_ids.push(report);
     
-clear_nids_srcip:    
     nids_srcip.clear();
 }
 
@@ -176,48 +202,43 @@ void StatIds::UpdateNidsDstIp(IdsRecord r) {
             }
         }
     }  
-    nids_dstip.push_back(NidsDstIp(r.ref_id, r.dst_ip));
+    nids_dstip.push_back(NidsDstIp(r.ref_id, r.dst_ip, r.location));
 }
 
 void StatIds::FlushNidsDstIp() {
         
-    if (sk.GetStateCtrl()) {
+    string report = "{ \"type\": \"nids_dstip\", \"data\": [ ";
+                
+    int j = 0;
+    std::vector<NidsDstIp>::iterator i, end;
         
-        report.info = "{ \"nids_dstip\" : [ ";
-        int j = 0;
-        
-        std::vector<NidsDstIp>::iterator i, end;
-        
-        for(i = nids_dstip.begin(), end = nids_dstip.end(); i != end; ++i) {
+    for(i = nids_dstip.begin(), end = nids_dstip.end(); i != end; ++i) {
                     
-            report.info += "{ \"ref_id\": \"";
-            report.info += i->ref_id;
+        report += "{ \"ref_id\": \"";
+        report += i->ref_id;
             
-            report.info += "\", \"ip\": \"";
-            report.info += i->ip;
+        report += "\", \"ip\": \"";
+        report += i->ip;
             
-            report.info += "\", \"counter\": ";
-            report.info += std::to_string(i->counter);
+        report += "\", \"agent\": \"";
+        report += i->agent;
             
-            report.info += ", \"time_of_survey\": \"";
-            report.info += GetNodeTime();
-            report.info += "\" }";
+        report += "\", \"counter\": ";
+        report += std::to_string(i->counter);
             
-            if ( j < nids_dstip.size() - 1) { 
-                report.info += ", "; 
-                j++;
-            }
+        report += ", \"time_of_survey\": \"";
+        report += GetNodeTime();
+        report += "\" }";
+            
+        if ( j < nids_dstip.size() - 1) { 
+            report += ", "; 
+            j++;
         }
-        report.info += " ] }";
-        
-        report.SetEventType(et_nids_dstip);
-        
-        sk.SendMessage(&report);
-        
-        report.info.clear();
     }
-    
-clear_nids_dstip:    
+    report += " ] }";
+        
+    q_stats_ids.push(report);
+        
     nids_dstip.clear();
 }    
 
@@ -238,44 +259,34 @@ void StatIds::UpdateHidsHostname(IdsRecord r) {
 
 void StatIds::FlushHidsHostname() {
         
-    if (sk.GetStateCtrl()) {
+    string report = "{ \"type\": \"hids_hostname\", \"data\" : [ ";
         
-        report.info = "{ \"hids_hostname\" : [ ";
-        int j = 0;
+    int j = 0;
+    std::vector<HidsHostname>::iterator i, end;
         
-        std::vector<HidsHostname>::iterator i, end;
-        
-        for(i = hids_hostname.begin(), end = hids_hostname.end(); i != end; ++i) {
+    for(i = hids_hostname.begin(), end = hids_hostname.end(); i != end; ++i) {
                     
-            report.info += "{ \"ref_id\": \"";
-            report.info += i->ref_id;
+        report += "{ \"ref_id\": \"";
+        report += i->ref_id;
             
-            report.info += "\", \"hostname\": \"";
-            report.info += i->hostname;
+        report += "\", \"hostname\": \"";
+        report += i->hostname;
             
-            report.info += "\", \"counter\": ";
-            report.info += std::to_string(i->counter);
+        report += "\", \"counter\": ";
+        report += std::to_string(i->counter);
             
-            report.info += ", \"time_of_survey\": \"";
-            report.info += GetNodeTime();
-            report.info += "\" }";
+        report += ", \"time_of_survey\": \"";
+        report += GetNodeTime();
+        report += "\" }";
             
-            if ( j < hids_hostname.size() - 1) { 
-                report.info += ", "; 
-                j++;
-            }
+        if ( j < hids_hostname.size() - 1) { 
+            report += ", "; 
+            j++;
         }
-        report.info += " ] }";
-        
-        report.SetEventType(et_hids_hostname);
-        
-        sk.SendMessage(&report);
-        
-        report.info.clear();
     }
-    
-    
-clear_hids_hostname:    
+    report += " ] }";
+        
+    q_stats_ids.push(report);
     
     hids_hostname.clear();
 }
@@ -287,55 +298,159 @@ void StatIds::UpdateHidsLocation(IdsRecord r) {
     for(i = hids_location.begin(), end = hids_location.end(); i != end; ++i) {
         if (i->ref_id.compare(r.ref_id) == 0)  {      
             if (i->location.compare(r.location) == 0) {
-                i->counter++;
-                return;
+                if (i->agent.compare(r.hostname) == 0) {
+                    i->counter++;
+                    return;
+                }
             }
         }
     }  
-    hids_location.push_back(HidsLocation(r.ref_id, r.location));
+    hids_location.push_back(HidsLocation(r.ref_id, r.location, r.hostname));
 }
 
 void StatIds::FlushHidsLocation() {
         
-    if (sk.GetStateCtrl()) {
+    string report = "{ \"type\": \"hids_location\", \"data\" : [ ";
         
-        report.info = "{ \"hids_location\" : [ ";
-        int j = 0;
+    int j = 0;
+    std::vector<HidsLocation>::iterator i, end;
         
-        std::vector<HidsLocation>::iterator i, end;
-        
-        for(i = hids_location.begin(), end = hids_location.end(); i != end; ++i) {
+    for(i = hids_location.begin(), end = hids_location.end(); i != end; ++i) {
                     
-            report.info += "{ \"ref_id\": \"";
-            report.info += i->ref_id;
+        report += "{ \"ref_id\": \"";
+        report += i->ref_id;
             
-            report.info += "\", \"location\": \"";
-            report.info += i->location;
+        report += "\", \"location\": \"";
+        report += i->location;
             
-            report.info += "\", \"counter\": ";
-            report.info += std::to_string(i->counter);
+        report += "\", \"agent\": \"";
+        report += i->agent;
             
-            report.info += ", \"time_of_survey\": \"";
-            report.info += GetNodeTime();
-            report.info += "\" }";
+        report += "\", \"counter\": ";
+        report += std::to_string(i->counter);
             
-            if ( j < hids_location.size() - 1) { 
-                report.info += ", "; 
-                j++;
-            }
+        report += ", \"time_of_survey\": \"";
+        report += GetNodeTime();
+        report += "\" }";
+            
+        if ( j < hids_location.size() - 1) { 
+            report += ", "; 
+            j++;
         }
-        report.info += " ] }";
-        
-        report.SetEventType(et_hids_location);
-        
-        sk.SendMessage(&report);
-        
-        report.info.clear();
     }
-    
-clear_hids_location:    
+    report += " ] }";
+        
+    q_stats_ids.push(report);
     
     hids_location.clear();
+}
+
+void StatIds::UpdateFimCause(IdsRecord r) {
+    
+    std::vector<FimCause>::iterator i, end;
+    
+    for(i = fim_cause.begin(), end = fim_cause.end(); i != end; ++i) {
+        if (i->ref_id.compare(r.ref_id) == 0)  {      
+            if (i->cause.compare(r.desc) == 0) {
+                if (i->agent.compare(r.hostname) == 0) {
+                    i->counter++;
+                    return;
+                }
+            }
+        }
+    }  
+    fim_cause.push_back(FimCause(r.ref_id, r.desc, r.hostname));
+}
+
+void StatIds::FlushFimCause() {
+        
+    string report = "{ \"type\": \"fim_cause\", \"data\" : [ ";
+        
+    int j = 0;
+    std::vector<FimCause>::iterator i, end;
+        
+    for(i = fim_cause.begin(), end = fim_cause.end(); i != end; ++i) {
+                    
+        report += "{ \"ref_id\": \"";
+        report += i->ref_id;
+            
+        report += "\", \"cause\": \"";
+        report += i->cause;
+            
+        report += "\", \"agent\": \"";
+        report += i->agent;
+            
+        report += "\", \"counter\": ";
+        report += std::to_string(i->counter);
+            
+        report += ", \"time_of_survey\": \"";
+        report += GetNodeTime();
+        report += "\" }";
+            
+        if ( j < fim_cause.size() - 1) { 
+            report += ", "; 
+            j++;
+        }
+    }
+    report += " ] }";
+        
+    q_stats_ids.push(report);
+    
+    fim_cause.clear();
+}
+
+void StatIds::UpdateFimFile(IdsRecord r) {
+    
+    std::vector<FimFile>::iterator i, end;
+    
+    for(i = fim_file.begin(), end = fim_file.end(); i != end; ++i) {
+        if (i->ref_id.compare(r.ref_id) == 0)  {      
+            if (i->file.compare(r.location) == 0) {
+                if (i->agent.compare(r.hostname) == 0) {
+                    i->counter++;
+                    return;
+                }
+            }
+        }
+    }  
+    fim_file.push_back(FimFile(r.ref_id, r.location, r.hostname));
+}
+
+void StatIds::FlushFimFile() {
+        
+    string report = "{ \"type\": \"fim_file\", \"data\" : [ ";
+        
+    int j = 0;
+    std::vector<FimFile>::iterator i, end;
+        
+    for(i = fim_file.begin(), end = fim_file.end(); i != end; ++i) {
+                    
+        report += "{ \"ref_id\": \"";
+        report += i->ref_id;
+            
+        report += "\", \"file\": \"";
+        report += i->file;
+            
+        report += "\", \"agent\": \"";
+        report += i->agent;
+            
+        report += "\", \"counter\": ";
+        report += std::to_string(i->counter);
+            
+        report += ", \"time_of_survey\": \"";
+        report += GetNodeTime();
+        report += "\" }";
+            
+        if ( j < fim_file.size() - 1) { 
+            report += ", "; 
+            j++;
+        }
+    }
+    report += " ] }";
+        
+    q_stats_ids.push(report);
+    
+    fim_file.clear();
 }
 
 void StatIds::UpdateIdsCategory(IdsRecord r) {
@@ -346,64 +461,61 @@ void StatIds::UpdateIdsCategory(IdsRecord r) {
         std::vector<IdsCategory>::iterator i, end;
         
         for(i = ids_category.begin(), end = ids_category.end(); i != end; ++i) {
-            if (i->ref_id.compare(r.ref_id) == 0)  {  
-                if (i->ids_cat.compare(j) == 0) {
-                    i->counter++;
-                    flag = true;
+            if (i->ref_id.compare(r.ref_id) == 0)  { 
+                if (i->ids_type == r.ids_type) {
+                    if (i->ids_cat.compare(j) == 0) {
+                        if (i->agent.compare(r.hostname) == 0) {
+                            i->counter++;
+                            flag = true;
+                        }
+                    }
                 }
             }
         }
         
         if (!flag) {
-            ids_category.push_back(IdsCategory(r.ids_type, r.ref_id, j));
+            ids_category.push_back(IdsCategory( r.ref_id, r.ids_type, j, r.hostname));
             flag = false;
         }
-        
     }  
 }
 
 void StatIds::FlushIdsCategory() {
     
-    if (sk.GetStateCtrl()) {
+    string report = "{ \"type\": \"ids_cat\", \"data\" : [ ";
         
-        report.info = "{ \"ids_cat\" : [ ";
-        int j = 0;
+    int j = 0;
+    std::vector<IdsCategory>::iterator i, end;
         
-        std::vector<IdsCategory>::iterator i, end;
-        
-        for(i = ids_category.begin(), end = ids_category.end(); i != end; ++i) {
+    for(i = ids_category.begin(), end = ids_category.end(); i != end; ++i) {
                     
-            report.info += "{ \"ref_id\": \"";
-            report.info += i->ref_id;
+        report += "{ \"ref_id\": \"";
+        report += i->ref_id;
             
-            report.info += "\", \"ids_type\": ";
-            report.info += std::to_string(i->ids_type);
+        report += "\", \"ids_type\": ";
+        report += std::to_string(i->ids_type);
             
-            report.info += ", \"category\": \"";
-            report.info += i->ids_cat;
+        report += ", \"category\": \"";
+        report += i->ids_cat;
             
-            report.info += "\", \"counter\": ";
-            report.info += std::to_string(i->counter);
+        report += "\", \"agent\": \"";
+        report += i->agent;
             
-            report.info += ", \"time_of_survey\": \"";
-            report.info += GetNodeTime();
-            report.info += "\" }";
+        report += "\", \"counter\": ";
+        report += std::to_string(i->counter);
             
-            if ( j < ids_category.size() - 1) { 
-                report.info += ", "; 
-                j++;
-            }
+        report += ", \"time_of_survey\": \"";
+        report += GetNodeTime();
+        report += "\" }";
+            
+        if ( j < ids_category.size() - 1) { 
+            report += ", "; 
+            j++;
         }
-        report.info += " ] }";
-        
-        report.SetEventType(et_ids_cat);
-        
-        sk.SendMessage(&report);
-        
-        report.info.clear();
     }
-    
-clear_ids_category:    
+    report += " ] }";
+        
+    q_stats_ids.push(report);
     
     ids_category.clear();
 }
@@ -413,65 +525,64 @@ void StatIds::UpdateIdsEvent(IdsRecord r) {
     std::vector<IdsEvent>::iterator i, end;
     
     for(i = ids_event.begin(), end = ids_event.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {     
-            if (i->event == r.event) {
-                i->counter++;
-                return;
+        if (i->ref_id.compare(r.ref_id) == 0)  {  
+            if (i->ids_type == r.ids_type) {
+                if (i->event == r.event) {
+                    if (i->agent.compare(r.hostname) == 0) {
+                        i->counter++;
+                        return;
+                    }
+                }
             }  
         }
-    }  
-    ids_event.push_back(IdsEvent(r.ids_type, r.ref_id, r.event, r.severity, r.desc));
+    } 
+    
+    ids_event.push_back(IdsEvent( r.ref_id, r.ids_type, r.event, r.severity, r.desc, r.hostname));
 }
 
 void StatIds::FlushIdsEvent() {
     
-    if (sk.GetStateCtrl()) {
+    string report = "{ \"type\": \"ids_event\", \"data\" : [ ";
         
-        report.info = "{ \"ids_event\" : [ ";
-        int j = 0;
+    int j = 0;
+    std::vector<IdsEvent>::iterator i, end;
         
-        std::vector<IdsEvent>::iterator i, end;
-        
-        for(i = ids_event.begin(), end = ids_event.end(); i != end; ++i) {
+    for(i = ids_event.begin(), end = ids_event.end(); i != end; ++i) {
                     
-            report.info += "{ \"ref_id\": \"";
-            report.info += i->ref_id;
+        report += "{ \"ref_id\": \"";
+        report += i->ref_id;
             
-            report.info += "\", \"ids_type\": ";
-            report.info += std::to_string(i->ids_type);
+        report += "\", \"ids_type\": ";
+        report += std::to_string(i->ids_type);
             
-            report.info += ", \"event\": ";
-            report.info += std::to_string(i->event);
+        report += ", \"event\": ";
+        report += std::to_string(i->event);
             
-            report.info += ", \"severity\": ";
-            report.info += std::to_string(i->severity);
+        report += ", \"severity\": ";
+        report += std::to_string(i->severity);
             
-            report.info += ", \"counter\": ";
-            report.info += std::to_string(i->counter);
+        report += ", \"counter\": ";
+        report += std::to_string(i->counter);
             
-            report.info += ", \"description\": \"";
-            report.info += i->desc;
+        report += ", \"description\": \"";
+        report += i->desc;
             
-            report.info += "\", \"time_of_survey\": \"";
-            report.info += GetNodeTime();
+        report += "\", \"agent\": \"";
+        report += i->agent;
             
-            report.info += "\" }";
+        report += "\", \"time_of_survey\": \"";
+        report += GetNodeTime();
             
-            if ( j < ids_category.size() - 1) { 
-                report.info += ", "; 
-                j++;
-            }
+        report += "\" }";
+            
+        if ( j < ids_category.size() - 1) { 
+            report += ", "; 
+            j++;
         }
-        report.info += " ] }";
-        
-        report.SetEventType(et_ids_event);
-        
-        sk.SendMessage(&report);
-        
-        report.info.clear();
     }
-    
-clear_ids_event:    
+    report += " ] }";
+        
+    q_stats_ids.push(report);
     
     ids_event.clear();
 }
@@ -484,25 +595,23 @@ void StatIds::UpdateHidsAlerts(IdsRecord r) {
     for(i = hids_alerts_list.begin(), end = hids_alerts_list.end(); i != end; ++i) {
         if (i->ref_id.compare(r.ref_id) == 0)  {     
             if (i->event == r.event) {
-                if (i->src_ip.compare(r.src_ip) == 0) { 
-                    if (i->hostname.compare(r.hostname) == 0) { 
-                        if (i->location.compare(r.location) == 0) {
-                            //get current time
-                            current_time = time(NULL);
-                            i->count++;    
-                            if ((i->alert_time + i->agr.in_period) < current_time) {
-                                if (i->count >= i->agr.reproduced) {
-                                    SendHidsAlert(i, i->count);
-                                    hids_alerts_list.erase(i);
-                                    return;
-                                }
-                                else {
-                                    hids_alerts_list.erase(i);
-                                    goto new_hids_alert;
-                                }
+                if (i->hostname.compare(r.hostname) == 0) { 
+                    if (i->regex.compare(r.regex) == 0)  {
+                        //get current time
+                        current_time = time(NULL);
+                        i->count++;    
+                        if ((i->alert_time + i->agr.in_period) < current_time) {
+                            if (i->count >= i->agr.reproduced) {
+                                SendHidsAlert(i, i->count);
+                                hids_alerts_list.erase(i);
+                                return;
                             }
-                            return;
+                            else {
+                                hids_alerts_list.erase(i);
+                                goto new_hids_alert;
+                            }
                         }
+                        return;
                     }
                 }
             }  
@@ -516,50 +625,47 @@ new_hids_alert:
 void StatIds::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     stringstream ss;
     
-    if (sk.GetStateCtrl()) {
+    sk.alert.ref_id = r->ref_id;
     
-        sk.alert.ref_id = r->ref_id;
-    
-        sk.alert.type = "Alertflex";
+    sk.alert.source = "OSSEC";
         
-        if (r->ids_type == 3) sk.alert.source = "FIM";
-        else sk.alert.source = "HIDS";
+    if (r->ids_type == 1) sk.alert.type = "FIM";
+    else sk.alert.type = "HIDS";
         
-        if (r->agr.new_event != 0) sk.alert.event = r->agr.new_event;
-        else sk.alert.event = r->event;
+    if (r->agr.new_event != 0) sk.alert.event = r->agr.new_event;
+    else sk.alert.event = r->event;
         
-        if (r->agr.new_severity != 0) sk.alert.severity = r->agr.new_severity;
-        else sk.alert.severity = r->severity;
+    if (r->agr.new_severity != 0) sk.alert.severity = r->agr.new_severity;
+    else sk.alert.severity = r->severity;
         
-        copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
-        if (r->agr.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->agr.new_category);
+    copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
+    if (r->agr.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->agr.new_category);
                 
-        if (r->action.compare("none") != 0) sk.alert.action = r->action;
-        else sk.alert.action = "none";
+    if (r->action.compare("none") != 0) sk.alert.action = r->action;
+    else sk.alert.action = "none";
         
-        if (r->agr.new_description.compare("") != 0)  sk.alert.description = r->agr.new_description;
-        else sk.alert.description = r->desc;
+    if (r->agr.new_description.compare("") != 0)  sk.alert.description = r->agr.new_description;
+    else sk.alert.description = r->desc;
         
-        sk.alert.srcip = r->src_ip;
+    sk.alert.srcip = r->src_ip;
     
-        sk.alert.dstip = r->dst_ip;
+    sk.alert.dstip = r->dst_ip;
         
-        sk.alert.hostname = r->hostname;
+    sk.alert.hostname = r->hostname;
         
-        sk.alert.location = r->location;
+    sk.alert.location = r->location;
         
-        ss << "Message has been repeated ";
-        ss << c;
-        ss << " times";
+    ss << "Message has been repeated ";
+    ss << c;
+    ss << " times";
     
-        sk.alert.info = ss.str();
+    sk.alert.info = ss.str();
         
-        sk.alert.event_json = "";
+    sk.alert.event_json = "";
         
-        sk.alert.status = "aggregated_new";
+    sk.alert.status = "aggregated_new";
     
-        sk.SendAlert();
-    }
+    sk.SendAlert();
 }
 
 void StatIds::FlushHidsAlert() {
@@ -581,13 +687,13 @@ void StatIds::UpdateNidsAlerts(IdsRecord r) {
     for(i = nids_alerts_list.begin(), end = nids_alerts_list.end(); i != end; ++i) {
         if (i->ref_id.compare(r.ref_id) == 0)  {     
             if (i->event == r.event) {
-                if (i->src_ip.compare(r.src_ip) == 0) { 
-                    if (i->dst_ip.compare(r.dst_ip) == 0) {
+                if (i->hostname.compare(r.hostname) == 0) { 
+                    if (i->regex.compare(r.regex) == 0)  {
                         
                         //get current time
                         current_time = time(NULL);
-                            i->count++;  
-                            if ((i->alert_time + i->agr.in_period) < current_time) {
+                        i->count++;  
+                        if ((i->alert_time + i->agr.in_period) < current_time) {
                             if (i->count >= i->agr.reproduced) {
                                 SendNidsAlert(i, i->count);
                                 nids_alerts_list.erase(i);
@@ -611,48 +717,45 @@ new_nids_alert:
 void StatIds::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     stringstream ss;
     
-    if (sk.GetStateCtrl()) {
+    sk.alert.ref_id = r->ref_id;
     
-        sk.alert.ref_id = r->ref_id;
+    sk.alert.source = "Suricata";
+    sk.alert.type = "NIDS";
     
-        sk.alert.source = "NIDS";
-        sk.alert.type = "Alertflex";
-    
-        if (r->agr.new_event != 0) sk.alert.event = r->agr.new_event;
-        else sk.alert.event = r->event;
+    if (r->agr.new_event != 0) sk.alert.event = r->agr.new_event;
+    else sk.alert.event = r->event;
         
-        if (r->agr.new_severity != 0) sk.alert.severity = r->agr.new_severity;
-        else sk.alert.severity = r->severity;
+    if (r->agr.new_severity != 0) sk.alert.severity = r->agr.new_severity;
+    else sk.alert.severity = r->severity;
         
-        copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
-        if (r->agr.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->agr.new_category);
+    copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
+    if (r->agr.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->agr.new_category);
               
-        if (r->action.compare("none") != 0) sk.alert.action = r->action;
-        else sk.alert.action = "none";
+    if (r->action.compare("none") != 0) sk.alert.action = r->action;
+    else sk.alert.action = "none";
         
-        if (r->agr.new_description.compare("") != 0)  sk.alert.description = r->agr.new_description;
-        else sk.alert.description = r->desc;
+    if (r->agr.new_description.compare("") != 0)  sk.alert.description = r->agr.new_description;
+    else sk.alert.description = r->desc;
         
-        sk.alert.srcip = r->src_ip;
+    sk.alert.srcip = r->src_ip;
     
-        sk.alert.dstip = r->dst_ip;
+    sk.alert.dstip = r->dst_ip;
     
-        sk.alert.hostname = "";
+    sk.alert.hostname = "";
         
-        sk.alert.location = "";       
+    sk.alert.location = "";       
     
-        ss << "Message has been repeated ";
-        ss << c;
-        ss << " times";
+    ss << "Message has been repeated ";
+    ss << c;
+    ss << " times";
     
-        sk.alert.info = ss.str();
+    sk.alert.info = ss.str();
         
-        sk.alert.event_json = "";
+    sk.alert.event_json = "";
     
-        sk.alert.status = "aggregated_new";
+    sk.alert.status = "aggregated_new";
     
-        sk.SendAlert();
-    }
+    sk.SendAlert();
 }
 
 void StatIds::FlushNidsAlert() {
@@ -666,7 +769,6 @@ void StatIds::FlushNidsAlert() {
             nids_alerts_list.erase(i++);
     }
 }
-
 
 
 

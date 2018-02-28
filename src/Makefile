@@ -135,7 +135,7 @@ install:
 		gunzip GeoLiteCity.dat.gz;\
 		mkdir /etc/alertflex/geo;\
 		mv GeoLiteCity.dat /etc/alertflex/geo/;\
-	fi
+	fi;
 	cp ./etc/filters.json /etc/alertflex
 	cp ./etc/alertflex.yaml /etc/alertflex
 

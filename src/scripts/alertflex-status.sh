@@ -1,9 +1,11 @@
 #!/bin/bash
-echo "************************"
-echo "* Status of local node *"
-echo "************************"
+echo "**********************************"
+echo "* Status of alertflex local node *"
+echo "**********************************"
 echo
 altprobe status
+echo
+service activemq status
 echo
 service suricata status
 echo

@@ -10,20 +10,19 @@
 
 #include <vector>
 
-#include "sinks.h"
 #include "ids.h"
 #include "config.h"
+#include "source.h"
+#include "filters.h"
 
 using namespace std;
 
 class Ids {
 public:
-    int ids_type; // 1 - suricata, 2 - ossec
     unsigned int counter;
     string ref_id;
     
-    Ids (int type, string id) {  
-        ids_type = type;
+    Ids (string id) {  
         counter = 1;
         ref_id = id;
     }
@@ -32,18 +31,22 @@ public:
 class NidsSrcIp : public Ids {
 public: 
     string ip;
+    string agent;
         
-    NidsSrcIp (string id, string i) : Ids(1, id)  {
+    NidsSrcIp (string id, string i, string a) : Ids(id)  {
         ip = i;
+        agent = a;
     }
 };
 
 class NidsDstIp : public Ids {
 public: 
     string ip;
+    string agent;
     
-    NidsDstIp (string id, string i) : Ids(1, id)  {
+    NidsDstIp (string id, string i, string a) : Ids(id)  {
         ip = i;
+        agent = a;
     }
 };
 
@@ -51,7 +54,7 @@ class HidsHostname : public Ids {
 public: 
     string hostname;
     
-    HidsHostname (string id, string h) : Ids(2, id)  {
+    HidsHostname (string id, string h) : Ids(id)  {
         hostname = h;
     }
 };
@@ -59,42 +62,72 @@ public:
 class HidsLocation : public Ids {
 public: 
     string location;
+    string agent;
     
-    HidsLocation (string id, string l) : Ids(2, id)  {
+    HidsLocation (string id, string l, string a) : Ids(id)  {
         location = l;
+        agent = a;
+    }
+};
+
+class FimFile : public Ids {
+public: 
+    string file;
+    string agent;
+    
+    FimFile (string id, string f, string a) : Ids(id)  {
+        file = f;
+        agent = a;
+    }
+};
+
+class FimCause : public Ids {
+public: 
+    string cause;
+    string agent;
+    
+    FimCause (string id, string c, string a) : Ids(id)  {
+        cause = c;
+        agent = a;
     }
 };
 
 class IdsCategory : public Ids {
 public: 
+    int ids_type;
     string ids_cat;
+    string agent;
     
-    IdsCategory (int type, string id, string cat) : Ids(type, id)  {
+    IdsCategory ( string id, int type, string cat, string a) : Ids(id)  {
         ids_cat = cat;
+        ids_type = type;
+        agent = a;
     }
 };
 
 class IdsEvent : public Ids  {
 public: 
+    int ids_type;
     unsigned int event;
     unsigned int severity;
     string desc;
+    string agent;
     
-    IdsEvent (int type, string id, unsigned int e, unsigned int s, string d) : Ids(type, id)  {
+    IdsEvent (string id, int type, unsigned int e, unsigned int s, string d, string a) : Ids(id)  {
         event = e;
         severity = s;
+        ids_type = type;
         desc = d;
+        agent = a;
     }
 };
 
-class StatIds : public CollectorObject {
+
+class StatIds : public Source {
 public:  
     
-    int statids_status;
-    
-    Sinks sk;
-    FiltersSingleton fs;
-    Report report;
+    IdsBuffers mem_mon;
+    int counter;
     
     //waiting alerts 
     std::list<IdsRecord> hids_alerts_list;
@@ -110,19 +143,21 @@ public:
     
     std::vector<HidsLocation> hids_location;
     
+    std::vector<FimFile> fim_file;
+    
+    std::vector<FimCause> fim_cause;
+    
     std::vector<IdsCategory> ids_category;
     
     std::vector<IdsEvent> ids_event;
     
-    StatIds () {
-        statids_status = 0;
-    }
+    virtual int Open();
+    virtual void Close();
     
     virtual int GetConfig();
-    int Open();
-    void Close();
     
     int Go();
+    void PushRecord(IdsRecord rec);
     void ProcessStatistic();
     void RoutineJob();
     
@@ -133,7 +168,7 @@ public:
     void UpdateNidsAlerts(IdsRecord r);
     void SendNidsAlert(std::list<IdsRecord>::iterator r, int c);
     void FlushNidsAlert();
-   
+    
     void UpdateNidsSrcIp(IdsRecord r);
     void FlushNidsSrcIp();
     
@@ -146,18 +181,25 @@ public:
     void UpdateHidsLocation(IdsRecord r);
     void FlushHidsLocation();
     
+    void UpdateFimCause(IdsRecord r);
+    void FlushFimCause();
+    
+    void UpdateFimFile(IdsRecord r);
+    void FlushFimFile();
+    
     void UpdateIdsCategory(IdsRecord r);
     void FlushIdsCategory();
     
     void UpdateIdsEvent(IdsRecord r);
     void FlushIdsEvent();
     
-    int GetStatus() { 
-        if (sk.GetStateCtrl() == 0) statids_status = 0;
-        return statids_status; 
+    IdsBuffers* GetBuffers(void) {
+        return &mem_mon;
     }
-        
+    
 };
+
+extern boost::lockfree::spsc_queue<string> q_stats_ids;
 
 #endif	/* STAT_IDS_H */
 
