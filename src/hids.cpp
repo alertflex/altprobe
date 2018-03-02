@@ -141,7 +141,7 @@ int Hids::ParsJson(char* redis_payload) {
     
     string loc = pt.get<string>("location","");
     
-    if (loc.compare("Wazuh-VULS") == 0 && node_ver.compare("pro") == 0) {
+    if (loc.compare("Wazuh-VULS") == 0 ) {
         
         stringstream report;
         
@@ -219,6 +219,52 @@ int Hids::ParsJson(char* redis_payload) {
         return 0;
     }
     
+    string mon_con = pt.get<string>("data.audit.key","");
+    
+    if (mon_con.compare("monitor-connections") == 0) {
+        
+        stringstream report;
+        
+        report << "{\"version\": \"1.1\",\"host\":\"";
+        report << node_id;
+        
+        report << "\",\"short_message\":\"auditd\"";
+        report << ",\"full_message\":\"Network activity of process from Auditd\"";
+        report << ",\"level\":";
+        report << 1;
+        report << ",\"_event_type\":\"monitor-connections\"";
+        report << ",\"_time_of_event\":\"";
+        report << GetGraylogFormat();
+    
+        report << "\",\"_description\":\"";
+        report << pt.get<string>("rule.description","");
+                
+        report << "\",\"_agentname\":\"";
+        report << pt.get<string>("agent.name","");
+        
+        report << "\",\"_full_log\":\"";
+        string full_log = pt.get<string>("full_log","");
+        ReplaceAll(full_log, "\"", "");
+        report << full_log;
+        
+        report << "\",\"_pid\":\"";
+        report << pt.get<string>("data.audit.pid","");
+        
+        report << "\",\"_command\":\"";
+        report <<  pt.get<string>("data.audit.command","");
+        
+        report << "\",\"_exe\":\"";
+        report <<  pt.get<string>("data.audit.exe","");
+        
+        report << "\"}";
+    
+        q_logs_hids.push(report.str());
+        
+        pt.clear();
+        pt1.clear();
+        return 0;
+    }
+    
     string desc = pt.get<string>("rule.description","");
     
     
@@ -226,14 +272,14 @@ int Hids::ParsJson(char* redis_payload) {
         
         stringstream report;
         
-        report << "{\"version\": \"1.1\",\"node\":\"";
+        report << "{\"version\": \"1.1\",\"host\":\"";
         report << node_id;
         
         report << "\",\"short_message\":\"sysmon\"";
         report << ",\"full_message\":\"Network activity of process from SysMon\"";
         report << ",\"level\":";
         report << 1;
-        report << ",\"event_type\":\"sysmon\"";
+        report << ",\"_event_type\":\"monitor-connections\"";
         report << ",\"_time_of_event\":\"";
         report << GetGraylogFormat();
     
@@ -370,7 +416,7 @@ void Hids::CreateLog() {
     
     stringstream ss;
     
-    ss << "{\"version\": \"1.1\",\"node\":\"";
+    ss << "{\"version\": \"1.1\",\"host\":\"";
     ss << node_id;
     if (rec.file.filename.compare("") != 0) {
         ss << "\",\"short_message\":\"fim\"";
@@ -397,7 +443,7 @@ void Hids::CreateLog() {
         }
     }    
     ss << level;
-    ss << ",\"event_type\":\"ossec\"";
+    ss << ",\"_event_type\":\"ossec\"";
     ss << ",\"_ossec-level\":";
     ss << rec.rule.level;
     ss << ",\"_time_of_event\":\"";

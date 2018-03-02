@@ -19,7 +19,6 @@
 
 
 string CollectorObject::node_id;
-string CollectorObject::node_ver;
 int CollectorObject::timezone = 0;
 int CollectorObject::log_size = 0;
 long CollectorObject::gosleep_timer = 0;
@@ -34,7 +33,6 @@ int CollectorObject::GetConfig() {
     ConfigYaml* cy = new ConfigYaml( "collector");
     
     cy->addKey("id");
-    cy->addKey("ver");
     cy->addKey("time_zone");
     cy->addKey("log_size");
     cy->addKey("startup_timer");
@@ -46,13 +44,6 @@ int CollectorObject::GetConfig() {
     
     if (!node_id.compare("")) {
         SysLog("config file error: parameter collector id");
-        return 0;
-    }
-    
-    node_ver = cy->getParameter("ver");
-    
-    if (!node_ver.compare("")) {
-        SysLog("config file error: parameter collector ver");
         return 0;
     }
     

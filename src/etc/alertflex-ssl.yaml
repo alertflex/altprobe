@@ -6,8 +6,7 @@
 # Collector version 0.7
 collector:
   id: "_node_id"
-  ver: "free"
-  
+    
   # time difference between collector and controller's, timezones in hours
   time_zone: 0
   # save events/logs to local path - /var/log/alertflex, if controller isn't available

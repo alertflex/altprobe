@@ -336,7 +336,7 @@ void Nids::CreateLogPayload(int r) {
             
         case 1: // alert record
     
-            ss <<  "{\"version\": \"1.1\",\"node\":\"";
+            ss <<  "{\"version\": \"1.1\",\"host\":\"";
             ss <<  node_id;
             ss << "\",\"short_message\":\"nids\"";
             ss << ",\"full_message\":\"Alert from Suricata NIDS\"";
@@ -396,7 +396,7 @@ void Nids::CreateLogPayload(int r) {
             break;
             
         case 2: // dns record   
-            ss <<  "{\"version\": \"1.1\",\"node\":\"";
+            ss <<  "{\"version\": \"1.1\",\"host\":\"";
             ss <<  node_id;
             ss <<  "\",\"short_message\":\"dns\"";
             ss <<  ",\"full_message\":\"DNS message from Suricata NIDS\"";
@@ -445,7 +445,7 @@ void Nids::CreateLogPayload(int r) {
             break;
             
         case 3: // ssh record
-            ss <<  "{\"version\": \"1.1\",\"node\":\"";
+            ss <<  "{\"version\": \"1.1\",\"host\":\"";
             ss <<  node_id;
             ss <<  "\",\"short_message\":\"ssh\"";
             ss <<  ",\"full_message\":\"SSH message from Suricata NIDS\"";
@@ -482,7 +482,7 @@ void Nids::CreateLogPayload(int r) {
             break;
             
         case 4: // flow record
-            ss << "{\"version\": \"1.1\",\"node\":\"";
+            ss << "{\"version\": \"1.1\",\"host\":\"";
             ss << node_id;
             ss << "\",\"short_message\":\"netflow\"";
             ss << ",\"full_message\":\"Netflow message from Suricata NIDS\"";

@@ -16,7 +16,6 @@ class CollectorObject {
 public:
     //
     static string node_id;
-    static string node_ver;
     static int timezone;
     static int log_size;
     static long startup_timer;
