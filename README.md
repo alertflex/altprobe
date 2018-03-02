@@ -17,7 +17,7 @@ Altprobe can integrate a Wazuh Host IDS (OSSEC fork) and Suricata Network IDS
 with Log Management platform Graylog and Threat Intelligence Platform MISP. 
 
 Below, a diagram of configuration Altprobe and Alertflex controller for working with GrayLog and MISP
-![](https://github.com/olegzhr/altprobe/blob/master/img/arch.jpg)
+![](https://github.com/olegzhr/altprobe/blob/master/img/arch.png)
 
 ## Documentation (include an installation instructions)
 <http://alertflex.org/doc/>
