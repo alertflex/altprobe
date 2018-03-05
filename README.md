@@ -55,7 +55,7 @@ For enabling an events from Sysmon via Wazuh IDS, please, change level of ``rule
 
 For enabling an network activities events from Auditd, please, use the command: 
 ``auditctl -a exit,always -F arch=b64 -S connect -k linux-connects``
-key value: linux-connects (important!)
+key value: ``linux-connect``s (important!)
 
 For advanced configuration of Altprobe, please, see file: [filters.json](https://github.com/olegzhr/Altprobe/blob/master/src/etc/filters.json)
 
