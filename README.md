@@ -61,8 +61,10 @@ For advanced configuration of Altprobe, please, see file: [filters.json](https:/
 ## Screenshots
 Below, a screenshots of Graylog dashboards for IDS events from Altprobe
 
+Normalized and aggregated alerts from Host and Network IDS:
 ![](https://github.com/olegzhr/altprobe/blob/master/img/graylog1.jpg)
 
+Simple statistics about IDS alerts categories, applications protocols and Geo IP netflow map:
 ![](https://github.com/olegzhr/altprobe/blob/master/img/graylog2.jpg)
 
 ## Requirements
