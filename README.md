@@ -50,9 +50,11 @@ Below, a diagram of configuration Altprobe and Alertflex controller for working 
 <http://alertflex.org/doc/>
 
 NOTE:
+
 For enabling an events from Sysmon via Wazuh IDS, please, change level of rule_id 185001 instead 0  to other value.
 
-For enabling an network activities events from Auditd, please, use the command: auditctl -a exit,always -F arch=b64 -S connect -k linux-connects.
+For enabling an network activities events from Auditd, please, use the command: 
+``auditctl -a exit,always -F arch=b64 -S connect -k linux-connects.``
 key value: linux-connects (important!)
 
 ## Screenshots
