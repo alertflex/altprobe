@@ -50,7 +50,9 @@ Below, a diagram of configuration Altprobe and Alertflex controller for working 
 <http://alertflex.org/doc/>
 
 ## Screenshots
-Below, a screenshot of Graylog dashboards for IDS events from Altprobe
+Below, a screenshots of Graylog dashboards for IDS events from Altprobe
+
+![](https://github.com/olegzhr/altprobe/blob/master/img/graylog.jpg)
 
 ![](https://github.com/olegzhr/altprobe/blob/master/img/graylog.jpg)
 
