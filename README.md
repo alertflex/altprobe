@@ -52,9 +52,9 @@ Below, a diagram of configuration Altprobe and Alertflex controller for working 
 ## Screenshots
 Below, a screenshots of Graylog dashboards for IDS events from Altprobe
 
-![](https://github.com/olegzhr/altprobe/blob/master/img/graylog.jpg)
+![](https://github.com/olegzhr/altprobe/blob/master/img/graylog1.jpg)
 
-![](https://github.com/olegzhr/altprobe/blob/master/img/graylog.jpg)
+![](https://github.com/olegzhr/altprobe/blob/master/img/graylog2.jpg)
 
 ## Requirements
 Altprobe was tested under Ubuntu version 14.04 with Wazuh HIDS (OSSEC fork) version 3.2 and Suricata NIDS version 4.0.3
