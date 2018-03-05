@@ -113,6 +113,7 @@ BwList* Hids::CheckBwList() {
 int Hids::ParsJson(char* redis_payload) {
     
     bpt::ptree pt, pt1;
+    stringstream report;
     string message;
     
     jsonPayload.assign(reply->str, GetBufferSize(reply->str));
@@ -141,9 +142,8 @@ int Hids::ParsJson(char* redis_payload) {
     
     string loc = pt.get<string>("location","");
     
+    
     if (loc.compare("Wazuh-VULS") == 0 ) {
-        
-        stringstream report;
         
         report << "{ \"type\": \"report_vuls\", \"data\": ";
         
@@ -177,7 +177,10 @@ int Hids::ParsJson(char* redis_payload) {
         
         report << severity;
         
-        report << ", \"description\": \"";
+        report <<  ", \"event_time\":\"";
+        report << pt.get<string>("timestamp","");
+        
+        report << "\", \"description\": \"";
         report << pt.get<string>("rule.description","");
         
         report << "\", \"affected_packages\": \"";
@@ -221,28 +224,30 @@ int Hids::ParsJson(char* redis_payload) {
     
     string mon_con = pt.get<string>("data.audit.key","");
     
-    if (mon_con.compare("monitor-connections") == 0) {
-        
-        stringstream report;
+    if (mon_con.compare("linux-connects") == 0) {
         
         report << "{\"version\": \"1.1\",\"host\":\"";
         report << node_id;
+        report << "\",\"short_message\":\"process-linux\"";
+        report << ",\"full_message\":\"Network activity of linux process from Auditd\"";
+	report << ",\"level\":";
+        report << 7;
+        report << ",\"_type\":\"auditd\"";
+        report << ",\"_source\":\"ossec\"";
         
-        report << "\",\"short_message\":\"auditd\"";
-        report << ",\"full_message\":\"Network activity of process from Auditd\"";
-        report << ",\"level\":";
-        report << 1;
-        report << ",\"_event_type\":\"monitor-connections\"";
-        report << ",\"_time_of_event\":\"";
-        report << GetGraylogFormat();
-    
-        report << "\",\"_description\":\"";
-        report << pt.get<string>("rule.description","");
-                
-        report << "\",\"_agentname\":\"";
+	report << ",\"_agentname\":\"";
         report << pt.get<string>("agent.name","");
         
-        report << "\",\"_full_log\":\"";
+        report <<  "\", \"_event_time\":\"";
+        report << pt.get<string>("timestamp","");
+        
+        report << "\",\"_collected_time\":\"";
+        report << GetGraylogFormat();
+		
+	report << "\",\"_description\":\"";
+        report << pt.get<string>("rule.description","");
+        
+	report << "\",\"_full_log\":\"";
         string full_log = pt.get<string>("full_log","");
         ReplaceAll(full_log, "\"", "");
         report << full_log;
@@ -267,27 +272,29 @@ int Hids::ParsJson(char* redis_payload) {
     
     string desc = pt.get<string>("rule.description","");
     
-    
     if (loc.compare("WinEvtLog") == 0 && desc.compare("Sysmon - Event 3") == 0) {
-        
-        stringstream report;
         
         report << "{\"version\": \"1.1\",\"host\":\"";
         report << node_id;
-        
-        report << "\",\"short_message\":\"sysmon\"";
-        report << ",\"full_message\":\"Network activity of process from SysMon\"";
+        report << "\",\"short_message\":\"process-win\"";
+        report << ",\"full_message\":\"Network activity of windows process from Sysmon\"";
         report << ",\"level\":";
-        report << 1;
-        report << ",\"_event_type\":\"monitor-connections\"";
-        report << ",\"_time_of_event\":\"";
-        report << GetGraylogFormat();
-    
-        report << "\",\"_description\":\"";
-        report << desc;
+        report << 7;
+		
+	report << ",\"_type\":\"sysmon\"";
+        report << ",\"_source\":\"hids\"";
         
-        report << "\",\"_agentname\":\"";
+	report << ",\"_agentname\":\"";
         report << pt.get<string>("agent.name","");
+        
+        report << "\", \"_event_time\":\"";
+        report << pt.get<string>("timestamp","");
+        
+        report << "\",\"_collected_time\":\"";
+        report << GetGraylogFormat();
+		
+	report << "\",\"_description\":\"";
+        report << desc;
         
         report << "\",\"_id\":\"";
         report << pt.get<string>("data.id","");
@@ -380,6 +387,8 @@ int Hids::ParsJson(char* redis_payload) {
     
     rec.hostname = pt.get<string>("agent.name","");
     
+    rec.datetime = pt.get<string>("timestamp","");
+    
     rec.location = loc;
     ReplaceAll(rec.location, "\"", "");
     ReplaceAll(rec.location, "\\", "\\\\\\\\");
@@ -414,86 +423,80 @@ int Hids::ParsJson(char* redis_payload) {
 
 void Hids::CreateLog() {
     
-    stringstream ss;
+    stringstream report;
     
-    ss << "{\"version\": \"1.1\",\"host\":\"";
-    ss << node_id;
+    report << "{\"version\": \"1.1\",\"host\":\"";
+    report << node_id;
+    report << "\",\"short_message\":\"event-hids\"";
+    report << ",\"full_message\":\"IDS/FIM event from OSSEC/Wazuh\"";
+    report << ",\"level\":";
+    report << 7;
     if (rec.file.filename.compare("") != 0) {
-        ss << "\",\"short_message\":\"fim\"";
-        ss << ",\"full_message\":\"Alert from OSSEC FIM\"";
+        report << ",\"_type\":\"fim\"";
     } else {
-        ss << "\",\"short_message\":\"hids\"";
-        ss << ",\"full_message\":\"Alert from OSSEC IDS\"";
+        report << ",\"_type\":\"ids\"";
     }
-    ss << ",\"level\":";
+    report << ",\"_source\":\"ossec\"";
+        
+    report << ",\"_agentname\":\"";
+    report << rec.hostname;
     
-    int level;
+    report << "\", \"_event_time\":\"";
+    report << rec.datetime;
     
-    if (rec.rule.level < 2) {
-        level = 0;
-    } else {
-        if (rec.rule.level < 4) {
-            level = 1;
-        } else {
-            if (rec.rule.level < 10) {
-                level = 2;
-            } else {
-                level = 3;
-            }
-        }
-    }    
-    ss << level;
-    ss << ",\"_event_type\":\"ossec\"";
-    ss << ",\"_ossec-level\":";
-    ss << rec.rule.level;
-    ss << ",\"_time_of_event\":\"";
-    ss << GetGraylogFormat();
-    ss << "\",\"_description\":\"";
-    ss << rec.rule.desc;
-    ss << "\",\"_sidid\":";
-    ss << rec.rule.id;
-    ss << ",\"_group_name\":\"";
+    report << "\",\"_collected_time\":\"";
+    report << GetGraylogFormat();
+		
+    report << "\",\"_description\":\"";
+    report << rec.rule.desc;
+    
+    report << ",\"_ossec-level\":";
+    report << rec.rule.level;
+    
+    report << ",\"_sidid\":";
+    report << rec.rule.id;
+	
+    report << ",\"_group_name\":\"";
     
     int j = 0;
     for (string i : rec.rule.list_cats) {
-        if (j != 0 && j < rec.rule.list_cats.size()) ss << ", ";
-        ss << i;
+        if (j != 0 && j < rec.rule.list_cats.size()) report << ", ";
+        report << i;
             
         j++;    
     }
     
-    ss << "\",\"_info\":\"";
-    ss << rec.rule.info;
-    ss << "\",\"_agentname\":\"";
-    ss << rec.hostname;
-    ss << "\",\"_location\":\"";
-    ss << rec.location;
-    ss << "\",\"_srcip\":\"";
-    ss << rec.srcip;
-    ss << "\",\"_dstip\":\"";
-    ss << rec.dstip;
+    report << "\",\"_info\":\"";
+    report << rec.rule.info;
+    report << "\",\"_location\":\"";
+    report << rec.location;
+    report << "\",\"_srcip\":\"";
+    report << rec.srcip;
+    report << "\",\"_dstip\":\"";
+    report << rec.dstip;
     if (rec.file.filename.compare("") != 0) {
-        ss << "\",\"_filename\":\"";
-        ss << rec.file.filename;
-        ss << "\",\"_md5_before\":\"";
-        ss << rec.file.md5_before;
-        ss << "\",\"_md5_after\":\"";
-        ss << rec.file.md5_after;
-        ss << "\",\"_sha1_before\":\"";
-        ss << rec.file.sha1_before;
-        ss << "\",\"_sha1_after\":\"";
-        ss << rec.file.sha1_after;
-        ss << "\",\"_owner_before\":\"";
-        ss << rec.file.owner_before;
-        ss << "\",\"_owner_after\":\"";
-        ss << rec.file.owner_after;
-        ss << "\",\"_gowner_before\":\"";
-        ss << rec.file.gowner_before;
-        ss << "\",\"_gowner_after\":\"";
-        ss << rec.file.gowner_after;
+        report << "\",\"_filename\":\"";
+        report << rec.file.filename;
+        report << "\",\"_md5_before\":\"";
+        report << rec.file.md5_before;
+        report << "\",\"_md5_after\":\"";
+        report << rec.file.md5_after;
+        report << "\",\"_sha1_before\":\"";
+        report << rec.file.sha1_before;
+        report << "\",\"_sha1_after\":\"";
+        report << rec.file.sha1_after;
+        report << "\",\"_owner_before\":\"";
+        report << rec.file.owner_before;
+        report << "\",\"_owner_after\":\"";
+        report << rec.file.owner_after;
+        report << "\",\"_gowner_before\":\"";
+        report << rec.file.gowner_before;
+        report << "\",\"_gowner_after\":\"";
+        report << rec.file.gowner_after;
     }
-    ss << "\"}";
-    q_logs_hids.push(ss.str());
+    report << "\"}";
+    
+    q_logs_hids.push(report.str());
     
 }
 
@@ -644,7 +647,7 @@ void Hids::SendAlert(int s, BwList*  bwl) {
             
         sk.alert.info = ss.str();
     }
-        
+    
     sk.alert.event_json.assign(reply->str, GetBufferSize(reply->str));
         
     sk.SendAlert();

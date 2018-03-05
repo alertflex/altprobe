@@ -323,210 +323,262 @@ int Nids::ParsJson (char* redis_payload) {
 }
 
 void Nids::CreateLogPayload(int r) {
-    /*
-    if (sk.log_type == 1) {
-        logPayload = jsonPayload;
-        return;
-    }*/
     
-    stringstream ss;
-    string strProbeId(node_id);
+    stringstream report;
     
     switch (r) {
             
         case 1: // alert record
     
-            ss <<  "{\"version\": \"1.1\",\"host\":\"";
-            ss <<  node_id;
-            ss << "\",\"short_message\":\"nids\"";
-            ss << ",\"full_message\":\"Alert from Suricata NIDS\"";
-            ss << ",\"level\":";
+            report << "{\"version\": \"1.1\",\"host\":\"";
+            report << node_id;
+            report << "\",\"short_message\":\"event-nids\"";
+            report << ",\"full_message\":\"IDS event from Suricata\"";
+            report << ",\"level\":";
+            report << 7;
+            report << ",\"_type\":\"event\"";
+            report << ",\"_source\":\"suricata\"";
+			
+            report <<  ",\"_event_time\":\"";
+            report <<  rec.time_stamp;
             
-            int level; 
+            report << "\",\"_collected_time\":\"";
+            report << GetGraylogFormat();
+			
+            report << "\",\"_severity\":";
+            report << rec.alert.severity;
+			
+            report <<  "\",\"_category\":\"";
+            report <<  rec.alert.category;
+			
+            report <<  "\",\"_signature\":\"";
+            report <<  rec.alert.signature;
+			
+            report <<  "\",\"_flow_id\":";
+            report <<  rec.flow_id;
+			
+            report <<  ",\"_srcip\":\"";
+            report <<  rec.src_ip;
+			
+            report <<  "\",\"_dstip\":\"";
+            report <<  rec.dst_ip;
+			
+            report << "\",\"_srcip_host\":\"";
+            report << rec.src_agent;
+			
+            report << "\",\"_dstip_host\":\"";
+            report << rec.dst_agent;
+			
+            report <<  "\",\"_srcport\":";
+            report <<  rec.src_port;
+			
+            report <<  ",\"_dstport\":";
+            report <<  rec.dst_port;
+			
+            report <<  ",\"_gid\":";
+            report <<  rec.alert.gid;
+			
+            report <<  ",\"_signature_id\":";
+            report <<  rec.alert.signature_id;
+			
+            report <<  ",\"_action\":\"";
+            report <<  rec.alert.action;
+            report <<  "\"}";
             
-            switch (rec.alert.severity) {
-                case 1 :
-                    level = 3; 
-                    break;
-                case 2 :
-                    level = 2; 
-                    break;
-                case 3 :
-                    level = 1; 
-                    break;
-                default :
-                    level = 0; 
-                    break;
-            }
+            //SysLog((char*) report.str().c_str());
             
-            ss <<  level;
-            
-            ss <<  ",\"_event_type\":\"suricata\"";
-            ss << ",\"_severity\":";
-            ss << rec.alert.severity;
-            ss <<  ",\"_time_of_process\":\"";
-            ss <<  GetGraylogFormat();
-            ss <<  "\",\"_time_stamp\":\"";
-            ss <<  rec.time_stamp;
-            ss <<  "\",\"_category\":\"";
-            ss <<  rec.alert.category;
-            ss <<  "\",\"_signature\":\"";
-            ss <<  rec.alert.signature;
-            ss <<  "\",\"_flow_id\":";
-            ss <<  rec.flow_id;
-            ss <<  ",\"_srcip\":\"";
-            ss <<  rec.src_ip;
-            ss <<  "\",\"_dstip\":\"";
-            ss <<  rec.dst_ip;
-            ss << "\",\"_srcip_type\":\"";
-            ss << rec.src_agent;
-            ss << "\",\"_dstip_type\":\"";
-            ss << rec.dst_agent;
-            ss <<  "\",\"_srcport\":";
-            ss <<  rec.src_port;
-            ss <<  ",\"_dstport\":";
-            ss <<  rec.dst_port;
-            ss <<  ",\"_gid\":";
-            ss <<  rec.alert.gid;
-            ss <<  ",\"_signature_id\":";
-            ss <<  rec.alert.signature_id;
-            ss <<  ",\"_action\":\"";
-            ss <<  rec.alert.action;
-            ss <<  "\"}";
             break;
             
-        case 2: // dns record   
-            ss <<  "{\"version\": \"1.1\",\"host\":\"";
-            ss <<  node_id;
-            ss <<  "\",\"short_message\":\"dns\"";
-            ss <<  ",\"full_message\":\"DNS message from Suricata NIDS\"";
-            ss <<  ",\"level\":";
-            ss <<  0;
-            ss <<  ",\"_event_type\":\"suricata\"";
-            ss <<  ",\"_time_of_process\":\"";
-            ss <<  GetGraylogFormat();
-            ss <<  "\",\"_time_stamp\":\"";
-            ss <<  rec.time_stamp;
-            ss <<  "\",\"_dns_type\":\"";
-            ss <<  rec.dns.type;
-            ss <<  "\",\"_flow_id\":";
-            ss <<  rec.flow_id;
-            ss <<  ",\"_srcip\":\"";
-            ss <<  rec.src_ip;
-            ss <<  "\",\"_dstip\":\"";
-            ss <<  rec.dst_ip;
-            ss << "\",\"_srcip_type\":\"";
-            ss << rec.src_agent;
-            ss << "\",\"_dstip_type\":\"";
-            ss << rec.dst_agent;
-            ss <<  "\",\"_srcport\":";
-            ss <<  rec.src_port;
-            ss <<  ",\"_dstport\":";
-            ss <<  rec.dst_port;
-            ss <<  ",\"_id\":";
-            ss <<  rec.dns.id;
-            ss <<  ",\"_rrname\":\"";
-            ss <<  rec.dns.rrname;
-            ss <<  "\",\"_rrtype\":\"";
-            ss <<  rec.dns.rrtype;
+        case 2: // dns record  
+			
+            report << "{\"version\": \"1.1\",\"host\":\"";
+            report << node_id;
+            report << "\",\"short_message\":\"dns-nids\"";
+            report << ",\"full_message\":\"DNS event from Suricata\"";
+            report << ",\"level\":";
+            report << 7;
+            report << ",\"_type\":\"dns\"";
+            report << ",\"_source\":\"suricata\"";
+		
+            report <<  ",\"_event_time\":\"";
+            report <<  rec.time_stamp;
+            
+            report << "\",\"_collected_time\":\"";
+            report << GetGraylogFormat();
+			
+            report <<  "\",\"_dns_type\":\"";
+            report <<  rec.dns.type;
+			
+            report <<  "\",\"_flow_id\":";
+            report <<  rec.flow_id;
+			
+            report <<  ",\"_srcip\":\"";
+            report <<  rec.src_ip;
+			
+            report <<  "\",\"_dstip\":\"";
+            report <<  rec.dst_ip;
+			
+            report << "\",\"_srcip_host\":\"";
+            report << rec.src_agent;
+			
+            report << "\",\"_dstip_host\":\"";
+            report << rec.dst_agent;
+			
+            report <<  "\",\"_srcport\":";
+            report <<  rec.src_port;
+			
+            report <<  ",\"_dstport\":";
+            report <<  rec.dst_port;
+			
+            report <<  ",\"_id\":";
+            report <<  rec.dns.id;
+			
+            report <<  ",\"_rrname\":\"";
+            report <<  rec.dns.rrname;
+			
+            report <<  "\",\"_rrtype\":\"";
+            report <<  rec.dns.rrtype;
+			
             if (!rec.dns.type.compare("answer")) {
-                ss <<  "\",\"_rcode\":\"";
-                ss <<  rec.dns.rcode;
-                ss <<  "\",\"_rdata\":\"";
-                ss <<  rec.dns.rdata;
-                ss <<  "\",\"_ttl\":";
-                ss <<  rec.dns.ttl;
+			
+                report <<  "\",\"_rcode\":\"";
+                report <<  rec.dns.rcode;
+				
+                report <<  "\",\"_rdata\":\"";
+                report <<  rec.dns.rdata;
+				
+                report <<  "\",\"_ttl\":";
+                report <<  rec.dns.ttl;
             }
             else {
-                ss <<  "\",\"_tx_id\":";
-                ss <<  rec.dns.tx_id;
+                report <<  "\",\"_tx_id\":";
+                report <<  rec.dns.tx_id;
             }
-            ss <<  "}";
+            report <<  "}";
+            
+            //SysLog((char*) report.str().c_str());
+            
             break;
             
         case 3: // ssh record
-            ss <<  "{\"version\": \"1.1\",\"host\":\"";
-            ss <<  node_id;
-            ss <<  "\",\"short_message\":\"ssh\"";
-            ss <<  ",\"full_message\":\"SSH message from Suricata NIDS\"";
-            ss <<  ",\"level\":";
-            ss <<  0;
-            ss <<  ",\"_event_type\":\"suricata\"";
-            ss <<  ",\"_time_of_process\":\"";
-            ss <<  GetGraylogFormat();
-            ss <<  "\",\"_time_stamp\":\"";
-            ss <<  rec.time_stamp;
-            ss <<  "\",\"_flow_id\":";
-            ss <<  rec.flow_id;
-            ss <<  ",\"_srcip\":\"";
-            ss <<  rec.src_ip;
-            ss <<  "\",\"_dstip\":\"";
-            ss <<  rec.dst_ip;
-            ss << "\",\"_srcip_type\":\"";
-            ss << rec.src_agent;
-            ss << "\",\"_dstip_type\":\"";
-            ss << rec.dst_agent;
-            ss <<  "\",\"_srcport\":";
-            ss <<  rec.src_port;
-            ss <<  ",\"_dstport\":";
-            ss <<  rec.dst_port;
-            ss <<  ",\"_client_proto_ver\":\"";
-            ss <<  rec.ssh.client_proto;
-            ss <<  "\",\"_client_sw_ver\":\"";
-            ss <<  rec.ssh.client_sw;
-            ss <<  "\",\"_server_proto_ver\":\"";
-            ss <<  rec.ssh.server_proto;
-            ss <<  "\",\"_server_sw_ver\":\"";
-            ss <<  rec.ssh.server_sw;
-            ss <<  "\"}";
+			
+            report << "{\"version\": \"1.1\",\"host\":\"";
+            report << node_id;
+            report << "\",\"short_message\":\"ssh-nids\"";
+            report << ",\"full_message\":\"SSH event from Suricata\"";
+            report << ",\"level\":";
+            report << 7;
+            report << ",\"_type\":\"ssh\"";
+            report << ",\"_source\":\"suricata\"";
+		
+            report <<  ",\"_event_time\":\"";
+            report <<  rec.time_stamp;
+            
+            report << "\",\"_collected_time\":\"";
+            report << GetGraylogFormat();
+			
+            report <<  "\",\"_flow_id\":";
+            report <<  rec.flow_id;
+			
+            report <<  ",\"_srcip\":\"";
+            report <<  rec.src_ip;
+			
+            report <<  "\",\"_dstip\":\"";
+            report <<  rec.dst_ip;
+			
+            report << "\",\"_srcip_host\":\"";
+            report << rec.src_agent;
+			
+            report << "\",\"_dstip_host\":\"";
+            report << rec.dst_agent;
+			
+            report <<  "\",\"_srcport\":";
+            report <<  rec.src_port;
+			
+            report <<  ",\"_dstport\":";
+            report <<  rec.dst_port;
+			
+            report <<  ",\"_client_proto_ver\":\"";
+            report <<  rec.ssh.client_proto;
+			
+            report <<  "\",\"_client_sw_ver\":\"";
+            report <<  rec.ssh.client_sw;
+			
+            report <<  "\",\"_server_proto_ver\":\"";
+            report <<  rec.ssh.server_proto;
+			
+            report <<  "\",\"_server_sw_ver\":\"";
+            report <<  rec.ssh.server_sw;
+            report <<  "\"}";
+            
+            //SysLog((char*) report.str().c_str());
+            
             break;
             
         case 4: // flow record
-            ss << "{\"version\": \"1.1\",\"host\":\"";
-            ss << node_id;
-            ss << "\",\"short_message\":\"netflow\"";
-            ss << ",\"full_message\":\"Netflow message from Suricata NIDS\"";
-            ss << ",\"level\":";
-            ss << 0;
-            ss << ",\"_event_type\":\"suricata\"";
-            ss << ",\"_time_of_process\":\"";
-            ss << GetGraylogFormat();
-            ss <<  "\",\"_time_stamp\":\"";
-            ss <<  rec.time_stamp;
-            ss << "\",\"_protocol\":\"";
-            ss << rec.protocol;
-            ss << "\",\"_app_proto\":\"";
-            ss << rec.netflow.app_proto;
-            ss <<  "\",\"_flow_id\":";
-            ss <<  rec.flow_id;
-            ss << ",\"_srcip\":\"";
-            ss << rec.src_ip;
-            ss << "\",\"_dstip\":\"";
-            ss << rec.dst_ip;
-            ss << "\",\"_srcip_type\":\"";
-            ss << rec.src_agent;
-            ss << "\",\"_dstip_type\":\"";
-            ss << rec.dst_agent;
-            ss << "\",\"_srcport\":";
-            ss << rec.src_port;
-            ss << ",\"_dstport\":";
-            ss << rec.dst_port;
-            ss << ",\"_bytes\":";
-            ss << rec.netflow.bytes;
-            ss << ",\"_pkts\":";
-            ss << rec.netflow.pkts;
-            ss << ",\"_age\":";
-            ss << rec.netflow.age;
-            ss << ",\"_start\":\"";
-            ss << rec.netflow.start;
-            ss << "\",\"_end\":\"";
-            ss << rec.netflow.end;
-            ss << "\"}";
+		
+            report << "{\"version\": \"1.1\",\"host\":\"";
+            report << node_id;
+            report << "\",\"short_message\":\"netflow-nids\"";
+            report << ",\"full_message\":\"Netflow event from Suricata\"";
+            report << ",\"level\":";
+            report << 7;
+            report << ",\"_type\":\"netflow\"";
+            report << ",\"_source\":\"suricata\"";
+			
+            report <<  ",\"_event_time\":\"";
+            report <<  rec.time_stamp;
+            
+            report << "\",\"_collected_time\":\"";
+            report << GetGraylogFormat();
+			
+            report << "\",\"_protocol\":\"";
+            report << rec.protocol;
+			
+            report << "\",\"_app_proto\":\"";
+            report << rec.netflow.app_proto;
+			
+            report <<  "\",\"_flow_id\":";
+            report <<  rec.flow_id;
+			
+            report << ",\"_srcip\":\"";
+            report << rec.src_ip;
+			
+            report << "\",\"_dstip\":\"";
+            report << rec.dst_ip;
+			
+            report << "\",\"_srcip_host\":\"";
+            report << rec.src_agent;
+			
+            report << "\",\"_dstip_host\":\"";
+            report << rec.dst_agent;
+			
+            report << "\",\"_srcport\":";
+            report << rec.src_port;
+			
+            report << ",\"_dstport\":";
+            report << rec.dst_port;
+			
+            report << ",\"_bytes\":";
+            report << rec.netflow.bytes;
+			
+            report << ",\"_pkts\":";
+            report << rec.netflow.pkts;
+			
+            report << ",\"_age\":";
+            report << rec.netflow.age;
+			
+            report << ",\"_start\":\"";
+            report << rec.netflow.start;
+			
+            report << "\",\"_end\":\"";
+            report << rec.netflow.end;
+			
+            report << "\"}";
             break;
     }
     
-    q_logs_nids.push(ss.str());
-    
+    q_logs_nids.push(report.str());
 }
 
 void Nids::SendAlert(int s, BwList* bwl) {
