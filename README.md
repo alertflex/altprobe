@@ -22,28 +22,28 @@ Below, a diagram of configuration Altprobe and Alertflex controller for working 
 
 ## Type of events (GELF format)
 
-* "short_message":"alert-flex"
+* "short_message":"alert-flex",
 "full_message":"Alert from Alertflex collector/controller"
 
-* "short_message":"event-hids"
+* "short_message":"event-hids",
 "full_message":"IDS/FIM event from OSSEC/Wazuh"
 
-* "short_message":"process-linux"
+* "short_message":"process-linux",
 "full_message":"Network activity of linux process from Auditd"
 
-* "short_message":"process-win"
+* "short_message":"process-win",
 "full_message":"Network activity of windows process from Sysmon"
 
-* "short_message":"event-nids"
+* "short_message":"event-nids",
 "full_message":"IDS event from Suricata"
 
-* "short_message":"dns-nids"
+* "short_message":"dns-nids",
 "full_message":"DNS event from Suricata"
 
-* "short_message":"ssh-nids"
+* "short_message":"ssh-nids",
 "full_message":"SSH event from Suricata"
 
-* "short_message":"netflow-nids"
+* "short_message":"netflow-nids",
 "full_message":"Netflow event from Suricata"
 
 ## Documentation (include an installation instructions)
