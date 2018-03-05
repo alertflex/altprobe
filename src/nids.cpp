@@ -348,7 +348,7 @@ void Nids::CreateLogPayload(int r) {
             report << "\",\"_severity\":";
             report << rec.alert.severity;
 			
-            report <<  "\",\"_category\":\"";
+            report <<  ",\"_category\":\"";
             report <<  rec.alert.category;
 			
             report <<  "\",\"_signature\":\"";

@@ -262,6 +262,8 @@ int Hids::ParsJson(char* redis_payload) {
         report <<  pt.get<string>("data.audit.exe","");
         
         report << "\"}";
+        
+        // SysLog((char*) report.str().c_str());
     
         q_logs_hids.push(report.str());
         
@@ -450,7 +452,7 @@ void Hids::CreateLog() {
     report << "\",\"_description\":\"";
     report << rec.rule.desc;
     
-    report << ",\"_ossec-level\":";
+    report << "\",\"_ossec-level\":";
     report << rec.rule.level;
     
     report << ",\"_sidid\":";
@@ -495,6 +497,8 @@ void Hids::CreateLog() {
         report << rec.file.gowner_after;
     }
     report << "\"}";
+    
+    //SysLog((char*) report.str().c_str());
     
     q_logs_hids.push(report.str());
     
