@@ -57,6 +57,8 @@ For enabling an network activities events from Auditd, please, use the command:
 ``auditctl -a exit,always -F arch=b64 -S connect -k linux-connects``
 key value: linux-connects (important!)
 
+For advanced configuration of Altprobe, please, see file: `filters.json <src/etc/filters.json>`
+
 ## Screenshots
 Below, a screenshots of Graylog dashboards for IDS events from Altprobe
 
