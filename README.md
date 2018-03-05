@@ -61,11 +61,11 @@ For advanced configuration of Altprobe, please, see file: [filters.json](https:/
 ## Screenshots
 Below, a screenshots of Graylog dashboards for IDS events from Altprobe
 
-Normalized and aggregated alerts from Host and Network IDS:
 ![](https://github.com/olegzhr/altprobe/blob/master/img/graylog1.jpg)
+Normalized and aggregated alerts from Host and Network IDS
 
-Simple statistics about IDS alerts categories, applications protocols and Geo IP netflow map:
 ![](https://github.com/olegzhr/altprobe/blob/master/img/graylog2.jpg)
+Simple statistics about IDS alerts categories, applications protocols and Geo IP netflow map
 
 ## Requirements
 Altprobe was tested under Ubuntu version 14.04 with Wazuh HIDS (OSSEC fork) version 3.2 and Suricata NIDS version 4.0.3
