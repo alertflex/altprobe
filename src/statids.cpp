@@ -72,45 +72,43 @@ void StatIds::ProcessStatistic() {
     
     while (!q_nids.empty() || !q_hids.empty()) {
         
-        IdsRecord rec;
-        
         if (!q_nids.empty()) {
-            q_nids.pop(rec);
-            PushRecord(rec);
+            q_nids.pop(ids_rec);
+            PushRecord();
         }
         
         if (!q_hids.empty()) {
-            q_hids.pop(rec);
-            PushRecord(rec);
+            q_hids.pop(ids_rec);
+            PushRecord();
         }
     }       
         
     if (!counter) usleep(GetGosleepTimer()*60);
 }
 
-void StatIds::PushRecord(IdsRecord rec) {
+void StatIds::PushRecord() {
     
-    UpdateIdsCategory(rec);
-    UpdateIdsEvent(rec);
+    UpdateIdsCategory();
+    UpdateIdsEvent();
         
-    if (rec.ids_type == 1) {
-        UpdateFimFile(rec);
-        UpdateFimCause(rec);
+    if (ids_rec.ids_type == 1) {
+        UpdateFimFile();
+        UpdateFimCause();
     }
             
-    if (rec.ids_type == 2) {
-        UpdateHidsHostname(rec);
-        UpdateHidsLocation(rec);
+    if (ids_rec.ids_type == 2) {
+        UpdateHidsHostname();
+        UpdateHidsLocation();
     }
         
-    if (rec.ids_type == 1 || rec.ids_type == 2) {
-        if (rec.agr.reproduced != 0) UpdateHidsAlerts(rec);
+    if (ids_rec.ids_type == 1 || ids_rec.ids_type == 2) {
+        if (ids_rec.agr.reproduced != 0) UpdateHidsAlerts();
     }
         
-    if (rec.ids_type == 3) {
-        UpdateNidsSrcIp(rec);
-        UpdateNidsDstIp(rec);
-        if(rec.agr.reproduced != 0) UpdateNidsAlerts(rec);
+    if (ids_rec.ids_type == 3) {
+        UpdateNidsSrcIp();
+        UpdateNidsDstIp();
+        if(ids_rec.agr.reproduced != 0) UpdateNidsAlerts();
     } 
         
     counter++;
@@ -136,24 +134,24 @@ void StatIds::RoutineJob() {
     FlushIdsEvent();
 }
 
-void StatIds::UpdateNidsSrcIp(IdsRecord r) {
+void StatIds::UpdateNidsSrcIp() {
     
     std::vector<NidsSrcIp>::iterator i, end;
     
     for(i = nids_srcip.begin(), end = nids_srcip.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {  
-            if (i->ip.compare(r.src_ip) == 0) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {  
+            if (i->ip.compare(ids_rec.src_ip) == 0) {
                 i->counter++;
                 return;
             }
         }
     }  
-    nids_srcip.push_back(NidsSrcIp(r.ref_id, r.src_ip, r.hostname));
+    nids_srcip.push_back(NidsSrcIp(ids_rec.ref_id, ids_rec.src_ip, ids_rec.hostname));
 }
 
 void StatIds::FlushNidsSrcIp() {
         
-    string report = "{ \"type\": \"nids_srcip\", \"data\" : [ ";
+    report = "{ \"type\": \"nids_srcip\", \"data\" : [ ";
         
     int j = 0;
         
@@ -186,28 +184,29 @@ void StatIds::FlushNidsSrcIp() {
         
     q_stats_ids.push(report);
     
+    report.clear();
     nids_srcip.clear();
 }
 
 
-void StatIds::UpdateNidsDstIp(IdsRecord r) {
+void StatIds::UpdateNidsDstIp() {
     
     std::vector<NidsDstIp>::iterator i, end;
     
     for(i = nids_dstip.begin(), end = nids_dstip.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {      
-            if (i->ip.compare(r.dst_ip) == 0) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {      
+            if (i->ip.compare(ids_rec.dst_ip) == 0) {
                 i->counter++;
                 return;
             }
         }
     }  
-    nids_dstip.push_back(NidsDstIp(r.ref_id, r.dst_ip, r.location));
+    nids_dstip.push_back(NidsDstIp(ids_rec.ref_id, ids_rec.dst_ip, ids_rec.location));
 }
 
 void StatIds::FlushNidsDstIp() {
         
-    string report = "{ \"type\": \"nids_dstip\", \"data\": [ ";
+    report = "{ \"type\": \"nids_dstip\", \"data\": [ ";
                 
     int j = 0;
     std::vector<NidsDstIp>::iterator i, end;
@@ -238,28 +237,29 @@ void StatIds::FlushNidsDstIp() {
     report += " ] }";
         
     q_stats_ids.push(report);
-        
+    
+    report.clear();    
     nids_dstip.clear();
 }    
 
-void StatIds::UpdateHidsHostname(IdsRecord r) {
+void StatIds::UpdateHidsHostname() {
     
     std::vector<HidsHostname>::iterator i, end;
     
     for(i = hids_hostname.begin(), end = hids_hostname.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {      
-            if (i->hostname.compare(r.hostname) == 0) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {      
+            if (i->hostname.compare(ids_rec.hostname) == 0) {
                 i->counter++;
                 return;
             }
         }
     }  
-    hids_hostname.push_back(HidsHostname(r.ref_id, r.hostname));
+    hids_hostname.push_back(HidsHostname(ids_rec.ref_id, ids_rec.hostname));
 }
 
 void StatIds::FlushHidsHostname() {
         
-    string report = "{ \"type\": \"hids_hostname\", \"data\" : [ ";
+    report = "{ \"type\": \"hids_hostname\", \"data\" : [ ";
         
     int j = 0;
     std::vector<HidsHostname>::iterator i, end;
@@ -288,29 +288,30 @@ void StatIds::FlushHidsHostname() {
         
     q_stats_ids.push(report);
     
+    report.clear();
     hids_hostname.clear();
 }
 
-void StatIds::UpdateHidsLocation(IdsRecord r) {
+void StatIds::UpdateHidsLocation() {
     
     std::vector<HidsLocation>::iterator i, end;
     
     for(i = hids_location.begin(), end = hids_location.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {      
-            if (i->location.compare(r.location) == 0) {
-                if (i->agent.compare(r.hostname) == 0) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {      
+            if (i->location.compare(ids_rec.location) == 0) {
+                if (i->agent.compare(ids_rec.hostname) == 0) {
                     i->counter++;
                     return;
                 }
             }
         }
     }  
-    hids_location.push_back(HidsLocation(r.ref_id, r.location, r.hostname));
+    hids_location.push_back(HidsLocation(ids_rec.ref_id, ids_rec.location, ids_rec.hostname));
 }
 
 void StatIds::FlushHidsLocation() {
         
-    string report = "{ \"type\": \"hids_location\", \"data\" : [ ";
+    report = "{ \"type\": \"hids_location\", \"data\" : [ ";
         
     int j = 0;
     std::vector<HidsLocation>::iterator i, end;
@@ -342,29 +343,30 @@ void StatIds::FlushHidsLocation() {
         
     q_stats_ids.push(report);
     
+    report.clear();
     hids_location.clear();
 }
 
-void StatIds::UpdateFimCause(IdsRecord r) {
+void StatIds::UpdateFimCause() {
     
     std::vector<FimCause>::iterator i, end;
     
     for(i = fim_cause.begin(), end = fim_cause.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {      
-            if (i->cause.compare(r.desc) == 0) {
-                if (i->agent.compare(r.hostname) == 0) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {      
+            if (i->cause.compare(ids_rec.desc) == 0) {
+                if (i->agent.compare(ids_rec.hostname) == 0) {
                     i->counter++;
                     return;
                 }
             }
         }
     }  
-    fim_cause.push_back(FimCause(r.ref_id, r.desc, r.hostname));
+    fim_cause.push_back(FimCause(ids_rec.ref_id, ids_rec.desc, ids_rec.hostname));
 }
 
 void StatIds::FlushFimCause() {
         
-    string report = "{ \"type\": \"fim_cause\", \"data\" : [ ";
+    report = "{ \"type\": \"fim_cause\", \"data\" : [ ";
         
     int j = 0;
     std::vector<FimCause>::iterator i, end;
@@ -396,29 +398,30 @@ void StatIds::FlushFimCause() {
         
     q_stats_ids.push(report);
     
+    report.clear();
     fim_cause.clear();
 }
 
-void StatIds::UpdateFimFile(IdsRecord r) {
+void StatIds::UpdateFimFile() {
     
     std::vector<FimFile>::iterator i, end;
     
     for(i = fim_file.begin(), end = fim_file.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {      
-            if (i->file.compare(r.location) == 0) {
-                if (i->agent.compare(r.hostname) == 0) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {      
+            if (i->file.compare(ids_rec.location) == 0) {
+                if (i->agent.compare(ids_rec.hostname) == 0) {
                     i->counter++;
                     return;
                 }
             }
         }
     }  
-    fim_file.push_back(FimFile(r.ref_id, r.location, r.hostname));
+    fim_file.push_back(FimFile(ids_rec.ref_id, ids_rec.location, ids_rec.hostname));
 }
 
 void StatIds::FlushFimFile() {
         
-    string report = "{ \"type\": \"fim_file\", \"data\" : [ ";
+    report = "{ \"type\": \"fim_file\", \"data\" : [ ";
         
     int j = 0;
     std::vector<FimFile>::iterator i, end;
@@ -450,21 +453,22 @@ void StatIds::FlushFimFile() {
         
     q_stats_ids.push(report);
     
+    report.clear();
     fim_file.clear();
 }
 
-void StatIds::UpdateIdsCategory(IdsRecord r) {
+void StatIds::UpdateIdsCategory() {
     bool flag = false;
     
-    for (string j : r.list_cats) {
+    for (string j : ids_rec.list_cats) {
     
         std::vector<IdsCategory>::iterator i, end;
         
         for(i = ids_category.begin(), end = ids_category.end(); i != end; ++i) {
-            if (i->ref_id.compare(r.ref_id) == 0)  { 
-                if (i->ids_type == r.ids_type) {
+            if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
+                if (i->ids_type == ids_rec.ids_type) {
                     if (i->ids_cat.compare(j) == 0) {
-                        if (i->agent.compare(r.hostname) == 0) {
+                        if (i->agent.compare(ids_rec.hostname) == 0) {
                             i->counter++;
                             flag = true;
                         }
@@ -474,7 +478,7 @@ void StatIds::UpdateIdsCategory(IdsRecord r) {
         }
         
         if (!flag) {
-            ids_category.push_back(IdsCategory( r.ref_id, r.ids_type, j, r.hostname));
+            ids_category.push_back(IdsCategory( ids_rec.ref_id, ids_rec.ids_type, j, ids_rec.hostname));
             flag = false;
         }
     }  
@@ -482,7 +486,7 @@ void StatIds::UpdateIdsCategory(IdsRecord r) {
 
 void StatIds::FlushIdsCategory() {
     
-    string report = "{ \"type\": \"ids_cat\", \"data\" : [ ";
+    report = "{ \"type\": \"ids_cat\", \"data\" : [ ";
         
     int j = 0;
     std::vector<IdsCategory>::iterator i, end;
@@ -517,18 +521,19 @@ void StatIds::FlushIdsCategory() {
         
     q_stats_ids.push(report);
     
+    report.clear();
     ids_category.clear();
 }
 
-void StatIds::UpdateIdsEvent(IdsRecord r) {
+void StatIds::UpdateIdsEvent() {
     
     std::vector<IdsEvent>::iterator i, end;
     
     for(i = ids_event.begin(), end = ids_event.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {  
-            if (i->ids_type == r.ids_type) {
-                if (i->event == r.event) {
-                    if (i->agent.compare(r.hostname) == 0) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {  
+            if (i->ids_type == ids_rec.ids_type) {
+                if (i->event == ids_rec.event) {
+                    if (i->agent.compare(ids_rec.hostname) == 0) {
                         i->counter++;
                         return;
                     }
@@ -537,12 +542,12 @@ void StatIds::UpdateIdsEvent(IdsRecord r) {
         }
     } 
     
-    ids_event.push_back(IdsEvent( r.ref_id, r.ids_type, r.event, r.severity, r.desc, r.hostname));
+    ids_event.push_back(IdsEvent( ids_rec.ref_id, ids_rec.ids_type, ids_rec.event, ids_rec.severity, ids_rec.desc, ids_rec.hostname));
 }
 
 void StatIds::FlushIdsEvent() {
     
-    string report = "{ \"type\": \"ids_event\", \"data\" : [ ";
+    report = "{ \"type\": \"ids_event\", \"data\" : [ ";
         
     int j = 0;
     std::vector<IdsEvent>::iterator i, end;
@@ -584,32 +589,31 @@ void StatIds::FlushIdsEvent() {
         
     q_stats_ids.push(report);
     
+    report.clear();
     ids_event.clear();
 }
 
-void StatIds::UpdateHidsAlerts(IdsRecord r) {
+void StatIds::UpdateHidsAlerts() {
     std::list<IdsRecord>::iterator i, end;
     time_t current_time;
     
     
     for(i = hids_alerts_list.begin(), end = hids_alerts_list.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {     
-            if (i->event == r.event) {
-                if (i->hostname.compare(r.hostname) == 0) { 
-                    if (i->regex.compare(r.regex) == 0)  {
-                        //get current time
-                        current_time = time(NULL);
-                        i->count++;    
-                        if ((i->alert_time + i->agr.in_period) < current_time) {
-                            if (i->count >= i->agr.reproduced) {
-                                SendHidsAlert(i, i->count);
-                                hids_alerts_list.erase(i);
-                                return;
-                            }
-                            else {
-                                hids_alerts_list.erase(i);
-                                goto new_hids_alert;
-                            }
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {     
+            if (i->event == ids_rec.event) {
+                if (i->hostname.compare(ids_rec.hostname) == 0) { 
+                    //get current time
+                    current_time = time(NULL);
+                    i->count++;    
+                    if ((i->alert_time + i->agr.in_period) < current_time) {
+                        if (i->count >= i->agr.reproduced) {
+                            SendHidsAlert(i, i->count);
+                            hids_alerts_list.erase(i);
+                            return;
+                        }
+                        else {
+                            hids_alerts_list.erase(i);
+                            goto new_hids_alert;
                         }
                         return;
                     }
@@ -618,12 +622,11 @@ void StatIds::UpdateHidsAlerts(IdsRecord r) {
         }
     }
 new_hids_alert:
-    r.count = 1;
-    hids_alerts_list.push_back(r);
+    ids_rec.count = 1;
+    hids_alerts_list.push_back(ids_rec);
 }
 
 void StatIds::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
-    stringstream ss;
     
     sk.alert.ref_id = r->ref_id;
     
@@ -655,12 +658,10 @@ void StatIds::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
         
     sk.alert.location = r->location;
         
-    ss << "Message has been repeated ";
-    ss << c;
-    ss << " times";
+    sk.alert.info = "Message has been repeated ";
+    sk.alert.info += std::to_string(c);
+    sk.alert.info += " times";
     
-    sk.alert.info = ss.str();
-        
     sk.alert.event_json = "";
         
     sk.alert.status = "aggregated_new";
@@ -680,28 +681,25 @@ void StatIds::FlushHidsAlert() {
     }
 }
 
-void StatIds::UpdateNidsAlerts(IdsRecord r) {
+void StatIds::UpdateNidsAlerts() {
     std::list<IdsRecord>::iterator i, end;
     time_t current_time;
     
     for(i = nids_alerts_list.begin(), end = nids_alerts_list.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {     
-            if (i->event == r.event) {
-                if (i->hostname.compare(r.hostname) == 0) { 
-                    if (i->regex.compare(r.regex) == 0)  {
-                        
-                        //get current time
-                        current_time = time(NULL);
-                        i->count++;  
-                        if ((i->alert_time + i->agr.in_period) < current_time) {
-                            if (i->count >= i->agr.reproduced) {
-                                SendNidsAlert(i, i->count);
-                                nids_alerts_list.erase(i);
-                            }
-                            else {
-                                nids_alerts_list.erase(i);
-                                goto new_nids_alert;
-                            }
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {     
+            if (i->event == ids_rec.event) {
+                if (i->hostname.compare(ids_rec.hostname) == 0) { 
+                    //get current time
+                    current_time = time(NULL);
+                    i->count++;  
+                    if ((i->alert_time + i->agr.in_period) < current_time) {
+                        if (i->count >= i->agr.reproduced) {
+                            SendNidsAlert(i, i->count);
+                            nids_alerts_list.erase(i);
+                        }
+                        else {
+                            nids_alerts_list.erase(i);
+                            goto new_nids_alert;
                         }
                         return;
                     }
@@ -710,12 +708,11 @@ void StatIds::UpdateNidsAlerts(IdsRecord r) {
         }
     } 
 new_nids_alert:
-    r.count = 1;
-    nids_alerts_list.push_back(r);
+    ids_rec.count = 1;
+    nids_alerts_list.push_back(ids_rec);
 }
 
 void StatIds::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
-    stringstream ss;
     
     sk.alert.ref_id = r->ref_id;
     
@@ -745,12 +742,10 @@ void StatIds::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
         
     sk.alert.location = "";       
     
-    ss << "Message has been repeated ";
-    ss << c;
-    ss << " times";
+    sk.alert.info = "Message has been repeated ";
+    sk.alert.info += std::to_string(c);
+    sk.alert.info += " times";
     
-    sk.alert.info = ss.str();
-        
     sk.alert.event_json = "";
     
     sk.alert.status = "aggregated_new";

@@ -183,9 +183,13 @@ public:
     }
 };
 
+namespace bpt = boost::property_tree;
 
 class Metric : public Source {
 public:
+    
+    bpt::ptree pt;
+    stringstream ss;
     
     //
     MetricMemory rec_mem;
@@ -196,6 +200,16 @@ public:
     
     Metric (string skey) : Source(skey) {
         ClearRecords();
+        ResetStream();
+    }
+    
+    void ResetStream() {
+        ss.str("");
+        ss.clear();
+    }
+    
+    void ResetJsontree() {
+        pt.clear();
     }
     
     int Go();
@@ -214,6 +228,8 @@ public:
         rec_fs.Reset();
         rec_cpu.Reset();
         rec_pro.Reset();
+        ResetJsontree();
+        jsonPayload.clear();
     }
 };
 

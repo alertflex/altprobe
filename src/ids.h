@@ -34,8 +34,7 @@ public:
     Aggregator agr;
     int count;
     time_t alert_time;
-    string regex;
-    
+        
     void Reset() {
         ref_id.clear();
         ids_type = 0;
@@ -52,7 +51,6 @@ public:
         
         agr.reproduced = 0;
         count = 0;
-        regex = "";
         alert_time = time (NULL);
     }
     

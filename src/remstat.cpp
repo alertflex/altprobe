@@ -39,8 +39,6 @@ int RemStat::Go(void) {
     
     while (!q_compliance.empty() || !q_stats_flow.empty() || !q_stats_ids.empty() || !q_stats_collr.empty() || !q_stats_metric.empty()) {
         
-        string rec;
-        
         if (!q_compliance.empty()) {
             q_compliance.pop(rec);
             stats_list.push_back(rec);
@@ -90,26 +88,26 @@ int RemStat::Go(void) {
 void RemStat::ProcessLogs() {
     
     if (!stats_list.empty()) {
-        string stats_string = "{ \"stats\" : [";
+        report = "{ \"stats\" : [";
         
         std::vector<string>::iterator i, end;
         
         int j = 0;
         for(i = stats_list.begin(), end = stats_list.end(); i != end; ++i) {
             
-            stats_string += *i;
+            report += *i;
             
             if ( j < stats_list.size() - 1) {
-                stats_string += ", "; 
+                report += ", "; 
                 j++;
             }
         }
-        stats_string += " ] }";
+        report += " ] }";
+        stats_list.clear();
         
-        std::stringstream ss, comp;
-        ss << stats_string;
+        // SysLog((char*) report.c_str());
         
-        //SysLog((char*) ss.str().c_str());
+        ss << report;
         
         boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
         in.push(boost::iostreams::gzip_compressor());
@@ -123,11 +121,11 @@ void RemStat::ProcessLogs() {
         //string s = std::to_string(rep_size);
         //string output = "stat compressed = " + s;
         //SysLog((char*) output.c_str());
-
-        sk.SendMessage(new BinData(comp.str(),1));
+        bd.data = comp.str();
+        sk.SendMessage(&bd);
+        
+        ResetStreams();
     }
-    
-    stats_list.clear();
 }
 
 long RemStat::ResetEventsVolume() {

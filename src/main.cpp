@@ -214,7 +214,7 @@ int InitThreads(void)
             daemon_log(LOG_ERR,"error creating thread for ids stat");
             return 0;
         }
-    } 
+    }
     
     //traffic
     if (statflows.GetStatus()) {
@@ -227,7 +227,7 @@ int InitThreads(void)
             daemon_log(LOG_ERR,"error creating thread for statflow");
             return 0;
         }
-    } 
+    }
     
     //metrics
     if (met.GetStatus()) {
@@ -240,7 +240,7 @@ int InitThreads(void)
             daemon_log(LOG_ERR,"error creating thread for metrics");
             return 0;
         }
-    } 
+    }
     
     //hids
     if (hids.GetStatus()) {

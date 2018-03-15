@@ -156,6 +156,7 @@ public:
     }
 };
 
+namespace bpt = boost::property_tree;
 
 class Nids : public Source {
 public:  
@@ -164,8 +165,24 @@ public:
     SuricataRecord rec;
     int counter_repetition;
     
+    // create new ids record
+    Traffic net_stat;
+    
+    bpt::ptree pt;
+    stringstream ss;
+    
     Nids (string skey) : Source(skey) {
-        rec.Reset();
+        ClearRecords();
+        ResetStream();
+    }
+    
+    void ResetStream() {
+        ss.str("");
+        ss.clear();
+    }
+    
+    void ResetJsontree() {
+        pt.clear();
     }
     
     int Go();
@@ -180,6 +197,8 @@ public:
         
     void ClearRecords() {
         rec.Reset();
+        net_stat.Reset();
+        ResetJsontree();
         jsonPayload.clear();
     }
 };

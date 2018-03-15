@@ -37,8 +37,6 @@ int RemLog::Go(void) {
         
     while (!q_logs_nids.empty() || !q_logs_hids.empty()) {
         
-        string rec;
-        
         if (!q_logs_nids.empty()) {
             q_logs_nids.pop(rec);
             logs_list.push_back(rec);
@@ -69,26 +67,26 @@ int RemLog::Go(void) {
 void RemLog::ProcessLogs() {
     
     if (!logs_list.empty()) {
-        string log_string = "{ \"logs\" : [";
+        report = "{ \"logs\" : [";
         
         std::vector<string>::iterator i, end;
         
         int j = 0;
         for(i = logs_list.begin(), end = logs_list.end(); i != end; ++i) {
             
-            log_string += *i;
+            report += *i;
             
             if ( j < logs_list.size() - 1) {
-                log_string += ", "; 
+                report += ", "; 
                 j++;
             }
         }
-        log_string += " ] }";
+        report += " ] }";
+        logs_list.clear();
         
-        //SysLog((char*) log_string.c_str());
+        // SysLog((char*) report.c_str());
         
-        std::stringstream ss, comp;
-        ss << log_string;
+        ss << report;
         
         boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
         in.push(boost::iostreams::gzip_compressor());
@@ -102,11 +100,11 @@ void RemLog::ProcessLogs() {
         //string s = std::to_string(rep_size);
         //string output = "logs compressed = " + s;
         //SysLog((char*) output.c_str());
-
-        sk.SendMessage(new BinData(comp.str(),2));
+        bd.data = comp.str();
+        sk.SendMessage(&bd);
+        
+        ResetStreams();
     }
-    
-    logs_list.clear();
 }
 
 long RemLog::ResetEventsVolume() {

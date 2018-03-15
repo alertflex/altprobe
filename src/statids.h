@@ -124,8 +124,9 @@ public:
 
 
 class StatIds : public Source {
-public:  
+public: 
     
+    IdsRecord ids_rec;
     IdsBuffers mem_mon;
     int counter;
     
@@ -157,40 +158,40 @@ public:
     virtual int GetConfig();
     
     int Go();
-    void PushRecord(IdsRecord rec);
+    void PushRecord();
     void ProcessStatistic();
     void RoutineJob();
     
-    void UpdateHidsAlerts(IdsRecord r);
+    void UpdateHidsAlerts();
     void SendHidsAlert(std::list<IdsRecord>::iterator r, int c);
     void FlushHidsAlert();
     
-    void UpdateNidsAlerts(IdsRecord r);
+    void UpdateNidsAlerts();
     void SendNidsAlert(std::list<IdsRecord>::iterator r, int c);
     void FlushNidsAlert();
     
-    void UpdateNidsSrcIp(IdsRecord r);
+    void UpdateNidsSrcIp();
     void FlushNidsSrcIp();
     
-    void UpdateNidsDstIp(IdsRecord r);
+    void UpdateNidsDstIp();
     void FlushNidsDstIp();
     
-    void UpdateHidsHostname(IdsRecord r);
+    void UpdateHidsHostname();
     void FlushHidsHostname();
     
-    void UpdateHidsLocation(IdsRecord r);
+    void UpdateHidsLocation();
     void FlushHidsLocation();
     
-    void UpdateFimCause(IdsRecord r);
+    void UpdateFimCause();
     void FlushFimCause();
     
-    void UpdateFimFile(IdsRecord r);
+    void UpdateFimFile();
     void FlushFimFile();
     
-    void UpdateIdsCategory(IdsRecord r);
+    void UpdateIdsCategory();
     void FlushIdsCategory();
     
-    void UpdateIdsEvent(IdsRecord r);
+    void UpdateIdsEvent();
     void FlushIdsEvent();
     
     IdsBuffers* GetBuffers(void) {

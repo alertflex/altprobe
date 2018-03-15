@@ -41,6 +41,7 @@ public:
     
     //JSON strings for regex and log output 
     string jsonPayload;
+    string report;
             
     // interfaces
     Sinks sk;

@@ -153,10 +153,13 @@ public:
 class StatFlows : public Source {
 public: 
     
+    FlowsRecord flows_rec;
+    
+    Traffic traffic_rec;
     Traffic traffic;
     
     FlowsBuffers mem_mon;
-    
+        
     //Statistics data
     std::vector<TopTalker> top_talkers;
     
@@ -180,28 +183,25 @@ public:
     void ProcessTraffic();
     void RoutineJob();
     
-    void UpdateTopTalkers(FlowsRecord r);
+    void UpdateTopTalkers();
     void FlushTopTalkers();
     
-    void UpdateCountries(FlowsRecord r);
+    void UpdateCountries();
     void FlushCountries();
     
-    void UpdateApplications(FlowsRecord r);
+    void UpdateApplications();
     void FlushApplications();
     
-    void UpdateDnsQueries(FlowsRecord r);
+    void UpdateDnsQueries();
     void FlushDnsQueries();
     
-    void UpdateSshSessions(FlowsRecord r);
+    void UpdateSshSessions();
     void FlushSshSessions();
-    
-    void UpdateDstPorts(FlowsRecord r);
-    void FlushDstPorts();
     
     void UpdateTraffic();
     void FlushTraffic();
         
-    void UpdateThresholds(FlowsRecord r);
+    void UpdateThresholds();
     void CheckThresholds(Threshold* th);
     void SendAlert(Threshold* th, bool type_alert);
     void FlushThresholds();

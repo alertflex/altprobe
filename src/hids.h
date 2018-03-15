@@ -105,15 +105,33 @@ public:
     }
 };
 
+namespace bpt = boost::property_tree;
 
 class Hids : public Source {
 public:
     //OSSEC record
     OssecRecord rec;
     
+    bpt::ptree pt, pt1, groups_cats, pcidss_cats;
+    stringstream ss, ss1;
     
     Hids (string skey) : Source(skey) {
-        rec.Reset();
+        ClearRecords();
+        ResetStreams();
+    }
+    
+    void ResetStreams() {
+        ss.str("");
+        ss.clear();
+        ss1.str("");
+        ss1.clear();
+    }
+    
+    void ResetJsontree() {
+        pt.clear();
+        pt1.clear();
+        groups_cats.clear();
+        pcidss_cats.clear();
     }
     
     int Go();
@@ -128,6 +146,7 @@ public:
     void ClearRecords() {
 	rec.Reset();
         jsonPayload.clear();
+        ResetJsontree();
     }
     
 };

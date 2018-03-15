@@ -75,22 +75,20 @@ void StatFlows::ProcessTraffic() {
         
         IncrementEventsCounter();
         
-        FlowsRecord rec;
-        q_flows.pop(rec);
+        q_flows.pop(flows_rec);
         
-        switch(rec.flows_type) {
+        switch(flows_rec.flows_type) {
             case 1:
-                UpdateThresholds(rec);
-                UpdateTopTalkers(rec);
-                UpdateCountries(rec);
-                UpdateApplications(rec);
-                UpdateDstPorts(rec);
+                UpdateThresholds();
+                UpdateTopTalkers();
+                UpdateCountries();
+                UpdateApplications();
                 break;
             case 2:
-                UpdateDnsQueries(rec);
+                UpdateDnsQueries();
                 break;
             case 3:
-                UpdateSshSessions(rec); 
+                UpdateSshSessions(); 
                 break;
             default:
                 break;
@@ -123,16 +121,15 @@ void StatFlows::UpdateTraffic() {
         
         IncrementEventsCounter();
         
-        Traffic rec;
-        q_netstat.pop(rec);
+        q_netstat.pop(traffic_rec);
         
-        traffic.Aggregate(rec);
+        traffic.Aggregate(&traffic_rec);
     }
 }
 
 void StatFlows::FlushTraffic() {
     
-    string report = "{ \"type\": \"flows_traffic\", \"data\" : ";
+    report = "{ \"type\": \"flows_traffic\", \"data\" : ";
         
     report += "{ \"ref_id\": \"";
     report += traffic.ref_id;
@@ -202,32 +199,33 @@ void StatFlows::FlushTraffic() {
     report += "\" } }";
         
     q_stats_flow.push(report);
-        
+    
+    report.clear();    
     traffic.Reset();
 }
 
 
 
-void StatFlows::UpdateTopTalkers(FlowsRecord r) {
+void StatFlows::UpdateTopTalkers() {
     
     std::vector<TopTalker>::iterator i, end;
     
     for(i = top_talkers.begin(), end = top_talkers.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {      
+        if (i->ref_id.compare(flows_rec.ref_id) == 0)  {      
             
-            if ((i->src_ip.compare(r.src_ip) == 0) && (i->dst_ip.compare(r.dst_ip) == 0)) { 
-                i->counter = i->counter + r.bytes;
+            if ((i->src_ip.compare(flows_rec.src_ip) == 0) && (i->dst_ip.compare(flows_rec.dst_ip) == 0)) { 
+                i->counter = i->counter + flows_rec.bytes;
                 return;
             }
             
-            if ((i->src_ip.compare(r.dst_ip) == 0) && (i->dst_ip.compare(r.src_ip) == 0)) { 
-                i->counter = i->counter + r.bytes;
+            if ((i->src_ip.compare(flows_rec.dst_ip) == 0) && (i->dst_ip.compare(flows_rec.src_ip) == 0)) { 
+                i->counter = i->counter + flows_rec.bytes;
                 return;
             }
         }
     }  
     
-    top_talkers.push_back(TopTalker(r.ref_id, r.src_ip, r.dst_ip, r.src_agent, r.dst_agent, r.bytes));
+    top_talkers.push_back(TopTalker(flows_rec.ref_id, flows_rec.src_ip, flows_rec.dst_ip, flows_rec.src_agent, flows_rec.dst_agent, flows_rec.bytes));
     
 }
 
@@ -242,7 +240,7 @@ void StatFlows::FlushTopTalkers() {
     
     boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
     
-    string report = "{ \"type\": \"flows_talker\", \"data\" : [ ";
+    report = "{ \"type\": \"flows_talker\", \"data\" : [ ";
         
         
     std::sort(top_talkers.begin(), top_talkers.end(), convSort);
@@ -275,7 +273,7 @@ void StatFlows::FlushTopTalkers() {
         report += GetNodeTime();
         report += "\" }";
             
-        if ( j < top_talkers.size() - 1) {
+        if ( j < top_talkers.size() - 1 && i < fs.filter.traf.top_talkers) {
             report += ", "; 
             j++;
         }
@@ -285,28 +283,29 @@ void StatFlows::FlushTopTalkers() {
         
     q_stats_flow.push(report);
     
+    report.clear();
     top_talkers.clear();
     
 }
 
-void StatFlows::UpdateApplications(FlowsRecord r) {
+void StatFlows::UpdateApplications() {
     
     bool src = false;
     bool dst = false;
     std::vector<Application>::iterator i, end;
     
     for(i = applications.begin(), end = applications.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {     
-            if (i->app.compare(r.info1) == 0) {
+        if (i->ref_id.compare(flows_rec.ref_id) == 0)  {     
+            if (i->app.compare(flows_rec.info1) == 0) {
                 
-                if (i->agent.compare(r.src_agent) == 0) {
-                    i->counter = i->counter + r.bytes;
+                if (i->agent.compare(flows_rec.src_agent) == 0) {
+                    i->counter = i->counter + flows_rec.bytes;
                     src = true;
                     continue;
                 }
             
-                if (i->agent.compare(r.dst_agent) == 0) {
-                    i->counter = i->counter + r.bytes;
+                if (i->agent.compare(flows_rec.dst_agent) == 0) {
+                    i->counter = i->counter + flows_rec.bytes;
                     dst = true;
                     continue;
                 }
@@ -316,13 +315,13 @@ void StatFlows::UpdateApplications(FlowsRecord r) {
     
     if (src || dst) return;
     
-    if (r.dst_agent.compare("none") != 0) applications.push_back(Application(r.ref_id, r.info1, r.dst_agent, r.bytes));
-    if (r.src_agent.compare("none") != 0) applications.push_back(Application(r.ref_id, r.info1, r.src_agent, r.bytes));
+    if (flows_rec.dst_agent.compare("none") != 0) applications.push_back(Application(flows_rec.ref_id, flows_rec.info1, flows_rec.dst_agent, flows_rec.bytes));
+    if (flows_rec.src_agent.compare("none") != 0) applications.push_back(Application(flows_rec.ref_id, flows_rec.info1, flows_rec.src_agent, flows_rec.bytes));
 }
 
 void StatFlows::FlushApplications() {
         
-    string report = "{ \"type\": \"flows_app\", \"data\" : [ ";
+    report = "{ \"type\": \"flows_app\", \"data\" : [ ";
         
     std::vector<Application>::iterator i, end;
         
@@ -354,26 +353,27 @@ void StatFlows::FlushApplications() {
         
     q_stats_flow.push(report);
     
+    report.clear();
     applications.clear();
 }
 
-void StatFlows::UpdateDnsQueries(FlowsRecord r) {
+void StatFlows::UpdateDnsQueries() {
     
     bool src = false;
     bool dst = false;
     std::vector<DnsQuery>::iterator i, end;
         
     for(i = dns_queries.begin(), end = dns_queries.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {     
-            if (i->query.compare(r.info1) == 0) {
+        if (i->ref_id.compare(flows_rec.ref_id) == 0)  {     
+            if (i->query.compare(flows_rec.info1) == 0) {
                 
-                if (i->agent.compare(r.src_agent) == 0) {
+                if (i->agent.compare(flows_rec.src_agent) == 0) {
                     i->counter++;
                     src = true;
                     continue;
                 }
             
-                if (i->agent.compare(r.dst_agent) == 0) {
+                if (i->agent.compare(flows_rec.dst_agent) == 0) {
                     i->counter++;
                     dst = true;
                     continue;
@@ -384,14 +384,14 @@ void StatFlows::UpdateDnsQueries(FlowsRecord r) {
     
     if (src || dst) return;
     
-    if (r.dst_agent.compare("none") != 0) dns_queries.push_back(DnsQuery(r.ref_id, r.info1, r.dst_agent));
-    if (r.src_agent.compare("none") != 0) dns_queries.push_back(DnsQuery(r.ref_id, r.info1, r.src_agent));
+    if (flows_rec.dst_agent.compare("none") != 0) dns_queries.push_back(DnsQuery(flows_rec.ref_id, flows_rec.info1, flows_rec.dst_agent));
+    if (flows_rec.src_agent.compare("none") != 0) dns_queries.push_back(DnsQuery(flows_rec.ref_id, flows_rec.info1, flows_rec.src_agent));
     
 }
 
 void StatFlows::FlushDnsQueries() {
         
-    string report = "{ \"type\": \"flows_dns\", \"data\" : [ ";
+    report = "{ \"type\": \"flows_dns\", \"data\" : [ ";
         
     std::vector<DnsQuery>::iterator i, end;
         
@@ -423,29 +423,30 @@ void StatFlows::FlushDnsQueries() {
         
     q_stats_flow.push(report);
     
+    report.clear();
     dns_queries.clear();
 }
 
-void StatFlows::UpdateCountries(FlowsRecord r) {
+void StatFlows::UpdateCountries() {
     
     bool flag_src = false, flag_dst = false, flag_both = false;
     unsigned long traf;
     
-    if (r.src_country.compare(r.dst_country) == 0) flag_both = true;
+    if (flows_rec.src_country.compare(flows_rec.dst_country) == 0) flag_both = true;
     
     std::vector<Country>::iterator i, end;
     
     for(i = countries.begin(), end = countries.end(); i != end; ++i) {
         
-        if (i->ref_id.compare(r.ref_id) == 0)  { 
-            if (i->country.compare(r.src_country) == 0) { 
-                i->counter = i->counter + r.bytes;
+        if (i->ref_id.compare(flows_rec.ref_id) == 0)  { 
+            if (i->country.compare(flows_rec.src_country) == 0) { 
+                i->counter = i->counter + flows_rec.bytes;
                 flag_src =true;
             }
             
             if (!(flag_both && flag_src))
-                if (i->country.compare(r.dst_country) == 0) {
-                    i->counter = i->counter + r.bytes;
+                if (i->country.compare(flows_rec.dst_country) == 0) {
+                    i->counter = i->counter + flows_rec.bytes;
                     flag_dst = true;
                 }
         
@@ -455,17 +456,17 @@ void StatFlows::UpdateCountries(FlowsRecord r) {
     }  
     
     if (!flag_src) {
-        countries.push_back(Country(r.ref_id, r.src_country, r.bytes));
+        countries.push_back(Country(flows_rec.ref_id, flows_rec.src_country, flows_rec.bytes));
     }
         
     if (!flag_dst && !flag_both) {
-        countries.push_back(Country(r.ref_id, r.dst_country, r.bytes));
+        countries.push_back(Country(flows_rec.ref_id, flows_rec.dst_country, flows_rec.bytes));
     }
 }
 
 void StatFlows::FlushCountries() {
     
-    string report = "{ \"type\": \"flows_country\", \"data\" : [ ";
+    report = "{ \"type\": \"flows_country\", \"data\" : [ ";
         
     std::vector<Country>::iterator i, end;
         
@@ -494,18 +495,19 @@ void StatFlows::FlushCountries() {
         
     q_stats_flow.push(report);
     
+    report.clear();
     countries.clear();
     
 }
 
-void StatFlows::UpdateSshSessions(FlowsRecord r) {
+void StatFlows::UpdateSshSessions() {
     
     std::vector<SshSession>::iterator i, end;
     
     for(i = ssh_sessions.begin(), end = ssh_sessions.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {      
-            if ((i->src_ip.compare(r.src_ip) == 0) && (i->dst_ip.compare(r.dst_ip) == 0)) { 
-                if ((i->client.compare(r.info1) == 0) && (i->server.compare(r.info2) == 0)) { 
+        if (i->ref_id.compare(flows_rec.ref_id) == 0)  {      
+            if ((i->src_ip.compare(flows_rec.src_ip) == 0) && (i->dst_ip.compare(flows_rec.dst_ip) == 0)) { 
+                if ((i->client.compare(flows_rec.info1) == 0) && (i->server.compare(flows_rec.info2) == 0)) { 
                     i->counter++;
                     return;
                 }
@@ -513,13 +515,13 @@ void StatFlows::UpdateSshSessions(FlowsRecord r) {
         }
     }  
     
-    ssh_sessions.push_back(SshSession(r.ref_id, r.info1, r.info2, r.src_ip, r.dst_ip, r.src_agent, r.dst_agent));
+    ssh_sessions.push_back(SshSession(flows_rec.ref_id, flows_rec.info1, flows_rec.info2, flows_rec.src_ip, flows_rec.dst_ip, flows_rec.src_agent, flows_rec.dst_agent));
     
 }
 
 void StatFlows::FlushSshSessions() {
     
-    string report = "{ \"type\": \"flows_ssh\", \"data\" : [ ";
+    report = "{ \"type\": \"flows_ssh\", \"data\" : [ ";
         
     std::vector<SshSession>::iterator i, end;
         
@@ -563,71 +565,12 @@ void StatFlows::FlushSshSessions() {
         
     q_stats_flow.push(report);
     
+    report.clear();
     ssh_sessions.clear();
     
 }
 
-void StatFlows::UpdateDstPorts(FlowsRecord r) {
-    
-    std::vector<DstPort>::iterator i, end;
-    
-    for(i = dst_ports.begin(), end = dst_ports.end(); i != end; ++i) {
-        if (i->ref_id.compare(r.ref_id) == 0)  {      
-            if (i->ip.compare(r.dst_ip) == 0) { 
-                if (i->port == r.dst_port) { 
-                    i->counter++;
-                    return;
-                }
-            }
-        }
-    }  
-    
-    dst_ports.push_back(DstPort(r.ref_id, r.dst_ip, r.dst_agent, r.dst_port));
-    
-}
-
-void StatFlows::FlushDstPorts() {
-    
-    string report = "{ \"type\": \"flows_dest\", \"data\" : [ ";
-        
-    std::vector<DstPort>::iterator i, end;
-        
-    int j = 0;
-    for(i = dst_ports.begin(), end = dst_ports.end(); i != end; ++i) {
-            
-        report += "{ \"ref_id\": \"";
-        report += i->ref_id;
-            
-        report += "\", \"ip\": \"";
-        report += i->ip;
-            
-        report += "\", \"agent\": \"";
-        report += i->agent;
-            
-        report += "\", \"port\": ";
-        report += std::to_string(i->port);
-                
-        report += ", \"counter\": ";
-        report += std::to_string(i->counter);
-            
-        report += ", \"time_of_survey\": \"";
-        report += GetNodeTime();
-        report += "\" }";
-            
-        if ( j < dst_ports.size() - 1) {
-            report += ", "; 
-            j++;
-        }
-    }
-    report += " ] }";
-        
-    q_stats_flow.push(report);
-    
-    dst_ports.clear();
-}
-
-
-void StatFlows::UpdateThresholds(FlowsRecord r) {
+void StatFlows::UpdateThresholds() {
     std::vector<Threshold*>::iterator i, end;
     unsigned long tmp;
     
@@ -635,11 +578,11 @@ void StatFlows::UpdateThresholds(FlowsRecord r) {
     
     for ( i = fs.filter.traf.th.begin(), end = fs.filter.traf.th.end(); i != end; ++i ) {
         
-        if (!(*i)->host.compare(r.dst_ip) || !(*i)->host.compare(r.src_ip)) {
+        if (!(*i)->host.compare(flows_rec.dst_ip) || !(*i)->host.compare(flows_rec.src_ip)) {
         
-            if (!(*i)->parameter.compare(r.info1) || !(*i)->parameter.compare("all")) {
+            if (!(*i)->parameter.compare(flows_rec.info1) || !(*i)->parameter.compare("all")) {
             
-                (*i)->value_count = (*i)->value_count + r.bytes;
+                (*i)->value_count = (*i)->value_count + flows_rec.bytes;
             }
         }
     }
@@ -669,8 +612,6 @@ void StatFlows::CheckThresholds(Threshold* th) {
     
 void StatFlows::SendAlert(Threshold* th, bool type_alert) {
     
-    stringstream ss;
-    
     if (type_alert) {
         sk.alert.description = "Traffic has been reached max limit. ";
     } else { 
@@ -698,27 +639,21 @@ void StatFlows::SendAlert(Threshold* th, bool type_alert) {
     else sk.alert.action = "none";
         
     // hostname location 
-    ss << th->host;
-                
-    sk.alert.location = ss.str();
+    sk.alert.location = th->host;
         
-    ss.str("");
-    
-    ss << "\"traffic counter\":";
-    ss << th->value_count;
+    sk.alert.info = "\"traffic counter\":";
+    sk.alert.info += std::to_string(th->value_count);
     if (type_alert) {
-        ss << ", \"max limit\":";
-        ss << th->value_max;
+        sk.alert.info += ", \"max limit\":";
+        sk.alert.info += std::to_string(th->value_max);
     } else { 
-        ss << ", \"min limit\":";
-        ss << th->value_min;
+        sk.alert.info += ", \"min limit\":";
+        sk.alert.info += std::to_string(th->value_min);
     } 
-    ss << ", \"app_proto\": \"";
-    ss << th->parameter;
-    ss << "\", \"for period in sec\": ";
-    ss << th->agr.in_period;
-        
-    sk.alert.info = ss.str();
+    sk.alert.info += ", \"app_proto\": \"";
+    sk.alert.info += th->parameter;
+    sk.alert.info += "\", \"for period in sec\": ";
+    sk.alert.info += std::to_string(th->agr.in_period);
         
     sk.alert.event_json = "";
         

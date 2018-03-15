@@ -23,6 +23,11 @@ public:
     int counter;
     int timeout;
     
+    std::stringstream ss, comp;
+        
+    string rec;
+    BinData bd;
+    
     //logs 
     std::vector<string> logs_list;
     
@@ -30,6 +35,15 @@ public:
         events_volume = 0;
         counter = 0;
         timeout = 0;
+        
+        ResetStreams();
+    }
+    
+    void ResetStreams() {
+        comp.str("");
+        comp.clear();
+        ss.str("");
+        ss.clear();
     }
     
     virtual int GetConfig();

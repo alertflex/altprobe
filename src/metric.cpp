@@ -13,9 +13,6 @@ boost::lockfree::spsc_queue<string> q_stats_metric{STAT_QUEUE_SIZE};
 #include <boost/tokenizer.hpp>
 #include <boost/regex.hpp>
 
-namespace bpt = boost::property_tree;
-
-
 int Metric::Go(void) {
     
     int res = 0;
@@ -78,7 +75,6 @@ int Metric::Go(void) {
 
 int Metric::ParsJson(char* redis_payload) {
     
-    bpt::ptree pt;
     int module_type = 0;
     
     // SysLog(redis_payload);
@@ -87,13 +83,13 @@ int Metric::ParsJson(char* redis_payload) {
     
     try {
     
-        stringstream ss(redis_payload);
+        ss << redis_payload;
         bpt::read_json(ss, pt);
     
         string module = pt.get<string>("metricset.module","");
         
         if (module.compare("system") != 0) {
-            pt.clear();
+            ResetStream();
             return 0;
         }
         
@@ -196,13 +192,13 @@ int Metric::ParsJson(char* redis_payload) {
         SysLog((char*) ex.what());
     } 
     
-    pt.clear();
+    ResetStream();
     return module_type;
 }
 
 void Metric::SendMemoryStat() {
     
-    string report = "{ \"type\": \"agent_memory\", \"data\": ";
+    report = "{ \"type\": \"agent_memory\", \"data\": ";
         
     report += "{ \"ref_id\": \"";
     report += fs.filter.ref_id;
@@ -248,11 +244,13 @@ void Metric::SendMemoryStat() {
     report += "\" } }";
         
     q_stats_metric.push(report);
+    
+    report.clear();
 }
 
 void Metric::SendNetworkStat() {
     
-    string report = "{ \"type\": \"agent_network\", \"data\": ";
+    report = "{ \"type\": \"agent_network\", \"data\": ";
         
     report += "{ \"ref_id\": \"";
     report += fs.filter.ref_id;
@@ -292,12 +290,13 @@ void Metric::SendNetworkStat() {
     report += "\" } }";
         
     q_stats_metric.push(report);
-        
+    
+    report.clear();
 }
 
 void Metric::SendFilesystemStat() {
     
-    string report = "{ \"type\": \"agent_filesystem\", \"data\": ";
+    report = "{ \"type\": \"agent_filesystem\", \"data\": ";
         
     report += "{ \"ref_id\": \"";
     report += fs.filter.ref_id;
@@ -340,11 +339,13 @@ void Metric::SendFilesystemStat() {
     report += "\" } }";
         
     q_stats_metric.push(report);
+    
+    report.clear();
 }
 
 void Metric::SendCpuStat() {
     
-    string report = "{ \"type\": \"agent_cpu\", \"data\": ";
+    report = "{ \"type\": \"agent_cpu\", \"data\": ";
         
     report += "{ \"ref_id\": \"";
     report += fs.filter.ref_id;
@@ -387,11 +388,13 @@ void Metric::SendCpuStat() {
     report += "\" } }";
         
     q_stats_metric.push(report);
+    
+    report.clear();
 }
 
 void Metric::SendProcessStat() {
     
-    string report = "{ \"type\": \"agent_process\", \"data\": ";
+    report = "{ \"type\": \"agent_process\", \"data\": ";
         
     report += "{ \"ref_id\": \"";
     report += fs.filter.ref_id;
@@ -416,4 +419,6 @@ void Metric::SendProcessStat() {
     report += "\" } }";
         
     q_stats_metric.push(report);
+    
+    report.clear();
 }

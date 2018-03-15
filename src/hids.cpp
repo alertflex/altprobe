@@ -12,8 +12,6 @@
 #include <boost/tokenizer.hpp>
 #include <boost/regex.hpp>
 
-namespace bpt = boost::property_tree;
-
 boost::lockfree::spsc_queue<string> q_logs_hids{LOG_QUEUE_SIZE};
 boost::lockfree::spsc_queue<string> q_compliance{LOG_QUEUE_SIZE};
 
@@ -112,30 +110,27 @@ BwList* Hids::CheckBwList() {
 
 int Hids::ParsJson(char* redis_payload) {
     
-    bpt::ptree pt, pt1;
-    stringstream report;
     string message;
     
     jsonPayload.assign(reply->str, GetBufferSize(reply->str));
     
     try {
     
-        stringstream ss1(redis_payload);
+        ss1 << redis_payload;
         bpt::read_json(ss1, pt1);
     
         message = pt1.get<string>("message","");
         
         if ((message.compare("") == 0)) {
-            pt1.clear();
+            ResetStreams();
             return 0;
         }
     
-        stringstream ss(message);
+        ss << message;
         bpt::read_json(ss, pt);
     
     } catch (const std::exception & ex) {
-        pt.clear();
-        pt1.clear();
+        ResetStreams();
         SysLog((char*) ex.what());
         return 0;
     } 
@@ -145,18 +140,18 @@ int Hids::ParsJson(char* redis_payload) {
     
     if (loc.compare("Wazuh-VULS") == 0 ) {
         
-        report << "{ \"type\": \"report_vuls\", \"data\": ";
+        report = "{ \"type\": \"report_vuls\", \"data\": ";
         
-        report << "{ \"ref_id\": \"";
-        report << fs.filter.ref_id;
+        report += "{ \"ref_id\": \"";
+        report += fs.filter.ref_id;
             
-        report << "\", \"agent_name\": \"";
-        report << pt.get<string>("agent.name","");
+        report += "\", \"agent_name\": \"";
+        report += pt.get<string>("agent.name","");
         
-        report << "\", \"event_id\": \"";
-        report << pt.get<int>("rule.id",0);
+        report += "\", \"event_id\": \"";
+        report += std::to_string(pt.get<int>("rule.id",0));
         
-        report << "\", \"severity\": ";
+        report += "\", \"severity\": ";
         
         int level = pt.get<int>("rule.level",0);
         string severity;
@@ -175,50 +170,50 @@ int Hids::ParsJson(char* redis_payload) {
             }
         }  
         
-        report << severity;
+        report += severity;
         
-        report <<  ", \"event_time\":\"";
-        report << pt.get<string>("timestamp","");
+        report +=  ", \"event_time\":\"";
+        report += pt.get<string>("timestamp","");
         
-        report << "\", \"description\": \"";
-        report << pt.get<string>("rule.description","");
+        report += "\", \"description\": \"";
+        report += pt.get<string>("rule.description","");
         
-        report << "\", \"affected_packages\": \"";
-        report << pt.get<string>("data.vuls.affected_packages","");
+        report += "\", \"affected_packages\": \"";
+        report += pt.get<string>("data.vuls.affected_packages","");
         
-        report << "\", \"assurance\": \"";
-        report << pt.get<string>("data.vuls.assurance","");
+        report += "\", \"assurance\": \"";
+        report += pt.get<string>("data.vuls.assurance","");
         
-        report << "\", \"kernel_version\": \"";
-        report << pt.get<string>("data.vuls.kernel_version","");
+        report += "\", \"kernel_version\": \"";
+        report += pt.get<string>("data.vuls.kernel_version","");
         
-        report << "\", \"last_modified\": \"";
-        report << pt.get<string>("data.vuls.last_modified","");
+        report += "\", \"last_modified\": \"";
+        report += pt.get<string>("data.vuls.last_modified","");
         
-        report << "\", \"link\": \"";
-        report << pt.get<string>("data.vuls.link","");
+        report += "\", \"link\": \"";
+        report += pt.get<string>("data.vuls.link","");
         
-        report << "\", \"os_version\": \"";
-        report << pt.get<string>("data.vuls.os_version","");
+        report += "\", \"os_version\": \"";
+        report += pt.get<string>("data.vuls.os_version","");
         
-        report << "\", \"score\": \"";
-        report << pt.get<string>("data.vuls.score","");
+        report += "\", \"score\": \"";
+        report += pt.get<string>("data.vuls.score","");
         
-        report << "\", \"scanned_cve\": \"";
-        report << pt.get<string>("data.vuls.scanned_cve","");
+        report += "\", \"scanned_cve\": \"";
+        report += pt.get<string>("data.vuls.scanned_cve","");
         
-        report << "\", \"source\": \"";
-        report << pt.get<string>("data.vuls.source","");
+        report += "\", \"source\": \"";
+        report += pt.get<string>("data.vuls.source","");
         
-        report << "\", \"time_of_survey\": \"";
-        report << GetNodeTime();
-        report << "\" } }";
+        report += "\", \"time_of_survey\": \"";
+        report += GetNodeTime();
+        report += "\" } }";
         
        
-        q_compliance.push(report.str());
+        q_compliance.push(report);
         
-        pt.clear();
-        pt1.clear();
+        report.clear();
+        ResetStreams();
         return 0;
     }
     
@@ -226,49 +221,49 @@ int Hids::ParsJson(char* redis_payload) {
     
     if (mon_con.compare("linux-connects") == 0) {
         
-        report << "{\"version\": \"1.1\",\"host\":\"";
-        report << node_id;
-        report << "\",\"short_message\":\"process-linux\"";
-        report << ",\"full_message\":\"Network activity of linux process from Auditd\"";
-	report << ",\"level\":";
-        report << 7;
-        report << ",\"_type\":\"auditd\"";
-        report << ",\"_source\":\"ossec\"";
+        report = "{\"version\": \"1.1\",\"host\":\"";
+        report += node_id;
+        report += "\",\"short_message\":\"process-linux\"";
+        report += ",\"full_message\":\"Network activity of linux process from Auditd\"";
+	report += ",\"level\":";
+        report += std::to_string(7);
+        report += ",\"_type\":\"auditd\"";
+        report += ",\"_source\":\"ossec\"";
         
-	report << ",\"_agentname\":\"";
-        report << pt.get<string>("agent.name","");
+	report += ",\"_agentname\":\"";
+        report += pt.get<string>("agent.name","");
         
-        report <<  "\", \"_event_time\":\"";
-        report << pt.get<string>("timestamp","");
+        report +=  "\", \"_event_time\":\"";
+        report += pt.get<string>("timestamp","");
         
-        report << "\",\"_collected_time\":\"";
-        report << GetGraylogFormat();
+        report += "\",\"_collected_time\":\"";
+        report += GetGraylogFormat();
 		
-	report << "\",\"_description\":\"";
-        report << pt.get<string>("rule.description","");
+	report += "\",\"_description\":\"";
+        report += pt.get<string>("rule.description","");
         
-	report << "\",\"_full_log\":\"";
+	report += "\",\"_full_log\":\"";
         string full_log = pt.get<string>("full_log","");
         ReplaceAll(full_log, "\"", "");
-        report << full_log;
+        report += full_log;
         
-        report << "\",\"_pid\":\"";
-        report << pt.get<string>("data.audit.pid","");
+        report += "\",\"_pid\":\"";
+        report += pt.get<string>("data.audit.pid","");
         
-        report << "\",\"_command\":\"";
-        report <<  pt.get<string>("data.audit.command","");
+        report += "\",\"_command\":\"";
+        report +=  pt.get<string>("data.audit.command","");
         
-        report << "\",\"_exe\":\"";
-        report <<  pt.get<string>("data.audit.exe","");
+        report += "\",\"_exe\":\"";
+        report +=  pt.get<string>("data.audit.exe","");
         
-        report << "\"}";
+        report += "\"}";
         
         // SysLog((char*) report.str().c_str());
     
-        q_logs_hids.push(report.str());
+        q_logs_hids.push(report);
         
-        pt.clear();
-        pt1.clear();
+        report.clear();
+        ResetStreams();
         return 0;
     }
     
@@ -276,83 +271,83 @@ int Hids::ParsJson(char* redis_payload) {
     
     if (loc.compare("WinEvtLog") == 0 && desc.compare("Sysmon - Event 3") == 0) {
         
-        report << "{\"version\": \"1.1\",\"host\":\"";
-        report << node_id;
-        report << "\",\"short_message\":\"process-win\"";
-        report << ",\"full_message\":\"Network activity of windows process from Sysmon\"";
-        report << ",\"level\":";
-        report << 7;
+        report = "{\"version\": \"1.1\",\"host\":\"";
+        report += node_id;
+        report += "\",\"short_message\":\"process-win\"";
+        report += ",\"full_message\":\"Network activity of windows process from Sysmon\"";
+        report += ",\"level\":";
+        report += std::to_string(7);
 		
-	report << ",\"_type\":\"sysmon\"";
-        report << ",\"_source\":\"hids\"";
+	report += ",\"_type\":\"sysmon\"";
+        report += ",\"_source\":\"hids\"";
         
-	report << ",\"_agentname\":\"";
-        report << pt.get<string>("agent.name","");
+	report += ",\"_agentname\":\"";
+        report += pt.get<string>("agent.name","");
         
-        report << "\", \"_event_time\":\"";
-        report << pt.get<string>("timestamp","");
+        report += "\", \"_event_time\":\"";
+        report += pt.get<string>("timestamp","");
         
-        report << "\",\"_collected_time\":\"";
-        report << GetGraylogFormat();
+        report += "\",\"_collected_time\":\"";
+        report += GetGraylogFormat();
 		
-	report << "\",\"_description\":\"";
-        report << desc;
+	report += "\",\"_description\":\"";
+        report += desc;
         
-        report << "\",\"_id\":\"";
-        report << pt.get<string>("data.id","");
+        report += "\",\"_id\":\"";
+        report += pt.get<string>("data.id","");
         
-        report << "\",\"_protocol\":\"";
-        report << pt.get<string>("data.protocol","");
+        report += "\",\"_protocol\":\"";
+        report += pt.get<string>("data.protocol","");
         
-        report << "\",\"_srcip\":\"";
-        report << pt.get<string>("data.srcip","");
+        report += "\",\"_srcip\":\"";
+        report += pt.get<string>("data.srcip","");
         
-        report << "\",\"_srcport\":\"";
-        report << pt.get<string>("data.srcport","");
+        report += "\",\"_srcport\":\"";
+        report += pt.get<string>("data.srcport","");
         
-        report << "\",\"_srcuser\":\"";
+        report += "\",\"_srcuser\":\"";
         string srcuser = pt.get<string>("data.srcuser","");
         ReplaceAll(srcuser, "\\", "\\\\\\\\");
-        report << srcuser;
+        report += srcuser;
         
-        report << "\",\"_dstip\":\"";
-        report << pt.get<string>("data.dstip","");
+        report += "\",\"_dstip\":\"";
+        report += pt.get<string>("data.dstip","");
         
-        report << "\",\"_dstport\":\"";
-        report << pt.get<string>("data.dstport","");
+        report += "\",\"_dstport\":\"";
+        report += pt.get<string>("data.dstport","");
         
-        report << "\",\"_processGuid\":\"";
-        report << pt.get<string>("data.sysmon.processGuid","");
+        report += "\",\"_processGuid\":\"";
+        report += pt.get<string>("data.sysmon.processGuid","");
         
-        report << "\",\"_processId\":\"";
-        report << pt.get<string>("data.sysmon.processId","");
+        report += "\",\"_processId\":\"";
+        report += pt.get<string>("data.sysmon.processId","");
         
-        report << "\",\"_image\":\"";
+        report += "\",\"_image\":\"";
         string image = pt.get<string>("data.sysmon.image","");
         ReplaceAll(image, "\\", "\\\\\\\\");
-        report << image;
+        report += image;
         
-        report << "\",\"_initiated\":\"";
-        report << pt.get<string>("data.sysmon.initiated","");
+        report += "\",\"_initiated\":\"";
+        report += pt.get<string>("data.sysmon.initiated","");
         
-        report << "\",\"_sourceIsIpv6\":\"";
-        report << pt.get<string>("data.sysmon.sourceIsIpv6","");
+        report += "\",\"_sourceIsIpv6\":\"";
+        report += pt.get<string>("data.sysmon.sourceIsIpv6","");
         
-        report << "\",\"_sourceHostname\":\"";
-        report << pt.get<string>("data.sysmon.sourceHostname","");
+        report += "\",\"_sourceHostname\":\"";
+        report += pt.get<string>("data.sysmon.sourceHostname","");
         
-        report << "\",\"_destinationIsIpv6\":\"";
-        report << pt.get<string>("data.sysmon.destinationIsIpv6","");
+        report += "\",\"_destinationIsIpv6\":\"";
+        report += pt.get<string>("data.sysmon.destinationIsIpv6","");
         
-        report << "\",\"_destinationHostname\":\"";
-        report << pt.get<string>("data.sysmon.destinationHostname","");
+        report += "\",\"_destinationHostname\":\"";
+        report += pt.get<string>("data.sysmon.destinationHostname","");
         
-        report << "\"}";
+        report += "\"}";
     
-        q_logs_hids.push(report.str());
+        q_logs_hids.push(report);
         
-        pt.clear();
-        pt1.clear();
+        report.clear();
+        ResetStreams();
         return 0;
     }
     
@@ -368,7 +363,7 @@ int Hids::ParsJson(char* redis_payload) {
     
     try {
     
-        bpt::ptree groups_cats = pt.get_child("rule.groups");
+        groups_cats = pt.get_child("rule.groups");
         
         BOOST_FOREACH(bpt::ptree::value_type &v, groups_cats) {
             assert(v.first.empty()); // array elements have no names
@@ -378,7 +373,7 @@ int Hids::ParsJson(char* redis_payload) {
     
     try {
     
-        bpt::ptree pcidss_cats = pt.get_child("rule.pci_dss");
+        pcidss_cats = pt.get_child("rule.pci_dss");
         BOOST_FOREACH(bpt::ptree::value_type &v, pcidss_cats) {
             assert(v.first.empty()); // array elements have no names
             string pcidss = "pci_dss_" + v.second.data();
@@ -417,91 +412,88 @@ int Hids::ParsJson(char* redis_payload) {
     
     rec.file.gowner_after = pt.get<string>("syscheck.gowner_after","");
         
-    
-    pt.clear();
-    pt1.clear();
+    ResetStreams();
     return 1;
 }
 
 void Hids::CreateLog() {
     
-    stringstream report;
-    
-    report << "{\"version\": \"1.1\",\"host\":\"";
-    report << node_id;
-    report << "\",\"short_message\":\"event-hids\"";
-    report << ",\"full_message\":\"IDS/FIM event from OSSEC/Wazuh\"";
-    report << ",\"level\":";
-    report << 7;
+    report = "{\"version\": \"1.1\",\"host\":\"";
+    report += node_id;
+    report += "\",\"short_message\":\"event-hids\"";
+    report += ",\"full_message\":\"IDS/FIM event from OSSEC/Wazuh\"";
+    report += ",\"level\":";
+    report += std::to_string(7);
     if (rec.file.filename.compare("") != 0) {
-        report << ",\"_type\":\"fim\"";
+        report += ",\"_type\":\"fim\"";
     } else {
-        report << ",\"_type\":\"ids\"";
+        report += ",\"_type\":\"ids\"";
     }
-    report << ",\"_source\":\"ossec\"";
+    report += ",\"_source\":\"ossec\"";
         
-    report << ",\"_agentname\":\"";
-    report << rec.hostname;
+    report += ",\"_agentname\":\"";
+    report += rec.hostname;
     
-    report << "\", \"_event_time\":\"";
-    report << rec.datetime;
+    report += "\", \"_event_time\":\"";
+    report += rec.datetime;
     
-    report << "\",\"_collected_time\":\"";
-    report << GetGraylogFormat();
+    report += "\",\"_collected_time\":\"";
+    report += GetGraylogFormat();
 		
-    report << "\",\"_description\":\"";
-    report << rec.rule.desc;
+    report += "\",\"_description\":\"";
+    report += rec.rule.desc;
     
-    report << "\",\"_ossec-level\":";
-    report << rec.rule.level;
+    report += "\",\"_ossec-level\":";
+    report += std::to_string(rec.rule.level);
     
-    report << ",\"_sidid\":";
-    report << rec.rule.id;
+    report += ",\"_sidid\":";
+    report += std::to_string(rec.rule.id);
 	
-    report << ",\"_group_name\":\"";
+    report += ",\"_group_name\":\"";
     
     int j = 0;
     for (string i : rec.rule.list_cats) {
-        if (j != 0 && j < rec.rule.list_cats.size()) report << ", ";
-        report << i;
+        if (j != 0 && j < rec.rule.list_cats.size()) report += ", ";
+        report += i;
             
         j++;    
     }
     
-    report << "\",\"_info\":\"";
-    report << rec.rule.info;
-    report << "\",\"_location\":\"";
-    report << rec.location;
-    report << "\",\"_srcip\":\"";
-    report << rec.srcip;
-    report << "\",\"_dstip\":\"";
-    report << rec.dstip;
+    report += "\",\"_info\":\"";
+    report += rec.rule.info;
+    report += "\",\"_location\":\"";
+    report += rec.location;
+    report += "\",\"_srcip\":\"";
+    report += rec.srcip;
+    report += "\",\"_dstip\":\"";
+    report += rec.dstip;
     if (rec.file.filename.compare("") != 0) {
-        report << "\",\"_filename\":\"";
-        report << rec.file.filename;
-        report << "\",\"_md5_before\":\"";
-        report << rec.file.md5_before;
-        report << "\",\"_md5_after\":\"";
-        report << rec.file.md5_after;
-        report << "\",\"_sha1_before\":\"";
-        report << rec.file.sha1_before;
-        report << "\",\"_sha1_after\":\"";
-        report << rec.file.sha1_after;
-        report << "\",\"_owner_before\":\"";
-        report << rec.file.owner_before;
-        report << "\",\"_owner_after\":\"";
-        report << rec.file.owner_after;
-        report << "\",\"_gowner_before\":\"";
-        report << rec.file.gowner_before;
-        report << "\",\"_gowner_after\":\"";
-        report << rec.file.gowner_after;
+        report += "\",\"_filename\":\"";
+        report += rec.file.filename;
+        report += "\",\"_md5_before\":\"";
+        report += rec.file.md5_before;
+        report += "\",\"_md5_after\":\"";
+        report += rec.file.md5_after;
+        report += "\",\"_sha1_before\":\"";
+        report += rec.file.sha1_before;
+        report += "\",\"_sha1_after\":\"";
+        report += rec.file.sha1_after;
+        report += "\",\"_owner_before\":\"";
+        report += rec.file.owner_before;
+        report += "\",\"_owner_after\":\"";
+        report += rec.file.owner_after;
+        report += "\",\"_gowner_before\":\"";
+        report += rec.file.gowner_before;
+        report += "\",\"_gowner_after\":\"";
+        report += rec.file.gowner_after;
     }
-    report << "\"}";
+    report += "\"}";
     
     //SysLog((char*) report.str().c_str());
     
-    q_logs_hids.push(report.str());
+    q_logs_hids.push(report);
     
+    report.clear();
 }
 
 
@@ -611,8 +603,6 @@ void Hids::SendAlert(int s, BwList*  bwl) {
         
     sk.alert.source = "OSSEC";
         
-    stringstream ss;
-                    
     if (rec.file.filename.compare("") == 0) {
             
         sk.alert.type = "HIDS";
@@ -630,26 +620,25 @@ void Hids::SendAlert(int s, BwList*  bwl) {
         
         sk.alert.location = rec.file.filename;
         
-        ss << "\"artifacts\": [";
-        ss << "{ \"dataType\": \"md5\",\"data\":\"";
-        ss << rec.file.md5_before;
-        ss << "\",\"message\":\"message digest before\" }, ";
+        sk.alert.info = "\"artifacts\": [";
+        sk.alert.info += "{ \"dataType\": \"md5\",\"data\":\"";
+        sk.alert.info += rec.file.md5_before;
+        sk.alert.info += "\",\"message\":\"message digest before\" }, ";
             
-        ss << "{ \"dataType\": \"md5\",\"data\":\"";
-        ss << rec.file.md5_after;
-        ss << "\",\"message\":\"Message digest after\" }, ";
+        sk.alert.info += "{ \"dataType\": \"md5\",\"data\":\"";
+        sk.alert.info += rec.file.md5_after;
+        sk.alert.info += "\",\"message\":\"Message digest after\" }, ";
         
-        ss << "{ \"dataType\": \"sha1\",\"data\":\"";
-        ss << rec.file.sha1_before;
-        ss << "\",\"message\":\"Secure hash before\" }, ";
+        sk.alert.info += "{ \"dataType\": \"sha1\",\"data\":\"";
+        sk.alert.info += rec.file.sha1_before;
+        sk.alert.info += "\",\"message\":\"Secure hash before\" }, ";
             
-        ss << "{ \"dataType\": \"sha1\",\"data\":\"";
-        ss << rec.file.sha1_after;
-        ss << "\",\"message\":\"Secure hash after\" } ";
+        sk.alert.info += "{ \"dataType\": \"sha1\",\"data\":\"";
+        sk.alert.info += rec.file.sha1_after;
+        sk.alert.info += "\",\"message\":\"Secure hash after\" } ";
             
-        ss << "]";
+        sk.alert.info += "]";
             
-        sk.alert.info = ss.str();
     }
     
     sk.alert.event_json.assign(reply->str, GetBufferSize(reply->str));

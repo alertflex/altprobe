@@ -69,9 +69,9 @@ public:
         data.clear();
     }
     
-    BinData (string d, int et) {
-        data = d;
-        event_type = et;
+    BinData () {
+        data.clear();
+        event_type = 2;
     }
 };
 
