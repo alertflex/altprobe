@@ -93,12 +93,12 @@ then
 	curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | sudo apt-key add -
 	echo "deb https://packages.wazuh.com/3.x/apt/ stable main" | sudo tee -a /etc/apt/sources.list.d/wazuh.list
 	sudo apt-get update
-	sudo apt-get install wazuh-manager
+	sudo apt-get -y install wazuh-manager
 	
 	echo "*** installation  Wazuh API***"
 	curl -sL https://deb.nodesource.com/setup_6.x | sudo bash -
 	sudo apt-get install nodejs
-	sudo apt-get install wazuh-api
+	sudo apt-get -y install wazuh-api
 	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/alertflex/alertflex.yaml
 	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/alertflex/alertflex.yaml
 	
