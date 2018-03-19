@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # load technical project data for Alertflex collector
-source ./tpd.sh
+source ./env.sh
 
 CURRENT_PATH=`pwd`
 if [ $INSTALL_PATH != $CURRENT_PATH ]
