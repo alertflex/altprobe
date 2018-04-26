@@ -93,7 +93,10 @@ int  Collector::Open() {
             SysLog("connection between Wazuh server and Altprobe is established");
             ParsAgentsStatus(payload);
         }
-        else ossecServerStatus = false;
+        else {
+            ossecServerStatus = false;
+            SysLog("error of connection between Wazuh server and Altprobe");
+        }
     }
     
     return 1;
