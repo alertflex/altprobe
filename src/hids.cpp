@@ -140,7 +140,7 @@ int Hids::ParsJson(char* redis_payload) {
     
     if (loc.compare("Wazuh-VULS") == 0 ) {
         
-        report = "{ \"type\": \"report_vuls\", \"data\": ";
+        report = "{ \"type\": \"vuls_report\", \"data\": ";
         
         report += "{ \"ref_id\": \"";
         report += fs.filter.ref_id;
