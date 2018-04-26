@@ -101,6 +101,7 @@ void RemLog::ProcessLogs() {
         //string output = "logs compressed = " + s;
         //SysLog((char*) output.c_str());
         bd.data = comp.str();
+        bd.event_type = 2;
         sk.SendMessage(&bd);
         
         ResetStreams();
