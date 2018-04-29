@@ -231,8 +231,7 @@ public:
     static void UpdateAgentsList(string id, string ip, string name, string status, 
         string date, string version, string manager, string os_platf, string os_ver, string os_name);
     static string GetAgentNameByIP(string ip);
-    static Alias* GetAliasByAgent(string n);
-    
+        
     int GetStatus() { return status; }
 };
 

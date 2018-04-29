@@ -79,7 +79,18 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             al->host_name = n_alias.second.get<string>("host_name");
             al->ip = n_alias.second.get<string>("ip");
                         
-            filter.alias.push_back(al);
+            if (al->ip.compare("indef") == 0) {
+                
+                struct hostent *hostaddr = gethostbyname(al->host_name.c_str());
+        
+                if (hostaddr != NULL) {
+                    
+                    al->ip = inet_ntoa(*(struct in_addr *)hostaddr->h_addr_list[0]);
+                    filter.alias.push_back(al);
+                    
+                }
+            }
+            else filter.alias.push_back(al);
         }
         
         bpt::ptree filters = pt.get_child("sources");
@@ -170,38 +181,22 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
 boost::shared_mutex FiltersSingleton::agents_update;
 
 void FiltersSingleton::UpdateAgentsList(string id, string ip, string name, string status, 
-        string date, string version, string manager, string os_platf, string os_ver, string os_name) {
+    string date, string version, string manager, string os_platf, string os_ver, string os_name) {
     
     boost::unique_lock<boost::shared_mutex> lock(agents_update);
     
-    string real_ip = "indef";
-    
-    if (IsValidIp(ip) == -1 || ip.compare("127.0.0.1") == 0) {
-            
-        Alias* al = GetAliasByAgent(name);
-            
-        if (al != NULL) {
-            
-            if (al->ip.compare("indef") != 0) real_ip = al->ip;
-            else {    
-                if (al->host_name.compare("indef") != 0) {
-                
-                    string host_name = al->host_name;
-            
-                    struct hostent *hostaddr = gethostbyname(host_name.c_str());
-        
-                    if (hostaddr != NULL) real_ip = inet_ntoa(*(struct in_addr *)hostaddr->h_addr_list[0]);
-                }
-            }
-        } 
-    }
-    else real_ip = ip;
-        
     std::vector<Agent>::iterator i, end;    
     
     for (i = agents_list.begin(), end = agents_list.end(); i != end; ++i) {
         if (i->name.compare(name) == 0) {
-            i->ip = real_ip;
+            i->id = id;
+            i->ip = ip;
+            i->dateAdd = date;
+            i->manager_host = manager;
+            i->os_name = os_name;
+            i->os_platform = os_platf;
+            i->os_version = os_ver;
+            i->version = version;
             i->status = status;
             return;
         }
@@ -215,28 +210,23 @@ string FiltersSingleton::GetAgentNameByIP(string ip) {
     
     boost::shared_lock<boost::shared_mutex> lock(agents_update);
     
-    std::vector<Agent>::iterator i, end;
+    std::vector<Alias*>::iterator i_al, end_al;
     
-    for(i = agents_list.begin(), end = agents_list.end(); i != end; ++i) {
-        if (i->ip.compare(ip) == 0) {
-            return i->name;
+    for(i_al = filter.alias.begin(), end_al = filter.alias.end(); i_al != end_al; ++i_al) {
+        if ((*i_al)->ip.compare(ip) == 0) {
+            return (*i_al)->agent_name; 
+        }
+    }
+    
+    std::vector<Agent>::iterator i_ag, end_ag;
+    
+    for(i_ag = agents_list.begin(), end_ag = agents_list.end(); i_ag != end_ag; ++i_ag) {
+        if (i_ag->ip.compare(ip) == 0) {
+            return i_ag->name;
         }
     }
     
     return "home_net";
-}
-
-Alias* FiltersSingleton::GetAliasByAgent(string n) {
-    
-    std::vector<Alias*>::iterator i, end;
-    
-    for(i = filter.alias.begin(), end = filter.alias.end(); i != end; ++i) {
-        if ((*i)->agent_name.compare(n) == 0) {
-            return (*i); 
-        }
-    }
-    
-    return NULL;
 }
 
 
