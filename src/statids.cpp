@@ -97,7 +97,7 @@ void StatIds::PushRecord() {
     }
             
     if (ids_rec.ids_type == 2) {
-        UpdateHidsHostname();
+        UpdateHidsSrcIp();
         UpdateHidsLocation();
     }
         
@@ -109,6 +109,12 @@ void StatIds::PushRecord() {
         UpdateNidsSrcIp();
         UpdateNidsDstIp();
         if(ids_rec.agr.reproduced != 0) UpdateNidsAlerts();
+    } 
+    
+    if (ids_rec.ids_type == 4) {
+        UpdateWafSource();
+        UpdateWafTarget();
+        if(ids_rec.agr.reproduced != 0) UpdateWafAlerts();
     } 
         
     counter++;
@@ -124,14 +130,18 @@ void StatIds::RoutineJob() {
     FlushNidsSrcIp();
     mem_mon.nids_dstip = nids_dstip.size();
     FlushNidsDstIp();
-    mem_mon.hids_hostname = hids_hostname.size();
-    FlushHidsHostname();
+    mem_mon.hids_srcip = hids_srcip.size();
+    FlushHidsSrcIp();
     mem_mon.hids_location = hids_location.size();
     FlushHidsLocation();
     mem_mon.ids_category = ids_category.size();
     FlushIdsCategory();
     mem_mon.ids_event = ids_event.size();
     FlushIdsEvent();
+    mem_mon.waf_target = waf_target.size();
+    FlushWafTarget();
+    mem_mon.waf_source = waf_source.size();
+    FlushWafSource();
 }
 
 void StatIds::UpdateNidsSrcIp() {
@@ -140,46 +150,47 @@ void StatIds::UpdateNidsSrcIp() {
     
     for(i = nids_srcip.begin(), end = nids_srcip.end(); i != end; ++i) {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  {  
-            if (i->ip.compare(ids_rec.src_ip) == 0) {
-                i->counter++;
-                return;
+            if (i->ids_name.compare(ids_rec.ids) == 0)  { 
+                if (i->ip.compare(ids_rec.src_ip) == 0) {
+                    i->counter++;
+                    return;
+                }
             }
         }
     }  
-    nids_srcip.push_back(NidsSrcIp(ids_rec.ref_id, ids_rec.src_ip, ids_rec.hostname));
+    nids_srcip.push_back(NidsSrcIp(ids_rec.ref_id, ids_rec.src_ip, ids_rec.agent, ids_rec.ids));
 }
 
 void StatIds::FlushNidsSrcIp() {
         
     report = "{ \"type\": \"nids_srcip\", \"data\" : [ ";
         
-    int j = 0;
-        
-    std::vector<NidsSrcIp>::iterator i, end;
-        
-    for(i = nids_srcip.begin(), end = nids_srcip.end(); i != end; ++i) {
+    std::vector<NidsSrcIp>::iterator it, end;
+            
+    for(it = nids_srcip.begin(), end = nids_srcip.end(); it != end; ++it) {
                     
         report += "{ \"ref_id\": \"";
-        report += i->ref_id;
+        report += it->ref_id;
             
         report += "\", \"ip\": \"";
-        report += i->ip;
+        report += it->ip;
             
         report += "\", \"agent\": \"";
-        report += i->agent;
+        report += it->agent;
+        
+        report += "\", \"ids\": \"";
+        report += it->ids_name;
             
         report += "\", \"counter\": ";
-        report += std::to_string(i->counter);
+        report += std::to_string(it->counter);
             
         report += ", \"time_of_survey\": \"";
         report += GetNodeTime();
-        report += "\" }";
+        report += "\" } ,";
             
-        if ( j < nids_srcip.size() - 1) { 
-            report += ", "; 
-            j++;
-        }
     }
+    
+    report.resize(report.size() - 1);
     report += " ] }";
         
     q_stats_ids.push(report);
@@ -194,102 +205,217 @@ void StatIds::UpdateNidsDstIp() {
     std::vector<NidsDstIp>::iterator i, end;
     
     for(i = nids_dstip.begin(), end = nids_dstip.end(); i != end; ++i) {
-        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {      
-            if (i->ip.compare(ids_rec.dst_ip) == 0) {
-                i->counter++;
-                return;
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
+            if (i->ids_name.compare(ids_rec.ids) == 0)  { 
+                if (i->ip.compare(ids_rec.dst_ip) == 0) {
+                    i->counter++;
+                    return;
+                }
             }
         }
     }  
-    nids_dstip.push_back(NidsDstIp(ids_rec.ref_id, ids_rec.dst_ip, ids_rec.location));
+    nids_dstip.push_back(NidsDstIp(ids_rec.ref_id, ids_rec.dst_ip, ids_rec.location, ids_rec.ids));
 }
 
 void StatIds::FlushNidsDstIp() {
         
     report = "{ \"type\": \"nids_dstip\", \"data\": [ ";
                 
-    int j = 0;
-    std::vector<NidsDstIp>::iterator i, end;
-        
-    for(i = nids_dstip.begin(), end = nids_dstip.end(); i != end; ++i) {
+    std::vector<NidsDstIp>::iterator it, end;
+    
+    for(it = nids_dstip.begin(), end = nids_dstip.end(); it != end; ++it) {
                     
         report += "{ \"ref_id\": \"";
-        report += i->ref_id;
+        report += it->ref_id;
             
         report += "\", \"ip\": \"";
-        report += i->ip;
+        report += it->ip;
             
         report += "\", \"agent\": \"";
-        report += i->agent;
+        report += it->agent;
+        
+        report += "\", \"ids\": \"";
+        report += it->ids_name;
             
         report += "\", \"counter\": ";
-        report += std::to_string(i->counter);
+        report += std::to_string(it->counter);
             
         report += ", \"time_of_survey\": \"";
         report += GetNodeTime();
-        report += "\" }";
+        report += "\" } ,";
             
-        if ( j < nids_dstip.size() - 1) { 
-            report += ", "; 
-            j++;
-        }
     }
+    
+    report.resize(report.size() - 1);
     report += " ] }";
         
     q_stats_ids.push(report);
     
     report.clear();    
     nids_dstip.clear();
-}    
+}   
 
-void StatIds::UpdateHidsHostname() {
+
+void StatIds::UpdateWafSource() {
     
-    std::vector<HidsHostname>::iterator i, end;
+    std::vector<WafSource>::iterator i, end;
     
-    for(i = hids_hostname.begin(), end = hids_hostname.end(); i != end; ++i) {
-        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {      
-            if (i->hostname.compare(ids_rec.hostname) == 0) {
-                i->counter++;
-                return;
+    for(i = waf_source.begin(), end = waf_source.end(); i != end; ++i) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {  
+            if (i->ids_name.compare(ids_rec.ids) == 0)  { 
+                if (i->source.compare(ids_rec.src_ip) == 0) {
+                    i->counter++;
+                    return;
+                }
             }
         }
     }  
-    hids_hostname.push_back(HidsHostname(ids_rec.ref_id, ids_rec.hostname));
+    waf_source.push_back(WafSource(ids_rec.ref_id, ids_rec.src_ip, ids_rec.agent, ids_rec.ids));
 }
 
-void StatIds::FlushHidsHostname() {
+void StatIds::FlushWafSource() {
         
-    report = "{ \"type\": \"hids_hostname\", \"data\" : [ ";
+    report = "{ \"type\": \"waf_source\", \"data\" : [ ";
         
-    int j = 0;
-    std::vector<HidsHostname>::iterator i, end;
-        
-    for(i = hids_hostname.begin(), end = hids_hostname.end(); i != end; ++i) {
+    std::vector<WafSource>::iterator it, end;
+            
+    for(it = waf_source.begin(), end = waf_source.end(); it != end; ++it) {
                     
         report += "{ \"ref_id\": \"";
-        report += i->ref_id;
+        report += it->ref_id;
             
-        report += "\", \"hostname\": \"";
-        report += i->hostname;
+        report += "\", \"source\": \"";
+        report += it->source;
+            
+        report += "\", \"agent\": \"";
+        report += it->agent;
+        
+        report += "\", \"ids\": \"";
+        report += it->ids_name;
             
         report += "\", \"counter\": ";
-        report += std::to_string(i->counter);
+        report += std::to_string(it->counter);
             
         report += ", \"time_of_survey\": \"";
         report += GetNodeTime();
-        report += "\" }";
+        report += "\" } ,";
             
-        if ( j < hids_hostname.size() - 1) { 
-            report += ", "; 
-            j++;
-        }
     }
+    
+    report.resize(report.size() - 1);
     report += " ] }";
         
     q_stats_ids.push(report);
     
     report.clear();
-    hids_hostname.clear();
+    waf_source.clear();
+}
+
+void StatIds::UpdateWafTarget() {
+    
+    std::vector<WafTarget>::iterator i, end;
+    
+    for(i = waf_target.begin(), end = waf_target.end(); i != end; ++i) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {  
+            if (i->ids_name.compare(ids_rec.ids) == 0)  { 
+                if (i->target.compare(ids_rec.location) == 0) {
+                    i->counter++;
+                    return;
+                }
+            }
+        }
+    }  
+    waf_target.push_back(WafTarget(ids_rec.ref_id, ids_rec.location, ids_rec.agent, ids_rec.ids));
+}
+
+void StatIds::FlushWafTarget() {
+        
+    report = "{ \"type\": \"waf_target\", \"data\" : [ ";
+        
+    std::vector<WafTarget>::iterator it, end;
+            
+    for(it = waf_target.begin(), end = waf_target.end(); it != end; ++it) {
+                    
+        report += "{ \"ref_id\": \"";
+        report += it->ref_id;
+            
+        report += "\", \"target\": \"";
+        report += it->target;
+            
+        report += "\", \"agent\": \"";
+        report += it->agent;
+        
+        report += "\", \"ids\": \"";
+        report += it->ids_name;
+            
+        report += "\", \"counter\": ";
+        report += std::to_string(it->counter);
+            
+        report += ", \"time_of_survey\": \"";
+        report += GetNodeTime();
+        report += "\" } ,";
+            
+    }
+    
+    report.resize(report.size() - 1);
+    report += " ] }";
+        
+    q_stats_ids.push(report);
+    
+    report.clear();
+    waf_target.clear();
+}
+
+void StatIds::UpdateHidsSrcIp() {
+    
+    std::vector<HidsSrcIp>::iterator i, end;
+    
+    for(i = hids_srcip.begin(), end = hids_srcip.end(); i != end; ++i) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
+            if (i->ip.compare(ids_rec.src_ip) == 0) {
+                if (i->agent.compare(ids_rec.agent) == 0) {
+                    i->counter++;
+                    return;
+                }
+            }
+        }
+    }  
+    hids_srcip.push_back(HidsSrcIp(ids_rec.ref_id, ids_rec.src_ip, ids_rec.agent));
+}
+
+void StatIds::FlushHidsSrcIp() {
+        
+    report = "{ \"type\": \"hids_srcip\", \"data\" : [ ";
+        
+    std::vector<HidsSrcIp>::iterator it, end;
+            
+    for(it = hids_srcip.begin(), end = hids_srcip.end(); it != end; ++it) {
+                    
+        report += "{ \"ref_id\": \"";
+        report += it->ref_id;
+            
+        report += "\", \"ip\": \"";
+        report += it->ip;
+        
+        report += "\", \"agent\": \"";
+        report += it->agent;
+            
+        report += "\", \"counter\": ";
+        report += std::to_string(it->counter);
+            
+        report += ", \"time_of_survey\": \"";
+        report += GetNodeTime();
+        report += "\" } ,";
+            
+    }
+    
+    report.resize(report.size() - 1);
+    report += " ] }";
+        
+    q_stats_ids.push(report);
+    
+    report.clear();
+    hids_srcip.clear();
 }
 
 void StatIds::UpdateHidsLocation() {
@@ -299,46 +425,43 @@ void StatIds::UpdateHidsLocation() {
     for(i = hids_location.begin(), end = hids_location.end(); i != end; ++i) {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  {      
             if (i->location.compare(ids_rec.location) == 0) {
-                if (i->agent.compare(ids_rec.hostname) == 0) {
+                if (i->agent.compare(ids_rec.agent) == 0) {
                     i->counter++;
                     return;
                 }
             }
         }
     }  
-    hids_location.push_back(HidsLocation(ids_rec.ref_id, ids_rec.location, ids_rec.hostname));
+    hids_location.push_back(HidsLocation(ids_rec.ref_id, ids_rec.location, ids_rec.agent));
 }
 
 void StatIds::FlushHidsLocation() {
         
     report = "{ \"type\": \"hids_location\", \"data\" : [ ";
         
-    int j = 0;
-    std::vector<HidsLocation>::iterator i, end;
-        
-    for(i = hids_location.begin(), end = hids_location.end(); i != end; ++i) {
+    std::vector<HidsLocation>::iterator it, end;
+           
+    for(it = hids_location.begin(), end = hids_location.end(); it != end; ++it) {
                     
         report += "{ \"ref_id\": \"";
-        report += i->ref_id;
+        report += it->ref_id;
             
         report += "\", \"location\": \"";
-        report += i->location;
+        report += it->location;
             
         report += "\", \"agent\": \"";
-        report += i->agent;
+        report += it->agent;
             
         report += "\", \"counter\": ";
-        report += std::to_string(i->counter);
+        report += std::to_string(it->counter);
             
         report += ", \"time_of_survey\": \"";
         report += GetNodeTime();
-        report += "\" }";
+        report += "\" } ,";
             
-        if ( j < hids_location.size() - 1) { 
-            report += ", "; 
-            j++;
-        }
     }
+    
+    report.resize(report.size() - 1);
     report += " ] }";
         
     q_stats_ids.push(report);
@@ -354,46 +477,43 @@ void StatIds::UpdateFimCause() {
     for(i = fim_cause.begin(), end = fim_cause.end(); i != end; ++i) {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  {      
             if (i->cause.compare(ids_rec.desc) == 0) {
-                if (i->agent.compare(ids_rec.hostname) == 0) {
+                if (i->agent.compare(ids_rec.agent) == 0) {
                     i->counter++;
                     return;
                 }
             }
         }
     }  
-    fim_cause.push_back(FimCause(ids_rec.ref_id, ids_rec.desc, ids_rec.hostname));
+    fim_cause.push_back(FimCause(ids_rec.ref_id, ids_rec.desc, ids_rec.agent));
 }
 
 void StatIds::FlushFimCause() {
         
     report = "{ \"type\": \"fim_cause\", \"data\" : [ ";
         
-    int j = 0;
-    std::vector<FimCause>::iterator i, end;
-        
-    for(i = fim_cause.begin(), end = fim_cause.end(); i != end; ++i) {
+    std::vector<FimCause>::iterator it, end;
+      
+    for(it = fim_cause.begin(), end = fim_cause.end(); it != end; ++it) {
                     
         report += "{ \"ref_id\": \"";
-        report += i->ref_id;
+        report += it->ref_id;
             
         report += "\", \"cause\": \"";
-        report += i->cause;
+        report += it->cause;
             
         report += "\", \"agent\": \"";
-        report += i->agent;
+        report += it->agent;
             
         report += "\", \"counter\": ";
-        report += std::to_string(i->counter);
+        report += std::to_string(it->counter);
             
         report += ", \"time_of_survey\": \"";
         report += GetNodeTime();
-        report += "\" }";
+        report += "\" } ,";
             
-        if ( j < fim_cause.size() - 1) { 
-            report += ", "; 
-            j++;
-        }
     }
+    
+    report.resize(report.size() - 1);
     report += " ] }";
         
     q_stats_ids.push(report);
@@ -409,46 +529,43 @@ void StatIds::UpdateFimFile() {
     for(i = fim_file.begin(), end = fim_file.end(); i != end; ++i) {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  {      
             if (i->file.compare(ids_rec.location) == 0) {
-                if (i->agent.compare(ids_rec.hostname) == 0) {
+                if (i->agent.compare(ids_rec.agent) == 0) {
                     i->counter++;
                     return;
                 }
             }
         }
     }  
-    fim_file.push_back(FimFile(ids_rec.ref_id, ids_rec.location, ids_rec.hostname));
+    fim_file.push_back(FimFile(ids_rec.ref_id, ids_rec.location, ids_rec.agent));
 }
 
 void StatIds::FlushFimFile() {
         
     report = "{ \"type\": \"fim_file\", \"data\" : [ ";
         
-    int j = 0;
-    std::vector<FimFile>::iterator i, end;
-        
-    for(i = fim_file.begin(), end = fim_file.end(); i != end; ++i) {
+    std::vector<FimFile>::iterator it, end;
+            
+    for(it = fim_file.begin(), end = fim_file.end(); it != end; ++it) {
                     
         report += "{ \"ref_id\": \"";
-        report += i->ref_id;
+        report += it->ref_id;
             
         report += "\", \"file\": \"";
-        report += i->file;
+        report += it->file;
             
         report += "\", \"agent\": \"";
-        report += i->agent;
+        report += it->agent;
             
         report += "\", \"counter\": ";
-        report += std::to_string(i->counter);
+        report += std::to_string(it->counter);
             
         report += ", \"time_of_survey\": \"";
         report += GetNodeTime();
-        report += "\" }";
+        report += "\" } ,";
             
-        if ( j < fim_file.size() - 1) { 
-            report += ", "; 
-            j++;
-        }
     }
+    
+    report.resize(report.size() - 1);
     report += " ] }";
         
     q_stats_ids.push(report);
@@ -465,20 +582,29 @@ void StatIds::UpdateIdsCategory() {
         std::vector<IdsCategory>::iterator i, end;
         
         for(i = ids_category.begin(), end = ids_category.end(); i != end; ++i) {
-            if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
-                if (i->ids_type == ids_rec.ids_type) {
-                    if (i->ids_cat.compare(j) == 0) {
-                        if (i->agent.compare(ids_rec.hostname) == 0) {
+            if (i->ref_id.compare(ids_rec.ref_id) == 0)  {
+                if (i->ids_cat.compare(j) == 0) {
+                            
+                    if ((i->ids_type == 3) || (i->ids_type == 4)) {
+                        
+                        if (i->ids_name.compare(ids_rec.ids) == 0) {
+                            i->counter++;
+                            flag = true;
+                        }
+                    } else {
+                            
+                        if (i->agent.compare(ids_rec.agent) == 0) {
                             i->counter++;
                             flag = true;
                         }
                     }
+                   
                 }
             }
         }
         
         if (!flag) {
-            ids_category.push_back(IdsCategory( ids_rec.ref_id, ids_rec.ids_type, j, ids_rec.hostname));
+            ids_category.push_back(IdsCategory( ids_rec.ref_id, ids_rec.ids_type, j, ids_rec.agent, ids_rec.ids));
             flag = false;
         }
     }  
@@ -488,35 +614,35 @@ void StatIds::FlushIdsCategory() {
     
     report = "{ \"type\": \"ids_cat\", \"data\" : [ ";
         
-    int j = 0;
-    std::vector<IdsCategory>::iterator i, end;
-        
-    for(i = ids_category.begin(), end = ids_category.end(); i != end; ++i) {
+    std::vector<IdsCategory>::iterator it, end;
+            
+    for(it = ids_category.begin(), end = ids_category.end(); it != end; ++it) {
                     
         report += "{ \"ref_id\": \"";
-        report += i->ref_id;
+        report += it->ref_id;
             
         report += "\", \"ids_type\": ";
-        report += std::to_string(i->ids_type);
+        report += std::to_string(it->ids_type);
             
         report += ", \"category\": \"";
-        report += i->ids_cat;
+        report += it->ids_cat;
             
         report += "\", \"agent\": \"";
-        report += i->agent;
+        report += it->agent;
+        
+        report += "\", \"ids\": \"";
+        report += it->ids_name;
             
         report += "\", \"counter\": ";
-        report += std::to_string(i->counter);
+        report += std::to_string(it->counter);
             
         report += ", \"time_of_survey\": \"";
         report += GetNodeTime();
-        report += "\" }";
+        report += "\" } ,";
             
-        if ( j < ids_category.size() - 1) { 
-            report += ", "; 
-            j++;
-        }
     }
+    
+    report.resize(report.size() - 1);
     report += " ] }";
         
     q_stats_ids.push(report);
@@ -531,60 +657,71 @@ void StatIds::UpdateIdsEvent() {
     
     for(i = ids_event.begin(), end = ids_event.end(); i != end; ++i) {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  {  
-            if (i->ids_type == ids_rec.ids_type) {
-                if (i->event == ids_rec.event) {
-                    if (i->agent.compare(ids_rec.hostname) == 0) {
+            
+            if (i->event == ids_rec.event) {
+                
+                if ((i->ids_type == 3) || (i->ids_type == 4)) {
+                        
+                    if (i->ids_name.compare(ids_rec.ids) == 0) {
+                        i->counter++;
+                        return;
+                    }
+                        
+                } else {
+                        
+                    if (i->agent.compare(ids_rec.agent) == 0) {
                         i->counter++;
                         return;
                     }
                 }
-            }  
+            }
+                
         }
     } 
     
-    ids_event.push_back(IdsEvent( ids_rec.ref_id, ids_rec.ids_type, ids_rec.event, ids_rec.severity, ids_rec.desc, ids_rec.hostname));
+    ids_event.push_back(IdsEvent( ids_rec.ref_id, ids_rec.ids_type, ids_rec.event, ids_rec.severity, ids_rec.desc, ids_rec.agent, ids_rec.ids));
 }
 
 void StatIds::FlushIdsEvent() {
     
     report = "{ \"type\": \"ids_event\", \"data\" : [ ";
         
-    int j = 0;
-    std::vector<IdsEvent>::iterator i, end;
-        
-    for(i = ids_event.begin(), end = ids_event.end(); i != end; ++i) {
+    std::vector<IdsEvent>::iterator it, end;
+            
+    for(it = ids_event.begin(), end = ids_event.end(); it != end; ++it) {
                     
         report += "{ \"ref_id\": \"";
-        report += i->ref_id;
+        report += it->ref_id;
             
         report += "\", \"ids_type\": ";
-        report += std::to_string(i->ids_type);
+        report += std::to_string(it->ids_type);
             
         report += ", \"event\": ";
-        report += std::to_string(i->event);
+        report += std::to_string(it->event);
             
         report += ", \"severity\": ";
-        report += std::to_string(i->severity);
+        report += std::to_string(it->severity);
             
         report += ", \"counter\": ";
-        report += std::to_string(i->counter);
+        report += std::to_string(it->counter);
             
         report += ", \"description\": \"";
-        report += i->desc;
+        report += it->desc;
             
         report += "\", \"agent\": \"";
-        report += i->agent;
+        report += it->agent;
+        
+        report += "\", \"ids\": \"";
+        report += it->ids_name;
             
         report += "\", \"time_of_survey\": \"";
         report += GetNodeTime();
             
-        report += "\" }";
+        report += "\" } ,";
             
-        if ( j < ids_category.size() - 1) { 
-            report += ", "; 
-            j++;
-        }
     }
+    
+    report.resize(report.size() - 1);
     report += " ] }";
         
     q_stats_ids.push(report);
@@ -599,9 +736,9 @@ void StatIds::UpdateHidsAlerts() {
     
     
     for(i = hids_alerts_list.begin(), end = hids_alerts_list.end(); i != end; ++i) {
-        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {     
-            if (i->event == ids_rec.event) {
-                if (i->hostname.compare(ids_rec.hostname) == 0) { 
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
+            if (i->agent.compare(ids_rec.agent) == 0) { 
+                if (i->event == ids_rec.event) {
                     //get current time
                     current_time = time(NULL);
                     i->count++;    
@@ -653,9 +790,11 @@ void StatIds::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.srcip = r->src_ip;
     
     sk.alert.dstip = r->dst_ip;
+    
+    sk.alert.agent = r->agent;
         
-    sk.alert.hostname = r->hostname;
-        
+    sk.alert.hostname = r->ids;
+    
     sk.alert.location = r->location;
         
     sk.alert.info = "Message has been repeated ";
@@ -686,9 +825,9 @@ void StatIds::UpdateNidsAlerts() {
     time_t current_time;
     
     for(i = nids_alerts_list.begin(), end = nids_alerts_list.end(); i != end; ++i) {
-        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {     
-            if (i->event == ids_rec.event) {
-                if (i->hostname.compare(ids_rec.hostname) == 0) { 
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
+            if (i->ids.compare(ids_rec.ids) == 0)  {
+                if (i->event == ids_rec.event) {
                     //get current time
                     current_time = time(NULL);
                     i->count++;  
@@ -738,7 +877,9 @@ void StatIds::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.dstip = r->dst_ip;
     
-    sk.alert.hostname = "";
+    sk.alert.hostname = r->ids;
+    
+    sk.alert.agent = r->agent;
         
     sk.alert.location = "";       
     
@@ -762,6 +903,93 @@ void StatIds::FlushNidsAlert() {
     for(i = nids_alerts_list.begin(), end = nids_alerts_list.end(); i != end; ++i) {
         if ((i->alert_time + i->agr.in_period) < current_time)
             nids_alerts_list.erase(i++);
+    }
+}
+
+
+void StatIds::UpdateWafAlerts() {
+    std::list<IdsRecord>::iterator i, end;
+    time_t current_time;
+    
+    for(i = waf_alerts_list.begin(), end = waf_alerts_list.end(); i != end; ++i) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
+            if (i->ids.compare(ids_rec.ids) == 0)  {
+                if (i->event == ids_rec.event) {
+                    //get current time
+                    current_time = time(NULL);
+                    i->count++;  
+                    if ((i->alert_time + i->agr.in_period) < current_time) {
+                        if (i->count >= i->agr.reproduced) {
+                            SendWafAlert(i, i->count);
+                            waf_alerts_list.erase(i);
+                        }
+                        else {
+                            waf_alerts_list.erase(i);
+                            goto new_waf_alert;
+                        }
+                        return;
+                    }
+                }
+            }  
+        }
+    } 
+new_waf_alert:
+    ids_rec.count = 1;
+    waf_alerts_list.push_back(ids_rec);
+}
+
+void StatIds::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
+    
+    sk.alert.ref_id = r->ref_id;
+    
+    sk.alert.source = "ModSecurity";
+    sk.alert.type = "NIDS";
+    
+    if (r->agr.new_event != 0) sk.alert.event = r->agr.new_event;
+    else sk.alert.event = r->event;
+        
+    if (r->agr.new_severity != 0) sk.alert.severity = r->agr.new_severity;
+    else sk.alert.severity = r->severity;
+        
+    copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
+    if (r->agr.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->agr.new_category);
+              
+    if (r->action.compare("none") != 0) sk.alert.action = r->action;
+    else sk.alert.action = "none";
+        
+    if (r->agr.new_description.compare("") != 0)  sk.alert.description = r->agr.new_description;
+    else sk.alert.description = r->desc;
+        
+    sk.alert.srcip = r->src_ip;
+    
+    sk.alert.dstip = r->dst_ip;
+    
+    sk.alert.hostname = r->ids;
+    
+    sk.alert.agent = r->agent;
+        
+    sk.alert.location = "";       
+    
+    sk.alert.info = "Message has been repeated ";
+    sk.alert.info += std::to_string(c);
+    sk.alert.info += " times";
+    
+    sk.alert.event_json = "";
+    
+    sk.alert.status = "aggregated_new";
+    
+    sk.SendAlert();
+}
+
+void StatIds::FlushWafAlert() {
+    std::list<IdsRecord>::iterator i, end;
+    time_t current_time;
+    
+    current_time = time(NULL);
+    
+    for(i = waf_alerts_list.begin(), end = waf_alerts_list.end(); i != end; ++i) {
+        if ((i->alert_time + i->agr.in_period) < current_time)
+            waf_alerts_list.erase(i++);
     }
 }
 

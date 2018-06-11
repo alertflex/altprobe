@@ -32,10 +32,12 @@ class NidsSrcIp : public Ids {
 public: 
     string ip;
     string agent;
+    string ids_name;
         
-    NidsSrcIp (string id, string i, string a) : Ids(id)  {
+    NidsSrcIp (string id, string i, string a, string n) : Ids(id)  {
         ip = i;
         agent = a;
+        ids_name = n;
     }
 };
 
@@ -43,19 +45,23 @@ class NidsDstIp : public Ids {
 public: 
     string ip;
     string agent;
+    string ids_name;
     
-    NidsDstIp (string id, string i, string a) : Ids(id)  {
+    NidsDstIp (string id, string i, string a, string n) : Ids(id)  {
         ip = i;
         agent = a;
+        ids_name = n;
     }
 };
 
-class HidsHostname : public Ids {
+class HidsSrcIp : public Ids {
 public: 
-    string hostname;
+    string ip;
+    string agent;
     
-    HidsHostname (string id, string h) : Ids(id)  {
-        hostname = h;
+    HidsSrcIp (string id, string i, string a) : Ids(id)  {
+        ip = i;
+        agent = a;
     }
 };
 
@@ -97,11 +103,13 @@ public:
     int ids_type;
     string ids_cat;
     string agent;
+    string ids_name;
     
-    IdsCategory ( string id, int type, string cat, string a) : Ids(id)  {
+    IdsCategory ( string id, int type, string cat, string a, string n) : Ids(id)  {
         ids_cat = cat;
         ids_type = type;
         agent = a;
+        ids_name = n;
     }
 };
 
@@ -112,13 +120,41 @@ public:
     unsigned int severity;
     string desc;
     string agent;
+    string ids_name;
     
-    IdsEvent (string id, int type, unsigned int e, unsigned int s, string d, string a) : Ids(id)  {
+    IdsEvent (string id, int type, unsigned int e, unsigned int s, string d, string a, string n) : Ids(id)  {
         event = e;
         severity = s;
         ids_type = type;
         desc = d;
         agent = a;
+        ids_name = n;
+    }
+};
+
+class WafSource : public Ids {
+public: 
+    string source;
+    string agent;
+    string ids_name;
+        
+    WafSource (string id, string s, string a, string n) : Ids(id)  {
+        source = s;
+        agent = a;
+        ids_name = n;
+    }
+};
+
+class WafTarget : public Ids {
+public: 
+    string target;
+    string agent;
+    string ids_name;
+    
+    WafTarget (string id, string t, string a, string n) : Ids(id)  {
+        target = t;
+        agent = a;
+        ids_name = n;
     }
 };
 
@@ -135,12 +171,14 @@ public:
     
     std::list<IdsRecord> nids_alerts_list;
     
+    std::list<IdsRecord> waf_alerts_list;
+    
     //Statistics data
     std::vector<NidsSrcIp> nids_srcip;
     
     std::vector<NidsDstIp> nids_dstip;
     
-    std::vector<HidsHostname> hids_hostname;
+    std::vector<HidsSrcIp> hids_srcip;
     
     std::vector<HidsLocation> hids_location;
     
@@ -151,6 +189,10 @@ public:
     std::vector<IdsCategory> ids_category;
     
     std::vector<IdsEvent> ids_event;
+    
+    std::vector<WafSource> waf_source;
+    
+    std::vector<WafTarget> waf_target;
     
     virtual int Open();
     virtual void Close();
@@ -170,14 +212,18 @@ public:
     void SendNidsAlert(std::list<IdsRecord>::iterator r, int c);
     void FlushNidsAlert();
     
+    void UpdateWafAlerts();
+    void SendWafAlert(std::list<IdsRecord>::iterator r, int c);
+    void FlushWafAlert();
+    
     void UpdateNidsSrcIp();
     void FlushNidsSrcIp();
     
     void UpdateNidsDstIp();
     void FlushNidsDstIp();
     
-    void UpdateHidsHostname();
-    void FlushHidsHostname();
+    void UpdateHidsSrcIp();
+    void FlushHidsSrcIp();
     
     void UpdateHidsLocation();
     void FlushHidsLocation();
@@ -193,6 +239,12 @@ public:
     
     void UpdateIdsEvent();
     void FlushIdsEvent();
+    
+    void UpdateWafSource();
+    void FlushWafSource();
+    
+    void UpdateWafTarget();
+    void FlushWafTarget();
     
     IdsBuffers* GetBuffers(void) {
         return &mem_mon;

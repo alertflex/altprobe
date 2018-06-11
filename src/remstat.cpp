@@ -92,16 +92,14 @@ void RemStat::ProcessLogs() {
         
         std::vector<string>::iterator i, end;
         
-        int j = 0;
         for(i = stats_list.begin(), end = stats_list.end(); i != end; ++i) {
             
             report += *i;
             
-            if ( j < stats_list.size() - 1) {
-                report += ", "; 
-                j++;
-            }
+            report += " ,"; 
         }
+        
+        report.resize(report.size() - 1);
         report += " ] }";
         stats_list.clear();
         

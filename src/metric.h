@@ -183,6 +183,37 @@ public:
     }
 };
 
+class MetricNginx {
+public:    
+    string ref_id;
+    /* Extracted from the decoders */
+    string agent_name;
+    string timestamp;
+    
+    long accepts;
+    long dropped;
+    long active;
+    long handled;
+    long requests;
+    long reading;
+    long writing;
+            
+    void Reset() {
+        
+        ref_id.clear();
+        agent_name.clear();
+        timestamp.clear();
+        
+        accepts = 0;
+        dropped = 0;
+        active = 0;
+        handled = 0;
+        requests = 0;
+        reading = 0;
+        writing = 0;
+    }
+};
+
 namespace bpt = boost::property_tree;
 
 class Metric : public Source {
@@ -191,12 +222,20 @@ public:
     bpt::ptree pt;
     stringstream ss;
     
+    // metrics checks variables
+    string agent;
+    string metric;
+    string parameter;
+    long value;
+    bool filter_flag;
+    
     //
     MetricMemory rec_mem;
     MetricNetwork rec_net;
     MetricFilesystem rec_fs;
     MetricCpu rec_cpu;
     MetricProcess rec_pro;
+    MetricNginx rec_nginx;
     
     Metric (string skey) : Source(skey) {
         ClearRecords();
@@ -221,15 +260,26 @@ public:
     void SendFilesystemStat();
     void SendCpuStat();
     void SendProcessStat();
+    void SendNginxStat();
+    void CheckThresholds(Threshold* th);
+    void SendAlert(Threshold* th);
     
     void ClearRecords() {
+        
         rec_mem.Reset();
         rec_net.Reset();
         rec_fs.Reset();
         rec_cpu.Reset();
         rec_pro.Reset();
+        rec_nginx.Reset();
         ResetJsontree();
         jsonPayload.clear();
+        
+        agent.clear();
+        metric.clear();
+        parameter.clear();
+        value = 0L;
+        filter_flag = false;
     }
 };
 

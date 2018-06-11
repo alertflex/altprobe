@@ -139,7 +139,11 @@ void Source::sendAlertMultiple(int type_source) {
     sk.alert.action = "none";
         
     sk.alert.description = "Multiple alert";
-        
+    
+    sk.alert.agent = node_id;
+    
+    sk.alert.hostname = node_id;
+    
     sk.alert.location = "";
         
     sk.alert.info = "";

@@ -23,6 +23,7 @@ public:
     string dst_ip;  
     string dst_country; 
     string dst_agent;
+    string ids;
     unsigned int dst_port; 
     unsigned int bytes; 
     string info1;
@@ -37,6 +38,7 @@ public:
         dst_ip.clear();
         dst_agent.clear();
         dst_country.clear();
+        ids.clear();
         dst_port = 0;
         bytes = 0;
         info1.clear();
@@ -56,6 +58,7 @@ public:
 class Traffic {
 public:
     string ref_id;
+    string ids;
     unsigned long drop;
     unsigned long accept;
     unsigned long invalid;
@@ -82,7 +85,7 @@ public:
         
     void Reset() {
         ref_id.clear();
-        
+        ids.clear();
         invalid = 0;
         pkts = 0;
         bytes = 0;

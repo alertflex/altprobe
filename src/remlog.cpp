@@ -71,16 +71,14 @@ void RemLog::ProcessLogs() {
         
         std::vector<string>::iterator i, end;
         
-        int j = 0;
         for(i = logs_list.begin(), end = logs_list.end(); i != end; ++i) {
             
             report += *i;
             
-            if ( j < logs_list.size() - 1) {
-                report += ", "; 
-                j++;
-            }
+            report += " ,"; 
         }
+        
+        report.resize(report.size() - 1);
         report += " ] }";
         logs_list.clear();
         

@@ -21,7 +21,8 @@ public:
     int ids_type; // 1 - fim, 2 - hids, 3 - nids, 4 - waf
     string src_ip;             
     string dst_ip; 
-    string hostname;
+    string agent;
+    string ids;
     string location;
     string action;
     int event;
@@ -40,7 +41,8 @@ public:
         ids_type = 0;
         src_ip.clear();
         dst_ip.clear(); 
-        hostname.clear(); 
+        agent.clear();
+        ids.clear(); 
         location.clear(); 
         action.clear();
         event = 0;
@@ -74,7 +76,7 @@ public:
     
     unsigned int nids_dstip;
     
-    unsigned int hids_hostname;
+    unsigned int hids_srcip;
     
     unsigned int hids_location;
     
@@ -85,6 +87,10 @@ public:
     unsigned int ids_category;
     
     unsigned int ids_event;
+    
+    unsigned int waf_source;
+    
+    unsigned int waf_target;
     
 };
 

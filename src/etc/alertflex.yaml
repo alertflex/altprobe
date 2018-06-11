@@ -5,7 +5,7 @@
 
 # Collector version 0.7
 collector:
-  id: "_node_id"
+  id: "test01"
     
   # time difference between collector and controller's, timezones in hours
   time_zone: 0

@@ -119,6 +119,7 @@ public:
     string dst_ip;
     unsigned int dst_port;
     
+    string ids;
     string protocol;
     string datetime; 
         
@@ -148,7 +149,8 @@ public:
         dst_port = 0;
         protocol.clear();
         datetime.clear();
-                
+        ids.clear();    
+        
         alert.Reset();
         dns.Reset();
         ssh.Reset();

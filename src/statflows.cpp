@@ -48,7 +48,7 @@ int StatFlows::Go(void) {
             gettimeofday(&end, NULL);
             seconds  = end.tv_sec  - start.tv_sec;
             
-            ProcessTraffic();
+            ProcessFlows();
             
             if (flush_timer < seconds) {
                 flush_timer = seconds;
@@ -65,11 +65,11 @@ int StatFlows::Go(void) {
 
 
 
-void StatFlows::ProcessTraffic() {
+void StatFlows::ProcessFlows() {
 
     int counter = 0;
     
-    UpdateTraffic();
+    ProcessTraffic();
     
     while (!q_flows.empty()) {
         
@@ -115,7 +115,7 @@ void StatFlows::RoutineJob() {
     FlushTraffic();
 }
 
-void StatFlows::UpdateTraffic() {
+void StatFlows::ProcessTraffic() {
     
     while (!q_netstat.empty()) {
         
@@ -123,85 +123,118 @@ void StatFlows::UpdateTraffic() {
         
         q_netstat.pop(traffic_rec);
         
-        traffic.Aggregate(&traffic_rec);
+        if (UpdateTraffic(traffic_rec)) traffics.push_back(traffic_rec);
     }
+}
+
+bool StatFlows::UpdateTraffic(Traffic t) {
+    
+    std::vector<Traffic>::iterator i, end;
+    
+    for(i = traffics.begin(), end = traffics.end(); i != end; ++i) {
+            
+        if (i->ref_id.compare(traffic_rec.ref_id) == 0)  {      
+            
+            if (i->ids.compare(traffic_rec.ids) == 0)  {
+                
+                i->Aggregate(&traffic_rec);
+                return false;
+            }
+        }
+    }  
+    
+    return true;
 }
 
 void StatFlows::FlushTraffic() {
     
-    report = "{ \"type\": \"flows_traffic\", \"data\" : ";
+    
+    report = "{ \"type\": \"flows_traffic\", \"data\" : [ ";
+    
+    std::vector<Traffic>::iterator it, end;
         
-    report += "{ \"ref_id\": \"";
-    report += traffic.ref_id;
+    for(it = traffics.begin(), end = traffics.end(); it != end; ++it) {
+        
+        report += "{ \"ref_id\": \"";
+        report += it->ref_id;
+    
+        report += "\", \"ids\": \"";
+        report += it->ids;
             
-    report += "\", \"invalid\": ";
-    report += std::to_string(traffic.invalid);
+        report += "\", \"invalid\": ";
+        report += std::to_string(it->invalid);
             
-    report += ", \"pkts\": ";
-    report += std::to_string(traffic.pkts);
+        report += ", \"pkts\": ";
+        report += std::to_string(it->pkts);
             
-    report += ", \"bytes\": ";
-    report += std::to_string(traffic.bytes);
+        report += ", \"bytes\": ";
+        report += std::to_string(it->bytes);
         
-    report += ", \"ethernet\": ";
-    report += std::to_string(traffic.ethernet);
+        report += ", \"ethernet\": ";
+        report += std::to_string(it->ethernet);
         
-    report += ", \"ppp\": ";
-    report += std::to_string(traffic.ppp);
+        report += ", \"ppp\": ";
+        report += std::to_string(it->ppp);
         
-    report += ", \"pppoe\": ";
-    report += std::to_string(traffic.pppoe);
+        report += ", \"pppoe\": ";
+        report += std::to_string(it->pppoe);
         
-    report += ", \"gre\": ";
-    report += std::to_string(traffic.gre);
+        report += ", \"gre\": ";
+        report += std::to_string(it->gre);
         
-    report += ", \"vlan\": ";
-    report += std::to_string(traffic.vlan);
+        report += ", \"vlan\": ";
+        report += std::to_string(it->vlan);
         
-    report += ", \"vlan_qinq\": ";
-    report += std::to_string(traffic.vlan_qinq);
+        report += ", \"vlan_qinq\": ";
+        report += std::to_string(it->vlan_qinq);
         
-    report += ", \"mpls\": ";
-    report += std::to_string(traffic.mpls);
+        report += ", \"mpls\": ";
+        report += std::to_string(it->mpls);
         
-    report += ", \"ipv4\": ";
-    report += std::to_string(traffic.ipv4);
+        report += ", \"ipv4\": ";
+        report += std::to_string(it->ipv4);
         
-    report += ", \"ipv6\": ";
-    report += std::to_string(traffic.ipv6);
+        report += ", \"ipv6\": ";
+        report += std::to_string(it->ipv6);
         
-    report += ", \"tcp\": ";
-    report += std::to_string(traffic.tcp);
+        report += ", \"tcp\": ";
+        report += std::to_string(it->tcp);
         
-    report += ", \"udp\": ";
-    report += std::to_string(traffic.udp);
+        report += ", \"udp\": ";
+        report += std::to_string(it->udp);
         
-    report += ", \"sctp\": ";
-    report += std::to_string(traffic.sctp);
+        report += ", \"sctp\": ";
+        report += std::to_string(it->sctp);
         
-    report += ", \"icmpv4\": ";
-    report += std::to_string(traffic.icmpv4);
+        report += ", \"icmpv4\": ";
+        report += std::to_string(it->icmpv4);
         
-    report += ", \"icmpv6\": ";
-    report += std::to_string(traffic.icmpv6);
+        report += ", \"icmpv6\": ";
+        report += std::to_string(it->icmpv6);
         
-    report += ", \"teredo\": ";
-    report += std::to_string(traffic.teredo);
+        report += ", \"teredo\": ";
+        report += std::to_string(it->teredo);
         
-    report += ", \"ipv4_in_ipv6\": ";
-    report += std::to_string(traffic.ipv4_in_ipv6);
+        report += ", \"ipv4_in_ipv6\": ";
+        report += std::to_string(it->ipv4_in_ipv6);
         
-    report += ", \"ipv6_in_ipv6\": ";
-    report += std::to_string(traffic.ipv6_in_ipv6);
+        report += ", \"ipv6_in_ipv6\": ";
+        report += std::to_string(it->ipv6_in_ipv6);
             
-    report += ", \"time_of_survey\": \"";
-    report += GetNodeTime();
-    report += "\" } }";
+        report += ", \"time_of_survey\": \"";
+        report += GetNodeTime();
+        report += "\" } ,";
+        
+    }
+    
+    report.resize(report.size() - 1);
+    report += " ] }";
+    
         
     q_stats_flow.push(report);
     
     report.clear();    
-    traffic.Reset();
+    traffics.clear();
 }
 
 
@@ -213,27 +246,30 @@ void StatFlows::UpdateTopTalkers() {
     for(i = top_talkers.begin(), end = top_talkers.end(); i != end; ++i) {
         if (i->ref_id.compare(flows_rec.ref_id) == 0)  {      
             
-            if ((i->src_ip.compare(flows_rec.src_ip) == 0) && (i->dst_ip.compare(flows_rec.dst_ip) == 0)) { 
-                i->counter = i->counter + flows_rec.bytes;
-                return;
-            }
+            if (i->ids.compare(flows_rec.ids) == 0)  {
+                
+                if ((i->src_ip.compare(flows_rec.src_ip) == 0) && (i->dst_ip.compare(flows_rec.dst_ip) == 0)) { 
+                    i->counter = i->counter + flows_rec.bytes;
+                    return;
+                }
             
-            if ((i->src_ip.compare(flows_rec.dst_ip) == 0) && (i->dst_ip.compare(flows_rec.src_ip) == 0)) { 
-                i->counter = i->counter + flows_rec.bytes;
-                return;
+                if ((i->src_ip.compare(flows_rec.dst_ip) == 0) && (i->dst_ip.compare(flows_rec.src_ip) == 0)) { 
+                    i->counter = i->counter + flows_rec.bytes;
+                    return;
+                }
             }
         }
     }  
     
-    top_talkers.push_back(TopTalker(flows_rec.ref_id, flows_rec.src_ip, flows_rec.dst_ip, flows_rec.src_agent, flows_rec.dst_agent, flows_rec.bytes));
+    
+    top_talkers.push_back(TopTalker(flows_rec.ref_id, flows_rec.ids, flows_rec.src_ip, flows_rec.dst_ip, flows_rec.src_agent, flows_rec.dst_agent, flows_rec.bytes));
     
 }
 
-bool convSort(TopTalker left, TopTalker right)
-{
+bool sortTalkers(TopTalker left, TopTalker right) {
+    
     return left.counter > right.counter;
  
-    return 0;
 } 
 
 void StatFlows::FlushTopTalkers() {
@@ -242,45 +278,56 @@ void StatFlows::FlushTopTalkers() {
     
     report = "{ \"type\": \"flows_talker\", \"data\" : [ ";
         
+    std::sort(top_talkers.begin(), top_talkers.end(), sortTalkers);
+    
+    std::vector<Agent>::iterator it_ag, end_ag;
+    std::vector<TopTalker>::iterator it_tlk, end_tlk;
+    string agent;
+    
+    for(it_ag = fs.agents_list.begin(), end_ag = fs.agents_list.end(); it_ag != end_ag; ++it_ag) {
         
-    std::sort(top_talkers.begin(), top_talkers.end(), convSort);
+        agent = it_ag->name;
+        int i = fs.filter.traf.top_talkers;
+                
+        for(it_tlk = top_talkers.begin(), end_tlk = top_talkers.end(); it_tlk != end_tlk && 0 < i; ++it_tlk) {
+            
+            if (agent.compare(it_tlk->src_agent) == 0 || agent.compare(it_tlk->dst_agent) == 0) {
+                
+                i--;
+            
+                report += "{ \"ref_id\": \"";
+                report += it_tlk->ref_id;
         
-    std::vector<TopTalker>::iterator it, end;
-        
-    int i = 0;
-    int j = 0;
-    for(it = top_talkers.begin(), end = top_talkers.end(); it != end && i < fs.filter.traf.top_talkers; ++it, i++) {
+                report += "\", \"ids\": \"";
+                report += it_tlk->ids;
             
-        report += "{ \"ref_id\": \"";
-        report += it->ref_id;
+                report += "\", \"srcip\": \"";
+                report += it_tlk->src_ip;
             
-        report += "\", \"srcip\": \"";
-        report += it->src_ip;
+                report += "\", \"dstip\": \"";
+                report += it_tlk->dst_ip;
             
-        report += "\", \"dstip\": \"";
-        report += it->dst_ip;
+                report += "\", \"srcagent\": \"";
+                report += it_tlk->src_agent;
             
-        report += "\", \"srcagent\": \"";
-        report += it->src_agent;
+                report += "\", \"dstagent\": \"";
+                report += it_tlk->dst_agent;
             
-        report += "\", \"dstagent\": \"";
-        report += it->dst_agent;
+                report += "\", \"traffic\": ";
+                report += std::to_string(it_tlk->counter);
             
-        report += "\", \"traffic\": ";
-        report += std::to_string(it->counter);
-            
-        report += ", \"time_of_survey\": \"";
-        report += GetNodeTime();
-        report += "\" }";
-            
-        if ( j < top_talkers.size() - 1 && i < fs.filter.traf.top_talkers) {
-            report += ", "; 
-            j++;
+                report += ", \"time_of_survey\": \"";
+                report += GetNodeTime();
+                report += "\" } ,";
+            }
         }
     }
-        
+    
+    report.resize(report.size() - 1);
     report += " ] }";
-        
+    
+    // SysLog((char*) report.c_str());
+    
     q_stats_flow.push(report);
     
     report.clear();
@@ -295,19 +342,21 @@ void StatFlows::UpdateApplications() {
     std::vector<Application>::iterator i, end;
     
     for(i = applications.begin(), end = applications.end(); i != end; ++i) {
-        if (i->ref_id.compare(flows_rec.ref_id) == 0)  {     
-            if (i->app.compare(flows_rec.info1) == 0) {
+        if (i->ref_id.compare(flows_rec.ref_id) == 0)  { 
+            if (i->ids.compare(flows_rec.ids) == 0)  {
+                if (i->app.compare(flows_rec.info1) == 0) {
                 
-                if (i->agent.compare(flows_rec.src_agent) == 0) {
-                    i->counter = i->counter + flows_rec.bytes;
-                    src = true;
-                    continue;
-                }
+                    if (i->agent.compare(flows_rec.src_agent) == 0) {
+                        i->counter = i->counter + flows_rec.bytes;
+                        src = true;
+                        continue;
+                    }
             
-                if (i->agent.compare(flows_rec.dst_agent) == 0) {
-                    i->counter = i->counter + flows_rec.bytes;
-                    dst = true;
-                    continue;
+                    if (i->agent.compare(flows_rec.dst_agent) == 0) {
+                        i->counter = i->counter + flows_rec.bytes;
+                        dst = true;
+                        continue;
+                    }
                 }
             }
         }
@@ -315,40 +364,39 @@ void StatFlows::UpdateApplications() {
     
     if (src || dst) return;
     
-    if (flows_rec.dst_agent.compare("none") != 0) applications.push_back(Application(flows_rec.ref_id, flows_rec.info1, flows_rec.dst_agent, flows_rec.bytes));
-    if (flows_rec.src_agent.compare("none") != 0) applications.push_back(Application(flows_rec.ref_id, flows_rec.info1, flows_rec.src_agent, flows_rec.bytes));
+    if (flows_rec.dst_agent.compare("ext_net") != 0) applications.push_back(Application(flows_rec.ref_id, flows_rec.ids, flows_rec.info1, flows_rec.dst_agent, flows_rec.bytes));
+    if (flows_rec.src_agent.compare("ext_net") != 0) applications.push_back(Application(flows_rec.ref_id, flows_rec.ids, flows_rec.info1, flows_rec.src_agent, flows_rec.bytes));
 }
 
 void StatFlows::FlushApplications() {
         
     report = "{ \"type\": \"flows_app\", \"data\" : [ ";
         
-    std::vector<Application>::iterator i, end;
+    std::vector<Application>::iterator it, end;
         
-    int j = 0;
-    for(i = applications.begin(), end = applications.end(); i != end; ++i) {
+    for(it = applications.begin(), end = applications.end(); it != end; ++it) {
             
         report += "{ \"ref_id\": \"";
-        report += i->ref_id;
+        report += it->ref_id;
+        
+        report += "\", \"ids\": \"";
+        report += it->ids;
             
         report += "\", \"app\": \"";
-        report += i->app;
+        report += it->app;
             
         report += "\", \"agent\": \"";
-        report += i->agent;
+        report += it->agent;
                 
         report += "\", \"traffic\": ";
-        report += std::to_string(i->counter);
+        report += std::to_string(it->counter);
             
         report += ", \"time_of_survey\": \"";
         report += GetNodeTime();
-        report += "\" }";
-            
-        if ( j < applications.size() - 1) {
-            report += ", "; 
-            j++;
-        }
+        report += "\" } ,";
     }
+    
+    report.resize(report.size() - 1);
     report += " ] }";
         
     q_stats_flow.push(report);
@@ -357,26 +405,29 @@ void StatFlows::FlushApplications() {
     applications.clear();
 }
 
+
 void StatFlows::UpdateDnsQueries() {
     
     bool src = false;
     bool dst = false;
     std::vector<DnsQuery>::iterator i, end;
-        
+    
     for(i = dns_queries.begin(), end = dns_queries.end(); i != end; ++i) {
-        if (i->ref_id.compare(flows_rec.ref_id) == 0)  {     
-            if (i->query.compare(flows_rec.info1) == 0) {
-                
-                if (i->agent.compare(flows_rec.src_agent) == 0) {
-                    i->counter++;
-                    src = true;
-                    continue;
-                }
+        if (i->ref_id.compare(flows_rec.ref_id) == 0)  {
+            if (i->ids.compare(flows_rec.ids) == 0)  {
+                if (i->query.compare(flows_rec.info1) == 0) {
+                    
+                    if (i->agent.compare(flows_rec.src_agent) == 0) {
+                        i->counter++;
+                        src = true;
+                        continue;
+                    }
             
-                if (i->agent.compare(flows_rec.dst_agent) == 0) {
-                    i->counter++;
-                    dst = true;
-                    continue;
+                    if (i->agent.compare(flows_rec.dst_agent) == 0) {
+                        i->counter++;
+                        dst = true;
+                        continue;
+                    }
                 }
             }
         }
@@ -384,47 +435,74 @@ void StatFlows::UpdateDnsQueries() {
     
     if (src || dst) return;
     
-    if (flows_rec.dst_agent.compare("none") != 0) dns_queries.push_back(DnsQuery(flows_rec.ref_id, flows_rec.info1, flows_rec.dst_agent));
-    if (flows_rec.src_agent.compare("none") != 0) dns_queries.push_back(DnsQuery(flows_rec.ref_id, flows_rec.info1, flows_rec.src_agent));
-    
+    if (flows_rec.dst_agent.compare("ext_net") != 0) {
+        dns_queries.push_back(DnsQuery(flows_rec.ref_id, flows_rec.ids, flows_rec.info1, flows_rec.dst_agent));
+    }
+    if (flows_rec.src_agent.compare("ext_net") != 0) {
+        dns_queries.push_back(DnsQuery(flows_rec.ref_id, flows_rec.ids, flows_rec.info1, flows_rec.src_agent));
+    }
 }
 
+bool sortDns(DnsQuery left, DnsQuery right) {
+    
+    return left.counter > right.counter;
+ 
+} 
+
 void StatFlows::FlushDnsQueries() {
-        
+    
+    boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
+    
     report = "{ \"type\": \"flows_dns\", \"data\" : [ ";
+    
+    std::sort(dns_queries.begin(), dns_queries.end(), sortDns);
         
-    std::vector<DnsQuery>::iterator i, end;
+    std::vector<Agent>::iterator it_ag, end_ag;
+    std::vector<DnsQuery>::iterator it_dns, end_dns;
+    string agent;
+    
+    for(it_ag = fs.agents_list.begin(), end_ag = fs.agents_list.end(); it_ag != end_ag; ++it_ag) {
         
-    int j = 0;
-    for(i = dns_queries.begin(), end = dns_queries.end(); i != end; ++i) {
-            
-        report += "{ \"ref_id\": \"";
-        report += i->ref_id;
-            
-        report += "\", \"query\": \"";
-        report += i->query;
-            
-        report += "\", \"agent\": \"";
-        report += i->agent;
+        agent = it_ag->name;
+        int i = fs.filter.traf.top_talkers;
                 
-        report += "\", \"counter\": ";
-        report += std::to_string(i->counter);
+        for(it_dns = dns_queries.begin(), end_dns = dns_queries.end(); it_dns != end_dns && 0 < i; ++it_dns) {
             
-        report += ", \"time_of_survey\": \"";
-        report += GetNodeTime();
-        report += "\" }";
+            if (agent.compare(it_dns->agent) == 0) {
+                
+                i--;
             
-        if ( j < dns_queries.size() - 1) {
-            report += ", "; 
-            j++;
+                report += "{ \"ref_id\": \"";
+                report += it_dns->ref_id;
+        
+                report += "\", \"ids\": \"";
+                report += it_dns->ids;
+            
+                report += "\", \"query\": \"";
+                report += it_dns->query;
+            
+                report += "\", \"agent\": \"";
+                report += it_dns->agent;
+                
+                report += "\", \"counter\": ";
+                report += std::to_string(it_dns->counter);
+            
+                report += ", \"time_of_survey\": \"";
+                report += GetNodeTime();
+                report += "\" } ,";
+            
+            }
         }
     }
+    
+    report.resize(report.size() - 1);
     report += " ] }";
-        
+    
     q_stats_flow.push(report);
     
     report.clear();
     dns_queries.clear();
+    
 }
 
 void StatFlows::UpdateCountries() {
@@ -439,28 +517,30 @@ void StatFlows::UpdateCountries() {
     for(i = countries.begin(), end = countries.end(); i != end; ++i) {
         
         if (i->ref_id.compare(flows_rec.ref_id) == 0)  { 
-            if (i->country.compare(flows_rec.src_country) == 0) { 
-                i->counter = i->counter + flows_rec.bytes;
-                flag_src =true;
-            }
-            
-            if (!(flag_both && flag_src))
-                if (i->country.compare(flows_rec.dst_country) == 0) {
+            if (i->ids.compare(flows_rec.ids) == 0)  { 
+                if (i->country.compare(flows_rec.src_country) == 0) { 
                     i->counter = i->counter + flows_rec.bytes;
-                    flag_dst = true;
+                    flag_src =true;
                 }
+            
+                if (!(flag_both && flag_src))
+                    if (i->country.compare(flows_rec.dst_country) == 0) {
+                        i->counter = i->counter + flows_rec.bytes;
+                        flag_dst = true;
+                    }
         
-            if (flag_src && flag_dst) return;
-            if (flag_src && flag_both) return;
+                if (flag_src && flag_dst) return;
+                if (flag_src && flag_both) return;
+            }
         }
     }  
     
     if (!flag_src) {
-        countries.push_back(Country(flows_rec.ref_id, flows_rec.src_country, flows_rec.bytes));
+        countries.push_back(Country(flows_rec.ref_id, flows_rec.ids, flows_rec.src_country, flows_rec.bytes));
     }
         
     if (!flag_dst && !flag_both) {
-        countries.push_back(Country(flows_rec.ref_id, flows_rec.dst_country, flows_rec.bytes));
+        countries.push_back(Country(flows_rec.ref_id, flows_rec.ids, flows_rec.dst_country, flows_rec.bytes));
     }
 }
 
@@ -468,29 +548,29 @@ void StatFlows::FlushCountries() {
     
     report = "{ \"type\": \"flows_country\", \"data\" : [ ";
         
-    std::vector<Country>::iterator i, end;
+    std::vector<Country>::iterator it, end;
         
-    int j = 0;
-    for(i = countries.begin(), end = countries.end(); i != end; ++i) {
+    for(it = countries.begin(), end = countries.end(); it != end; ++it) {
             
         report += "{ \"ref_id\": \"";
-        report += i->ref_id;
+        report += it->ref_id;
+        
+        report += "\", \"ids\": \"";
+        report += it->ids;
             
         report += "\", \"country\": \"";
-        report += i->country;
+        report += it->country;
                 
         report += "\", \"traffic\": ";
-        report += std::to_string(i->counter);
+        report += std::to_string(it->counter);
             
         report += ", \"time_of_survey\": \"";
         report += GetNodeTime();
-        report += "\" }";
-            
-        if ( j < countries.size() - 1) {
-            report += ", "; 
-            j++;
-        }
+        report += "\" } ,";
+    
     }
+    
+    report.resize(report.size() - 1);
     report += " ] }";
         
     q_stats_flow.push(report);
@@ -505,62 +585,63 @@ void StatFlows::UpdateSshSessions() {
     std::vector<SshSession>::iterator i, end;
     
     for(i = ssh_sessions.begin(), end = ssh_sessions.end(); i != end; ++i) {
-        if (i->ref_id.compare(flows_rec.ref_id) == 0)  {      
-            if ((i->src_ip.compare(flows_rec.src_ip) == 0) && (i->dst_ip.compare(flows_rec.dst_ip) == 0)) { 
-                if ((i->client.compare(flows_rec.info1) == 0) && (i->server.compare(flows_rec.info2) == 0)) { 
-                    i->counter++;
-                    return;
+        if (i->ref_id.compare(flows_rec.ref_id) == 0)  { 
+            if (i->ids.compare(flows_rec.ids) == 0)  {
+                if ((i->src_ip.compare(flows_rec.src_ip) == 0) && (i->dst_ip.compare(flows_rec.dst_ip) == 0)) { 
+                    if ((i->client.compare(flows_rec.info1) == 0) && (i->server.compare(flows_rec.info2) == 0)) { 
+                        i->counter++;
+                        return;
+                    }
                 }
             }
         }
     }  
     
-    ssh_sessions.push_back(SshSession(flows_rec.ref_id, flows_rec.info1, flows_rec.info2, flows_rec.src_ip, flows_rec.dst_ip, flows_rec.src_agent, flows_rec.dst_agent));
-    
+    ssh_sessions.push_back(SshSession(flows_rec.ref_id, flows_rec.ids, flows_rec.info1, flows_rec.info2, flows_rec.src_ip, flows_rec.dst_ip, flows_rec.src_agent, flows_rec.dst_agent));
 }
 
 void StatFlows::FlushSshSessions() {
     
     report = "{ \"type\": \"flows_ssh\", \"data\" : [ ";
         
-    std::vector<SshSession>::iterator i, end;
+    std::vector<SshSession>::iterator it, end;
         
-    int j = 0;
-    for(i = ssh_sessions.begin(), end = ssh_sessions.end(); i != end; ++i) {
+    for(it = ssh_sessions.begin(), end = ssh_sessions.end(); it != end; ++it) {
             
         report += "{ \"ref_id\": \"";
-        report += i->ref_id;
+        report += it->ref_id;
+        
+        report += "\", \"ids\": \"";
+        report += it->ids;
             
         report += "\", \"client_sw\": \"";
-        report += i->client;
+        report += it->client;
             
         report += "\", \"server_sw\": \"";
-        report += i->server;
+        report += it->server;
             
         report += "\", \"srcip\": \"";
-        report += i->src_ip;
+        report += it->src_ip;
             
         report += "\", \"dstip\": \"";
-        report += i->dst_ip;
+        report += it->dst_ip;
             
         report += "\", \"src_agent\": \"";
-        report += i->src_agent;
+        report += it->src_agent;
             
         report += "\", \"dst_agent\": \"";
-        report += i->dst_agent;
+        report += it->dst_agent;
                 
         report += "\", \"counter\": ";
-        report += std::to_string(i->counter);
+        report += std::to_string(it->counter);
             
         report += ", \"time_of_survey\": \"";
         report += GetNodeTime();
-        report += "\" }";
+        report += "\" } ,";
             
-        if ( j < ssh_sessions.size() - 1) {
-            report += ", "; 
-            j++;
-        }
     }
+    
+    report.resize(report.size() - 1);
     report += " ] }";
         
     q_stats_flow.push(report);
@@ -572,8 +653,7 @@ void StatFlows::FlushSshSessions() {
 
 void StatFlows::UpdateThresholds() {
     std::vector<Threshold*>::iterator i, end;
-    unsigned long tmp;
-    
+        
     boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
     
     for ( i = fs.filter.traf.th.begin(), end = fs.filter.traf.th.end(); i != end; ++i ) {
@@ -624,6 +704,7 @@ void StatFlows::SendAlert(Threshold* th, bool type_alert) {
     sk.alert.srcip = "";
     string strNodeId(node_id);
     sk.alert.hostname = strNodeId;
+    sk.alert.agent = strNodeId;
     sk.alert.type = "NIDS";
         
     if ( th->agr.new_event != 0) sk.alert.event = th->agr.new_event;

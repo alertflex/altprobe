@@ -150,8 +150,9 @@ int Nids::ParsJson (char* redis_payload) {
         else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
+        rec.ids = pt.get<string>("host","");
         rec.protocol = pt.get<string>("proto","");
-        
+                
         // alert record
         rec.alert.action = pt.get<string>("alert.action","");
                 
@@ -187,6 +188,8 @@ int Nids::ParsJson (char* redis_payload) {
         if (rec.dst_type == 0) rec.dst_agent = "ext_net";
         else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
+        
+        rec.ids = pt.get<string>("host","");
         
         rec.protocol = pt.get<string>("proto","");
         
@@ -234,6 +237,7 @@ int Nids::ParsJson (char* redis_payload) {
         else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
+        rec.ids = pt.get<string>("host","");
         rec.protocol = pt.get<string>("proto","");
         
         rec.ssh.client_proto = pt.get<string>("ssh.client.proto_version","indef");
@@ -266,6 +270,7 @@ int Nids::ParsJson (char* redis_payload) {
         else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
+        rec.ids = pt.get<string>("host","");
         rec.protocol = pt.get<string>("proto","");
         
         rec.netflow.app_proto = pt.get<string>("app_proto","indef");
@@ -285,6 +290,8 @@ int Nids::ParsJson (char* redis_payload) {
     rec.event_type = 0;
     
     if (event_type.compare("stats") == 0) {
+        
+        net_stat.ids = pt.get<string>("host","");
         
         net_stat.ref_id = fs.filter.ref_id;
         net_stat.invalid = pt.get<long>("stats.decoder.invalid",0);
@@ -347,12 +354,15 @@ void Nids::CreateLogPayload(int r) {
 			
             report +=  "\",\"_flow_id\":";
             report +=  std::to_string(rec.flow_id);
-			
+            
             report +=  ",\"_srcip\":\"";
             report +=  rec.src_ip;
 			
             report +=  "\",\"_dstip\":\"";
             report +=  rec.dst_ip;
+            
+            report +=  "\",\"_ids\":\"";
+            report +=  rec.ids;
 			
             report += "\",\"_srcip_host\":\"";
             report += rec.src_agent;
@@ -408,6 +418,9 @@ void Nids::CreateLogPayload(int r) {
 			
             report +=  "\",\"_dstip\":\"";
             report +=  rec.dst_ip;
+            
+            report +=  "\",\"_ids\":\"";
+            report +=  rec.ids;
 			
             report += "\",\"_srcip_host\":\"";
             report += rec.src_agent;
@@ -447,7 +460,7 @@ void Nids::CreateLogPayload(int r) {
             }
             report +=  "}";
             
-            //SysLog((char*) report.str().c_str());
+            // SysLog((char*) report.c_str());
             
             break;
             
@@ -476,6 +489,9 @@ void Nids::CreateLogPayload(int r) {
 			
             report +=  "\",\"_dstip\":\"";
             report +=  rec.dst_ip;
+            
+            report +=  "\",\"_ids\":\"";
+            report +=  rec.ids;
 			
             report += "\",\"_srcip_host\":\"";
             report += rec.src_agent;
@@ -537,6 +553,9 @@ void Nids::CreateLogPayload(int r) {
 			
             report += "\",\"_dstip\":\"";
             report += rec.dst_ip;
+            
+            report +=  "\",\"_ids\":\"";
+            report +=  rec.ids;
 			
             report += "\",\"_srcip_host\":\"";
             report += rec.src_agent;
@@ -619,8 +638,14 @@ void Nids::SendAlert(int s, BwList* bwl) {
         
     sk.alert.srcip = rec.src_ip;
     sk.alert.dstip = rec.dst_ip;
-        
-    sk.alert.hostname = rec.src_agent;
+    
+    if (rec.dst_agent.compare("ext_net") != 0) sk.alert.agent = rec.dst_agent;
+    else {
+        if (rec.src_agent.compare("ext_net") != 0) sk.alert.agent = rec.src_agent;
+        else sk.alert.agent = "ext_net";
+    }
+    
+    sk.alert.hostname = rec.ids;
     sk.alert.location = rec.dst_agent;
               
     sk.alert.info = "\"artifacts\": [";
@@ -673,7 +698,8 @@ int Nids::PushIdsRecord(BwList* bwl) {
     ids_rec.src_ip = rec.src_ip;
     ids_rec.dst_ip = rec.dst_ip;
     
-    ids_rec.hostname = rec.src_agent;
+    ids_rec.agent = rec.src_agent;
+    ids_rec.ids = rec.ids;
     ids_rec.location = rec.dst_agent;
                             
     if (bwl != NULL) {
@@ -717,7 +743,9 @@ void Nids::PushFlowsRecord() {
             
             flows_rec.src_agent = rec.src_agent;
             flows_rec.dst_agent = rec.dst_agent;
-                
+            
+            flows_rec.ids = rec.ids;
+            
             flows_rec.info1 = rec.dns.rrname;
             flows_rec.info2 = rec.dns.rdata;
     
@@ -736,6 +764,8 @@ void Nids::PushFlowsRecord() {
             
             flows_rec.src_agent = rec.src_agent;
             flows_rec.dst_agent = rec.dst_agent;
+            
+            flows_rec.ids = rec.ids;
                 
             flows_rec.info1 = rec.ssh.client_sw;
             flows_rec.info2 = rec.ssh.server_sw;
@@ -756,6 +786,10 @@ void Nids::PushFlowsRecord() {
             
             flows_rec.src_agent = rec.src_agent;
             flows_rec.dst_agent = rec.dst_agent;
+            
+    
+    
+            flows_rec.ids = rec.ids;
     
             flows_rec.info1 = rec.netflow.app_proto;
     

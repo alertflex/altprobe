@@ -141,6 +141,56 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             filter.nids.bwl.push_back(bwl);
         }
         
+        // WAF
+        filter.waf.log = filters.get<bool>("waf.log");
+        filter.waf.severity = filters.get<int>("waf.severity");
+        
+        bpt::ptree waf_bw_list = filters.get_child("waf.bw_list");
+        BOOST_FOREACH(bpt::ptree::value_type &waf_list, waf_bw_list) {
+            
+            BwList* bwl = new BwList();
+            
+            bwl->event = waf_list.second.get<int>("event");
+            bwl->host = waf_list.second.get<string>("agent");
+            bwl->action = waf_list.second.get<string>("action");
+            
+            bwl->agr.reproduced = waf_list.second.get<int>("aggregate.reproduced");  
+            bwl->agr.in_period = waf_list.second.get<int>("aggregate.in_period");  
+            bwl->agr.new_event = waf_list.second.get<int>("aggregate.new_event");           
+            bwl->agr.new_severity = waf_list.second.get<int>("aggregate.new_severity");
+            bwl->agr.new_category = waf_list.second.get<string>("aggregate.new_category");
+            bwl->agr.new_description = waf_list.second.get<string>("aggregate.new_description");
+            
+            filter.waf.bwl.push_back(bwl);
+        }
+        
+        // METRIC
+        filter.metric.log = filters.get<bool>("metrics.log");
+        filter.metric.severity = filters.get<int>("metrics.severity");
+        
+        bpt::ptree metrics_th_list = filters.get_child("metrics.thresholds");
+        BOOST_FOREACH(bpt::ptree::value_type &metrics_list, metrics_th_list) {
+            
+            Threshold* t = new Threshold();
+            
+            t->host = metrics_list.second.get<string>("agent");
+            t->element = metrics_list.second.get<string>("metric");
+            t->parameter = metrics_list.second.get<string>("parameter");
+            t->action = metrics_list.second.get<string>("action");
+            
+            t->value_min = metrics_list.second.get<int>("min");
+            t->value_max = metrics_list.second.get<int>("max");
+                        
+            t->agr.reproduced = metrics_list.second.get<int>("aggregate.reproduced");  
+            t->agr.in_period = metrics_list.second.get<int>("aggregate.in_period");  
+            t->agr.new_event = metrics_list.second.get<int>("aggregate.new_event");           
+            t->agr.new_severity = metrics_list.second.get<int>("aggregate.new_severity");
+            t->agr.new_category = metrics_list.second.get<string>("aggregate.new_category");
+            t->agr.new_description = metrics_list.second.get<string>("aggregate.new_description");
+            
+            filter.metric.th.push_back(t);
+        }
+        
         // NET
         filter.traf.log = filters.get<bool>("netflow.log");
         filter.traf.top_talkers = filters.get<int>("netflow.top_talkers");
@@ -185,12 +235,37 @@ void FiltersSingleton::UpdateAgentsList(string id, string ip, string name, strin
     
     boost::unique_lock<boost::shared_mutex> lock(agents_update);
     
-    std::vector<Agent>::iterator i, end;    
+    std::vector<Agent>::iterator i, end;   
+    
+    string real_ip = "indef";
+    
+    if (IsValidIp(ip) == -1 || ip.compare("127.0.0.1") == 0) {
+        
+        Alias* al = GetAliasByAgentName(name);
+            
+        if (al != NULL) {
+            
+            if (al->ip.compare("indef") != 0) real_ip = al->ip;
+            else {    
+                if (al->host_name.compare("indef") != 0) {
+                
+                    string host_name = al->host_name;
+            
+                    struct hostent *hostaddr = gethostbyname(host_name.c_str());
+        
+                    if (hostaddr != NULL) real_ip = inet_ntoa(*(struct in_addr *)hostaddr->h_addr_list[0]);
+                }
+            }
+            
+        }
+    }
+    else real_ip = ip;
+    
     
     for (i = agents_list.begin(), end = agents_list.end(); i != end; ++i) {
         if (i->name.compare(name) == 0) {
             i->id = id;
-            i->ip = ip;
+            i->ip = real_ip;
             i->dateAdd = date;
             i->manager_host = manager;
             i->os_name = os_name;
@@ -227,6 +302,19 @@ string FiltersSingleton::GetAgentNameByIP(string ip) {
     }
     
     return "home_net";
+}
+
+Alias* FiltersSingleton::GetAliasByAgentName(string n) {
+    
+    std::vector<Alias*>::iterator i, end;
+    
+    for(i = filter.alias.begin(), end = filter.alias.end(); i != end; ++i) {
+        if ((*i)->agent_name.compare(n) == 0) {
+             return (*i); 
+        } 
+    }
+    
+    return NULL;
 }
 
 

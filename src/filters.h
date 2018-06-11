@@ -188,6 +188,22 @@ public:
     
 };
 
+class MetricPolicy {
+public:
+    
+    int severity;
+    bool log;
+    
+    std::vector<Threshold*> th;
+    
+    void Reset() {
+        th.clear();
+        severity = 0;
+        log = false;
+    }
+    
+};
+
 class Filters {
 public:
     string ref_id;
@@ -200,6 +216,10 @@ public:
     
     IdsPolicy hids;
     
+    IdsPolicy waf;
+    
+    MetricPolicy metric;
+    
     NetflowPolicy traf;
     
     void Reset() {
@@ -209,7 +229,9 @@ public:
         alias.clear();
         nids.Reset();
         hids.Reset();
+        waf.Reset();
         traf.Reset();
+        metric.Reset();
     }
 };
 
@@ -231,6 +253,7 @@ public:
     static void UpdateAgentsList(string id, string ip, string name, string status, 
         string date, string version, string manager, string os_platf, string os_ver, string os_name);
     static string GetAgentNameByIP(string ip);
+    static Alias* GetAliasByAgentName(string name);
         
     int GetStatus() { return status; }
 };

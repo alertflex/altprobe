@@ -13,13 +13,13 @@
     }],
 
     "alias": [{
-        "agent_name": "host1",
-        "host_name": "host1",
+        "agent_name": "centos7-host",
+        "host_name": "centos7-host",
         "ip": "indef"
     }, {
-        "agent_name": "host10",
+        "agent_name": "win10",
         "host_name": "indef",
-        "ip": "192.168.1.120"
+        "ip": "192.168.1.2"
     }],
 
     "sources": { 
@@ -40,7 +40,7 @@
                 }
             }, { 
                 "event": 4572,
-                "agent": "flghost",
+                "agent": "win10-host",
                 "action": "graylog",
                 "aggregate": {
                     "reproduced": 0,
@@ -69,6 +69,35 @@
                 }
             }, { 
                 "event": 2200072,
+                "agent": "centos7-host",
+                "action": "suppress",
+                "aggregate": {
+                    "reproduced": 30,
+                    "in_period": 10,
+                    "new_event": 0,
+                    "new_severity": 0,
+                    "new_category": "new users cat 4",
+                    "new_description": "desc of alerts"
+                }
+            }]
+        },
+        "waf": {
+            "severity": 1,
+            "log": true,
+            "bw_list": [{ 
+                "event": 100001,
+                "agent": "none",
+                "action": "none",
+                "aggregate": {
+                    "reproduced": 30,
+                    "in_period": 10,
+                    "new_event": 0,
+                    "new_severity": 0,
+                    "new_category": "new users cat 3",
+                    "new_description": "desc of alerts"
+                }
+            }, { 
+                "event": 100002,
                 "agent": "test01",
                 "action": "suppress",
                 "aggregate": {
@@ -77,6 +106,41 @@
                     "new_event": 0,
                     "new_severity": 0,
                     "new_category": "new users cat 4",
+                    "new_description": "desc of alerts"
+                }
+            }]
+        },
+        "metrics": {
+            "severity":  2,
+            "log": true,
+            "thresholds": [{
+                "agent": "win10-host",
+                "metric": "memory",
+                "parameter":"free",
+                "min": 1,
+                "max": 100000,
+                "action": "none",
+                "aggregate": {
+                    "reproduced": 30,
+                    "in_period": 300,
+                    "new_event": 10,
+                    "new_severity": 1,
+                    "new_category": "new users cat 5",
+                    "new_description": "desc of alerts"
+                }
+            }, {
+                "agent": "centos7-host",
+                "metric": "nginx",
+                "parameter":"active",
+                "min": 1,
+                "max": 10000,
+                "action": "none",
+                "aggregate": {
+                    "reproduced": 30,
+                    "in_period": 300,
+                    "new_event": 11,
+                    "new_severity": 1,
+                    "new_category": "new users cat 5",
                     "new_description": "desc of alerts"
                 }
             }]

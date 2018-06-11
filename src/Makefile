@@ -120,7 +120,7 @@ help: .help-post
 # Add your post 'help' code here...
 
 install:
-	cp ./dist/Debug/GNU-Linux-x86/collector /usr/local/bin/altprobe
+	cp ./dist/Debug/GNU-Linux/collector /usr/local/bin/altprobe
 	chmod u+x ./scripts/alertflex-restart.sh
 	chmod u+x ./scripts/alertflex-start.sh
 	chmod u+x ./scripts/alertflex-status.sh

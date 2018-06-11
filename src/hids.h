@@ -12,6 +12,7 @@
 
 #include "sinks.h"
 #include "ids.h"
+#include "waf.h"
 #include "filters.h"
 #include "config.h"
 #include "source.h"
@@ -77,6 +78,7 @@ public:
     string ref_id;
     /* Extracted from the event */
     string location;
+    string agent;
     string hostname;
     
     /* Extracted from the decoders */
@@ -94,6 +96,7 @@ public:
         
         ref_id.clear();
         /* Extracted from the event */
+        agent.clear();
         location.clear();
         hostname.clear();
         /* Extracted from the decoders */
@@ -111,6 +114,8 @@ class Hids : public Source {
 public:
     //OSSEC record
     OssecRecord rec;
+    // ModSecurity record
+    ModsecRecord mr;
     
     bpt::ptree pt, pt1, groups_cats, pcidss_cats;
     stringstream ss, ss1;
@@ -139,12 +144,17 @@ public:
     int ParsJson (char* redis_payload);
     
     BwList* CheckBwList();
+    BwList* CheckWafBwList();
     void CreateLog();
+    void CreateWafLog();
     void SendAlert (int s, BwList*  bwl);
+    void SendWafAlert (int s, BwList*  bwl);
     int PushRecord(BwList* bwl);
+    int PushWafRecord(BwList* bwl);
     
     void ClearRecords() {
 	rec.Reset();
+        mr.Reset();
         jsonPayload.clear();
         ResetJsontree();
     }

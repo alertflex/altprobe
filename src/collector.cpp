@@ -75,7 +75,6 @@ int Collector::GetConfig() {
     }
     
     ossecServerStatus = true;
-  
     return 1;
     
 }
@@ -187,12 +186,14 @@ void Collector::RoutineJob() {
     unsigned long manids = stat_ids->mem_mon.nids_alerts_list;
     unsigned long mfimc = stat_ids->mem_mon.fim_cause;
     unsigned long mfimf = stat_ids->mem_mon.fim_file;
-    unsigned long mhidsh = stat_ids->mem_mon.hids_hostname;
+    unsigned long mhidss = stat_ids->mem_mon.hids_srcip;
     unsigned long mhidsl = stat_ids->mem_mon.hids_location;
     unsigned long midsc = stat_ids->mem_mon.ids_category;
     unsigned long midse = stat_ids->mem_mon.ids_event;
     unsigned long mnidsd = stat_ids->mem_mon.nids_dstip;
     unsigned long mnidss = stat_ids->mem_mon.nids_srcip;
+    unsigned long mwafs = stat_ids->mem_mon.waf_source;
+    unsigned long mwaft = stat_ids->mem_mon.waf_target;
                         
     ss << "{ \"type\": \"node_memory\", \"data\": { \"ref_id\": \"";
     ss << ref_id;
@@ -224,8 +225,8 @@ void Collector::RoutineJob() {
     ss << ", \"fim_file\": ";
     ss << to_string(mfimf);
         
-    ss << ", \"hids_hostname\": ";
-    ss << to_string(mhidsh);
+    ss << ", \"hids_srcip\": ";
+    ss << to_string(mhidss);
         
     ss << ", \"hids_location\": ";
     ss << to_string(mhidsl);
@@ -241,6 +242,12 @@ void Collector::RoutineJob() {
         
     ss << ", \"nids_srcip\": ";
     ss << to_string(mnidss);
+    
+    ss << ", \"waf_source\": ";
+    ss << to_string(mwafs);
+        
+    ss << ", \"waf_target\": ";
+    ss << to_string(mwaft);
         
     ss << ", \"time_of_survey\": \"";
     ss << GetNodeTime();
@@ -255,6 +262,7 @@ void Collector::RoutineJob() {
     unsigned long mhnetf = fs.filter.home_nets.size();
     unsigned long mhidsf = fs.filter.hids.bwl.size();
     unsigned long mnidsf = fs.filter.nids.bwl.size();
+    unsigned long mwaff = fs.filter.waf.bwl.size();
     unsigned long mmetf = 0;
     unsigned long mtraf = fs.filter.traf.th.size();
         
@@ -272,6 +280,9 @@ void Collector::RoutineJob() {
         
     ss << ", \"nids_filters\": ";
     ss << to_string(mnidsf);
+    
+    ss << ", \"waf_filters\": ";
+    ss << to_string(mwaff);
         
     ss << ", \"metric_filters\": ";
     ss << to_string(mmetf);
