@@ -46,7 +46,7 @@ Below, a diagram of configuration Altprobe and Alertflex controller for working 
 * "short_message":"netflow-nids",
 "full_message":"Netflow event from Suricata"
 
-## Documentation (include an installation instructions)
+## Documentation (early version, include an installation instructions)
 see web page: <http://alertflex.org/doc/>
 
 NOTE:
