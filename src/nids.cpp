@@ -596,7 +596,7 @@ void Nids::SendAlert(int s, BwList* bwl) {
     
     sk.alert.ref_id = fs.filter.ref_id;
     
-    sk.alert.type = "NIDS";
+    sk.alert.type = "NET";
     sk.alert.source = "Suricata";
     
     sk.alert.list_cats.push_back(rec.alert.category);

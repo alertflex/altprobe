@@ -120,13 +120,13 @@ void Source::sendAlertMultiple(int type_source) {
         
     switch (type_source) {
         case 1:
-            sk.alert.type = "HIDS";
+            sk.alert.type = "HOST";
             break;
         case 2:
-            sk.alert.type = "NIDS";
+            sk.alert.type = "NET";
             break;
         default:
-            sk.alert.type = "SEM";
+            sk.alert.type = "MISC";
             break;
     }
         

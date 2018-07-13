@@ -22,6 +22,7 @@ public:
     string src_ip;             
     string dst_ip; 
     string agent;
+    string user;
     string ids;
     string location;
     string action;
@@ -42,6 +43,7 @@ public:
         src_ip.clear();
         dst_ip.clear(); 
         agent.clear();
+        user.clear();
         ids.clear(); 
         location.clear(); 
         action.clear();

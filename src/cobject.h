@@ -87,6 +87,7 @@ public:
     string srcip;
     string dstip;
     string agent;
+    string user;
     string hostname;
     string location;
     string action;
@@ -110,6 +111,7 @@ public:
         action.clear();
         location.clear();
         agent.clear();
+        user.clear();
         hostname.clear();
         status.clear();
         info.clear();

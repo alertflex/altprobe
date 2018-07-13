@@ -79,6 +79,7 @@ public:
     /* Extracted from the event */
     string location;
     string agent;
+    string user;
     string hostname;
     
     /* Extracted from the decoders */
@@ -97,6 +98,7 @@ public:
         ref_id.clear();
         /* Extracted from the event */
         agent.clear();
+        user.clear();
         location.clear();
         hostname.clear();
         /* Extracted from the decoders */

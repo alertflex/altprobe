@@ -767,10 +767,10 @@ void StatIds::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.ref_id = r->ref_id;
     
-    sk.alert.source = "OSSEC";
+    sk.alert.source = "Wazuh";
         
-    if (r->ids_type == 1) sk.alert.type = "FIM";
-    else sk.alert.type = "HIDS";
+    if (r->ids_type == 1) sk.alert.type = "FILE";
+    else sk.alert.type = "HOST";
         
     if (r->agr.new_event != 0) sk.alert.event = r->agr.new_event;
     else sk.alert.event = r->event;
@@ -856,7 +856,7 @@ void StatIds::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.ref_id = r->ref_id;
     
     sk.alert.source = "Suricata";
-    sk.alert.type = "NIDS";
+    sk.alert.type = "NET";
     
     if (r->agr.new_event != 0) sk.alert.event = r->agr.new_event;
     else sk.alert.event = r->event;
@@ -942,8 +942,8 @@ void StatIds::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.ref_id = r->ref_id;
     
-    sk.alert.source = "ModSecurity";
-    sk.alert.type = "NIDS";
+    sk.alert.source = "Modsecurity";
+    sk.alert.type = "NET";
     
     if (r->agr.new_event != 0) sk.alert.event = r->agr.new_event;
     else sk.alert.event = r->event;

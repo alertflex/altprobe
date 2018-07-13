@@ -216,6 +216,9 @@ int Controller::SendMessage(Event* e) {
                 
             string strDstip(((Alert*) e)->dstip);
             message->setStringProperty("dstip", strDstip);
+			
+			string strUser(((Alert*) e)->user);
+            message->setStringProperty("user", strUser);
             
             string strAgent(((Alert*) e)->agent);
             message->setStringProperty("agent", strAgent);

@@ -25,10 +25,8 @@ public:
     
     unsigned int id;
     unsigned int severity;
-    string unique_id;
     string hostname;
     string uri;
-    string header;
     string file; //location
     string msg;  // info
         
@@ -41,8 +39,6 @@ public:
         severity = 0;
         file.clear();
         msg.clear();
-        header.clear();
-        unique_id.clear();
         hostname.clear();
         uri.clear();
         
@@ -53,30 +49,33 @@ public:
 
 //  ModeSecurity record                              
 class ModsecRecord {
-public:   
+public:    
     
     bool mod_rec;
     
     ModsecAudit ma;
     
     string buffer;
+    string parameters;
         
     vector<string> strs;
             
-    bool IsModsec(string str) {
-        mod_rec = str.find("ModSecurity") != str.npos;
+    bool IsModsec(const string str) {
+        mod_rec = str.find("ModSecurity: Warning") != str.npos;
         return mod_rec;
     } 
-    void GetAuditHeader(string str); 
-    void CheckAuditFields(string str);
-    string RemoveAuditParametersName(string str);
-    int ParsRecord(string rec);
+    
+    void GetAuditHeader(const string str); 
+    void CheckAuditFields(const string str);
+    void RemoveAuditParametersName(const string field, const string str);
+    int ParsRecord(const string rec);
     
     void Reset() {
-        mod_rec = false;
+        
         ma.Reset();
         strs.clear();
         buffer.clear();
+        parameters.clear();
     }
 };
 

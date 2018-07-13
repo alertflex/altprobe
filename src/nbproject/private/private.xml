@@ -7,11 +7,13 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/root/NetBeansProjects/collector/source.cpp</file>
             <file>file:/root/NetBeansProjects/collector/statflows.cpp</file>
-            <file>file:/root/NetBeansProjects/collector/remlog.cpp</file>
-            <file>file:/root/NetBeansProjects/collector/statids.cpp</file>
-            <file>file:/root/NetBeansProjects/collector/remstat.cpp</file>
+            <file>file:/root/NetBeansProjects/collector/sinks.cpp</file>
+            <file>file:/root/NetBeansProjects/collector/hids.cpp</file>
             <file>file:/root/NetBeansProjects/collector/metric.cpp</file>
+            <file>file:/root/NetBeansProjects/collector/nids.cpp</file>
+            <file>file:/root/NetBeansProjects/collector/statids.cpp</file>
         </group>
     </open-files>
 </project-private>

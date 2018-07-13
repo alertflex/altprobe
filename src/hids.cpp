@@ -4,7 +4,8 @@
  *
  * Created on May 26, 2014, 10:43 AM
  */
- 
+#include <stdio.h>
+#include <stdlib.h>
 #include "hids.h"
 
 #include <boost/algorithm/string.hpp>
@@ -63,6 +64,7 @@ int Hids::Go(void) {
                         if (!bwl->action.compare("supress")) SendWafAlert(severity, bwl);
                     } else {
                         if (fs.filter.waf.severity <= severity) {
+                            
                             SendWafAlert(severity, NULL);
                         }
                     } 
@@ -598,21 +600,33 @@ int Hids::ParsJson(char* redis_payload) {
     
     string dec_name = pt.get<string>("decoder.name","");
         
+    
     if (dec_name.compare("nginx-errorlog") == 0 && mr.IsModsec(full_log)) {
         
         mr.ParsRecord(full_log);
         
         rec.rule.id = mr.ma.id;
+        
         rec.rule.level = mr.ma.severity;
+        
         rec.rule.desc = mr.ma.msg;
         rec.rule.info = mr.ma.file;
         rec.location = mr.ma.uri;
         rec.srcip = mr.ma.hostname;
         
+        std::vector<string>::iterator it, end;
+        int i = 0;
+        for (vector<string>::const_iterator it = mr.ma.list_tags.begin(); it != mr.ma.list_tags.end(); ++it, i++) {
+        
+            rec.rule.list_cats.push_back(*it);
+        }
+        
     } else {
         
         rec.srcip = pt.get<string>("data.srcip","");
-    
+	
+        rec.user = pt.get<string>("data.dstuser","");
+        
         rec.rule.id = pt.get<int>("rule.id",0);
     
         rec.rule.level = pt.get<int>("rule.level",0);
@@ -727,6 +741,8 @@ void Hids::CreateLog() {
     report += rec.srcip;
     report += "\",\"_dstip\":\"";
     report += rec.dstip;
+	report += "\",\"_user\":\"";
+    report += rec.user;
     if (rec.file.filename.compare("") != 0) {
         report += "\",\"_filename\":\"";
         report += rec.file.filename;
@@ -846,6 +862,7 @@ int Hids::PushRecord(BwList* bwl) {
     ids_rec.dst_ip = rec.dstip;
     
     ids_rec.agent = rec.agent;
+	ids_rec.user = rec.user;
     ids_rec.ids = rec.hostname;
     ids_rec.action = "none";
                 
@@ -887,7 +904,19 @@ int Hids::PushWafRecord(BwList* bwl) {
             
     copy(rec.rule.list_cats.begin(),rec.rule.list_cats.end(),back_inserter(ids_rec.list_cats));
     
-    ids_rec.severity = rec.rule.level;
+    if (rec.rule.level < 3) {
+        ids_rec.severity = 3;
+    } else {
+        if (rec.rule.level < 4) {
+            ids_rec.severity = 2;
+        } else {
+            if (rec.rule.level < 5) {
+                ids_rec.severity = 1;
+            } else {
+                ids_rec.severity = 0;
+            }
+        }
+    }
     
     ids_rec.desc = rec.rule.desc;
                 
@@ -929,7 +958,7 @@ void Hids::SendAlert(int s, BwList*  bwl) {
     if (!rec.rule.list_cats.empty())
         copy(rec.rule.list_cats.begin(),rec.rule.list_cats.end(),back_inserter(sk.alert.list_cats));
     else 
-        sk.alert.list_cats.push_back("ossec");
+        sk.alert.list_cats.push_back("wazuh");
         
     sk.alert.severity = s;
     sk.alert.event = rec.rule.id;
@@ -969,23 +998,23 @@ void Hids::SendAlert(int s, BwList*  bwl) {
     sk.alert.srcip = rec.srcip;
     sk.alert.dstip = rec.dstip;
         
-    sk.alert.source = "OSSEC";
+    sk.alert.source = "Wazuh";
     
     sk.alert.agent = rec.agent;
+	sk.alert.user = rec.user;
     sk.alert.hostname = rec.hostname;
         
     if (rec.file.filename.compare("") == 0) {
             
-        sk.alert.type = "HIDS";
+        sk.alert.type = "HOST";
             
-        
         sk.alert.location = rec.location;
         
         sk.alert.info = rec.rule.info;
     }
     else {
             
-        sk.alert.type = "FIM";
+        sk.alert.type = "FILE";
             
         sk.alert.location = rec.file.filename;
         
@@ -1025,6 +1054,9 @@ void Hids::SendWafAlert(int s, BwList*  bwl) {
     else 
         sk.alert.list_cats.push_back("waf");
     
+    //std::string sev = "send alert waf severity is  " + std::to_string(s);
+    //SysLog((char*) sev.c_str());
+    
     sk.alert.severity = s;
     sk.alert.event = rec.rule.id;
     sk.alert.action = "none";
@@ -1063,8 +1095,8 @@ void Hids::SendWafAlert(int s, BwList*  bwl) {
     sk.alert.srcip = rec.srcip;
     sk.alert.dstip = rec.dstip;
         
-    sk.alert.source = "ModSecurity";
-    sk.alert.type = "NIDS";
+    sk.alert.source = "Modsecurity";
+    sk.alert.type = "NET";
     
     sk.alert.agent = rec.agent;
     sk.alert.hostname = rec.hostname;

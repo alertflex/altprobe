@@ -705,7 +705,7 @@ void StatFlows::SendAlert(Threshold* th, bool type_alert) {
     string strNodeId(node_id);
     sk.alert.hostname = strNodeId;
     sk.alert.agent = strNodeId;
-    sk.alert.type = "NIDS";
+    sk.alert.type = "NET";
         
     if ( th->agr.new_event != 0) sk.alert.event = th->agr.new_event;
     else sk.alert.event = 1;
