@@ -624,8 +624,6 @@ int Hids::ParsJson(char* redis_payload) {
     } else {
         
         rec.srcip = pt.get<string>("data.srcip","");
-	
-        rec.user = pt.get<string>("data.dstuser","");
         
         rec.rule.id = pt.get<int>("rule.id",0);
     
@@ -681,6 +679,17 @@ int Hids::ParsJson(char* redis_payload) {
         rec.file.gowner_before = pt.get<string>("syscheck.gowner_before","");
     
         rec.file.gowner_after = pt.get<string>("syscheck.gowner_after","");
+        
+        
+        string user = pt.get<string>("data.srcuser","");
+        
+        if (user.compare("") == 0) {
+            
+            user = pt.get<string>("data.dstuser","");
+        
+        }
+        
+        rec.user = user;
     }
     
     ResetStreams();
@@ -862,7 +871,7 @@ int Hids::PushRecord(BwList* bwl) {
     ids_rec.dst_ip = rec.dstip;
     
     ids_rec.agent = rec.agent;
-	ids_rec.user = rec.user;
+    ids_rec.user = rec.user;
     ids_rec.ids = rec.hostname;
     ids_rec.action = "none";
                 

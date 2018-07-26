@@ -132,6 +132,25 @@ public:
     }
 };
 
+class UserEvent : public Ids  {
+public: 
+    unsigned int event;
+    unsigned int severity;
+    string desc;
+    string agent;
+    string user;
+    string ip;
+    
+    UserEvent (string id, unsigned int e, unsigned int s, string d, string a, string u, string i) : Ids(id)  {
+        event = e;
+        severity = s;
+        desc = d;
+        agent = a;
+        user = u;
+        ip = i;
+    }
+};
+
 class WafSource : public Ids {
 public: 
     string source;
@@ -190,6 +209,8 @@ public:
     
     std::vector<IdsEvent> ids_event;
     
+    std::vector<UserEvent> user_event;
+    
     std::vector<WafSource> waf_source;
     
     std::vector<WafTarget> waf_target;
@@ -239,6 +260,9 @@ public:
     
     void UpdateIdsEvent();
     void FlushIdsEvent();
+    
+    void UpdateUserEvent();
+    void FlushUserEvent();
     
     void UpdateWafSource();
     void FlushWafSource();

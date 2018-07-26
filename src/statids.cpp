@@ -103,6 +103,7 @@ void StatIds::PushRecord() {
         
     if (ids_rec.ids_type == 1 || ids_rec.ids_type == 2) {
         if (ids_rec.agr.reproduced != 0) UpdateHidsAlerts();
+        UpdateUserEvent();
     }
         
     if (ids_rec.ids_type == 3) {
@@ -142,6 +143,9 @@ void StatIds::RoutineJob() {
     FlushWafTarget();
     mem_mon.waf_source = waf_source.size();
     FlushWafSource();
+    
+    FlushUserEvent();
+    //mem_mon.user_event = user_event.size();
 }
 
 void StatIds::UpdateNidsSrcIp() {
@@ -728,6 +732,82 @@ void StatIds::FlushIdsEvent() {
     
     report.clear();
     ids_event.clear();
+}
+
+void StatIds::UpdateUserEvent() {
+    
+    std::vector<UserEvent>::iterator i, end;
+    
+    for(i = user_event.begin(), end = user_event.end(); i != end; ++i) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {  
+            
+            if (i->event == ids_rec.event) {
+                
+                if (i->agent.compare(ids_rec.agent) == 0) {
+                    
+                    if (i->user.compare(ids_rec.user) == 0) {
+                        
+                        if (i->ip.compare("") == 0 || i->ip.compare(ids_rec.src_ip) == 0) {
+                            i->counter++;
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    } 
+    
+    if (ids_rec.user.compare("") != 0)
+        user_event.push_back(UserEvent( ids_rec.ref_id, ids_rec.event, ids_rec.severity, ids_rec.desc, ids_rec.agent, ids_rec.user, ids_rec.src_ip));
+}
+
+void StatIds::FlushUserEvent() {
+    
+    report = "{ \"type\": \"user_event\", \"data\" : [ ";
+        
+    std::vector<UserEvent>::iterator it, end;
+            
+    for(it = user_event.begin(), end = user_event.end(); it != end; ++it) {
+                    
+        report += "{ \"ref_id\": \"";
+        report += it->ref_id;
+            
+        report += "\", \"event\": ";
+        report += std::to_string(it->event);
+            
+        report += ", \"severity\": ";
+        report += std::to_string(it->severity);
+            
+        report += ", \"counter\": ";
+        report += std::to_string(it->counter);
+            
+        report += ", \"description\": \"";
+        report += it->desc;
+            
+        report += "\", \"agent\": \"";
+        report += it->agent;
+        
+        report += "\", \"user\": \"";
+        report += it->user;
+        
+        report += "\", \"ip\": \"";
+        report += it->ip;
+            
+        report += "\", \"time_of_survey\": \"";
+        report += GetNodeTime();
+            
+        report += "\" } ,";
+            
+    }
+    
+    report.resize(report.size() - 1);
+    report += " ] }";
+     
+    //SysLog((char*) report.c_str());
+    q_stats_ids.push(report);
+    
+    report.clear();
+    user_event.clear();
 }
 
 void StatIds::UpdateHidsAlerts() {
