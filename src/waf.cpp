@@ -1,5 +1,5 @@
 /* 
- * File:   cobject.cpp
+ * File:   waf.cpp
  * Author: Oleg Zharkov
  *
  */
