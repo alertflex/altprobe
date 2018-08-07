@@ -194,6 +194,7 @@ void Collector::RoutineJob() {
     unsigned long mnidss = stat_ids->mem_mon.nids_srcip;
     unsigned long mwafs = stat_ids->mem_mon.waf_source;
     unsigned long mwaft = stat_ids->mem_mon.waf_target;
+    unsigned long musers = stat_ids->mem_mon.user_event;
                         
     ss << "{ \"type\": \"node_memory\", \"data\": { \"ref_id\": \"";
     ss << ref_id;
@@ -248,6 +249,9 @@ void Collector::RoutineJob() {
         
     ss << ", \"waf_target\": ";
     ss << to_string(mwaft);
+    
+    ss << ", \"user_event\": ";
+    ss << to_string(musers);
         
     ss << ", \"time_of_survey\": \"";
     ss << GetNodeTime();

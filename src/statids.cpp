@@ -145,7 +145,7 @@ void StatIds::RoutineJob() {
     FlushWafSource();
     
     FlushUserEvent();
-    //mem_mon.user_event = user_event.size();
+    mem_mon.user_event = user_event.size();
 }
 
 void StatIds::UpdateNidsSrcIp() {

@@ -70,29 +70,31 @@ public:
 class IdsBuffers {
 public:
     
-    unsigned int hids_alerts_list;
+    unsigned long hids_alerts_list;
     
-    unsigned int nids_alerts_list;
+    unsigned long nids_alerts_list;
     
-    unsigned int nids_srcip;
+    unsigned long nids_srcip;
     
-    unsigned int nids_dstip;
+    unsigned long nids_dstip;
     
-    unsigned int hids_srcip;
+    unsigned long hids_srcip;
     
-    unsigned int hids_location;
+    unsigned long hids_location;
     
-    unsigned int fim_file;
+    unsigned long fim_file;
     
-    unsigned int fim_cause;
+    unsigned long fim_cause;
     
-    unsigned int ids_category;
+    unsigned long ids_category;
     
-    unsigned int ids_event;
+    unsigned long ids_event;
     
-    unsigned int waf_source;
+    unsigned long waf_source;
     
-    unsigned int waf_target;
+    unsigned long waf_target;
+    
+    unsigned long user_event;
     
 };
 
