@@ -56,9 +56,9 @@ cd ..
 if [ $INSTALL_SURICATA == yes ]
 then
 	echo "*** installation suricata ***"
-	wget "http://www.openinfosecfoundation.org/download/suricata-4.0.5.tar.gz"
-	tar -xvzf suricata-4.0.5.tar.gz
-	cd suricata-4.0.5
+	wget "http://www.openinfosecfoundation.org/download/suricata-4.0.3.tar.gz"
+	tar -xvzf suricata-4.0.3.tar.gz
+	cd suricata-4.0.3
 	autoreconf -f -i
 	./configure --enable-hiredis --prefix=/usr --sysconfdir=/etc --localstatedir=/var --enable-libjansson --with-libnss-libraries=/usr/lib --with-libnss-includes=/usr/include/nss/ --with-libnspr-libraries=/usr/lib --with-libnspr-includes=/usr/include/nspr
 	sudo make
