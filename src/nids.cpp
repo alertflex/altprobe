@@ -330,12 +330,12 @@ void Nids::CreateLogPayload(int r) {
     
             report = "{\"version\": \"1.1\",\"host\":\"";
             report += node_id;
-            report += "\",\"short_message\":\"event-nids\"";
-            report += ",\"full_message\":\"IDS event from Suricata\"";
+            report += "\",\"short_message\":\"alert-nids\"";
+            report += ",\"full_message\":\"Alert from Suricata NIDS\"";
             report += ",\"level\":";
             report += std::to_string(7);
-            report += ",\"_type\":\"event\"";
-            report += ",\"_source\":\"suricata\"";
+            report += ",\"_type\":\"NET\"";
+            report += ",\"_source\":\"Suricata\"";
 			
             report +=  ",\"_event_time\":\"";
             report +=  rec.time_stamp;
@@ -395,11 +395,11 @@ void Nids::CreateLogPayload(int r) {
             report = "{\"version\": \"1.1\",\"host\":\"";
             report += node_id;
             report += "\",\"short_message\":\"dns-nids\"";
-            report += ",\"full_message\":\"DNS event from Suricata\"";
+            report += ",\"full_message\":\"DNS event from Suricata NIDS\"";
             report += ",\"level\":";
             report += std::to_string(7);
-            report += ",\"_type\":\"dns\"";
-            report += ",\"_source\":\"suricata\"";
+            report += ",\"_type\":\"NET\"";
+            report += ",\"_source\":\"Suricata\"";
 		
             report +=  ",\"_event_time\":\"";
             report +=  rec.time_stamp;
@@ -469,11 +469,11 @@ void Nids::CreateLogPayload(int r) {
             report = "{\"version\": \"1.1\",\"host\":\"";
             report += node_id;
             report += "\",\"short_message\":\"ssh-nids\"";
-            report += ",\"full_message\":\"SSH event from Suricata\"";
+            report += ",\"full_message\":\"SSH event from Suricata NIDS\"";
             report += ",\"level\":";
             report += std::to_string(7);
-            report += ",\"_type\":\"ssh\"";
-            report += ",\"_source\":\"suricata\"";
+            report += ",\"_type\":\"NET\"";
+            report += ",\"_source\":\"Suricata\"";
 		
             report +=  ",\"_event_time\":\"";
             report +=  rec.time_stamp;
@@ -527,11 +527,11 @@ void Nids::CreateLogPayload(int r) {
             report = "{\"version\": \"1.1\",\"host\":\"";
             report += node_id;
             report += "\",\"short_message\":\"netflow-nids\"";
-            report += ",\"full_message\":\"Netflow event from Suricata\"";
+            report += ",\"full_message\":\"Netflow event from Suricata NIDS\"";
             report += ",\"level\":";
             report += std::to_string(7);
-            report += ",\"_type\":\"netflow\"";
-            report += ",\"_source\":\"suricata\"";
+            report += ",\"_type\":\"NET\"";
+            report += ",\"_source\":\"Suricata\"";
 			
             report +=  ",\"_event_time\":\"";
             report +=  rec.time_stamp;

@@ -462,8 +462,8 @@ int Hids::ParsJson(char* redis_payload) {
         report += ",\"full_message\":\"Network activity of linux process from Auditd\"";
 	report += ",\"level\":";
         report += std::to_string(7);
-        report += ",\"_type\":\"auditd\"";
-        report += ",\"_source\":\"ossec\"";
+        report += ",\"_type\":\"NET\"";
+        report += ",\"_source\":\"Wazuh\"";
         
 	report += ",\"_agent\":\"";
         report += pt.get<string>("agent.name","");
@@ -514,8 +514,8 @@ int Hids::ParsJson(char* redis_payload) {
         report += ",\"level\":";
         report += std::to_string(7);
 		
-	report += ",\"_type\":\"sysmon\"";
-        report += ",\"_source\":\"hids\"";
+	report += ",\"_type\":\"HOST\"";
+        report += ",\"_source\":\"Wazuh\"";
         
 	report += ",\"_agent\":\"";
         report += pt.get<string>("agent.name","");
@@ -700,16 +700,21 @@ void Hids::CreateLog() {
     
     report = "{\"version\": \"1.1\",\"host\":\"";
     report += node_id;
-    report += "\",\"short_message\":\"event-hids\"";
-    report += ",\"full_message\":\"IDS/FIM event from OSSEC/Wazuh\"";
-    report += ",\"level\":";
-    report += std::to_string(7);
+    
     if (rec.file.filename.compare("") != 0) {
-        report += ",\"_type\":\"fim\"";
+        report += "\",\"short_message\":\"alert-fim\"";
+        report += ",\"full_message\":\"Alert from OSSEC/Wazuh FIM\"";
+        report += ",\"level\":";
+        report += std::to_string(7);
+        report += ",\"_type\":\"FILE\"";
     } else {
-        report += ",\"_type\":\"ids\"";
+        report += "\",\"short_message\":\"alert-hids\"";
+        report += ",\"full_message\":\"Alert from OSSEC/Wazuh HIDS\"";
+        report += ",\"level\":";
+        report += std::to_string(7);
+        report += ",\"_type\":\"HOST\"";
     }
-    report += ",\"_source\":\"ossec\"";
+    report += ",\"_source\":\"Wazuh\"";
         
     report += ",\"_agent\":\"";
     report += rec.agent;
@@ -785,12 +790,12 @@ void Hids::CreateWafLog() {
     
     report = "{\"version\": \"1.1\",\"host\":\"";
     report += node_id;
-    report += "\",\"short_message\":\"event-waf\"";
-    report += ",\"full_message\":\"WAF event from ModSecurity\"";
+    report += "\",\"short_message\":\"alert-waf\"";
+    report += ",\"full_message\":\"Alert from ModSecurity/NGINX\"";
     report += ",\"level\":";
     report += std::to_string(7);
-    report += ",\"_type\":\"waf\"";
-    report += ",\"_source\":\"modsecurity\"";
+    report += ",\"_type\":\"NET\"";
+    report += ",\"_source\":\"Modsecurity\"";
         
     report += ",\"_agent\":\"";
     report += rec.agent;
