@@ -106,14 +106,16 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             
             bwl->event = hids_list.second.get<int>("event");
             bwl->host = hids_list.second.get<string>("agent");
-            bwl->action = hids_list.second.get<string>("action");
             
             bwl->agr.reproduced = hids_list.second.get<int>("aggregate.reproduced");  
             bwl->agr.in_period = hids_list.second.get<int>("aggregate.in_period");  
-            bwl->agr.new_event = hids_list.second.get<int>("aggregate.new_event");           
-            bwl->agr.new_severity = hids_list.second.get<int>("aggregate.new_severity");
-            bwl->agr.new_category = hids_list.second.get<string>("aggregate.new_category");
-            bwl->agr.new_description = hids_list.second.get<string>("aggregate.new_description");
+            
+            bwl->rsp.profile = hids_list.second.get<string>("response.profile");
+            bwl->rsp.ipblock_type = hids_list.second.get<string>("response.ipblock_type");
+            bwl->rsp.new_event = hids_list.second.get<int>("response.new_event");           
+            bwl->rsp.new_severity = hids_list.second.get<int>("response.new_severity");
+            bwl->rsp.new_category = hids_list.second.get<string>("response.new_category");
+            bwl->rsp.new_description = hids_list.second.get<string>("response.new_description");
             
             filter.hids.bwl.push_back(bwl);
         }
@@ -129,14 +131,16 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             
             bwl->event = nids_list.second.get<int>("event");
             bwl->host = nids_list.second.get<string>("agent");
-            bwl->action = nids_list.second.get<string>("action");
-            
+                        
             bwl->agr.reproduced = nids_list.second.get<int>("aggregate.reproduced");  
             bwl->agr.in_period = nids_list.second.get<int>("aggregate.in_period");  
-            bwl->agr.new_event = nids_list.second.get<int>("aggregate.new_event");           
-            bwl->agr.new_severity = nids_list.second.get<int>("aggregate.new_severity");
-            bwl->agr.new_category = nids_list.second.get<string>("aggregate.new_category");
-            bwl->agr.new_description = nids_list.second.get<string>("aggregate.new_description");
+            
+            bwl->rsp.profile = nids_list.second.get<string>("response.profile");
+            bwl->rsp.ipblock_type = nids_list.second.get<string>("response.ipblock_type");
+            bwl->rsp.new_event = nids_list.second.get<int>("response.new_event");           
+            bwl->rsp.new_severity = nids_list.second.get<int>("response.new_severity");
+            bwl->rsp.new_category = nids_list.second.get<string>("response.new_category");
+            bwl->rsp.new_description = nids_list.second.get<string>("response.new_description");
             
             filter.nids.bwl.push_back(bwl);
         }
@@ -152,14 +156,16 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             
             bwl->event = waf_list.second.get<int>("event");
             bwl->host = waf_list.second.get<string>("agent");
-            bwl->action = waf_list.second.get<string>("action");
             
             bwl->agr.reproduced = waf_list.second.get<int>("aggregate.reproduced");  
             bwl->agr.in_period = waf_list.second.get<int>("aggregate.in_period");  
-            bwl->agr.new_event = waf_list.second.get<int>("aggregate.new_event");           
-            bwl->agr.new_severity = waf_list.second.get<int>("aggregate.new_severity");
-            bwl->agr.new_category = waf_list.second.get<string>("aggregate.new_category");
-            bwl->agr.new_description = waf_list.second.get<string>("aggregate.new_description");
+            
+            bwl->rsp.profile = waf_list.second.get<string>("response.profile");
+            bwl->rsp.ipblock_type = waf_list.second.get<string>("response.ipblock_type");
+            bwl->rsp.new_event = waf_list.second.get<int>("response.new_event");           
+            bwl->rsp.new_severity = waf_list.second.get<int>("response.new_severity");
+            bwl->rsp.new_category = waf_list.second.get<string>("response.new_category");
+            bwl->rsp.new_description = waf_list.second.get<string>("response.new_description");
             
             filter.waf.bwl.push_back(bwl);
         }
@@ -176,17 +182,18 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             t->host = metrics_list.second.get<string>("agent");
             t->element = metrics_list.second.get<string>("metric");
             t->parameter = metrics_list.second.get<string>("parameter");
-            t->action = metrics_list.second.get<string>("action");
-            
             t->value_min = metrics_list.second.get<int>("min");
             t->value_max = metrics_list.second.get<int>("max");
                         
             t->agr.reproduced = metrics_list.second.get<int>("aggregate.reproduced");  
             t->agr.in_period = metrics_list.second.get<int>("aggregate.in_period");  
-            t->agr.new_event = metrics_list.second.get<int>("aggregate.new_event");           
-            t->agr.new_severity = metrics_list.second.get<int>("aggregate.new_severity");
-            t->agr.new_category = metrics_list.second.get<string>("aggregate.new_category");
-            t->agr.new_description = metrics_list.second.get<string>("aggregate.new_description");
+            
+            t->rsp.profile = metrics_list.second.get<string>("response.profile");
+            t->rsp.ipblock_type = metrics_list.second.get<string>("response.ipblock_type");
+            t->rsp.new_event = metrics_list.second.get<int>("response.new_event");           
+            t->rsp.new_severity = metrics_list.second.get<int>("response.new_severity");
+            t->rsp.new_category = metrics_list.second.get<string>("response.new_category");
+            t->rsp.new_description = metrics_list.second.get<string>("response.new_description");
             
             filter.metric.th.push_back(t);
         }
@@ -203,17 +210,18 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             t->host = traffic_list.second.get<string>("network");
             t->element = traffic_list.second.get<string>("netmask");
             t->parameter = traffic_list.second.get<string>("appl");
-            t->action = traffic_list.second.get<string>("action");
-            
             t->value_min = traffic_list.second.get<int>("min");
             t->value_max = traffic_list.second.get<int>("max");
                         
             t->agr.reproduced = traffic_list.second.get<int>("aggregate.reproduced");  
             t->agr.in_period = traffic_list.second.get<int>("aggregate.in_period");  
-            t->agr.new_event = traffic_list.second.get<int>("aggregate.new_event");           
-            t->agr.new_severity = traffic_list.second.get<int>("aggregate.new_severity");
-            t->agr.new_category = traffic_list.second.get<string>("aggregate.new_category");
-            t->agr.new_description = traffic_list.second.get<string>("aggregate.new_description");
+            
+            t->rsp.profile = traffic_list.second.get<string>("response.profile");
+            t->rsp.ipblock_type = traffic_list.second.get<string>("response.ipblock_type");
+            t->rsp.new_event = traffic_list.second.get<int>("response.new_event");           
+            t->rsp.new_severity = traffic_list.second.get<int>("response.new_severity");
+            t->rsp.new_category = traffic_list.second.get<string>("response.new_category");
+            t->rsp.new_description = traffic_list.second.get<string>("response.new_description");
             
             filter.traf.th.push_back(t);
         }
@@ -227,6 +235,7 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
     
     return 1;
 }
+
 
 boost::shared_mutex FiltersSingleton::agents_update;
 

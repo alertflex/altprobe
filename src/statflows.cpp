@@ -658,7 +658,11 @@ void StatFlows::UpdateThresholds() {
     
     for ( i = fs.filter.traf.th.begin(), end = fs.filter.traf.th.end(); i != end; ++i ) {
         
-        if (!(*i)->host.compare(flows_rec.dst_ip) || !(*i)->host.compare(flows_rec.src_ip)) {
+        bool dest = IsIPInRange(flows_rec.dst_ip, (*i)->host, (*i)->element);
+        
+        bool source = IsIPInRange(flows_rec.src_ip, (*i)->host, (*i)->element);
+        
+        if (dest || source) {
         
             if (!(*i)->parameter.compare(flows_rec.info1) || !(*i)->parameter.compare("all")) {
             
@@ -707,18 +711,21 @@ void StatFlows::SendAlert(Threshold* th, bool type_alert) {
     sk.alert.agent = strNodeId;
     sk.alert.type = "NET";
         
-    if ( th->agr.new_event != 0) sk.alert.event = th->agr.new_event;
+    if ( th->rsp.new_event != 0) sk.alert.event = th->rsp.new_event;
     else sk.alert.event = 1;
     
-    if ( th->agr.new_severity != 0) sk.alert.severity = th->agr.new_severity;
+    if ( th->rsp.new_severity != 0) sk.alert.severity = th->rsp.new_severity;
     else sk.alert.severity = 2;
     
-    if (th->agr.new_category.compare("") != 0) sk.alert.list_cats.push_back(th->agr.new_category);
+    if (th->rsp.new_category.compare("") != 0) sk.alert.list_cats.push_back(th->rsp.new_category);
     else sk.alert.list_cats.push_back("traffic threshold");
+    
+    if (th->rsp.new_description.compare("") != 0)  sk.alert.description = th->rsp.new_description;
+    else sk.alert.description = "traffic threshold";
         
-    if (th->action.compare("none") != 0) sk.alert.action = th->action;
+    if (th->rsp.profile.compare("none") != 0) sk.alert.action = th->rsp.profile;
     else sk.alert.action = "none";
-        
+    
     // hostname location 
     sk.alert.location = th->host;
         

@@ -817,22 +817,71 @@ void StatIds::UpdateHidsAlerts() {
     
     for(i = hids_alerts_list.begin(), end = hids_alerts_list.end(); i != end; ++i) {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
-            if (i->agent.compare(ids_rec.agent) == 0) { 
+            if (i->agent.compare(ids_rec.agent) == 0) {
+                
                 if (i->event == ids_rec.event) {
-                    //get current time
-                    current_time = time(NULL);
-                    i->count++;    
-                    if ((i->alert_time + i->agr.in_period) < current_time) {
-                        if (i->count >= i->agr.reproduced) {
-                            SendHidsAlert(i, i->count);
-                            hids_alerts_list.erase(i);
+                
+                    if (i->rsp.ipblock_type.compare("none") == 0) {
+                
+                        //get current time
+                        current_time = time(NULL);
+                        i->count++;    
+                        if ((i->alert_time + i->agr.in_period) < current_time) {
+                            if (i->count >= i->agr.reproduced) {
+                                SendHidsAlert(i, i->count);
+                                hids_alerts_list.erase(i);
+                                return;
+                            }
+                            else {
+                                hids_alerts_list.erase(i);
+                                goto new_hids_alert;
+                            }
                             return;
                         }
-                        else {
-                            hids_alerts_list.erase(i);
-                            goto new_hids_alert;
+                    } else {
+                        
+                        if (i->rsp.ipblock_type.compare("src") == 0) {
+                            
+                            if(i->src_ip.compare(ids_rec.src_ip) == 0) {
+                                
+                                current_time = time(NULL);
+                                i->count++;    
+                                if ((i->alert_time + i->agr.in_period) < current_time) {
+                                    if (i->count >= i->agr.reproduced) {
+                                        SendHidsAlert(i, i->count);
+                                        hids_alerts_list.erase(i);
+                                        return;
+                                    }
+                                    else {
+                                        hids_alerts_list.erase(i);
+                                        goto new_hids_alert;
+                                    }
+                                    return;
+                                }
+                            }
+                            
+                        } else {
+                        
+                            if(i->dst_ip.compare(ids_rec.dst_ip) == 0) {
+                                
+                                current_time = time(NULL);
+                                i->count++;    
+                                if ((i->alert_time + i->agr.in_period) < current_time) {
+                                    if (i->count >= i->agr.reproduced) {
+                                        SendHidsAlert(i, i->count);
+                                        hids_alerts_list.erase(i);
+                                        return;
+                                    }
+                                    else {
+                                        hids_alerts_list.erase(i);
+                                        goto new_hids_alert;
+                                    }
+                                    return;
+                                }
+                            }
+                            
                         }
-                        return;
+                        
                     }
                 }
             }  
@@ -851,26 +900,41 @@ void StatIds::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
         
     if (r->ids_type == 1) sk.alert.type = "FILE";
     else sk.alert.type = "HOST";
-        
-    if (r->agr.new_event != 0) sk.alert.event = r->agr.new_event;
-    else sk.alert.event = r->event;
-        
-    if (r->agr.new_severity != 0) sk.alert.severity = r->agr.new_severity;
-    else sk.alert.severity = r->severity;
-        
-    copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
-    if (r->agr.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->agr.new_category);
-                
-    if (r->action.compare("none") != 0) sk.alert.action = r->action;
-    else sk.alert.action = "none";
-        
-    if (r->agr.new_description.compare("") != 0)  sk.alert.description = r->agr.new_description;
-    else sk.alert.description = r->desc;
-        
+    
     sk.alert.srcip = r->src_ip;
     
     sk.alert.dstip = r->dst_ip;
+        
+    if (r->rsp.new_event != 0) sk.alert.event = r->rsp.new_event;
+    else sk.alert.event = r->event;
+        
+    if (r->rsp.new_severity != 0) sk.alert.severity = r->rsp.new_severity;
+    else sk.alert.severity = r->severity;
+        
+    copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
+    if (r->rsp.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
+                
+    if (r->rsp.new_description.compare("") != 0)  sk.alert.description = r->rsp.new_description;
+    else sk.alert.description = r->desc;
     
+    if (r->rsp.profile.compare("none") != 0) sk.alert.action = r->rsp.profile;
+    else sk.alert.action = "none";
+    
+    if (r->rsp.ipblock_type.compare("none") != 0) {
+            
+        if (r->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
+            ExecCmd(sk.alert.srcip, "src");
+            sk.alert.severity = 3;
+            sk.alert.list_cats.push_back("srcip_blocked");
+        } else {
+            if (r->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
+                ExecCmd(sk.alert.dstip, "dst");
+                sk.alert.severity = 3;
+                sk.alert.list_cats.push_back("dstip_blocked");
+            }
+        }
+    }
+        
     sk.alert.agent = r->agent;
         
     sk.alert.hostname = r->ids;
@@ -908,19 +972,65 @@ void StatIds::UpdateNidsAlerts() {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
             if (i->ids.compare(ids_rec.ids) == 0)  {
                 if (i->event == ids_rec.event) {
-                    //get current time
-                    current_time = time(NULL);
-                    i->count++;  
-                    if ((i->alert_time + i->agr.in_period) < current_time) {
-                        if (i->count >= i->agr.reproduced) {
-                            SendNidsAlert(i, i->count);
-                            nids_alerts_list.erase(i);
+                    
+                    if (i->rsp.ipblock_type.compare("none") == 0) {
+                        //get current time
+                        current_time = time(NULL);
+                        i->count++;  
+                        if ((i->alert_time + i->agr.in_period) < current_time) {
+                            if (i->count >= i->agr.reproduced) {
+                                SendNidsAlert(i, i->count);
+                                nids_alerts_list.erase(i);
+                            }
+                            else {
+                                nids_alerts_list.erase(i);
+                                goto new_nids_alert;
+                            }
+                            return;
                         }
-                        else {
-                            nids_alerts_list.erase(i);
-                            goto new_nids_alert;
+                    } else {
+                        
+                        if (i->rsp.ipblock_type.compare("src") == 0) {
+                            
+                            if(i->src_ip.compare(ids_rec.src_ip) == 0) {
+                                
+                                //get current time
+                                current_time = time(NULL);
+                                i->count++;  
+                                if ((i->alert_time + i->agr.in_period) < current_time) {
+                                    if (i->count >= i->agr.reproduced) {
+                                        SendNidsAlert(i, i->count);
+                                        nids_alerts_list.erase(i);
+                                    }
+                                    else {
+                                        nids_alerts_list.erase(i);
+                                        goto new_nids_alert;
+                                    }
+                                    return;
+                                }   
+                            }
+                            
+                        } else {
+                        
+                            if(i->dst_ip.compare(ids_rec.dst_ip) == 0) {
+                                
+                                //get current time
+                                current_time = time(NULL);
+                                i->count++;  
+                                if ((i->alert_time + i->agr.in_period) < current_time) {
+                                    if (i->count >= i->agr.reproduced) {
+                                        SendNidsAlert(i, i->count);
+                                        nids_alerts_list.erase(i);
+                                    }
+                                    else {
+                                        nids_alerts_list.erase(i);
+                                        goto new_nids_alert;
+                                    }
+                                    return;
+                                }
+                            }
                         }
-                        return;
+                        
                     }
                 }
             }  
@@ -938,25 +1048,40 @@ void StatIds::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.source = "Suricata";
     sk.alert.type = "NET";
     
-    if (r->agr.new_event != 0) sk.alert.event = r->agr.new_event;
-    else sk.alert.event = r->event;
-        
-    if (r->agr.new_severity != 0) sk.alert.severity = r->agr.new_severity;
-    else sk.alert.severity = r->severity;
-        
-    copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
-    if (r->agr.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->agr.new_category);
-              
-    if (r->action.compare("none") != 0) sk.alert.action = r->action;
-    else sk.alert.action = "none";
-        
-    if (r->agr.new_description.compare("") != 0)  sk.alert.description = r->agr.new_description;
-    else sk.alert.description = r->desc;
-        
     sk.alert.srcip = r->src_ip;
     
     sk.alert.dstip = r->dst_ip;
     
+    if (r->rsp.new_event != 0) sk.alert.event = r->rsp.new_event;
+    else sk.alert.event = r->event;
+        
+    if (r->rsp.new_severity != 0) sk.alert.severity = r->rsp.new_severity;
+    else sk.alert.severity = r->severity;
+        
+    copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
+    if (r->rsp.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
+              
+    if (r->rsp.profile.compare("none") != 0) sk.alert.action = r->rsp.profile;
+    else sk.alert.action = "none";
+        
+    if (r->rsp.new_description.compare("") != 0)  sk.alert.description = r->rsp.new_description;
+    else sk.alert.description = r->desc;
+    
+    if (r->rsp.ipblock_type.compare("none") != 0) {
+            
+        if (r->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
+            ExecCmd(sk.alert.srcip, "src");
+            sk.alert.severity = 3;
+            sk.alert.list_cats.push_back("srcip_blocked");
+        } else {
+            if (r->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
+                ExecCmd(sk.alert.dstip, "dst");
+                sk.alert.severity = 3;
+                sk.alert.list_cats.push_back("dstip_blocked");
+            }
+        }
+    }
+        
     sk.alert.hostname = r->ids;
     
     sk.alert.agent = r->agent;
@@ -995,19 +1120,65 @@ void StatIds::UpdateWafAlerts() {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
             if (i->ids.compare(ids_rec.ids) == 0)  {
                 if (i->event == ids_rec.event) {
-                    //get current time
-                    current_time = time(NULL);
-                    i->count++;  
-                    if ((i->alert_time + i->agr.in_period) < current_time) {
-                        if (i->count >= i->agr.reproduced) {
-                            SendWafAlert(i, i->count);
-                            waf_alerts_list.erase(i);
+                    
+                    if (i->rsp.ipblock_type.compare("none") == 0) {
+                        
+                        //get current time
+                        current_time = time(NULL);
+                        i->count++;  
+                        if ((i->alert_time + i->agr.in_period) < current_time) {
+                            if (i->count >= i->agr.reproduced) {
+                                SendWafAlert(i, i->count);
+                                waf_alerts_list.erase(i);
+                            }
+                            else {
+                                waf_alerts_list.erase(i);
+                                goto new_waf_alert;
+                            }
+                            return;
                         }
-                        else {
-                            waf_alerts_list.erase(i);
-                            goto new_waf_alert;
+                    } else {
+                        
+                        if (i->rsp.ipblock_type.compare("src") == 0) {
+                            
+                            if(i->src_ip.compare(ids_rec.src_ip) == 0) {
+                            
+                                //get current time
+                                current_time = time(NULL);
+                                i->count++;  
+                                if ((i->alert_time + i->agr.in_period) < current_time) {
+                                    if (i->count >= i->agr.reproduced) {
+                                        SendWafAlert(i, i->count);
+                                        waf_alerts_list.erase(i);
+                                    }
+                                    else {
+                                        waf_alerts_list.erase(i);
+                                        goto new_waf_alert;
+                                    }
+                                    return;
+                                }
+                            }
+                            
+                        } else {
+                        
+                            if(i->dst_ip.compare(ids_rec.dst_ip) == 0) {
+                            
+                                //get current time
+                                current_time = time(NULL);
+                                i->count++;  
+                                if ((i->alert_time + i->agr.in_period) < current_time) {
+                                    if (i->count >= i->agr.reproduced) {
+                                        SendWafAlert(i, i->count);
+                                        waf_alerts_list.erase(i);
+                                    }
+                                    else {
+                                        waf_alerts_list.erase(i);
+                                        goto new_waf_alert;
+                                    }
+                                    return;
+                                }       
+                            }
                         }
-                        return;
                     }
                 }
             }  
@@ -1025,25 +1196,40 @@ void StatIds::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.source = "Modsecurity";
     sk.alert.type = "NET";
     
-    if (r->agr.new_event != 0) sk.alert.event = r->agr.new_event;
-    else sk.alert.event = r->event;
-        
-    if (r->agr.new_severity != 0) sk.alert.severity = r->agr.new_severity;
-    else sk.alert.severity = r->severity;
-        
-    copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
-    if (r->agr.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->agr.new_category);
-              
-    if (r->action.compare("none") != 0) sk.alert.action = r->action;
-    else sk.alert.action = "none";
-        
-    if (r->agr.new_description.compare("") != 0)  sk.alert.description = r->agr.new_description;
-    else sk.alert.description = r->desc;
-        
     sk.alert.srcip = r->src_ip;
     
     sk.alert.dstip = r->dst_ip;
     
+    if (r->rsp.new_event != 0) sk.alert.event = r->rsp.new_event;
+    else sk.alert.event = r->event;
+        
+    if (r->rsp.new_severity != 0) sk.alert.severity = r->rsp.new_severity;
+    else sk.alert.severity = r->severity;
+        
+    copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
+    if (r->rsp.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
+              
+    if (r->rsp.profile.compare("none") != 0) sk.alert.action = r->rsp.profile;
+    else sk.alert.action = "none";
+        
+    if (r->rsp.new_description.compare("") != 0)  sk.alert.description = r->rsp.new_description;
+    else sk.alert.description = r->desc;
+    
+    if (r->rsp.ipblock_type.compare("none") != 0) {
+            
+        if (r->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
+            ExecCmd(sk.alert.srcip, "src");
+            sk.alert.severity = 3;
+            sk.alert.list_cats.push_back("srcip_blocked");
+        } else {
+            if (r->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
+                ExecCmd(sk.alert.dstip, "dst");
+                sk.alert.severity = 3;
+                sk.alert.list_cats.push_back("dstip_blocked");
+            }
+        }
+    }
+        
     sk.alert.hostname = r->ids;
     
     sk.alert.agent = r->agent;

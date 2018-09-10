@@ -12,8 +12,9 @@ collector:
   # save events/logs to local path - /var/log/alertflex, if controller isn't available
   # max size (MB) of the log file, if size more than this value, collector switches to the next log file
   log_size: 100
-  # alerts threshold, if the threshold is exceeded, collector omits all others alerts until Redis list is not empty
-  # also special alert about multiple alerts will appear (redirection of alerts to logs will not interrupted)
+  # alerts threshold, if the threshold is exceeded, collector omits all others alerts 
+  # until Redis list is not empty (redirection of alerts to logs still will not be interrupted)
+  # also special alert about multiple alerts will appear (it will inform an operator that anti-flooding is on)
   alerts_threshold: 100
   
   # TIMERS
@@ -24,18 +25,33 @@ collector:
   # period generation of reports for netflow and IDS statistics in sec, if 0 then this functionality is off (default 300)
   report_timer: 300  
   
+  # arguments for firewall-cmd, it  allows of blocking of suspicious IP by executed command for firewalld with below-listed args
+  # string $IPADDRESS is a template and will be replaced by certain IP
+  # block_ipsrc: "--add-rich-rule=\"rule family='ipv4' source address='$IPADDRESS' reject\""
+  block-ipsrc: "none"
+  # block_ipdst: "--add-rich-rule=\"rule family='ipv4' destination address='$IPADDRESS' protocol value='ip' reject\""
+  block-ipsrc: "none"
+  
   # path to MaxMind Geo DB
   geo_db: "/etc/alertflex/geo/GeoLiteCity.dat"
-  
-  # Altprobe reads sources events from Redis list by pop API call
-  redis_host: "127.0.0.1"
-  redis_port: 6379  
   
   # Altprobe reads via Wazuh API an OSSEC agents status (use report_timer for period of reading)
   wazuh_host: "127.0.0.1"
   wazuh_port: 55000  
   wazuh_user: "_wazuh_user"
   wazuh_pwd: "_wazuh_pwd"
+  
+  # Altprobe reads sources events from Redis list by pop API call
+  redis_host: "127.0.0.1"
+  redis_port: 6379 
+  
+sources:
+  # redis list for events from Wazuh IDS/OSSEC 
+  ossec: "altprobe_hids"
+  # redis list for metrics from ElasticStack Metricbeat  
+  metricbeat: "altprobe_metrics"
+  # redis list for events from Suricata IDS 
+  suricata: "altprobe_nids"
   
 controller:
   # send alerts and statistics to Controller (ActiveMQ interface)
@@ -44,17 +60,7 @@ controller:
   cert: "/etc/alertflex/Broker.pem"
   path: "jms/alertflex/"
   pwd: "_amq_pwd"
-  
-sources:
-  # redis list for events from Wazuh IDS/OSSEC 
-  ossec: "altprobe_hids"
-    
-  # redis list for metrics from ElasticStack Metricbeat  
-  metricbeat: "altprobe_metrics"
-  
-  # redis list for events from Suricata IDS 
-  suricata: "altprobe_nids"
-  
+
 
 
 

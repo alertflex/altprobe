@@ -54,23 +54,20 @@ int Nids::Go(void) {
                 
                 severity = PushIdsRecord(bwl);
                     
-                if (rec.src_type != 2 && rec.dst_type != 2) {
-                
-                    if (bwl != NULL) {
-                        if (!bwl->action.compare("supress")) {
-                            SendAlert(severity, bwl);
-                        }
-                    } else {
-                        if (fs.filter.nids.severity <= severity) SendAlert(severity, NULL);
+                if (bwl != NULL) {
+                    if (bwl->rsp.profile.compare("supress") != 0) {
+                        SendAlert(severity, bwl);
                     }
+                } else {
+                    if (fs.filter.nids.severity <= severity) SendAlert(severity, NULL);
+                }
                     
-                    if (sk.alerts_threshold != 0) {
+                if (sk.alerts_threshold != 0) {
             
-                        if (alerts_counter < sk.alerts_threshold) alerts_counter++;
-                        else {
-                            sendAlertMultiple(2);
-                            alerts_counter++;
-                        }
+                    if (alerts_counter < sk.alerts_threshold) alerts_counter++;
+                    else {
+                        SendAlertMultiple(3);
+                        alerts_counter++;
                     }
                 }
             } else {
@@ -100,7 +97,7 @@ BwList* Nids::CheckBwList() {
                 
                 string agent = (*i)->host;
                 
-                if (agent.compare("none") || agent.compare(rec.src_agent) == 0 || agent.compare(rec.dst_agent) == 0) {
+                if (agent.compare("all") == 0 || agent.compare(rec.src_agent) == 0 || agent.compare(rec.dst_agent) == 0) {
                         
                     return (*i);
                 }
@@ -139,13 +136,13 @@ int Nids::ParsJson (char* redis_payload) {
         rec.flow_id = pt.get<int>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
-        rec.src_type = CheckHomeNetwork(rec.src_ip);
+        rec.src_type = IsHomeNetwork(rec.src_ip);
         if (rec.src_type == 0) rec.src_agent = "ext_net";
         else rec.src_agent = fs.GetAgentNameByIP(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
-        rec.dst_type = CheckHomeNetwork(rec.dst_ip);
+        rec.dst_type = IsHomeNetwork(rec.dst_ip);
         if (rec.dst_type == 0) rec.dst_agent = "ext_net";
         else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
@@ -166,6 +163,10 @@ int Nids::ParsJson (char* redis_payload) {
         rec.alert.severity = pt.get<int>("alert.severity",0);
         
         ResetStream();
+        
+        if(SuppressAlert(rec.src_ip)) return 0;
+        if(SuppressAlert(rec.dst_ip)) return 0;
+        
         return rec.event_type;
     }
     
@@ -178,13 +179,13 @@ int Nids::ParsJson (char* redis_payload) {
         rec.flow_id = pt.get<int>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
-        rec.src_type = CheckHomeNetwork(rec.src_ip);
+        rec.src_type = IsHomeNetwork(rec.src_ip);
         if (rec.src_type == 0) rec.src_agent = "ext_net";
         else rec.src_agent = fs.GetAgentNameByIP(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
-        rec.dst_type = CheckHomeNetwork(rec.dst_ip);
+        rec.dst_type = IsHomeNetwork(rec.dst_ip);
         if (rec.dst_type == 0) rec.dst_agent = "ext_net";
         else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
@@ -226,13 +227,13 @@ int Nids::ParsJson (char* redis_payload) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
-        rec.src_type = CheckHomeNetwork(rec.src_ip);
+        rec.src_type = IsHomeNetwork(rec.src_ip);
         if (rec.src_type == 0) rec.src_agent = "ext_net";
         else rec.src_agent = fs.GetAgentNameByIP(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
-        rec.dst_type = CheckHomeNetwork(rec.dst_ip);
+        rec.dst_type = IsHomeNetwork(rec.dst_ip);
         if (rec.dst_type == 0) rec.dst_agent = "ext_net";
         else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
@@ -259,13 +260,13 @@ int Nids::ParsJson (char* redis_payload) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
-        rec.src_type = CheckHomeNetwork(rec.src_ip);
+        rec.src_type = IsHomeNetwork(rec.src_ip);
         if (rec.src_type == 0) rec.src_agent = "ext_net";
         else rec.src_agent = fs.GetAgentNameByIP(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
-        rec.dst_type = CheckHomeNetwork(rec.dst_ip);
+        rec.dst_type = IsHomeNetwork(rec.dst_ip);
         if (rec.dst_type == 0) rec.dst_agent = "ext_net";
         else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
@@ -607,38 +608,53 @@ void Nids::SendAlert(int s, BwList* bwl) {
     sk.alert.description = rec.alert.signature;
         
     sk.alert.status = "processed_new";
+    
+    sk.alert.srcip = rec.src_ip;
+    sk.alert.dstip = rec.dst_ip;
             
     if (bwl != NULL) {
             
-        if (bwl->action.compare("none") != 0) {
-            sk.alert.action = bwl->action;
+        if (bwl->rsp.profile.compare("none") != 0) {
+            sk.alert.action = bwl->rsp.profile;
             sk.alert.status = "modified_new";
-        }  
+        } 
         
-        if (bwl->agr.new_event != 0) {
-            sk.alert.event = bwl->agr.new_event;
+        if (bwl->rsp.new_event != 0) {
+            sk.alert.event = bwl->rsp.new_event;
             sk.alert.status = "modified_new";
         }    
             
-        if (bwl->agr.new_severity != 0) {
-            sk.alert.severity = bwl->agr.new_severity;
+        if (bwl->rsp.new_severity != 0) {
+            sk.alert.severity = bwl->rsp.new_severity;
             sk.alert.status = "modified_new";
         }   
             
-        if (bwl->agr.new_category.compare("") != 0) {
-            sk.alert.list_cats.push_back(bwl->agr.new_category);
+        if (bwl->rsp.new_category.compare("") != 0) {
+            sk.alert.list_cats.push_back(bwl->rsp.new_category);
             sk.alert.status = "modified_new";
         }   
                 
-        if (bwl->agr.new_description.compare("") != 0) {
-            sk.alert.description = bwl->agr.new_description;
+        if (bwl->rsp.new_description.compare("") != 0) {
+            sk.alert.description = bwl->rsp.new_description;
             sk.alert.status = "modified_new";
         }   
+        
+        if (bwl->rsp.ipblock_type.compare("none") != 0) {
+            
+            if (bwl->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
+                ExecCmd(rec.src_ip, "src");
+                sk.alert.severity = 3;
+                sk.alert.list_cats.push_back("srcip_blocked");
+            } else {
+                if (bwl->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
+                    ExecCmd(rec.dst_ip, "dst");
+                    sk.alert.severity = 3;
+                    sk.alert.list_cats.push_back("dstip_blocked");
+                }
+            }
+        }
     }
         
-    sk.alert.srcip = rec.src_ip;
-    sk.alert.dstip = rec.dst_ip;
-    
     if (rec.dst_agent.compare("ext_net") != 0) sk.alert.agent = rec.dst_agent;
     else {
         if (rec.src_agent.compare("ext_net") != 0) sk.alert.agent = rec.src_agent;
@@ -706,14 +722,16 @@ int Nids::PushIdsRecord(BwList* bwl) {
         
         if (bwl->agr.reproduced > 0) {
             
-            ids_rec.action = bwl->action;
-            
-            ids_rec.agr.new_category = bwl->agr.new_category;
-            ids_rec.agr.new_description = bwl->agr.new_description;
-            ids_rec.agr.new_event = bwl->agr.new_event;
-            ids_rec.agr.new_severity = bwl->agr.new_severity;
             ids_rec.agr.in_period = bwl->agr.in_period;
             ids_rec.agr.reproduced = bwl->agr.reproduced;
+            
+            ids_rec.rsp.profile = bwl->rsp.profile;
+            ids_rec.rsp.ipblock_type = bwl->rsp.ipblock_type;
+            ids_rec.rsp.new_category = bwl->rsp.new_category;
+            ids_rec.rsp.new_description = bwl->rsp.new_description;
+            ids_rec.rsp.new_event = bwl->rsp.new_event;
+            ids_rec.rsp.new_severity = bwl->rsp.new_severity;
+            
         }
     }
                                     

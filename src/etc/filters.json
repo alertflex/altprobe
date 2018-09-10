@@ -7,14 +7,14 @@
         "netmask": "255.255.255.0",
         "alert_suppress": false
     }, {
-        "network": "192.168.101.10",
+        "network": "192.168.2.10",
         "netmask": "255.255.255.255",
         "alert_suppress": true
     }],
 
     "alias": [{
-        "agent_name": "centos7-host",
-        "host_name": "centos7-host",
+        "agent_name": "centos7",
+        "host_name": "centos7",
         "ip": "indef"
     }, {
         "agent_name": "win10",
@@ -27,27 +27,33 @@
             "severity": 1,
             "log": true,
             "bw_list": [{ 
-                "event": 4571,
-                "agent": "flghost",
-                "action": "none",
+                "event": 55715,
+                "agent": "devtools",
                 "aggregate": {
-                    "reproduced": 30,
-                    "in_period": 10,
-                    "new_event": 0,
-                    "new_severity": 0,
-                    "new_category": "new users cat 1",
-                    "new_description": "desc of alerts"
+                    "reproduced": 0,
+                    "in_period": 0
+                },
+                "response": {
+                    "profile": "none",
+                    "ipblock_type": "src",
+                    "new_event": 55716,
+                    "new_severity": 1,
+                    "new_category": "block ip",
+                    "new_description": "block ip"
                 }
             }, { 
                 "event": 4572,
-                "agent": "win10-host",
-                "action": "graylog",
+                "agent": "win10",
                 "aggregate": {
-                    "reproduced": 0,
-                    "in_period": 0,
+                    "reproduced": 30,
+                    "in_period": 10
+                },
+                "response": {
+                    "profile": "none",
+                    "ipblock_type": "src",
                     "new_event": 0,
                     "new_severity": 0,
-                    "new_category": "new users cat 2",
+                    "new_category": "new users cat 1",
                     "new_description": "desc of alerts"
                 }
             }]
@@ -57,26 +63,32 @@
             "log": true,
             "bw_list": [{ 
                 "event": 2200071,
-                "agent": "none",
-                "action": "none",
+                "agent": "all",
                 "aggregate": {
                     "reproduced": 30,
-                    "in_period": 10,
+                    "in_period": 10
+                },
+                "response": {
+                    "profile": "none",
+                    "ipblock_type": "src",
                     "new_event": 0,
                     "new_severity": 0,
-                    "new_category": "new users cat 3",
+                    "new_category": "new users cat 1",
                     "new_description": "desc of alerts"
                 }
             }, { 
                 "event": 2200072,
-                "agent": "centos7-host",
-                "action": "suppress",
+                "agent": "centos7",
                 "aggregate": {
                     "reproduced": 30,
-                    "in_period": 10,
+                    "in_period": 10
+                },
+                "response": {
+                    "profile": "none",
+                    "ipblock_type": "src",
                     "new_event": 0,
                     "new_severity": 0,
-                    "new_category": "new users cat 4",
+                    "new_category": "new users cat 1",
                     "new_description": "desc of alerts"
                 }
             }]
@@ -87,25 +99,31 @@
             "bw_list": [{ 
                 "event": 100001,
                 "agent": "none",
-                "action": "none",
                 "aggregate": {
                     "reproduced": 30,
-                    "in_period": 10,
+                    "in_period": 10
+                },
+                "response": {
+                    "profile": "none",
+                    "ipblock_type": "src",
                     "new_event": 0,
                     "new_severity": 0,
-                    "new_category": "new users cat 3",
+                    "new_category": "new users cat 1",
                     "new_description": "desc of alerts"
                 }
             }, { 
                 "event": 100002,
                 "agent": "test01",
-                "action": "suppress",
                 "aggregate": {
                     "reproduced": 30,
-                    "in_period": 10,
+                    "in_period": 10
+                },
+                "response": {
+                    "profile": "none",
+                    "ipblock_type": "src",
                     "new_event": 0,
                     "new_severity": 0,
-                    "new_category": "new users cat 4",
+                    "new_category": "new users cat 1",
                     "new_description": "desc of alerts"
                 }
             }]
@@ -114,53 +132,62 @@
             "severity":  2,
             "log": true,
             "thresholds": [{
-                "agent": "win10-host",
+                "agent": "win10",
                 "metric": "memory",
                 "parameter":"free",
                 "min": 1,
                 "max": 100000,
-                "action": "none",
                 "aggregate": {
                     "reproduced": 30,
-                    "in_period": 300,
-                    "new_event": 10,
-                    "new_severity": 1,
-                    "new_category": "new users cat 5",
+                    "in_period": 10
+                },
+                "response": {
+                    "profile": "none",
+                    "ipblock_type": "none",
+                    "new_event": 0,
+                    "new_severity": 0,
+                    "new_category": "new users cat 1",
                     "new_description": "desc of alerts"
                 }
             }, {
-                "agent": "centos7-host",
+                "agent": "centos7",
                 "metric": "nginx",
                 "parameter":"active",
                 "min": 1,
                 "max": 10000,
-                "action": "none",
                 "aggregate": {
                     "reproduced": 30,
-                    "in_period": 300,
-                    "new_event": 11,
-                    "new_severity": 1,
-                    "new_category": "new users cat 5",
+                    "in_period": 10
+                },
+                "response": {
+                    "profile": "none",
+                    "ipblock_type": "none",
+                    "new_event": 0,
+                    "new_severity": 0,
+                    "new_category": "new users cat 1",
                     "new_description": "desc of alerts"
                 }
             }]
         },
-	"netflow": {
+        "netflow": {
             "top_talkers":  10,
             "log": true,
             "thresholds": [{
-                "network": "192.168.101.2",
+                "network": "192.168.1.2",
                 "netmask": "255.255.255.255",
                 "appl":"none",
                 "min": 1,
                 "max": 100000,
-                "action": "none",
                 "aggregate": {
                     "reproduced": 30,
-                    "in_period": 300,
-                    "new_event": 10,
-                    "new_severity": 1,
-                    "new_category": "new users cat 5",
+                    "in_period": 10
+                },
+                "response": {
+                    "profile": "none",
+                    "ipblock_type": "none",
+                    "new_event": 0,
+                    "new_severity": 0,
+                    "new_category": "new users cat 1",
                     "new_description": "desc of alerts"
                 }
             }, {
@@ -169,13 +196,16 @@
                 "appl":"dns",
                 "min": 1,
                 "max": 10000,
-                "action": "none",
                 "aggregate": {
                     "reproduced": 30,
-                    "in_period": 300,
-                    "new_event": 11,
-                    "new_severity": 1,
-                    "new_category": "new users cat 5",
+                    "in_period": 10
+                },
+                "response": {
+                    "profile": "none",
+                    "ipblock_type": "none",
+                    "new_event": 0,
+                    "new_severity": 0,
+                    "new_category": "new users cat 1",
                     "new_description": "desc of alerts"
                 }
             }]

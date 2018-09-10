@@ -707,18 +707,18 @@ void Metric::SendAlert(Threshold* th) {
     sk.alert.agent = agent;
     sk.alert.type = "HOST";
         
-    if ( th->agr.new_event != 0) sk.alert.event = th->agr.new_event;
+    if ( th->rsp.new_event != 0) sk.alert.event = th->rsp.new_event;
     else sk.alert.event = 1;
     
-    if ( th->agr.new_severity != 0) sk.alert.severity = th->agr.new_severity;
+    if ( th->rsp.new_severity != 0) sk.alert.severity = th->rsp.new_severity;
     else sk.alert.severity = 2;
     
-    if (th->agr.new_category.compare("") != 0) sk.alert.list_cats.push_back(th->agr.new_category);
+    if (th->rsp.new_category.compare("") != 0) sk.alert.list_cats.push_back(th->rsp.new_category);
     else sk.alert.list_cats.push_back("metrics threshold");
         
-    if (th->action.compare("none") != 0) sk.alert.action = th->action;
+    if (th->rsp.profile.compare("none") != 0) sk.alert.action = th->rsp.profile;
     else sk.alert.action = "none";
-        
+    
     // hostname location 
     sk.alert.location = metric;
     

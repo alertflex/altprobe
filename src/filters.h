@@ -56,7 +56,7 @@ public:
     string network;
     string netmask;
     bool alert_suppress;
-    
+        
     void Reset() {
         network.clear();
         netmask.clear();
@@ -89,20 +89,35 @@ class Aggregator {
 public:
     int reproduced;
     int in_period;
+        
+    void Reset () {
+        reproduced = 0;
+        in_period = 0;
+    }
+    
+    Aggregator () {
+        Reset();
+    }
+};
+
+class Response {
+public:
+    string profile;
+    string ipblock_type;
     int new_event;
     int new_severity;
     string new_category;
     string new_description;
     
     void Reset () {
-        reproduced = 0;
-        in_period = 0;
+        profile.clear();
+        ipblock_type.clear();
         new_event = 0;
         new_category.clear();
         new_description.clear();
     }
     
-    Aggregator () {
+    Response () {
         Reset();
     }
 };
@@ -111,13 +126,14 @@ class BwList {
 public:  
     int event;
     string host;
-    string action;
+    
     Aggregator agr;
+    Response rsp;
     
     void Reset () {
         event = 0;
         host.clear();
-        action.clear();
+        
     }
     
     BwList () {
@@ -146,8 +162,7 @@ public:
     string host;
     string element;
     string parameter;
-    string action;
-    
+        
     long int value_min;
     long int value_max;
     long int value_count;
@@ -155,6 +170,7 @@ public:
     time_t trigger_time;
     
     Aggregator agr;
+    Response rsp;
         
     void Reset() {
         value_count = 0;
@@ -162,7 +178,6 @@ public:
         value_max = 0;
         trigger_time = time(NULL);
         host.clear();
-        action.clear();
         element.clear();
         parameter.clear();
     }

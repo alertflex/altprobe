@@ -23,6 +23,9 @@ public:
             
     char collector_time[OS_DATETIME_SIZE]; 
     
+    static char block_ipsrc[OS_BUFFER_SIZE];
+    static char block_ipdst[OS_BUFFER_SIZE]; 
+    
     //Syslog info string
     static char SysLogInfo[OS_LONG_HEADER_SIZE];
     
@@ -46,6 +49,7 @@ public:
     static uint32_t IPToUInt(string ip);
     static bool IsIPInRange(string ip, string network, string mask);
     static unsigned int GetBufferSize(char* source);
+    static void ExecCmd(const string& cmd, string ip);
 };
 
 class Event {

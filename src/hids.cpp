@@ -29,7 +29,6 @@ int Hids::Go(void) {
         reply = (redisReply *) redisCommand( c, (const char *) redis_key.c_str());
         
         if (!reply) {
-            SysLog("failed reading ossec events from redis");
             freeReplyObject(reply);
             return 1;
         }
@@ -61,7 +60,7 @@ int Hids::Go(void) {
                     int severity = PushWafRecord(bwl);
                 
                     if (bwl != NULL) {
-                        if (!bwl->action.compare("supress")) SendWafAlert(severity, bwl);
+                        if (bwl->rsp.profile.compare("supress") != 0) SendWafAlert(severity, bwl);
                     } else {
                         if (fs.filter.waf.severity <= severity) {
                             
@@ -73,14 +72,15 @@ int Hids::Go(void) {
             
                         if (alerts_counter < sk.alerts_threshold) alerts_counter++;
                         else {
-                            sendAlertMultiple(1);
+                            SendAlertMultiple(2);
                             alerts_counter++;
                         }
                     }
                 }
                 
             } else {
-            
+                
+                
                 if (fs.filter.hids.log ) CreateLog();
             
                 if (alerts_counter <= sk.alerts_threshold) {
@@ -90,7 +90,8 @@ int Hids::Go(void) {
                     int severity = PushRecord(bwl);
                 
                     if (bwl != NULL) {
-                        if (!bwl->action.compare("supress")) SendAlert(severity, bwl);
+                        if (bwl->rsp.profile.compare("supress") != 0) SendAlert(severity, bwl);
+                        
                     } else {
                         if (fs.filter.hids.severity <= severity) {
                             SendAlert(severity, NULL);
@@ -101,7 +102,7 @@ int Hids::Go(void) {
             
                         if (alerts_counter < sk.alerts_threshold) alerts_counter++;
                         else {
-                            sendAlertMultiple(1);
+                            SendAlertMultiple(1);
                             alerts_counter++;
                         }
                     }
@@ -130,7 +131,7 @@ BwList* Hids::CheckBwList() {
                 
                 string agent = (*i)->host;
                 
-                if (agent.compare("none") || agent.compare(rec.agent) == 0) {
+                if (agent.compare("all") == 0 || agent.compare(rec.agent) == 0) {
                 
                     return (*i);
                 }
@@ -154,7 +155,7 @@ BwList* Hids::CheckWafBwList() {
                 
                 string agent = (*i)->host;
                 
-                if (agent.compare("none") || agent.compare(rec.agent) == 0) {
+                if (agent.compare("all") == 0 || agent.compare(rec.agent) == 0) {
                 
                     return (*i);
                 }
@@ -494,8 +495,6 @@ int Hids::ParsJson(char* redis_payload) {
         
         report += "\"}";
         
-        // SysLog((char*) report.str().c_str());
-    
         q_logs_hids.push(report);
         
         report.clear();
@@ -693,6 +692,10 @@ int Hids::ParsJson(char* redis_payload) {
     }
     
     ResetStreams();
+    
+    if(SuppressAlert(rec.srcip)) return 0;
+    if(SuppressAlert(rec.dstip)) return 0;
+    
     return 1;
 }
 
@@ -779,8 +782,6 @@ void Hids::CreateLog() {
     }
     report += "\"}";
     
-    //SysLog((char*) report.str().c_str());
-    
     q_logs_hids.push(report);
     
     report.clear();
@@ -838,8 +839,6 @@ void Hids::CreateWafLog() {
     report += rec.dstip;
     report += "\"}";
     
-    //SysLog((char*) report.str().c_str());
-    
     q_logs_hids.push(report);
     
     report.clear();
@@ -847,6 +846,7 @@ void Hids::CreateWafLog() {
 
 
 int Hids::PushRecord(BwList* bwl) {
+    
     // create new IDS record
     IdsRecord ids_rec;
             
@@ -892,14 +892,16 @@ int Hids::PushRecord(BwList* bwl) {
         
         if (bwl->agr.reproduced > 0) {
             
-            ids_rec.action = bwl->action;
-            
-            ids_rec.agr.new_category = bwl->agr.new_category;
-            ids_rec.agr.new_description = bwl->agr.new_description;
-            ids_rec.agr.new_event = bwl->agr.new_event;
-            ids_rec.agr.new_severity = bwl->agr.new_severity;
             ids_rec.agr.in_period = bwl->agr.in_period;
             ids_rec.agr.reproduced = bwl->agr.reproduced;
+            
+            ids_rec.rsp.profile = bwl->rsp.profile;
+            ids_rec.rsp.ipblock_type = bwl->rsp.ipblock_type;
+            ids_rec.rsp.new_category = bwl->rsp.new_category;
+            ids_rec.rsp.new_description = bwl->rsp.new_description;
+            ids_rec.rsp.new_event = bwl->rsp.new_event;
+            ids_rec.rsp.new_severity = bwl->rsp.new_severity;
+            
         }
     }
             
@@ -949,14 +951,15 @@ int Hids::PushWafRecord(BwList* bwl) {
         
         if (bwl->agr.reproduced > 0) {
             
-            ids_rec.action = bwl->action;
-            
-            ids_rec.agr.new_category = bwl->agr.new_category;
-            ids_rec.agr.new_description = bwl->agr.new_description;
-            ids_rec.agr.new_event = bwl->agr.new_event;
-            ids_rec.agr.new_severity = bwl->agr.new_severity;
             ids_rec.agr.in_period = bwl->agr.in_period;
             ids_rec.agr.reproduced = bwl->agr.reproduced;
+            
+            ids_rec.rsp.profile = bwl->rsp.profile;
+            ids_rec.rsp.ipblock_type = bwl->rsp.ipblock_type;
+            ids_rec.rsp.new_category = bwl->rsp.new_category;
+            ids_rec.rsp.new_description = bwl->rsp.new_description;
+            ids_rec.rsp.new_event = bwl->rsp.new_event;
+            ids_rec.rsp.new_severity = bwl->rsp.new_severity;
         }
     }
             
@@ -981,41 +984,14 @@ void Hids::SendAlert(int s, BwList*  bwl) {
         
     sk.alert.status = "processed_new";
             
-    if (bwl != NULL) {
-            
-        if (bwl->action.compare("none") != 0) {
-            sk.alert.action = bwl->action;
-            sk.alert.status = "modified_new";
-        } 
-        
-        if (bwl->agr.new_event != 0) {
-            sk.alert.event = bwl->agr.new_event;
-            sk.alert.status = "modified_new";
-        }    
-            
-        if (bwl->agr.new_severity != 0) {
-            sk.alert.severity = bwl->agr.new_severity;
-            sk.alert.status = "modified_new";
-        }   
-            
-        if (bwl->agr.new_category.compare("") != 0) {
-            sk.alert.list_cats.push_back(bwl->agr.new_category);
-            sk.alert.status = "modified_new";
-        }   
-                
-        if (bwl->agr.new_description.compare("") != 0) {
-            sk.alert.description = bwl->agr.new_description;
-            sk.alert.status = "modified_new";
-        }   
-    }
-        
     sk.alert.srcip = rec.srcip;
+    
     sk.alert.dstip = rec.dstip;
         
     sk.alert.source = "Wazuh";
     
     sk.alert.agent = rec.agent;
-	sk.alert.user = rec.user;
+    sk.alert.user = rec.user;
     sk.alert.hostname = rec.hostname;
         
     if (rec.file.filename.compare("") == 0) {
@@ -1053,6 +1029,49 @@ void Hids::SendAlert(int s, BwList*  bwl) {
             
     }
     
+    if (bwl != NULL) {
+            
+        if (bwl->rsp.profile.compare("none") != 0) {
+            sk.alert.action = bwl->rsp.profile;
+            sk.alert.status = "modified_new";
+        } 
+        
+        if (bwl->rsp.new_event != 0) {
+            sk.alert.event = bwl->rsp.new_event;
+            sk.alert.status = "modified_new";
+        }    
+            
+        if (bwl->rsp.new_severity != 0) {
+            sk.alert.severity = bwl->rsp.new_severity;
+            sk.alert.status = "modified_new";
+        }   
+            
+        if (bwl->rsp.new_category.compare("") != 0) {
+            sk.alert.list_cats.push_back(bwl->rsp.new_category);
+            sk.alert.status = "modified_new";
+        }   
+                
+        if (bwl->rsp.new_description.compare("") != 0) {
+            sk.alert.description = bwl->rsp.new_description;
+            sk.alert.status = "modified_new";
+        }   
+        
+        if (bwl->rsp.ipblock_type.compare("none") != 0) {
+            
+            if (bwl->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
+                ExecCmd(rec.srcip, "src");
+                sk.alert.severity = 3;
+                sk.alert.list_cats.push_back("srcip_blocked");
+            } else {
+                if (bwl->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
+                    ExecCmd(rec.dstip, "dst");
+                    sk.alert.severity = 3;
+                    sk.alert.list_cats.push_back("dstip_blocked");
+                }
+            }
+        }
+    }
+    
     sk.alert.event_json.assign(reply->str, GetBufferSize(reply->str));
         
     sk.SendAlert();
@@ -1068,9 +1087,6 @@ void Hids::SendWafAlert(int s, BwList*  bwl) {
     else 
         sk.alert.list_cats.push_back("waf");
     
-    //std::string sev = "send alert waf severity is  " + std::to_string(s);
-    //SysLog((char*) sev.c_str());
-    
     sk.alert.severity = s;
     sk.alert.event = rec.rule.id;
     sk.alert.action = "none";
@@ -1078,34 +1094,6 @@ void Hids::SendWafAlert(int s, BwList*  bwl) {
         
     sk.alert.status = "processed_new";
     
-    if (bwl != NULL) {
-            
-        if (bwl->action.compare("none") != 0) {
-            sk.alert.action = bwl->action;
-            sk.alert.status = "modified_new";
-        } 
-        
-        if (bwl->agr.new_event != 0) {
-            sk.alert.event = bwl->agr.new_event;
-            sk.alert.status = "modified_new";
-        }    
-            
-        if (bwl->agr.new_severity != 0) {
-            sk.alert.severity = bwl->agr.new_severity;
-            sk.alert.status = "modified_new";
-        }   
-            
-        if (bwl->agr.new_category.compare("") != 0) {
-            sk.alert.list_cats.push_back(bwl->agr.new_category);
-            sk.alert.status = "modified_new";
-        }   
-                
-        if (bwl->agr.new_description.compare("") != 0) {
-            sk.alert.description = bwl->agr.new_description;
-            sk.alert.status = "modified_new";
-        }   
-    }
-            
     sk.alert.srcip = rec.srcip;
     sk.alert.dstip = rec.dstip;
         
@@ -1118,6 +1106,49 @@ void Hids::SendWafAlert(int s, BwList*  bwl) {
     sk.alert.location = rec.location;
         
     sk.alert.info = rec.rule.info;
+    
+    if (bwl != NULL) {
+            
+        if (bwl->rsp.profile.compare("none") != 0) {
+            sk.alert.action = bwl->rsp.profile;
+            sk.alert.status = "modified_new";
+        } 
+        
+        if (bwl->rsp.new_event != 0) {
+            sk.alert.event = bwl->rsp.new_event;
+            sk.alert.status = "modified_new";
+        }    
+            
+        if (bwl->rsp.new_severity != 0) {
+            sk.alert.severity = bwl->rsp.new_severity;
+            sk.alert.status = "modified_new";
+        }   
+            
+        if (bwl->rsp.new_category.compare("") != 0) {
+            sk.alert.list_cats.push_back(bwl->rsp.new_category);
+            sk.alert.status = "modified_new";
+        }   
+                
+        if (bwl->rsp.new_description.compare("") != 0) {
+            sk.alert.description = bwl->rsp.new_description;
+            sk.alert.status = "modified_new";
+        }   
+        
+        if (bwl->rsp.ipblock_type.compare("none") != 0) {
+            
+            if (bwl->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
+                ExecCmd(rec.srcip, "src");
+                sk.alert.severity = 3;
+                sk.alert.list_cats.push_back("srcip_blocked");
+            } else {
+                if (bwl->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
+                    ExecCmd(rec.dstip, "dst");
+                    sk.alert.severity = 3;
+                    sk.alert.list_cats.push_back("dstip_blocked");
+                }
+            }
+        }
+    }
     
     sk.alert.event_json.assign(reply->str, GetBufferSize(reply->str));
         

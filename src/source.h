@@ -42,7 +42,7 @@ public:
     //JSON strings for regex and log output 
     string jsonPayload;
     string report;
-            
+    
     // interfaces
     Sinks sk;
     FiltersSingleton fs;
@@ -72,8 +72,10 @@ public:
     
     long ResetEventsCounter();
     void IncrementEventsCounter();
-    void sendAlertMultiple(int type_source);
-    int CheckHomeNetwork(string ip);
+    void SendAlertMultiple(int type);
+    int IsHomeNetwork(string ip);
+    bool SuppressAlert(string ip);
+    
 };
 
 #endif	/* SOURCE_H */

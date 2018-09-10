@@ -113,11 +113,12 @@ void Updates::onMessage(const Message* message) {
         
             string type = pt.get<string>("type");
             string node = pt.get<string>("node");
-        
-            if (!type.compare("filters")) {
             
-                if (!node.compare(node_id)) {
-                    
+            
+            if (!node.compare(node_id)) {
+        
+                if (!type.compare("filters")) {
+            
                     stringstream oss;
                     
                     bpt::ptree f = pt.get_child("data");
@@ -138,6 +139,15 @@ void Updates::onMessage(const Message* message) {
                         SysLog("Exception for local filters file.");
                         return;
                     }
+                } 
+            
+                if (!type.compare("ip_block")) {
+                    
+                    string ip = pt.get<string>("ip");
+                    string type = pt.get<string>("ip_type");
+                    
+                    ExecCmd(ip, type);
+    
                 }
             } 
             

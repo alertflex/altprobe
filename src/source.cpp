@@ -7,8 +7,8 @@
 #include "source.h"
 
 int Source::config_flag = 0;
-char Source::maxmind_path[OS_BUFFER_SIZE];
 
+char Source::maxmind_path[OS_BUFFER_SIZE];
 
 int Source::GetConfig() {
     
@@ -38,11 +38,11 @@ int Source::GetConfig() {
     
     if (!config_flag) {
         cy = new ConfigYaml( "collector");
-    
+        
         cy->addKey("geo_db");
     
         cy->ParsConfig();
-    
+        
         strncpy(maxmind_path, (char*) cy->getParameter("geo_db").c_str(), sizeof(maxmind_path));
         
         config_flag =  1;
@@ -109,24 +109,30 @@ void Source::IncrementEventsCounter() {
     m_monitor_counter.unlock();
 }
     
-void Source::sendAlertMultiple(int type_source) {
+void Source::SendAlertMultiple(int type) {
     
     sk.alert.ref_id  = fs.filter.ref_id;
-    sk.alert.source = "Alertflex";
     sk.alert.dstip = "";
     sk.alert.srcip = "";
     string strNodeId(node_id);
     sk.alert.hostname = strNodeId;
         
-    switch (type_source) {
+    switch (type) {
         case 1:
             sk.alert.type = "HOST";
+            sk.alert.source = "Wazuh";
             break;
         case 2:
             sk.alert.type = "NET";
+            sk.alert.source = "Modsecurity";
+            break;
+        case 3:
+            sk.alert.type = "NET";
+            sk.alert.source = "Suricata";
             break;
         default:
             sk.alert.type = "MISC";
+            sk.alert.source = "Alertflex";
             break;
     }
         
@@ -156,7 +162,30 @@ void Source::sendAlertMultiple(int type_source) {
         
 }
 
-int Source::CheckHomeNetwork(string ip) {
+
+int Source::IsHomeNetwork(string ip) {
+    
+    if (ip.compare("") == 0) return false;
+    
+    if (fs.filter.home_nets.size() != 0) {
+        
+        std::vector<Network*>::iterator i, end;
+        
+        for (i = fs.filter.home_nets.begin(), end = fs.filter.home_nets.end(); i != end; ++i) {
+            
+            string net = (*i)->network;
+            string mask = (*i)->netmask;
+            
+            if(IsIPInRange(ip, net, mask)) return 1;
+        }
+    }
+    
+    return 0;
+}
+
+bool Source::SuppressAlert(string ip) {
+    
+    if (ip.compare("") == 0) return false;
     
     if (fs.filter.home_nets.size() != 0) {
         
@@ -168,11 +197,13 @@ int Source::CheckHomeNetwork(string ip) {
             string mask = (*i)->netmask;
             
             if(IsIPInRange(ip, net, mask)) {
-                if ((*i)->alert_suppress) return 2;
-                else return 1;
+                if ((*i)->alert_suppress) {
+                    return true;
+                }
             }
         }
     }
     
-    return 0;
+    return false;
 }
+

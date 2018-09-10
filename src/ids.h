@@ -34,6 +34,8 @@ public:
     
     // for checking of reproduce the alert
     Aggregator agr;
+    Response rsp;
+    
     int count;
     time_t alert_time;
         

@@ -59,6 +59,10 @@ public:
     string parameters;
         
     vector<string> strs;
+    
+    ModsecRecord() {
+        mod_rec = false;
+    }
             
     bool IsModsec(const string str) {
         mod_rec = str.find("ModSecurity: Warning") != str.npos;
@@ -72,6 +76,7 @@ public:
     
     void Reset() {
         
+        mod_rec = false;
         ma.Reset();
         strs.clear();
         buffer.clear();
