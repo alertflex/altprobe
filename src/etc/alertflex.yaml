@@ -30,7 +30,7 @@ collector:
   # block_ipsrc: "--add-rich-rule=\"rule family='ipv4' source address='$IPADDRESS' reject\""
   block-ipsrc: "none"
   # block_ipdst: "--add-rich-rule=\"rule family='ipv4' destination address='$IPADDRESS' protocol value='ip' reject\""
-  block-ipsrc: "none"
+  block-ipdst: "none"
   
   # path to MaxMind Geo DB
   geo_db: "/etc/alertflex/geo/GeoLiteCity.dat"
