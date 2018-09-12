@@ -138,6 +138,17 @@ install:
 	fi;
 	cp ./etc/filters.json /etc/alertflex
 	cp ./etc/alertflex.yaml /etc/alertflex
+	
+update:
+	cp ./dist/Debug/GNU-Linux/collector /usr/local/bin/altprobe
+	chmod u+x ./scripts/alertflex-restart.sh
+	chmod u+x ./scripts/alertflex-start.sh
+	chmod u+x ./scripts/alertflex-status.sh
+	chmod u+x ./scripts/alertflex-stop.sh
+	cp ./scripts/alertflex-restart.sh /usr/local/bin/altprobe-restart
+	cp ./scripts/alertflex-start.sh /usr/local/bin/altprobe-start
+	cp ./scripts/alertflex-stop.sh /usr/local/bin/altprobe-stop
+	cp ./scripts/alertflex-status.sh /usr/local/bin/altprobe-status
 
 # include project implementation makefile
 include nbproject/Makefile-impl.mk
