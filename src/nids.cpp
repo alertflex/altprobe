@@ -55,7 +55,7 @@ int Nids::Go(void) {
                 severity = PushIdsRecord(bwl);
                     
                 if (bwl != NULL) {
-                    if (bwl->rsp.profile.compare("supress") != 0) {
+                    if (bwl->rsp.profile.compare("suppress") != 0) {
                         SendAlert(severity, bwl);
                     }
                 } else {
