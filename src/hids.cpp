@@ -60,7 +60,7 @@ int Hids::Go(void) {
                     int severity = PushWafRecord(bwl);
                 
                     if (bwl != NULL) {
-                        if (bwl->rsp.profile.compare("supress") != 0) SendWafAlert(severity, bwl);
+                        if (bwl->rsp.profile.compare("suppress") != 0) SendWafAlert(severity, bwl);
                     } else {
                         if (fs.filter.waf.severity <= severity) {
                             
@@ -90,7 +90,7 @@ int Hids::Go(void) {
                     int severity = PushRecord(bwl);
                 
                     if (bwl != NULL) {
-                        if (bwl->rsp.profile.compare("supress") != 0) SendAlert(severity, bwl);
+                        if (bwl->rsp.profile.compare("suppress") != 0) SendAlert(severity, bwl);
                         
                     } else {
                         if (fs.filter.hids.severity <= severity) {
