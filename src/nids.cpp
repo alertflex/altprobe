@@ -642,14 +642,22 @@ void Nids::SendAlert(int s, BwList* bwl) {
         if (bwl->rsp.ipblock_type.compare("none") != 0) {
             
             if (bwl->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
-                ExecCmd(rec.src_ip, "src");
-                sk.alert.severity = 3;
-                sk.alert.list_cats.push_back("srcip_blocked");
+                
+                if (!IsHomeNetwork(rec.src_ip)) {
+                    ExecCmd(rec.src_ip, "src");
+                    sk.alert.severity = 3;
+                    sk.alert.list_cats.push_back("srcip_blocked");
+                }
+                
             } else {
                 if (bwl->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
-                    ExecCmd(rec.dst_ip, "dst");
-                    sk.alert.severity = 3;
-                    sk.alert.list_cats.push_back("dstip_blocked");
+                    
+                    if (!IsHomeNetwork(rec.dst_ip)) {
+                        ExecCmd(rec.dst_ip, "dst");
+                        sk.alert.severity = 3;
+                        sk.alert.list_cats.push_back("dstip_blocked");
+                    }
+                    
                 }
             }
         }

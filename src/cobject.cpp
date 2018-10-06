@@ -39,8 +39,8 @@ int CollectorObject::GetConfig() {
     cy->addKey("log_size");
     cy->addKey("startup_timer");
     cy->addKey("sleep_timer");
-    cy->addKey("block_ipsrc");
-    cy->addKey("block_ipdst");
+    cy->addKey("block-ipsrc");
+    cy->addKey("block-ipdst");
         
     cy->ParsConfig();
     
@@ -70,9 +70,9 @@ int CollectorObject::GetConfig() {
         return 0;
     }
     
-    strncpy(block_ipsrc, (char*) cy->getParameter("block_ipsrc").c_str(), sizeof(block_ipsrc));
+    strncpy(block_ipsrc, (char*) cy->getParameter("block-ipsrc").c_str(), sizeof(block_ipsrc));
         
-    strncpy(block_ipdst, (char*) cy->getParameter("block_ipdst").c_str(), sizeof(block_ipdst));
+    strncpy(block_ipdst, (char*) cy->getParameter("block-ipdst").c_str(), sizeof(block_ipdst));
     
     
     return 1;

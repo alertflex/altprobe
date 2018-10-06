@@ -149,7 +149,7 @@ update:
 	cp ./scripts/alertflex-start.sh /usr/local/bin/altprobe-start
 	cp ./scripts/alertflex-stop.sh /usr/local/bin/altprobe-stop
 	cp ./scripts/alertflex-status.sh /usr/local/bin/altprobe-status
-
+	
 # include project implementation makefile
 include nbproject/Makefile-impl.mk
 

@@ -1059,14 +1059,22 @@ void Hids::SendAlert(int s, BwList*  bwl) {
         if (bwl->rsp.ipblock_type.compare("none") != 0) {
             
             if (bwl->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
-                ExecCmd(rec.srcip, "src");
-                sk.alert.severity = 3;
-                sk.alert.list_cats.push_back("srcip_blocked");
+                
+                if (!IsHomeNetwork(rec.srcip)) {
+                    ExecCmd(rec.srcip, "src");
+                    sk.alert.severity = 3;
+                    sk.alert.list_cats.push_back("srcip_blocked");
+                }
+                
             } else {
                 if (bwl->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
-                    ExecCmd(rec.dstip, "dst");
-                    sk.alert.severity = 3;
-                    sk.alert.list_cats.push_back("dstip_blocked");
+                    
+                    if (!IsHomeNetwork(rec.dstip)) {
+                        ExecCmd(rec.dstip, "dst");
+                        sk.alert.severity = 3;
+                        sk.alert.list_cats.push_back("dstip_blocked");
+                    }
+                    
                 }
             }
         }
@@ -1137,14 +1145,22 @@ void Hids::SendWafAlert(int s, BwList*  bwl) {
         if (bwl->rsp.ipblock_type.compare("none") != 0) {
             
             if (bwl->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
-                ExecCmd(rec.srcip, "src");
-                sk.alert.severity = 3;
-                sk.alert.list_cats.push_back("srcip_blocked");
+                
+                if (!IsHomeNetwork(rec.srcip)) {
+                    ExecCmd(rec.srcip, "src");
+                    sk.alert.severity = 3;
+                    sk.alert.list_cats.push_back("srcip_blocked");
+                }
+                
             } else {
                 if (bwl->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
-                    ExecCmd(rec.dstip, "dst");
-                    sk.alert.severity = 3;
-                    sk.alert.list_cats.push_back("dstip_blocked");
+                    
+                    if (!IsHomeNetwork(rec.dstip)) {
+                        ExecCmd(rec.dstip, "dst");
+                        sk.alert.severity = 3;
+                        sk.alert.list_cats.push_back("dstip_blocked");
+                    }
+                    
                 }
             }
         }

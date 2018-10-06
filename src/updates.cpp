@@ -146,7 +146,7 @@ void Updates::onMessage(const Message* message) {
                     string ip = pt.get<string>("ip");
                     string type = pt.get<string>("ip_type");
                     
-                    ExecCmd(ip, type);
+                    if (!IsHomeNetwork(ip)) ExecCmd(ip, type);
     
                 }
             } 
@@ -294,6 +294,26 @@ bool Updates::Reset() {
     }
     
     return connection_status;
+}
+
+int Updates::IsHomeNetwork(string ip) {
+    
+    if (ip.compare("") == 0) return 0;
+    
+    if (fs.filter.home_nets.size() != 0) {
+        
+        std::vector<Network*>::iterator i, end;
+        
+        for (i = fs.filter.home_nets.begin(), end = fs.filter.home_nets.end(); i != end; ++i) {
+            
+            string net = (*i)->network;
+            string mask = (*i)->netmask;
+            
+            if(IsIPInRange(ip, net, mask)) return 1;
+        }
+    }
+    
+    return 0;
 }
 
 

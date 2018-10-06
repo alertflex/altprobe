@@ -165,7 +165,7 @@ void Source::SendAlertMultiple(int type) {
 
 int Source::IsHomeNetwork(string ip) {
     
-    if (ip.compare("") == 0) return false;
+    if (ip.compare("") == 0) return 0;
     
     if (fs.filter.home_nets.size() != 0) {
         

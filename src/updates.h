@@ -40,7 +40,7 @@ public:
     void RoutineJob();
     void onMessage(const Message* message);
     void onException(const CMSException& ex AMQCPP_UNUSED);
-    
+    int IsHomeNetwork(string ip);    
 };
 
 #endif	/* UPDATES_H */
