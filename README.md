@@ -52,7 +52,7 @@ Simple statistics about IDS alerts categories, applications protocols and Geo IP
 
 ## Requirements
 
-Altprobe was tested under Ubuntu version 14.04 with Wazuh HIDS (OSSEC fork) version 3.2 and Suricata NIDS version 4.0.3
+Altprobe was tested under Ubuntu version 14.04 with Wazuh HIDS (OSSEC fork) version 3.2, ModSecurity 3.0 and Nginx, Suricata NIDS version 4.0.3
 
 ## Installation instructions
 
@@ -71,12 +71,14 @@ For the distributed configuration with SSL connections, you need to perform extr
 
 NOTE:
 
-For enabling an events from Sysmon via Wazuh IDS, please, change level of ``rule_id 185001`` instead 0  to other value.
-For enabling an network activities events from Auditd, please, use the command: 
-``auditctl -a exit,always -F arch=b64 -S connect -k linux-connects``,
-key value ``linux-connects`` is important!
+* For enabling an events from Sysmon via Wazuh IDS, please, change level of ``rule_id 185001`` instead 0  to other value.
 
-For advanced configuration of Altprobe, please, see file: [filters.json](https://github.com/olegzhr/Altprobe/blob/master/src/etc/filters.json)
+* For enabling an network activities events from Auditd, please, use the command: ``auditctl -a exit,always -F arch=b64 -S connect -k linux-connects``, key value ``linux-connects`` is important!
+
+* For integration Nginx and ModSecurity 3.0 with Wazuh IDS, add string ``error_log  /var/log/nginx/error.log info;`` to file  nginx.conf
+  examples of Modsecurity rules for Wazuh, please, see in file [0260-nginx_rules.xml](https://github.com/olegzhr/Altprobe/blob/master/configs/0260-nginx_rules.xml)
+
+* For advanced configuration of Altprobe use altprobe config file and filtering policies, please, see samples in dir: [filters.json](https://github.com/olegzhr/Altprobe/blob/master/src/etc/)
 
 ## Support
 
