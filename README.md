@@ -78,7 +78,7 @@ NOTE:
 * For integration Nginx and ModSecurity 3.0 with Wazuh IDS, add string ``error_log  /var/log/nginx/error.log info;`` to file  nginx.conf
   examples of Modsecurity rules for Wazuh, please, see in file [0260-nginx_rules.xml](https://github.com/olegzhr/Altprobe/blob/master/configs/0260-nginx_rules.xml)
 
-* For advanced configuration of Altprobe use altprobe config file and filtering policies, please, see samples in dir: [filters.json](https://github.com/olegzhr/Altprobe/blob/master/src/etc/)
+* For advanced configuration of Altprobe use altprobe config file and filtering policies, please, see samples in dir: [/src/etc/](https://github.com/olegzhr/Altprobe/blob/master/src/etc/)
 
 ## Support
 
