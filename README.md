@@ -96,6 +96,56 @@ Examples of Modsecurity rules for Wazuh, please, see in file [0260-nginx_rules.x
 	
 ## Troubleshooting
 
+Collector CLI interface
+.. parsed-literal::
+	altprobe-start
+	altprobe-stop
+	altprobe-restart
+	altprobe-status
+
+
+for example:
+
+.. parsed-literal::
+	root@host:~# altprobe-status
+	
+	alertflex collector isn't running
+
+	suricata start/running, process 1797
+
+	ossec-monitord is running...
+	ossec-logcollector is running...
+	ossec-remoted is running...
+	ossec-syscheckd is running...
+	ossec-analysisd is running...
+	ossec-maild not running...
+	ossec-execd is running...
+	wazuh-modulesd is running...
+
+	root@host:~# altprobe-start
+	alertflex collector started with code 0
+	root@host:~#
+
+	root@host:~# altprobe-status
+	
+	alertflex collector is running, process 19023
+
+	suricata start/running, process 1797
+
+	ossec-monitord is running...
+	ossec-logcollector is running...
+	ossec-remoted is running...
+	ossec-syscheckd is running...
+	ossec-analysisd is running...
+	ossec-maild not running...
+	ossec-execd is running...
+	wazuh-modulesd is running...
+
+how to see a collector errors:
+
+.. parsed-literal::
+	cat /var/log/syslog | grep altprobe
+
 
 ## Support
 
