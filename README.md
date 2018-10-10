@@ -71,6 +71,8 @@ For the distributed configuration with SSL connections, you need to perform extr
 
 NOTE:
 
+* It is recommended to start of installation Alertflex collector (Altprobe) after a finish of installation Alertflex controller
+
 * Installation and configuration of IDS OSSEC/Wazuh and Suricata IDS are not parts of Alertflex solution. Although install script for Altprobe includes these procedures, it comes with NO WARRANTY!
 
 * The collector’s install script will replace file /etc/rc.local by a new one, if you use this file for something else, backup it for keeping the previous configuration
@@ -85,6 +87,11 @@ NOTE:
 Examples of Modsecurity rules for Wazuh, please, see in file [0260-nginx_rules.xml](https://github.com/olegzhr/Altprobe/blob/master/configs/0260-nginx_rules.xml)
 
 * For advanced configuration of Altprobe use altprobe config file and filtering policies, please, see samples in dir: [/src/etc/](https://github.com/olegzhr/Altprobe/blob/master/src/etc/)
+
+* For integration Metricbeat with Altprobe in the file ``/etc/metricbeat/metricbeat.yml`` set next parameters:
+	$ output.redis:
+  	hosts: ["altprobe_host_or_ip"]
+  	key: "altprobe_metrics"
 
 ## Support
 
