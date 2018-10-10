@@ -89,9 +89,13 @@ Examples of Modsecurity rules for Wazuh, please, see in file [0260-nginx_rules.x
 * For advanced configuration of Altprobe use altprobe config file and filtering policies, please, see samples in dir: [/src/etc/](https://github.com/olegzhr/Altprobe/blob/master/src/etc/)
 
 * For integration Metricbeat with Altprobe in the file ``/etc/metricbeat/metricbeat.yml`` set next parameters:
+	
 	$ output.redis:
   	hosts: ["altprobe_host_or_ip"]
   	key: "altprobe_metrics"
+	
+## Troubleshooting
+
 
 ## Support
 
