@@ -98,7 +98,7 @@ void Sinks::SendAlert(void) {
         al << GetNodeTime();
         
         al << "\",\"agent\": \"";
-        al << alert.hostname;
+        al << alert.dstagent;
         
         al << "\",\"source\": \"";
         al << alert.source;

@@ -704,12 +704,21 @@ void StatFlows::SendAlert(Threshold* th, bool type_alert) {
             
     sk.alert.ref_id  = fs.filter.ref_id;
     sk.alert.source = "Netflow";
+    sk.alert.type = "NET";
+    
+    sk.alert.score = 0;
     sk.alert.dstip = "";
     sk.alert.srcip = "";
+    sk.alert.dstport = 0;
+    sk.alert.srcport = 0;
+    sk.alert.dstagent = "none";
+    sk.alert.srcagent = "none";
+    sk.alert.user = "none";
+    
     string strNodeId(node_id);
-    sk.alert.hostname = strNodeId;
-    sk.alert.agent = strNodeId;
-    sk.alert.type = "NET";
+    sk.alert.sensor = strNodeId;
+    sk.alert.filter = fs.filter.desc;
+    sk.alert.event_time = GetNodeTime();
         
     if ( th->rsp.new_event != 0) sk.alert.event = th->rsp.new_event;
     else sk.alert.event = 1;

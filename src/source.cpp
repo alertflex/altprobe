@@ -112,10 +112,19 @@ void Source::IncrementEventsCounter() {
 void Source::SendAlertMultiple(int type) {
     
     sk.alert.ref_id  = fs.filter.ref_id;
+    
     sk.alert.dstip = "";
     sk.alert.srcip = "";
+    sk.alert.dstport = 0;
+    sk.alert.srcport = 0;
+    sk.alert.dstagent = "none";
+    sk.alert.srcagent = "none";
+    sk.alert.user = "none";
+    
     string strNodeId(node_id);
-    sk.alert.hostname = strNodeId;
+    sk.alert.sensor = strNodeId;
+    sk.alert.filter = fs.filter.desc;
+    sk.alert.event_time = GetNodeTime();
         
     switch (type) {
         case 1:
@@ -139,16 +148,13 @@ void Source::SendAlertMultiple(int type) {
     sk.alert.event = 1;
     
     sk.alert.severity = 3;
+    sk.alert.score = 0;
     
     sk.alert.list_cats.push_back("Multiple alert");
         
     sk.alert.action = "none";
         
     sk.alert.description = "Multiple alert";
-    
-    sk.alert.agent = node_id;
-    
-    sk.alert.hostname = node_id;
     
     sk.alert.location = "";
         

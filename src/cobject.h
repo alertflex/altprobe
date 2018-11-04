@@ -87,18 +87,24 @@ public:
     string type;
     int event;
     int severity;
+    int score;
     string description;
     string srcip;
     string dstip;
-    string agent;
+    string srcagent;
+    string dstagent;
+    unsigned int srcport;
+    unsigned int dstport;
     string user;
-    string hostname;
+    string sensor;
     string location;
-    string action;
+    string action; 
+    string filter;
     string status;
     string info;
     string event_json;
-    
+    string event_time;
+        
     std::vector<string> list_cats;
     
     void Reset() {
@@ -114,12 +120,19 @@ public:
         dstip.clear();
         action.clear();
         location.clear();
-        agent.clear();
         user.clear();
-        hostname.clear();
         status.clear();
         info.clear();
         event_json.clear();
+        // new
+        score = 0;
+        srcagent.clear();
+        dstagent.clear();
+        srcport = 0;
+        dstport = 0;
+        sensor.clear();
+        filter.clear();
+        event_time.clear();
         
         list_cats.clear();
     }

@@ -904,6 +904,17 @@ void StatIds::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.srcip = r->src_ip;
     
     sk.alert.dstip = r->dst_ip;
+    
+    sk.alert.dstport = 0;
+    sk.alert.srcport = 0;
+    sk.alert.dstagent = r->agent;
+    sk.alert.srcagent = "none";
+    sk.alert.user = "none";
+    sk.alert.score = 0;
+    
+    sk.alert.sensor = r->ids;
+    sk.alert.filter = fs.filter.desc;
+    sk.alert.event_time = GetNodeTime();
         
     if (r->rsp.new_event != 0) sk.alert.event = r->rsp.new_event;
     else sk.alert.event = r->event;
@@ -935,10 +946,6 @@ void StatIds::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
         }
     }
         
-    sk.alert.agent = r->agent;
-        
-    sk.alert.hostname = r->ids;
-    
     sk.alert.location = r->location;
         
     sk.alert.info = "Message has been repeated ";
@@ -1052,6 +1059,17 @@ void StatIds::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.dstip = r->dst_ip;
     
+    sk.alert.dstport = 0;
+    sk.alert.srcport = 0;
+    sk.alert.dstagent = r->agent;
+    sk.alert.srcagent = "none";
+    sk.alert.user = "none";
+    sk.alert.score = 0;
+    
+    sk.alert.sensor = r->ids;
+    sk.alert.filter = fs.filter.desc;
+    sk.alert.event_time = GetNodeTime();
+    
     if (r->rsp.new_event != 0) sk.alert.event = r->rsp.new_event;
     else sk.alert.event = r->event;
         
@@ -1081,10 +1099,6 @@ void StatIds::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
             }
         }
     }
-        
-    sk.alert.hostname = r->ids;
-    
-    sk.alert.agent = r->agent;
         
     sk.alert.location = "";       
     
@@ -1200,6 +1214,17 @@ void StatIds::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.dstip = r->dst_ip;
     
+    sk.alert.dstport = 0;
+    sk.alert.srcport = 0;
+    sk.alert.dstagent = r->agent;
+    sk.alert.srcagent = "none";
+    sk.alert.user = "none";
+    sk.alert.score = 0;
+    
+    sk.alert.sensor = r->ids;
+    sk.alert.filter = fs.filter.desc;
+    sk.alert.event_time = GetNodeTime();
+    
     if (r->rsp.new_event != 0) sk.alert.event = r->rsp.new_event;
     else sk.alert.event = r->event;
         
@@ -1229,10 +1254,6 @@ void StatIds::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
             }
         }
     }
-        
-    sk.alert.hostname = r->ids;
-    
-    sk.alert.agent = r->agent;
         
     sk.alert.location = "";       
     

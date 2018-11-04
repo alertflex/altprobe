@@ -700,13 +700,22 @@ void Metric::SendAlert(Threshold* th) {
     sk.alert.description = "Metric parameter has been reached limits";
     sk.alert.ref_id  = fs.filter.ref_id;
     sk.alert.source = "Metric";
+    sk.alert.type = "HOST";
+    sk.alert.score = 0;
+    
     sk.alert.dstip = "";
     sk.alert.srcip = "";
+    sk.alert.dstport = 0;
+    sk.alert.srcport = 0;
+    sk.alert.dstagent = agent;
+    sk.alert.srcagent = "none";
+    sk.alert.user = "none";
+    
     string strNodeId(node_id);
-    sk.alert.hostname = strNodeId;
-    sk.alert.agent = agent;
-    sk.alert.type = "HOST";
-        
+    sk.alert.sensor = strNodeId;
+    sk.alert.filter = fs.filter.desc;
+    sk.alert.event_time = GetNodeTime();
+    
     if ( th->rsp.new_event != 0) sk.alert.event = th->rsp.new_event;
     else sk.alert.event = 1;
     

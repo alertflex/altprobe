@@ -181,9 +181,6 @@ int Controller::SendMessage(Event* e) {
             string strRefId(((Alert*) e)->ref_id);
             message->setStringProperty("ref_id", strRefId);
                 
-            string timeOfEvent = GetNodeTime();
-            message->setStringProperty("time_of_event",timeOfEvent);
-                
             string strSource(((Alert*) e)->source);
             message->setStringProperty("source", strSource);
                 
@@ -193,6 +190,8 @@ int Controller::SendMessage(Event* e) {
             message->setIntProperty("event", ((Alert*) e)->event);
                     
             message->setIntProperty("severity", ((Alert*) e)->severity);
+            
+            message->setIntProperty("score", ((Alert*) e)->score);
                     
             char cat_string[OS_STRING_SIZE];
         
@@ -216,15 +215,22 @@ int Controller::SendMessage(Event* e) {
                 
             string strDstip(((Alert*) e)->dstip);
             message->setStringProperty("dstip", strDstip);
+            
+            string strSrcagent(((Alert*) e)->srcagent);
+            message->setStringProperty("srcagent", strSrcagent);
+                
+            string strDstagent(((Alert*) e)->dstagent);
+            message->setStringProperty("dstagent", strDstagent);
+            
+            message->setIntProperty("srcport", ((Alert*) e)->srcport);
+            
+            message->setIntProperty("dstport", ((Alert*) e)->dstport);
 			
-			string strUser(((Alert*) e)->user);
+            string strUser(((Alert*) e)->user);
             message->setStringProperty("user", strUser);
             
-            string strAgent(((Alert*) e)->agent);
-            message->setStringProperty("agent", strAgent);
-                
-            string strHost(((Alert*) e)->hostname);
-            message->setStringProperty("hostname", strHost);
+            string strSensor(((Alert*) e)->sensor);
+            message->setStringProperty("sensor", strSensor);
                 
             string strLoc(((Alert*) e)->location);
             message->setStringProperty("location", strLoc);
@@ -234,15 +240,24 @@ int Controller::SendMessage(Event* e) {
                 
             string strStatus(((Alert*) e)->status);
             message->setStringProperty("status", strStatus);
-                
+            
+            string strFilter(((Alert*) e)->filter);
+            message->setStringProperty("filter", strFilter);
+            
             string strInfo(((Alert*) e)->info);
             message->setStringProperty("info", strInfo);
-                    
+            
+            string strEventTime(((Alert*) e)->event_time);
+            message->setStringProperty("event_time", strEventTime);
+            
+            message->setStringProperty("collr_time", GetNodeTime());
+            
             string strEventJson(((Alert*) e)->event_json);
             message->setStringProperty("event_json", strEventJson);  
             
             producer->send(message.get());
-        
+            
+                    
         }  else {
             
             // Create a stats or logs

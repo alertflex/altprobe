@@ -107,7 +107,7 @@ public:
     string ref_id;
     int event_type;
     string time_stamp;
-    unsigned long flow_id;
+    string iface;
         
     int src_type;
     string src_agent;
@@ -121,8 +121,7 @@ public:
     
     string ids;
     string protocol;
-    string datetime; 
-        
+            
     //  Record  Alert 
     SuricataAlert alert;
     //  Record  DNS 
@@ -138,7 +137,7 @@ public:
         ref_id.clear();
         event_type = 0;
         time_stamp.clear();
-        flow_id = 0;
+        iface.clear();;
         src_type = 0;
         src_agent.clear();
         src_ip.clear();
@@ -148,7 +147,6 @@ public:
         dst_ip.clear();
         dst_port = 0;
         protocol.clear();
-        datetime.clear();
         ids.clear();    
         
         alert.Reset();

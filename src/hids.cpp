@@ -593,7 +593,7 @@ int Hids::ParsJson(char* redis_payload) {
     
     rec.hostname = pt.get<string>("manager.name","");
     
-    rec.datetime = pt.get<string>("timestamp","");
+    rec.timestamp = pt.get<string>("timestamp","");
     
     rec.dstip = pt.get<string>("data.dstip","");
     
@@ -726,7 +726,7 @@ void Hids::CreateLog() {
     report += rec.hostname;
     
     report += "\", \"_event_time\":\"";
-    report += rec.datetime;
+    report += rec.timestamp;
     
     report += "\",\"_collected_time\":\"";
     report += GetGraylogFormat();
@@ -805,7 +805,7 @@ void Hids::CreateWafLog() {
     report += rec.hostname;
     
     report += "\", \"_event_time\":\"";
-    report += rec.datetime;
+    report += rec.timestamp;
     
     report += "\",\"_collected_time\":\"";
     report += GetGraylogFormat();
@@ -978,6 +978,7 @@ void Hids::SendAlert(int s, BwList*  bwl) {
         sk.alert.list_cats.push_back("wazuh");
         
     sk.alert.severity = s;
+    sk.alert.score = rec.rule.level;
     sk.alert.event = rec.rule.id;
     sk.alert.action = "none";
     sk.alert.description = rec.rule.desc;
@@ -985,14 +986,20 @@ void Hids::SendAlert(int s, BwList*  bwl) {
     sk.alert.status = "processed_new";
             
     sk.alert.srcip = rec.srcip;
-    
     sk.alert.dstip = rec.dstip;
+    
+    sk.alert.srcagent = "none";
+    sk.alert.dstagent = rec.agent;
+    
+    sk.alert.srcport = 0;
+    sk.alert.dstport = 0;
         
     sk.alert.source = "Wazuh";
     
-    sk.alert.agent = rec.agent;
     sk.alert.user = rec.user;
-    sk.alert.hostname = rec.hostname;
+    sk.alert.sensor = rec.hostname;
+    sk.alert.filter = fs.filter.desc;
+    sk.alert.event_time = rec.timestamp;
         
     if (rec.file.filename.compare("") == 0) {
             
@@ -1096,6 +1103,7 @@ void Hids::SendWafAlert(int s, BwList*  bwl) {
         sk.alert.list_cats.push_back("waf");
     
     sk.alert.severity = s;
+    sk.alert.score = rec.rule.level;
     sk.alert.event = rec.rule.id;
     sk.alert.action = "none";
     sk.alert.description = rec.rule.desc;
@@ -1108,8 +1116,16 @@ void Hids::SendWafAlert(int s, BwList*  bwl) {
     sk.alert.source = "Modsecurity";
     sk.alert.type = "NET";
     
-    sk.alert.agent = rec.agent;
-    sk.alert.hostname = rec.hostname;
+    sk.alert.srcagent = "none";
+    sk.alert.dstagent = "none";
+    
+    sk.alert.srcport = 0;
+    sk.alert.dstport = 0;
+        
+    sk.alert.user = rec.user;
+    sk.alert.sensor = rec.agent;
+    sk.alert.filter = fs.filter.desc;
+    sk.alert.event_time = rec.timestamp;
         
     sk.alert.location = rec.location;
         

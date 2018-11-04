@@ -86,7 +86,7 @@ public:
     string srcip;
     string dstip;
             
-    string datetime;    
+    string timestamp;    
     
     
     void Reset() {
@@ -106,7 +106,7 @@ public:
         dstip.clear();
                 
         /* Additional parameters */
-        datetime.clear();
+        timestamp.clear();
     }
 };
 
