@@ -4,6 +4,7 @@ Altprobe is a component of the Alertflex project, it has functional of a collect
 In tandem with Alertflex controller (see [AlertflexCtrl repository](https://github.com/olegzhr/AlertflexCtrl/blob/master/README.md) ), 
 Altprobe can integrate a Wazuh Host IDS (OSSEC fork) and Suricata Network IDS
 with Log Management platform Graylog and Threat Intelligence Platform MISP. 
+![](https://github.com/olegzhr/altprobe/blob/master/img/arch.png)
 
 ## Functionalities of Altprobe
 
