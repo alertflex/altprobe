@@ -132,7 +132,7 @@
             "severity":  2,
             "log": true,
             "thresholds": [{
-				"log": true,
+		"log": true,
                 "agent": "win10",
                 "metric": "memory",
                 "parameter":"free",
@@ -151,7 +151,7 @@
                     "new_description": "desc of alerts"
                 }
             }, {
-				"log": true,
+		"log": true,
                 "agent": "centos7",
                 "metric": "nginx",
                 "parameter":"active",
@@ -175,7 +175,7 @@
             "top_talkers":  10,
             "log": true,
             "thresholds": [{
-				"log": true,
+		"log": true,
                 "network": "192.168.1.2",
                 "netmask": "255.255.255.255",
                 "appl":"none",
@@ -194,7 +194,7 @@
                     "new_description": "desc of alerts"
                 }
             }, {
-				"log": true,
+		"log": true,
                 "network": "192.168.1.10",
                 "netmask": "255.255.255.0",
                 "appl":"dns",
