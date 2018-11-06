@@ -99,78 +99,79 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
         filter.hids.log = filters.get<bool>("hids.log");
         filter.hids.severity = filters.get<int>("hids.severity");
         
-        bpt::ptree hids_bw_list = filters.get_child("hids.bw_list");
-        BOOST_FOREACH(bpt::ptree::value_type &hids_list, hids_bw_list) {
+        bpt::ptree hids_gray_list = filters.get_child("hids.gray_list");
+        BOOST_FOREACH(bpt::ptree::value_type &hids_list, hids_gray_list) {
             
-            BwList* bwl = new BwList();
+            GrayList* gl = new GrayList();
             
-            bwl->event = hids_list.second.get<int>("event");
-            bwl->host = hids_list.second.get<string>("agent");
+            gl->event = hids_list.second.get<int>("event");
+            gl->host = hids_list.second.get<string>("agent");
             
-            bwl->agr.reproduced = hids_list.second.get<int>("aggregate.reproduced");  
-            bwl->agr.in_period = hids_list.second.get<int>("aggregate.in_period");  
+            gl->agr.reproduced = hids_list.second.get<int>("aggregate.reproduced");  
+            gl->agr.in_period = hids_list.second.get<int>("aggregate.in_period");  
             
-            bwl->rsp.profile = hids_list.second.get<string>("response.profile");
-            bwl->rsp.ipblock_type = hids_list.second.get<string>("response.ipblock_type");
-            bwl->rsp.new_event = hids_list.second.get<int>("response.new_event");           
-            bwl->rsp.new_severity = hids_list.second.get<int>("response.new_severity");
-            bwl->rsp.new_category = hids_list.second.get<string>("response.new_category");
-            bwl->rsp.new_description = hids_list.second.get<string>("response.new_description");
+            gl->rsp.profile = hids_list.second.get<string>("response.profile");
+            gl->rsp.ipblock_type = hids_list.second.get<string>("response.ipblock_type");
+            gl->rsp.new_event = hids_list.second.get<int>("response.new_event");           
+            gl->rsp.new_severity = hids_list.second.get<int>("response.new_severity");
+            gl->rsp.new_category = hids_list.second.get<string>("response.new_category");
+            gl->rsp.new_description = hids_list.second.get<string>("response.new_description");
             
-            filter.hids.bwl.push_back(bwl);
+            filter.hids.gl.push_back(gl);
         }
         
         // NIDS
         filter.nids.log = filters.get<bool>("nids.log");
         filter.nids.severity = filters.get<int>("nids.severity");
         
-        bpt::ptree nids_bw_list = filters.get_child("nids.bw_list");
-        BOOST_FOREACH(bpt::ptree::value_type &nids_list, nids_bw_list) {
+        bpt::ptree nids_gray_list = filters.get_child("nids.gray_list");
+        BOOST_FOREACH(bpt::ptree::value_type &nids_list, nids_gray_list) {
             
-            BwList* bwl = new BwList();
+            GrayList* gl = new GrayList();
             
-            bwl->event = nids_list.second.get<int>("event");
-            bwl->host = nids_list.second.get<string>("agent");
+            gl->event = nids_list.second.get<int>("event");
+            gl->host = nids_list.second.get<string>("agent");
                         
-            bwl->agr.reproduced = nids_list.second.get<int>("aggregate.reproduced");  
-            bwl->agr.in_period = nids_list.second.get<int>("aggregate.in_period");  
+            gl->agr.reproduced = nids_list.second.get<int>("aggregate.reproduced");  
+            gl->agr.in_period = nids_list.second.get<int>("aggregate.in_period");  
             
-            bwl->rsp.profile = nids_list.second.get<string>("response.profile");
-            bwl->rsp.ipblock_type = nids_list.second.get<string>("response.ipblock_type");
-            bwl->rsp.new_event = nids_list.second.get<int>("response.new_event");           
-            bwl->rsp.new_severity = nids_list.second.get<int>("response.new_severity");
-            bwl->rsp.new_category = nids_list.second.get<string>("response.new_category");
-            bwl->rsp.new_description = nids_list.second.get<string>("response.new_description");
+            gl->rsp.profile = nids_list.second.get<string>("response.profile");
+            gl->rsp.ipblock_type = nids_list.second.get<string>("response.ipblock_type");
+            gl->rsp.new_event = nids_list.second.get<int>("response.new_event");           
+            gl->rsp.new_severity = nids_list.second.get<int>("response.new_severity");
+            gl->rsp.new_category = nids_list.second.get<string>("response.new_category");
+            gl->rsp.new_description = nids_list.second.get<string>("response.new_description");
             
-            filter.nids.bwl.push_back(bwl);
+            filter.nids.gl.push_back(gl);
         }
         
         // WAF
         filter.waf.log = filters.get<bool>("waf.log");
         filter.waf.severity = filters.get<int>("waf.severity");
         
-        bpt::ptree waf_bw_list = filters.get_child("waf.bw_list");
-        BOOST_FOREACH(bpt::ptree::value_type &waf_list, waf_bw_list) {
+        bpt::ptree waf_gray_list = filters.get_child("waf.gray_list");
+        BOOST_FOREACH(bpt::ptree::value_type &waf_list, waf_gray_list) {
             
-            BwList* bwl = new BwList();
+            GrayList* gl = new GrayList();
             
-            bwl->event = waf_list.second.get<int>("event");
-            bwl->host = waf_list.second.get<string>("agent");
+            gl->event = waf_list.second.get<int>("event");
+            gl->host = waf_list.second.get<string>("agent");
             
-            bwl->agr.reproduced = waf_list.second.get<int>("aggregate.reproduced");  
-            bwl->agr.in_period = waf_list.second.get<int>("aggregate.in_period");  
+            gl->agr.reproduced = waf_list.second.get<int>("aggregate.reproduced");  
+            gl->agr.in_period = waf_list.second.get<int>("aggregate.in_period");  
             
-            bwl->rsp.profile = waf_list.second.get<string>("response.profile");
-            bwl->rsp.ipblock_type = waf_list.second.get<string>("response.ipblock_type");
-            bwl->rsp.new_event = waf_list.second.get<int>("response.new_event");           
-            bwl->rsp.new_severity = waf_list.second.get<int>("response.new_severity");
-            bwl->rsp.new_category = waf_list.second.get<string>("response.new_category");
-            bwl->rsp.new_description = waf_list.second.get<string>("response.new_description");
+            gl->rsp.profile = waf_list.second.get<string>("response.profile");
+            gl->rsp.ipblock_type = waf_list.second.get<string>("response.ipblock_type");
+            gl->rsp.new_event = waf_list.second.get<int>("response.new_event");           
+            gl->rsp.new_severity = waf_list.second.get<int>("response.new_severity");
+            gl->rsp.new_category = waf_list.second.get<string>("response.new_category");
+            gl->rsp.new_description = waf_list.second.get<string>("response.new_description");
             
-            filter.waf.bwl.push_back(bwl);
+            filter.waf.gl.push_back(gl);
         }
         
         // METRIC
+        
         filter.metric.log = filters.get<bool>("metrics.log");
         filter.metric.severity = filters.get<int>("metrics.severity");
         
@@ -179,6 +180,7 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             
             Threshold* t = new Threshold();
             
+            t->log = metrics_list.second.get<bool>("log");            
             t->host = metrics_list.second.get<string>("agent");
             t->element = metrics_list.second.get<string>("metric");
             t->parameter = metrics_list.second.get<string>("parameter");
@@ -199,6 +201,7 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
         }
         
         // NET
+        
         filter.traf.log = filters.get<bool>("netflow.log");
         filter.traf.top_talkers = filters.get<int>("netflow.top_talkers");
         
@@ -207,6 +210,7 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             
             Threshold* t = new Threshold();
             
+            t->log = traffic_list.second.get<bool>("log");    
             t->host = traffic_list.second.get<string>("network");
             t->element = traffic_list.second.get<string>("netmask");
             t->parameter = traffic_list.second.get<string>("appl");

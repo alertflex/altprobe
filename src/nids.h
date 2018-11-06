@@ -188,10 +188,11 @@ public:
     int Go();
     
     int ParsJson (char* redis_payload);
-    BwList* CheckBwList();
+    GrayList* CheckGrayList();
+    bool CheckFlowsLog(int r);
     void CreateLogPayload(int r);
-    void SendAlert (int s, BwList* bwl);
-    int PushIdsRecord(BwList* bwl);
+    void SendAlert (int s, GrayList* gl);
+    int PushIdsRecord(GrayList* gl);
     void PushFlowsRecord();
     string CountryByIp(string ip);
         

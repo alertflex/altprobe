@@ -26,7 +26,7 @@
         "hids": {
             "severity": 1,
             "log": true,
-            "bw_list": [{ 
+            "gray_list": [{ 
                 "event": 55715,
                 "agent": "devtools",
                 "aggregate": {
@@ -61,7 +61,7 @@
         "nids": {
             "severity": 1,
             "log": true,
-            "bw_list": [{ 
+            "gray_list": [{ 
                 "event": 2200071,
                 "agent": "all",
                 "aggregate": {
@@ -96,7 +96,7 @@
         "waf": {
             "severity": 1,
             "log": true,
-            "bw_list": [{ 
+            "gray_list": [{ 
                 "event": 100001,
                 "agent": "none",
                 "aggregate": {
@@ -132,6 +132,7 @@
             "severity":  2,
             "log": true,
             "thresholds": [{
+				"log": true,
                 "agent": "win10",
                 "metric": "memory",
                 "parameter":"free",
@@ -150,6 +151,7 @@
                     "new_description": "desc of alerts"
                 }
             }, {
+				"log": true,
                 "agent": "centos7",
                 "metric": "nginx",
                 "parameter":"active",
@@ -173,6 +175,7 @@
             "top_talkers":  10,
             "log": true,
             "thresholds": [{
+				"log": true,
                 "network": "192.168.1.2",
                 "netmask": "255.255.255.255",
                 "appl":"none",
@@ -191,6 +194,7 @@
                     "new_description": "desc of alerts"
                 }
             }, {
+				"log": true,
                 "network": "192.168.1.10",
                 "netmask": "255.255.255.0",
                 "appl":"dns",

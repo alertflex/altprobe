@@ -145,14 +145,14 @@ public:
     
     int ParsJson (char* redis_payload);
     
-    BwList* CheckBwList();
-    BwList* CheckWafBwList();
+    GrayList* CheckGrayList();
+    GrayList* CheckWafGrayList();
     void CreateLog();
     void CreateWafLog();
-    void SendAlert (int s, BwList*  bwl);
-    void SendWafAlert (int s, BwList*  bwl);
-    int PushRecord(BwList* bwl);
-    int PushWafRecord(BwList* bwl);
+    void SendAlert (int s, GrayList* gl);
+    void SendWafAlert (int s, GrayList*  gl);
+    int PushRecord(GrayList* gl);
+    int PushWafRecord(GrayList* gl);
     
     void ClearRecords() {
 	rec.Reset();

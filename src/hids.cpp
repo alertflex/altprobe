@@ -18,7 +18,7 @@ boost::lockfree::spsc_queue<string> q_compliance{LOG_QUEUE_SIZE};
 
 int Hids::Go(void) {
     
-    BwList* bwl;
+    GrayList* gl;
     int res = 0;
     
     ClearRecords();
@@ -55,12 +55,12 @@ int Hids::Go(void) {
             
                 if (alerts_counter <= sk.alerts_threshold) {
             
-                    bwl = CheckWafBwList();
+                    gl = CheckWafGrayList();
             
-                    int severity = PushWafRecord(bwl);
+                    int severity = PushWafRecord(gl);
                 
-                    if (bwl != NULL) {
-                        if (bwl->rsp.profile.compare("suppress") != 0) SendWafAlert(severity, bwl);
+                    if (gl != NULL) {
+                        if (gl->rsp.profile.compare("suppress") != 0) SendWafAlert(severity, gl);
                     } else {
                         if (fs.filter.waf.severity <= severity) {
                             
@@ -85,12 +85,12 @@ int Hids::Go(void) {
             
                 if (alerts_counter <= sk.alerts_threshold) {
             
-                    bwl = CheckBwList();
+                    gl = CheckGrayList();
             
-                    int severity = PushRecord(bwl);
+                    int severity = PushRecord(gl);
                 
-                    if (bwl != NULL) {
-                        if (bwl->rsp.profile.compare("suppress") != 0) SendAlert(severity, bwl);
+                    if (gl != NULL) {
+                        if (gl->rsp.profile.compare("suppress") != 0) SendAlert(severity, gl);
                         
                     } else {
                         if (fs.filter.hids.severity <= severity) {
@@ -118,13 +118,13 @@ int Hids::Go(void) {
     return 1;
 }
 
-BwList* Hids::CheckBwList() {
+GrayList* Hids::CheckGrayList() {
     
-    if (fs.filter.hids.bwl.size() != 0) {
+    if (fs.filter.hids.gl.size() != 0) {
         
-        std::vector<BwList*>::iterator i, end;
+        std::vector<GrayList*>::iterator i, end;
         
-        for (i = fs.filter.hids.bwl.begin(), end = fs.filter.hids.bwl.end(); i != end; ++i) {
+        for (i = fs.filter.hids.gl.begin(), end = fs.filter.hids.gl.end(); i != end; ++i) {
             
             int event_id = (*i)->event;
             if (event_id == rec.rule.id) {
@@ -142,13 +142,13 @@ BwList* Hids::CheckBwList() {
     return NULL;
 }
 
-BwList* Hids::CheckWafBwList() {
+GrayList* Hids::CheckWafGrayList() {
     
-    if (fs.filter.waf.bwl.size() != 0) {
+    if (fs.filter.waf.gl.size() != 0) {
         
-        std::vector<BwList*>::iterator i, end;
+        std::vector<GrayList*>::iterator i, end;
         
-        for (i = fs.filter.waf.bwl.begin(), end = fs.filter.waf.bwl.end(); i != end; ++i) {
+        for (i = fs.filter.waf.gl.begin(), end = fs.filter.waf.gl.end(); i != end; ++i) {
             
             int event_id = (*i)->event;
             if (event_id == rec.rule.id) {
@@ -845,7 +845,7 @@ void Hids::CreateWafLog() {
 }
 
 
-int Hids::PushRecord(BwList* bwl) {
+int Hids::PushRecord(GrayList* gl) {
     
     // create new IDS record
     IdsRecord ids_rec;
@@ -888,19 +888,19 @@ int Hids::PushRecord(BwList* bwl) {
         ids_rec.ids_type = 1;
     }
         
-    if (bwl != NULL) {
+    if (gl != NULL) {
         
-        if (bwl->agr.reproduced > 0) {
+        if (gl->agr.reproduced > 0) {
             
-            ids_rec.agr.in_period = bwl->agr.in_period;
-            ids_rec.agr.reproduced = bwl->agr.reproduced;
+            ids_rec.agr.in_period = gl->agr.in_period;
+            ids_rec.agr.reproduced = gl->agr.reproduced;
             
-            ids_rec.rsp.profile = bwl->rsp.profile;
-            ids_rec.rsp.ipblock_type = bwl->rsp.ipblock_type;
-            ids_rec.rsp.new_category = bwl->rsp.new_category;
-            ids_rec.rsp.new_description = bwl->rsp.new_description;
-            ids_rec.rsp.new_event = bwl->rsp.new_event;
-            ids_rec.rsp.new_severity = bwl->rsp.new_severity;
+            ids_rec.rsp.profile = gl->rsp.profile;
+            ids_rec.rsp.ipblock_type = gl->rsp.ipblock_type;
+            ids_rec.rsp.new_category = gl->rsp.new_category;
+            ids_rec.rsp.new_description = gl->rsp.new_description;
+            ids_rec.rsp.new_event = gl->rsp.new_event;
+            ids_rec.rsp.new_severity = gl->rsp.new_severity;
             
         }
     }
@@ -910,7 +910,7 @@ int Hids::PushRecord(BwList* bwl) {
     return ids_rec.severity;
 }
 
-int Hids::PushWafRecord(BwList* bwl) {
+int Hids::PushWafRecord(GrayList* gl) {
     // create new IDS record
     IdsRecord ids_rec;
             
@@ -947,19 +947,19 @@ int Hids::PushWafRecord(BwList* bwl) {
     ids_rec.ids_type = 4;
     
         
-    if (bwl != NULL) {
+    if (gl != NULL) {
         
-        if (bwl->agr.reproduced > 0) {
+        if (gl->agr.reproduced > 0) {
             
-            ids_rec.agr.in_period = bwl->agr.in_period;
-            ids_rec.agr.reproduced = bwl->agr.reproduced;
+            ids_rec.agr.in_period = gl->agr.in_period;
+            ids_rec.agr.reproduced = gl->agr.reproduced;
             
-            ids_rec.rsp.profile = bwl->rsp.profile;
-            ids_rec.rsp.ipblock_type = bwl->rsp.ipblock_type;
-            ids_rec.rsp.new_category = bwl->rsp.new_category;
-            ids_rec.rsp.new_description = bwl->rsp.new_description;
-            ids_rec.rsp.new_event = bwl->rsp.new_event;
-            ids_rec.rsp.new_severity = bwl->rsp.new_severity;
+            ids_rec.rsp.profile = gl->rsp.profile;
+            ids_rec.rsp.ipblock_type = gl->rsp.ipblock_type;
+            ids_rec.rsp.new_category = gl->rsp.new_category;
+            ids_rec.rsp.new_description = gl->rsp.new_description;
+            ids_rec.rsp.new_event = gl->rsp.new_event;
+            ids_rec.rsp.new_severity = gl->rsp.new_severity;
         }
     }
             
@@ -968,7 +968,7 @@ int Hids::PushWafRecord(BwList* bwl) {
     return ids_rec.severity;
 }
 
-void Hids::SendAlert(int s, BwList*  bwl) {
+void Hids::SendAlert(int s, GrayList*  gl) {
     
     sk.alert.ref_id =  fs.filter.ref_id;
     
@@ -1036,36 +1036,36 @@ void Hids::SendAlert(int s, BwList*  bwl) {
             
     }
     
-    if (bwl != NULL) {
+    if (gl != NULL) {
             
-        if (bwl->rsp.profile.compare("none") != 0) {
-            sk.alert.action = bwl->rsp.profile;
+        if (gl->rsp.profile.compare("none") != 0) {
+            sk.alert.action = gl->rsp.profile;
             sk.alert.status = "modified_new";
         } 
         
-        if (bwl->rsp.new_event != 0) {
-            sk.alert.event = bwl->rsp.new_event;
+        if (gl->rsp.new_event != 0) {
+            sk.alert.event = gl->rsp.new_event;
             sk.alert.status = "modified_new";
         }    
             
-        if (bwl->rsp.new_severity != 0) {
-            sk.alert.severity = bwl->rsp.new_severity;
+        if (gl->rsp.new_severity != 0) {
+            sk.alert.severity = gl->rsp.new_severity;
             sk.alert.status = "modified_new";
         }   
             
-        if (bwl->rsp.new_category.compare("") != 0) {
-            sk.alert.list_cats.push_back(bwl->rsp.new_category);
+        if (gl->rsp.new_category.compare("") != 0) {
+            sk.alert.list_cats.push_back(gl->rsp.new_category);
             sk.alert.status = "modified_new";
         }   
                 
-        if (bwl->rsp.new_description.compare("") != 0) {
-            sk.alert.description = bwl->rsp.new_description;
+        if (gl->rsp.new_description.compare("") != 0) {
+            sk.alert.description = gl->rsp.new_description;
             sk.alert.status = "modified_new";
         }   
         
-        if (bwl->rsp.ipblock_type.compare("none") != 0) {
+        if (gl->rsp.ipblock_type.compare("none") != 0) {
             
-            if (bwl->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
+            if (gl->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
                 
                 if (!IsHomeNetwork(rec.srcip)) {
                     ExecCmd(rec.srcip, "src");
@@ -1074,7 +1074,7 @@ void Hids::SendAlert(int s, BwList*  bwl) {
                 }
                 
             } else {
-                if (bwl->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
+                if (gl->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
                     
                     if (!IsHomeNetwork(rec.dstip)) {
                         ExecCmd(rec.dstip, "dst");
@@ -1093,7 +1093,7 @@ void Hids::SendAlert(int s, BwList*  bwl) {
         
 }
 
-void Hids::SendWafAlert(int s, BwList*  bwl) {
+void Hids::SendWafAlert(int s, GrayList*  gl) {
     
     sk.alert.ref_id =  fs.filter.ref_id;
     
@@ -1131,36 +1131,36 @@ void Hids::SendWafAlert(int s, BwList*  bwl) {
         
     sk.alert.info = rec.rule.info;
     
-    if (bwl != NULL) {
+    if (gl != NULL) {
             
-        if (bwl->rsp.profile.compare("none") != 0) {
-            sk.alert.action = bwl->rsp.profile;
+        if (gl->rsp.profile.compare("none") != 0) {
+            sk.alert.action = gl->rsp.profile;
             sk.alert.status = "modified_new";
         } 
         
-        if (bwl->rsp.new_event != 0) {
-            sk.alert.event = bwl->rsp.new_event;
+        if (gl->rsp.new_event != 0) {
+            sk.alert.event = gl->rsp.new_event;
             sk.alert.status = "modified_new";
         }    
             
-        if (bwl->rsp.new_severity != 0) {
-            sk.alert.severity = bwl->rsp.new_severity;
+        if (gl->rsp.new_severity != 0) {
+            sk.alert.severity = gl->rsp.new_severity;
             sk.alert.status = "modified_new";
         }   
             
-        if (bwl->rsp.new_category.compare("") != 0) {
-            sk.alert.list_cats.push_back(bwl->rsp.new_category);
+        if (gl->rsp.new_category.compare("") != 0) {
+            sk.alert.list_cats.push_back(gl->rsp.new_category);
             sk.alert.status = "modified_new";
         }   
                 
-        if (bwl->rsp.new_description.compare("") != 0) {
-            sk.alert.description = bwl->rsp.new_description;
+        if (gl->rsp.new_description.compare("") != 0) {
+            sk.alert.description = gl->rsp.new_description;
             sk.alert.status = "modified_new";
         }   
         
-        if (bwl->rsp.ipblock_type.compare("none") != 0) {
+        if (gl->rsp.ipblock_type.compare("none") != 0) {
             
-            if (bwl->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
+            if (gl->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
                 
                 if (!IsHomeNetwork(rec.srcip)) {
                     ExecCmd(rec.srcip, "src");
@@ -1169,7 +1169,7 @@ void Hids::SendWafAlert(int s, BwList*  bwl) {
                 }
                 
             } else {
-                if (bwl->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
+                if (gl->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
                     
                     if (!IsHomeNetwork(rec.dstip)) {
                         ExecCmd(rec.dstip, "dst");

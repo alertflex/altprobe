@@ -122,7 +122,7 @@ public:
     }
 };
 
-class BwList {
+class GrayList {
 public:  
     int event;
     string host;
@@ -136,7 +136,7 @@ public:
         
     }
     
-    BwList () {
+    GrayList () {
         Reset();
     }
 };
@@ -144,13 +144,13 @@ public:
 class IdsPolicy {
 public: 
     
-    int severity;
     bool log;
+    int severity;
     
-    std::vector<BwList*> bwl;
+    std::vector<GrayList*> gl;
     
     void Reset() {
-        bwl.clear();
+        gl.clear();
         severity = 0;
         log = false;
     }
@@ -158,7 +158,10 @@ public:
 
 
 class Threshold {
-public: 
+public:
+    
+    bool log;
+    
     string host;
     string element;
     string parameter;
@@ -173,6 +176,7 @@ public:
     Response rsp;
         
     void Reset() {
+        log = false;
         value_count = 0;
         value_min = 0;
         value_max = 0;
@@ -190,15 +194,16 @@ public:
 class NetflowPolicy {
 public:
     
-    int top_talkers;
     bool log;
+    int top_talkers;
     
     std::vector<Threshold*> th;
     
     void Reset() {
-        th.clear();
-        top_talkers = 0;
+        
         log = false;
+        top_talkers = 0;
+        th.clear();
     }
     
 };
@@ -206,15 +211,16 @@ public:
 class MetricPolicy {
 public:
     
-    int severity;
     bool log;
-    
+    int severity;
+        
     std::vector<Threshold*> th;
     
     void Reset() {
-        th.clear();
-        severity = 0;
+        
         log = false;
+        severity = 0;
+        th.clear();
     }
     
 };

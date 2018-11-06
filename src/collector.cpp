@@ -264,9 +264,9 @@ void Collector::RoutineJob() {
         
     unsigned long magent = fs.agents_list.size();
     unsigned long mhnetf = fs.filter.home_nets.size();
-    unsigned long mhidsf = fs.filter.hids.bwl.size();
-    unsigned long mnidsf = fs.filter.nids.bwl.size();
-    unsigned long mwaff = fs.filter.waf.bwl.size();
+    unsigned long mhidsf = fs.filter.hids.gl.size();
+    unsigned long mnidsf = fs.filter.nids.gl.size();
+    unsigned long mwaff = fs.filter.waf.gl.size();
     unsigned long mmetf = 0;
     unsigned long mtraf = fs.filter.traf.th.size();
         

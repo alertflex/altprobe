@@ -14,7 +14,7 @@ int Nids::Go(void) {
     
     // boost::shared_lock<boost::shared_mutex> lock(fs.filters_update_lock);
     
-    BwList* bwl;
+    GrayList* gl;
     int severity;
     int res = 0;
     
@@ -46,17 +46,17 @@ int Nids::Go(void) {
             
             boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
         
-            if (fs.filter.nids.log) CreateLogPayload(res);
-                
             if (res == 1 && alerts_counter <= sk.alerts_threshold) {
-                    
-                bwl = CheckBwList();
                 
-                severity = PushIdsRecord(bwl);
+                if (fs.filter.nids.log) CreateLogPayload(res);
+                
+                gl = CheckGrayList();
+                
+                severity = PushIdsRecord(gl);
                     
-                if (bwl != NULL) {
-                    if (bwl->rsp.profile.compare("suppress") != 0) {
-                        SendAlert(severity, bwl);
+                if (gl != NULL) {
+                    if (gl->rsp.profile.compare("suppress") != 0) {
+                        SendAlert(severity, gl);
                     }
                 } else {
                     if (fs.filter.nids.severity <= severity) SendAlert(severity, NULL);
@@ -71,7 +71,11 @@ int Nids::Go(void) {
                     }
                 }
             } else {
-                PushFlowsRecord();
+                
+                if(CheckFlowsLog(res)) PushFlowsRecord();
+                else {
+                    if (fs.filter.traf.log) PushFlowsRecord();
+                }
             }
         } 
             
@@ -85,13 +89,13 @@ int Nids::Go(void) {
 }
 
 
-BwList* Nids::CheckBwList() {
+GrayList* Nids::CheckGrayList() {
     
-    if (fs.filter.nids.bwl.size() != 0) {
+    if (fs.filter.nids.gl.size() != 0) {
         
-        std::vector<BwList*>::iterator i, end;
+        std::vector<GrayList*>::iterator i, end;
         
-        for (i = fs.filter.nids.bwl.begin(), end = fs.filter.nids.bwl.end(); i != end; ++i) {
+        for (i = fs.filter.nids.gl.begin(), end = fs.filter.nids.gl.end(); i != end; ++i) {
             int event_id = (*i)->event;
             if (event_id == rec.alert.signature_id) {
                 
@@ -106,6 +110,43 @@ BwList* Nids::CheckBwList() {
     }
     
     return NULL;
+}
+
+
+bool Nids::CheckFlowsLog(int r) {
+    
+    if (fs.filter.traf.th.size() != 0) {
+        
+        std::vector<Threshold*>::iterator i, end;
+        
+        for (i = fs.filter.traf.th.begin(), end = fs.filter.traf.th.end(); i != end; ++i) {
+            
+            bool dest = IsIPInRange(rec.dst_ip, (*i)->host, (*i)->element);
+            
+            bool source = IsIPInRange(rec.src_ip, (*i)->host, (*i)->element);
+            
+            if (dest || source) {
+        
+                if (!(*i)->parameter.compare("all")) return (*i)->log;
+                else {
+                    
+                    switch (r) {
+            
+                        case 2: // dns record
+                            if (!(*i)->parameter.compare("dns")) return (*i)->log;
+                            break;
+                        case 3: // ssh record
+                            if (!(*i)->parameter.compare("ssh")) return (*i)->log;
+                            break;
+                        default: // netflow record
+                            if (!(*i)->parameter.compare(rec.protocol)) return (*i)->log;
+                    }
+                }
+            }
+        }
+    }
+    
+    return false;
 }
 
 
@@ -328,6 +369,8 @@ void Nids::CreateLogPayload(int r) {
     switch (r) {
             
         case 1: // alert record
+            
+            
     
             report = "{\"version\": \"1.1\",\"host\":\"";
             report += node_id;
@@ -593,7 +636,7 @@ void Nids::CreateLogPayload(int r) {
     report.clear();
 }
 
-void Nids::SendAlert(int s, BwList* bwl) {
+void Nids::SendAlert(int s, GrayList* gl) {
     
     sk.alert.ref_id = fs.filter.ref_id;
     
@@ -620,36 +663,36 @@ void Nids::SendAlert(int s, BwList* bwl) {
     sk.alert.dstagent = rec.dst_agent;
     sk.alert.user = "none";
             
-    if (bwl != NULL) {
+    if (gl != NULL) {
             
-        if (bwl->rsp.profile.compare("none") != 0) {
-            sk.alert.action = bwl->rsp.profile;
+        if (gl->rsp.profile.compare("none") != 0) {
+            sk.alert.action = gl->rsp.profile;
             sk.alert.status = "modified_new";
         } 
         
-        if (bwl->rsp.new_event != 0) {
-            sk.alert.event = bwl->rsp.new_event;
+        if (gl->rsp.new_event != 0) {
+            sk.alert.event = gl->rsp.new_event;
             sk.alert.status = "modified_new";
         }    
             
-        if (bwl->rsp.new_severity != 0) {
-            sk.alert.severity = bwl->rsp.new_severity;
+        if (gl->rsp.new_severity != 0) {
+            sk.alert.severity = gl->rsp.new_severity;
             sk.alert.status = "modified_new";
         }   
             
-        if (bwl->rsp.new_category.compare("") != 0) {
-            sk.alert.list_cats.push_back(bwl->rsp.new_category);
+        if (gl->rsp.new_category.compare("") != 0) {
+            sk.alert.list_cats.push_back(gl->rsp.new_category);
             sk.alert.status = "modified_new";
         }   
                 
-        if (bwl->rsp.new_description.compare("") != 0) {
-            sk.alert.description = bwl->rsp.new_description;
+        if (gl->rsp.new_description.compare("") != 0) {
+            sk.alert.description = gl->rsp.new_description;
             sk.alert.status = "modified_new";
         }   
         
-        if (bwl->rsp.ipblock_type.compare("none") != 0) {
+        if (gl->rsp.ipblock_type.compare("none") != 0) {
             
-            if (bwl->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
+            if (gl->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
                 
                 if (!IsHomeNetwork(rec.src_ip)) {
                     ExecCmd(rec.src_ip, "src");
@@ -658,7 +701,7 @@ void Nids::SendAlert(int s, BwList* bwl) {
                 }
                 
             } else {
-                if (bwl->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
+                if (gl->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
                     
                     if (!IsHomeNetwork(rec.dst_ip)) {
                         ExecCmd(rec.dst_ip, "dst");
@@ -694,7 +737,7 @@ void Nids::SendAlert(int s, BwList* bwl) {
     ResetStream();
 }
 
-int Nids::PushIdsRecord(BwList* bwl) {
+int Nids::PushIdsRecord(GrayList* gl) {
     // create new ids record
     IdsRecord ids_rec;
                 
@@ -730,19 +773,19 @@ int Nids::PushIdsRecord(BwList* bwl) {
     ids_rec.ids = rec.ids;
     ids_rec.location = rec.dst_agent;
                             
-    if (bwl != NULL) {
+    if (gl != NULL) {
         
-        if (bwl->agr.reproduced > 0) {
+        if (gl->agr.reproduced > 0) {
             
-            ids_rec.agr.in_period = bwl->agr.in_period;
-            ids_rec.agr.reproduced = bwl->agr.reproduced;
+            ids_rec.agr.in_period = gl->agr.in_period;
+            ids_rec.agr.reproduced = gl->agr.reproduced;
             
-            ids_rec.rsp.profile = bwl->rsp.profile;
-            ids_rec.rsp.ipblock_type = bwl->rsp.ipblock_type;
-            ids_rec.rsp.new_category = bwl->rsp.new_category;
-            ids_rec.rsp.new_description = bwl->rsp.new_description;
-            ids_rec.rsp.new_event = bwl->rsp.new_event;
-            ids_rec.rsp.new_severity = bwl->rsp.new_severity;
+            ids_rec.rsp.profile = gl->rsp.profile;
+            ids_rec.rsp.ipblock_type = gl->rsp.ipblock_type;
+            ids_rec.rsp.new_category = gl->rsp.new_category;
+            ids_rec.rsp.new_description = gl->rsp.new_description;
+            ids_rec.rsp.new_event = gl->rsp.new_event;
+            ids_rec.rsp.new_severity = gl->rsp.new_severity;
             
         }
     }
