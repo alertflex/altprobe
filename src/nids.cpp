@@ -126,20 +126,24 @@ bool Nids::CheckFlowsLog(int r) {
             bool source = IsIPInRange(rec.src_ip, (*i)->host, (*i)->element);
             
             if (dest || source) {
+                
+                bool log = false;
+                
+                if (!(*i)->rsp.profile.compare("log-mgmt"))  log = true;
         
-                if (!(*i)->parameter.compare("all")) return (*i)->log;
+                if (!(*i)->parameter.compare("all")) return log;
                 else {
                     
                     switch (r) {
             
                         case 2: // dns record
-                            if (!(*i)->parameter.compare("dns")) return (*i)->log;
+                            if (!(*i)->parameter.compare("dns")) return log;
                             break;
                         case 3: // ssh record
-                            if (!(*i)->parameter.compare("ssh")) return (*i)->log;
+                            if (!(*i)->parameter.compare("ssh")) return log;
                             break;
                         default: // netflow record
-                            if (!(*i)->parameter.compare(rec.protocol)) return (*i)->log;
+                            if (!(*i)->parameter.compare(rec.protocol)) return log;
                     }
                 }
             }

@@ -180,7 +180,6 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             
             Threshold* t = new Threshold();
             
-            t->log = metrics_list.second.get<bool>("log");            
             t->host = metrics_list.second.get<string>("agent");
             t->element = metrics_list.second.get<string>("metric");
             t->parameter = metrics_list.second.get<string>("parameter");
@@ -210,7 +209,6 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             
             Threshold* t = new Threshold();
             
-            t->log = traffic_list.second.get<bool>("log");    
             t->host = traffic_list.second.get<string>("network");
             t->element = traffic_list.second.get<string>("netmask");
             t->parameter = traffic_list.second.get<string>("appl");

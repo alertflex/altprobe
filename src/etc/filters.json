@@ -132,7 +132,6 @@
             "severity":  2,
             "log": true,
             "thresholds": [{
-		"log": true,
                 "agent": "win10",
                 "metric": "memory",
                 "parameter":"free",
@@ -151,7 +150,6 @@
                     "new_description": "desc of alerts"
                 }
             }, {
-		"log": true,
                 "agent": "centos7",
                 "metric": "nginx",
                 "parameter":"active",
@@ -175,7 +173,6 @@
             "top_talkers":  10,
             "log": true,
             "thresholds": [{
-		"log": true,
                 "network": "192.168.1.2",
                 "netmask": "255.255.255.255",
                 "appl":"none",
@@ -186,7 +183,7 @@
                     "in_period": 10
                 },
                 "response": {
-                    "profile": "none",
+                    "profile": "log-mgmt",
                     "ipblock_type": "none",
                     "new_event": 0,
                     "new_severity": 0,
@@ -194,7 +191,6 @@
                     "new_description": "desc of alerts"
                 }
             }, {
-		"log": true,
                 "network": "192.168.1.10",
                 "netmask": "255.255.255.0",
                 "appl":"dns",

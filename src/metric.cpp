@@ -44,7 +44,7 @@ int Metric::Go(void) {
         
         IncrementEventsCounter();
         
-        if (res != 0) {
+        if (res != 0 && fs.filter.metric.log) {
             switch (res) {
                 case 1:
                     SendMemoryStat();
@@ -720,7 +720,7 @@ void Metric::SendAlert(Threshold* th) {
     else sk.alert.event = 1;
     
     if ( th->rsp.new_severity != 0) sk.alert.severity = th->rsp.new_severity;
-    else sk.alert.severity = 2;
+    else sk.alert.severity = fs.filter.metric.severity;
     
     if (th->rsp.new_category.compare("") != 0) sk.alert.list_cats.push_back(th->rsp.new_category);
     else sk.alert.list_cats.push_back("metrics threshold");

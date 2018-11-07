@@ -160,8 +160,6 @@ public:
 class Threshold {
 public:
     
-    bool log;
-    
     string host;
     string element;
     string parameter;
@@ -176,7 +174,6 @@ public:
     Response rsp;
         
     void Reset() {
-        log = false;
         value_count = 0;
         value_min = 0;
         value_max = 0;
