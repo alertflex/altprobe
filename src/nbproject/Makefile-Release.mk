@@ -46,6 +46,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/loclog.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/metric.o \
+	${OBJECTDIR}/misc.o \
 	${OBJECTDIR}/nids.o \
 	${OBJECTDIR}/remlog.o \
 	${OBJECTDIR}/remstat.o \
@@ -135,6 +136,11 @@ ${OBJECTDIR}/metric.o: metric.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/metric.o metric.cpp
+
+${OBJECTDIR}/misc.o: misc.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/misc.o misc.cpp
 
 ${OBJECTDIR}/nids.o: nids.cpp
 	${MKDIR} -p ${OBJECTDIR}
