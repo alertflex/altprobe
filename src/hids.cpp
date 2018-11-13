@@ -62,7 +62,7 @@ int Hids::Go(void) {
                     if (gl != NULL) {
                         if (gl->rsp.profile.compare("suppress") != 0) SendWafAlert(severity, gl);
                     } else {
-                        if (fs.filter.waf.severity <= severity) {
+                        if (fs.filter.waf.severity.threshold <= severity) {
                             
                             SendWafAlert(severity, NULL);
                         }
@@ -93,7 +93,7 @@ int Hids::Go(void) {
                         if (gl->rsp.profile.compare("suppress") != 0) SendAlert(severity, gl);
                         
                     } else {
-                        if (fs.filter.hids.severity <= severity) {
+                        if (fs.filter.hids.severity.threshold <= severity) {
                             SendAlert(severity, NULL);
                         }
                     } 
@@ -218,13 +218,13 @@ int Hids::ParsJson(char* redis_payload) {
         int level = pt.get<int>("rule.level",0);
         string severity;
     
-        if (level < 2) {
+        if (level < fs.filter.hids.severity.level0) {
             severity = "0";
         } else {
-            if (level < 4) {
+            if (level < fs.filter.hids.severity.level1) {
                 severity = "1";
             } else {
-                if (level < 10) {
+                if (level < fs.filter.hids.severity.level2) {
                     severity = "2";
                 } else {
                     severity = "3";
@@ -301,13 +301,13 @@ int Hids::ParsJson(char* redis_payload) {
         int level = pt.get<int>("rule.level",0);
         string severity;
     
-        if (level < 2) {
+        if (level < fs.filter.hids.severity.level0) {
             severity = "0";
         } else {
-            if (level < 4) {
+            if (level < fs.filter.hids.severity.level1) {
                 severity = "1";
             } else {
-                if (level < 10) {
+                if (level < fs.filter.hids.severity.level2) {
                     severity = "2";
                 } else {
                     severity = "3";
@@ -381,13 +381,13 @@ int Hids::ParsJson(char* redis_payload) {
         int level = pt.get<int>("rule.level",0);
         string severity;
     
-        if (level < 2) {
+        if (level < fs.filter.hids.severity.level0) {
             severity = "0";
         } else {
-            if (level < 4) {
+            if (level < fs.filter.hids.severity.level1) {
                 severity = "1";
             } else {
-                if (level < 10) {
+                if (level < fs.filter.hids.severity.level2) {
                     severity = "2";
                 } else {
                     severity = "3";
@@ -856,13 +856,13 @@ int Hids::PushRecord(GrayList* gl) {
             
     copy(rec.rule.list_cats.begin(),rec.rule.list_cats.end(),back_inserter(ids_rec.list_cats));
     
-    if (rec.rule.level < 2) {
+    if (rec.rule.level < fs.filter.hids.severity.level0) {
         ids_rec.severity = 0;
     } else {
-        if (rec.rule.level < 4) {
+        if (rec.rule.level < fs.filter.hids.severity.level1) {
             ids_rec.severity = 1;
         } else {
-            if (rec.rule.level < 10) {
+            if (rec.rule.level < fs.filter.hids.severity.level2) {
                 ids_rec.severity = 2;
             } else {
                 ids_rec.severity = 3;
@@ -920,13 +920,13 @@ int Hids::PushWafRecord(GrayList* gl) {
             
     copy(rec.rule.list_cats.begin(),rec.rule.list_cats.end(),back_inserter(ids_rec.list_cats));
     
-    if (rec.rule.level < 3) {
+    if (rec.rule.level < fs.filter.waf.severity.level2) {
         ids_rec.severity = 3;
     } else {
-        if (rec.rule.level < 4) {
+        if (rec.rule.level < fs.filter.waf.severity.level1) {
             ids_rec.severity = 2;
         } else {
-            if (rec.rule.level < 5) {
+            if (rec.rule.level < fs.filter.waf.severity.level0) {
                 ids_rec.severity = 1;
             } else {
                 ids_rec.severity = 0;

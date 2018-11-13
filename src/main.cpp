@@ -15,6 +15,7 @@
 #include "statids.h"
 #include "hids.h"
 #include "metric.h"
+#include "misc.h"
 #include "nids.h"
 #include "collector.h"
 #include "remlog.h"
@@ -64,6 +65,22 @@ void * thread_met(void *arg) {
     pthread_cleanup_push(exit_thread_met, exit_thread_met_arg);
     
     while (met.Go()) { }
+    
+    pthread_cleanup_pop(1);
+    pthread_exit(0);
+}
+
+Misc misc("misc");
+pthread_t pthread_misc;
+
+void* exit_thread_misc_arg;
+void exit_thread_misc(void* arg) { misc.Close(); }
+
+void * thread_misc(void *arg) {
+    
+    pthread_cleanup_push(exit_thread_misc, exit_thread_misc_arg);
+    
+    while (misc.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
@@ -177,6 +194,9 @@ int LoadConfig(void)
     //metrics
     if (!met.GetConfig()) return 0;
     
+    //misc
+    if (!misc.GetConfig()) return 0;
+    
     //hids
     if (!hids.GetConfig()) return 0;
     
@@ -238,6 +258,19 @@ int InitThreads(void)
             
         if (pthread_create(&pthread_met, NULL, thread_met, &arg)) {
             daemon_log(LOG_ERR,"error creating thread for metrics");
+            return 0;
+        }
+    }
+    
+    //misc
+    if (misc.GetStatus()) {
+        if (!misc.Open()) {
+            daemon_log(LOG_ERR,"cannot open Misc server");
+            return 0;
+        }
+            
+        if (pthread_create(&pthread_misc, NULL, thread_misc, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for misc");
             return 0;
         }
     }
@@ -341,6 +374,12 @@ void KillsThreads(void)
     if (met.GetStatus()) {
         pthread_cancel(pthread_met);
         pthread_join(pthread_met, NULL);
+    }
+    
+    //misc
+    if (misc.GetStatus()) {
+        pthread_cancel(pthread_misc);
+        pthread_join(pthread_misc, NULL);
     }
     
     //hids

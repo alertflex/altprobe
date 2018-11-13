@@ -59,7 +59,7 @@ int Nids::Go(void) {
                         SendAlert(severity, gl);
                     }
                 } else {
-                    if (fs.filter.nids.severity <= severity) SendAlert(severity, NULL);
+                    if (fs.filter.nids.severity.threshold <= severity) SendAlert(severity, NULL);
                 }
                     
                 if (sk.alerts_threshold != 0) {
@@ -180,6 +180,8 @@ int Nids::ParsJson (char* redis_payload) {
         
         rec.iface = pt.get<string>("in_iface","");
         
+        rec.flow_id = pt.get<long>("flow_id",0);
+        
         rec.src_ip = pt.get<string>("src_ip","");
         rec.src_type = IsHomeNetwork(rec.src_ip);
         if (rec.src_type == 0) rec.src_agent = "ext_net";
@@ -222,6 +224,8 @@ int Nids::ParsJson (char* redis_payload) {
         rec.time_stamp = pt.get<string>("timestamp","");
         
         rec.iface = pt.get<string>("in_iface","");
+        
+        rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
         rec.src_type = IsHomeNetwork(rec.src_ip);
@@ -271,6 +275,8 @@ int Nids::ParsJson (char* redis_payload) {
         
         rec.iface = pt.get<string>("in_iface","");
         
+        rec.flow_id = pt.get<long>("flow_id",0);
+        
         rec.src_ip = pt.get<string>("src_ip","");
         rec.src_type = IsHomeNetwork(rec.src_ip);
         if (rec.src_type == 0) rec.src_agent = "ext_net";
@@ -303,6 +309,8 @@ int Nids::ParsJson (char* redis_payload) {
         rec.time_stamp = pt.get<string>("timestamp","");
         
         rec.iface = pt.get<string>("in_iface","");
+        
+        rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
         rec.src_type = IsHomeNetwork(rec.src_ip);
@@ -403,7 +411,10 @@ void Nids::CreateLogPayload(int r) {
             report +=  "\",\"_iface\":\"";
             report +=  rec.iface;
             
-            report +=  "\",\"_srcip\":\"";
+            report +=  "\",\"_flow_id\":";
+            report +=  std::to_string(rec.flow_id);
+            
+            report +=  ",\"_srcip\":\"";
             report +=  rec.src_ip;
 			
             report +=  "\",\"_dstip\":\"";
@@ -460,8 +471,11 @@ void Nids::CreateLogPayload(int r) {
 			
             report +=  "\",\"_iface\":\"";
             report +=  rec.iface;
+            
+            report +=  "\",\"_flow_id\":";
+            report +=  std::to_string(rec.flow_id);
 			
-            report +=  "\",\"_srcip\":\"";
+            report +=  ",\"_srcip\":\"";
             report +=  rec.src_ip;
 			
             report +=  "\",\"_dstip\":\"";
@@ -531,8 +545,11 @@ void Nids::CreateLogPayload(int r) {
 			
             report +=  "\",\"_iface\":\"";
             report +=  rec.iface;
+            
+            report +=  "\",\"_flow_id\":";
+            report +=  std::to_string(rec.flow_id);
 			
-            report +=  "\",\"_srcip\":\"";
+            report +=  ",\"_srcip\":\"";
             report +=  rec.src_ip;
 			
             report +=  "\",\"_dstip\":\"";
@@ -595,8 +612,11 @@ void Nids::CreateLogPayload(int r) {
 			
             report +=  "\",\"_iface\":\"";
             report +=  rec.iface;
+            
+            report +=  "\",\"_flow_id\":";
+            report +=  std::to_string(rec.flow_id);
 			
-            report += "\",\"_srcip\":\"";
+            report += ",\"_srcip\":\"";
             report += rec.src_ip;
 			
             report += "\",\"_dstip\":\"";
@@ -719,7 +739,7 @@ void Nids::SendAlert(int s, GrayList* gl) {
     }
         
     sk.alert.sensor = rec.ids;
-    sk.alert.location = rec.iface;
+    sk.alert.location = std::to_string(rec.flow_id);
     sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = rec.time_stamp;
               

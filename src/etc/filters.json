@@ -24,8 +24,13 @@
 
     "sources": { 
         "hids": {
-            "severity": 1,
             "log": true,
+            "severity": {
+                "threshold": 1,
+                "level0": 2,
+                "level1": 4,
+                "level2": 10
+            },
             "gray_list": [{ 
                 "event": 55715,
                 "agent": "devtools",
@@ -59,8 +64,13 @@
             }]
         },
         "nids": {
-            "severity": 1,
             "log": true,
+            "severity": {
+                "threshold": 1,
+                "level0": 0,
+                "level1": 1,
+                "level2": 2
+            },
             "gray_list": [{ 
                 "event": 2200071,
                 "agent": "all",
@@ -94,8 +104,13 @@
             }]
         },
         "waf": {
-            "severity": 1,
             "log": true,
+            "severity": {
+                "threshold": 1,
+                "level0": 5,
+                "level1": 4,
+                "level2": 3
+            },
             "gray_list": [{ 
                 "event": 100001,
                 "agent": "none",

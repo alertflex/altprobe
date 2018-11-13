@@ -97,8 +97,11 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
         
         // HIDS
         filter.hids.log = filters.get<bool>("hids.log");
-        filter.hids.severity = filters.get<int>("hids.severity");
-        
+        filter.hids.severity.threshold = filters.get<int>("hids.severity.threshold");
+        filter.hids.severity.level0 = filters.get<int>("hids.severity.level0");
+        filter.hids.severity.level1 = filters.get<int>("hids.severity.level1");
+        filter.hids.severity.level2 = filters.get<int>("hids.severity.level2");
+              
         bpt::ptree hids_gray_list = filters.get_child("hids.gray_list");
         BOOST_FOREACH(bpt::ptree::value_type &hids_list, hids_gray_list) {
             
@@ -122,8 +125,11 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
         
         // NIDS
         filter.nids.log = filters.get<bool>("nids.log");
-        filter.nids.severity = filters.get<int>("nids.severity");
-        
+        filter.nids.severity.threshold = filters.get<int>("nids.severity.threshold");
+        filter.nids.severity.level0 = filters.get<int>("nids.severity.level0");
+        filter.nids.severity.level1 = filters.get<int>("nids.severity.level1");
+        filter.nids.severity.level2 = filters.get<int>("nids.severity.level2");
+               
         bpt::ptree nids_gray_list = filters.get_child("nids.gray_list");
         BOOST_FOREACH(bpt::ptree::value_type &nids_list, nids_gray_list) {
             
@@ -147,8 +153,11 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
         
         // WAF
         filter.waf.log = filters.get<bool>("waf.log");
-        filter.waf.severity = filters.get<int>("waf.severity");
-        
+        filter.waf.severity.threshold = filters.get<int>("waf.severity.threshold");
+        filter.waf.severity.level0 = filters.get<int>("waf.severity.level0");
+        filter.waf.severity.level1 = filters.get<int>("waf.severity.level1");
+        filter.waf.severity.level2 = filters.get<int>("waf.severity.level2");
+               
         bpt::ptree waf_gray_list = filters.get_child("waf.gray_list");
         BOOST_FOREACH(bpt::ptree::value_type &waf_list, waf_gray_list) {
             

@@ -141,17 +141,34 @@ public:
     }
 };
 
+class Severity {
+public: 
+    
+    int threshold;
+    int level0;
+    int level1;
+    int level2;
+        
+    void Reset() {
+        threshold = 0;
+        level0 = 0;
+        level1 = 0;
+        level2 = 0;
+    }
+};
+
+
 class IdsPolicy {
 public: 
     
     bool log;
-    int severity;
+    Severity severity;
     
     std::vector<GrayList*> gl;
     
     void Reset() {
         gl.clear();
-        severity = 0;
+        severity.Reset();
         log = false;
     }
 };

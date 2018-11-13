@@ -108,6 +108,7 @@ public:
     int event_type;
     string time_stamp;
     string iface;
+    long flow_id;
         
     int src_type;
     string src_agent;
@@ -137,7 +138,8 @@ public:
         ref_id.clear();
         event_type = 0;
         time_stamp.clear();
-        iface.clear();;
+        iface.clear();
+        flow_id = 0;
         src_type = 0;
         src_agent.clear();
         src_ip.clear();

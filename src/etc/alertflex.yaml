@@ -50,6 +50,8 @@ sources:
   ossec: "altprobe_hids"
   # redis list for metrics from ElasticStack Metricbeat  
   metricbeat: "altprobe_metrics"
+  # redis list for events from Altprobe clients 
+  misc: "altprobe_misc"
   # redis list for events from Suricata IDS 
   suricata: "altprobe_nids"
   
