@@ -45,11 +45,14 @@ with Log Management platform Graylog, Monitoring platform Grafana and Threat Int
 
 Below, a screenshots of Graylog web forms for IDS events from Altprobe
 
+Normalized and aggregated alerts from Host and Network IDS (GrayLog)
 ![](https://github.com/olegzhr/altprobe/blob/master/img/graylog1.jpg)
-Normalized and aggregated alerts from Host and Network IDS
 
+Simple statistics about IDS alerts categories, applications protocols and Geo IP netflow map (GrayLog)
 ![](https://github.com/olegzhr/altprobe/blob/master/img/graylog2.jpg)
-Simple statistics about IDS alerts categories, applications protocols and Geo IP netflow map
+
+At the moment for integration with Grafana you can use Grafana MySQL data source with direct SQL requests to Alertflex DB
+![](https://github.com/olegzhr/altprobe/blob/master/img/grafana.jpg)
 
 ## Requirements
 
