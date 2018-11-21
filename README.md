@@ -43,7 +43,7 @@ with Log Management platform Graylog, Monitoring platform Grafana and Threat Int
 
 ## Screenshots
 
-Below, a screenshots of Graylog web forms for IDS events from Altprobe
+Below, a screenshots of Graylog and Grafana web forms for events from Altprobe
 
 Normalized and aggregated alerts from Host and Network IDS (GrayLog)
 ![](https://github.com/olegzhr/altprobe/blob/master/img/graylog1.jpg)
