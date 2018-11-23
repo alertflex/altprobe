@@ -62,14 +62,13 @@ Altprobe was tested under Ubuntu version 14.04 with Wazuh HIDS (OSSEC fork) vers
 
 Download installation files
 
-    $ sudo apt-get install git
-    git clone git://github.com/olegzhr/Altprobe.git
+    $ git clone git://github.com/olegzhr/Altprobe.git
     cd ./Altprobe
 
 Fill in collector specific parameters in file ``env.sh`` and start installation		
     
-    $ chmod u+x install_node.sh
-    ./install_node.sh
+    $ chmod u+x install_ubuntu14.sh
+    ./install_ubuntu14.sh
 
 For the distributed configuration with SSL connections, you need to perform extra steps, see installation instructions for AlertflexCtrl
 
