@@ -480,7 +480,7 @@ void Collector::ParsAgentsStatus (string status) {
             string status = agents.second.get<string>("status");
             string dateAdd = agents.second.get<string>("dateAdd");
             string version = agents.second.get<string>("version");
-            string manager_host = agents.second.get<string>("manager_host");
+            string manager_host = agents.second.get<string>("manager");
             string os_platform = agents.second.get<string>("os.platform", "indef");
             string os_version = agents.second.get<string>("os.version", "indef");
             string os_name = agents.second.get<string>("os.name", "indef");
