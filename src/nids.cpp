@@ -45,10 +45,10 @@ int Nids::Go(void) {
         if (res != 0) {
             
             boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
+		
+	    if (fs.filter.nids.log) CreateLogPayload(res);
         
             if (res == 1 && alerts_counter <= sk.alerts_threshold) {
-                
-                if (fs.filter.nids.log) CreateLogPayload(res);
                 
                 gl = CheckGrayList();
                 
