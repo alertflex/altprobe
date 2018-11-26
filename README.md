@@ -84,14 +84,12 @@ NOTE:
 
 * For the distributed configuration all nodes should be reachable over a network via DNS names or host names (use these names in file ``env.sh`` as values for parameters)
 
-* For enabling an events from Sysmon via Wazuh IDS, please, change level of ``rule_id 185001`` instead 0  to other value. See file ``/var/ossec/ruleset/rules0330-sysmon_rules.xml``
+* For enabling events from Sysmon via Wazuh IDS, please, change level of ``rule_id 185001`` instead 0  to other value. See file ``/var/ossec/ruleset/rules0330-sysmon_rules.xml``
 
 * For enabling an network activities events from Auditd, please, use the command: ``auditctl -a exit,always -F arch=b64 -S connect -k linux-connects``, key value ``linux-connects`` is important!
 
 * For integration Nginx and ModSecurity 3.0 with Wazuh IDS, add string ``error_log  /var/log/nginx/error.log info;`` to file  nginx.conf. 
-Examples of Modsecurity rules for Wazuh, please, see in file [0260-nginx_rules.xml](https://github.com/olegzhr/Altprobe/blob/master/configs/0260-nginx_rules.xml)
-
-* For advanced configuration of Altprobe use altprobe config file and filtering policies, please, see samples in dir: [/src/etc/](https://github.com/olegzhr/Altprobe/blob/master/src/etc/)
+Example of modified Modsec rules for Wazuh, see in file [0260-nginx_rules.xml](https://github.com/olegzhr/Altprobe/blob/master/configs/0260-nginx_rules.xml)
 
 * For integration Metricbeat with Altprobe 
 
@@ -100,6 +98,13 @@ in the file ``/etc/metricbeat/metricbeat.yml`` set next parameters:
     $ output.redis:
     hosts: ["altprobe_host_or_ip"]
     key: "altprobe_metrics"
+
+## Post-install
+
+For advanced configuration of Altprobe use altprobe config file and filtering policies, see samples in dir: [/src/etc/](https://github.com/olegzhr/Altprobe/blob/master/src/etc/)
+
+Below some useful parameters of filtering policies:
+
    
 	
 ## Troubleshooting
