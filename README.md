@@ -43,7 +43,7 @@ with Log Management platform Graylog, Monitoring platform Grafana and Threat Int
 
 ## Screenshots
 
-Below, a screenshots of Grafana and Graylog web forms for events from Altprobe
+Below, screenshots of Grafana and Graylog web forms for events from Altprobe
 
 Grafana alerts dashboard
 ![](https://github.com/olegzhr/altprobe/blob/master/img/alerts_dashboard.jpg)
