@@ -43,16 +43,18 @@ with Log Management platform Graylog, Monitoring platform Grafana and Threat Int
 
 ## Screenshots
 
-Below, a screenshots of Graylog and Grafana web forms for events from Altprobe
+Below, a screenshots of Grafana and Graylog web forms for events from Altprobe
 
-Normalized and aggregated alerts from Host and Network IDS (GrayLog)
-![](https://github.com/olegzhr/altprobe/blob/master/img/graylog1.jpg)
+Grafana alerts dashboard
+![](https://github.com/olegzhr/altprobe/blob/master/img/alerts_dashboard.jpg)
 
-Simple statistics about IDS alerts categories, applications protocols and Geo IP netflow map (GrayLog)
-![](https://github.com/olegzhr/altprobe/blob/master/img/graylog2.jpg)
+Grafana metrics dashboard
+![](https://github.com/olegzhr/altprobe/blob/master/img/metrics_dashboard.jpg)
 
-At the moment for integration with Grafana you can use Grafana MySQL data source with direct SQL requests to Alertflex DB
-![](https://github.com/olegzhr/altprobe/blob/master/img/grafana.jpg)
+Graylog statistics about IDS alerts categories, applications protocols and Geo IP netflow map
+![](https://github.com/olegzhr/altprobe/blob/master/img/graylog.jpg)
+
+
 
 ## Requirements
 
@@ -67,8 +69,8 @@ Download installation files
 
 Fill in collector specific parameters in file ``env.sh`` and start installation		
     
-    $ chmod u+x install_ubuntu14.sh
-    ./install_ubuntu14.sh
+    $ chmod u+x install_ubuntu.sh
+    ./install_ubuntu.sh
 
 For the distributed configuration with SSL connections, you need to perform extra steps, see installation instructions for AlertflexCtrl
 
