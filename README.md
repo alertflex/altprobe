@@ -45,10 +45,10 @@ with Log Management platform Graylog, Monitoring platform Grafana and Threat Int
 
 Below, screenshots of Grafana and Graylog web forms for events from Altprobe
 
-Grafana alerts dashboard
+Grafana alerts dashboard [Download] (https://grafana.com/dashboards/9228)
 ![](https://github.com/olegzhr/altprobe/blob/master/img/alerts_dashboard.jpg)
 
-Grafana metrics dashboard
+Grafana metrics dashboard [Download] (https://grafana.com/dashboards/9234)
 ![](https://github.com/olegzhr/altprobe/blob/master/img/metrics_dashboard.jpg)
 
 Graylog statistics about IDS alerts categories, applications protocols and Geo IP netflow map
