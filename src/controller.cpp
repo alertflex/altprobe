@@ -274,6 +274,7 @@ int Controller::SendMessage(Event* e) {
             for (int i=0; i < msg_comp.size() + 1; i++) vec.push_back(c[i]);
                 
             byte_message->writeBytes(vec);
+            
             producer->send(byte_message);
                                     
             delete byte_message;

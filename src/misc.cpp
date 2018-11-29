@@ -56,7 +56,7 @@ int Misc::Go(void) {
 int Misc::ParsJson(char* redis_payload) {
     
     try {
-    
+        
         jsonPayload.assign(reply->str, GetBufferSize(reply->str));
     
         ss << redis_payload;
