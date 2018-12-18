@@ -103,7 +103,6 @@ public:
 class Response {
 public:
     string profile;
-    string ipblock_type;
     int new_event;
     int new_severity;
     string new_category;
@@ -111,7 +110,6 @@ public:
     
     void Reset () {
         profile.clear();
-        ipblock_type.clear();
         new_event = 0;
         new_category.clear();
         new_description.clear();

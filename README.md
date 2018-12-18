@@ -3,14 +3,14 @@
 Altprobe is a component of the Alertflex project, it has functional of a collector according to SIEM/Log Management terminologies.
 In tandem with Alertflex controller (see [AlertflexCtrl repository](https://github.com/olegzhr/AlertflexCtrl/blob/master/README.md) ), 
 Altprobe can integrate a Wazuh Host IDS (OSSEC fork) and Suricata Network IDS
-with Log Management platform Graylog, Monitoring platform Grafana and Threat Intelligence Platform MISP. 
+with log management platform Graylog, monitoring platform Grafana and threat intelligence platform MISP. 
 ![](https://github.com/olegzhr/altprobe/blob/master/img/arch.png)
 
 ## Functionalities of Altprobe
 
 * Reads events in JSON format from Suricata NIDS, Wazuh HIDS, Modsecurity WAF, Elastic Metricbeat through a server Redis
 * Based on filtering policies, Collector retrieves high priority events from data streams created by security sensors, makes aggregation and normalization for these events. This allows to simplify the management of alerts and incidents, reduces noise from minor events.
-* High priority events (alerts) are immediately sent to the controller node.
+* High priority events (alerts) are immediately sent to the central node.
 * All log events, host metrics, statistics are sent to the Controller inside of pre-accumulated and compressed data set, this implements the "Anti-flooding" algorithm to prevent large bursts of events on the controller side.
 * Alerts and log events (NetFlow, DNS and SSH sessions, minor priority events) can be redirected to the Log Management platform via Controller
 * The Collector saves various statistics about IDS and NetFlow events and send it to the Controller.

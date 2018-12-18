@@ -114,7 +114,6 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             gl->agr.in_period = hids_list.second.get<int>("aggregate.in_period");  
             
             gl->rsp.profile = hids_list.second.get<string>("response.profile");
-            gl->rsp.ipblock_type = hids_list.second.get<string>("response.ipblock_type");
             gl->rsp.new_event = hids_list.second.get<int>("response.new_event");           
             gl->rsp.new_severity = hids_list.second.get<int>("response.new_severity");
             gl->rsp.new_category = hids_list.second.get<string>("response.new_category");
@@ -142,7 +141,6 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             gl->agr.in_period = nids_list.second.get<int>("aggregate.in_period");  
             
             gl->rsp.profile = nids_list.second.get<string>("response.profile");
-            gl->rsp.ipblock_type = nids_list.second.get<string>("response.ipblock_type");
             gl->rsp.new_event = nids_list.second.get<int>("response.new_event");           
             gl->rsp.new_severity = nids_list.second.get<int>("response.new_severity");
             gl->rsp.new_category = nids_list.second.get<string>("response.new_category");
@@ -170,7 +168,6 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             gl->agr.in_period = waf_list.second.get<int>("aggregate.in_period");  
             
             gl->rsp.profile = waf_list.second.get<string>("response.profile");
-            gl->rsp.ipblock_type = waf_list.second.get<string>("response.ipblock_type");
             gl->rsp.new_event = waf_list.second.get<int>("response.new_event");           
             gl->rsp.new_severity = waf_list.second.get<int>("response.new_severity");
             gl->rsp.new_category = waf_list.second.get<string>("response.new_category");
@@ -199,7 +196,6 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             t->agr.in_period = metrics_list.second.get<int>("aggregate.in_period");  
             
             t->rsp.profile = metrics_list.second.get<string>("response.profile");
-            t->rsp.ipblock_type = metrics_list.second.get<string>("response.ipblock_type");
             t->rsp.new_event = metrics_list.second.get<int>("response.new_event");           
             t->rsp.new_severity = metrics_list.second.get<int>("response.new_severity");
             t->rsp.new_category = metrics_list.second.get<string>("response.new_category");
@@ -228,7 +224,6 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             t->agr.in_period = traffic_list.second.get<int>("aggregate.in_period");  
             
             t->rsp.profile = traffic_list.second.get<string>("response.profile");
-            t->rsp.ipblock_type = traffic_list.second.get<string>("response.ipblock_type");
             t->rsp.new_event = traffic_list.second.get<int>("response.new_event");           
             t->rsp.new_severity = traffic_list.second.get<int>("response.new_severity");
             t->rsp.new_category = traffic_list.second.get<string>("response.new_category");

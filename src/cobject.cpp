@@ -23,8 +23,6 @@ int CollectorObject::timezone = 0;
 int CollectorObject::log_size = 0;
 long CollectorObject::gosleep_timer = 0;
 long CollectorObject::startup_timer = 0;
-char CollectorObject::block_ipsrc[OS_BUFFER_SIZE];
-char CollectorObject::block_ipdst[OS_BUFFER_SIZE];
 
 char CollectorObject::SysLogInfo[OS_LONG_HEADER_SIZE];
 
@@ -39,9 +37,7 @@ int CollectorObject::GetConfig() {
     cy->addKey("log_size");
     cy->addKey("startup_timer");
     cy->addKey("sleep_timer");
-    cy->addKey("block-ipsrc");
-    cy->addKey("block-ipdst");
-        
+            
     cy->ParsConfig();
     
     node_id = cy->getParameter("id");
@@ -69,11 +65,6 @@ int CollectorObject::GetConfig() {
         SysLog("config file error: parameter startup_timer");
         return 0;
     }
-    
-    strncpy(block_ipsrc, (char*) cy->getParameter("block-ipsrc").c_str(), sizeof(block_ipsrc));
-        
-    strncpy(block_ipdst, (char*) cy->getParameter("block-ipdst").c_str(), sizeof(block_ipdst));
-    
     
     return 1;
 }
@@ -200,28 +191,6 @@ void CollectorObject::ReplaceAll(string& input, const string& from, const string
     pos += to.size();
   }
 }
-
-void CollectorObject::ExecCmd(const string& ip, string type) {
-    
-    string str;
-    
-    if (ip.compare("") != 0) {
-        
-        if (type.compare("src") == 0) str = string(block_ipsrc);
-        else str = string(block_ipdst);
-    
-        if (str.compare("none") != 0 && str.compare("") != 0) {
-            
-            string cmd("firewall-cmd " + str);
-    
-            int pos = cmd.find (address_template);
-    
-            cmd.replace(pos, 10, ip);
-            system(cmd.c_str());
-        }
-    }
-}
-
 
 void Alert::CreateAlertUUID(void) {
     

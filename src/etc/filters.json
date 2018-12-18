@@ -40,11 +40,10 @@
                 },
                 "response": {
                     "profile": "none",
-                    "ipblock_type": "src",
                     "new_event": 55716,
                     "new_severity": 1,
-                    "new_category": "block ip",
-                    "new_description": "block ip"
+                    "new_category": "new users cat 1",
+                    "new_description": "desc of alerts"
                 }
             }, { 
                 "event": 4572,
@@ -55,10 +54,9 @@
                 },
                 "response": {
                     "profile": "none",
-                    "ipblock_type": "src",
                     "new_event": 0,
                     "new_severity": 0,
-                    "new_category": "new users cat 1",
+                    "new_category": "new users cat 2",
                     "new_description": "desc of alerts"
                 }
             }]
@@ -80,7 +78,6 @@
                 },
                 "response": {
                     "profile": "none",
-                    "ipblock_type": "src",
                     "new_event": 0,
                     "new_severity": 0,
                     "new_category": "new users cat 1",
@@ -95,10 +92,9 @@
                 },
                 "response": {
                     "profile": "none",
-                    "ipblock_type": "src",
                     "new_event": 0,
                     "new_severity": 0,
-                    "new_category": "new users cat 1",
+                    "new_category": "new users cat 2",
                     "new_description": "desc of alerts"
                 }
             }]
@@ -120,7 +116,6 @@
                 },
                 "response": {
                     "profile": "none",
-                    "ipblock_type": "src",
                     "new_event": 0,
                     "new_severity": 0,
                     "new_category": "new users cat 1",
@@ -135,10 +130,9 @@
                 },
                 "response": {
                     "profile": "none",
-                    "ipblock_type": "src",
                     "new_event": 0,
                     "new_severity": 0,
-                    "new_category": "new users cat 1",
+                    "new_category": "new users cat 2",
                     "new_description": "desc of alerts"
                 }
             }]
@@ -158,7 +152,6 @@
                 },
                 "response": {
                     "profile": "none",
-                    "ipblock_type": "none",
                     "new_event": 0,
                     "new_severity": 0,
                     "new_category": "new users cat 1",
@@ -176,10 +169,9 @@
                 },
                 "response": {
                     "profile": "none",
-                    "ipblock_type": "none",
                     "new_event": 0,
                     "new_severity": 0,
-                    "new_category": "new users cat 1",
+                    "new_category": "new users cat 2",
                     "new_description": "desc of alerts"
                 }
             }]
@@ -199,7 +191,6 @@
                 },
                 "response": {
                     "profile": "log-mgmt",
-                    "ipblock_type": "none",
                     "new_event": 0,
                     "new_severity": 0,
                     "new_category": "new users cat 1",
@@ -217,10 +208,9 @@
                 },
                 "response": {
                     "profile": "none",
-                    "ipblock_type": "none",
                     "new_event": 0,
                     "new_severity": 0,
-                    "new_category": "new users cat 1",
+                    "new_category": "new users cat 2",
                     "new_description": "desc of alerts"
                 }
             }]

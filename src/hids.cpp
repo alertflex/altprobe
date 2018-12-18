@@ -896,7 +896,6 @@ int Hids::PushRecord(GrayList* gl) {
             ids_rec.agr.reproduced = gl->agr.reproduced;
             
             ids_rec.rsp.profile = gl->rsp.profile;
-            ids_rec.rsp.ipblock_type = gl->rsp.ipblock_type;
             ids_rec.rsp.new_category = gl->rsp.new_category;
             ids_rec.rsp.new_description = gl->rsp.new_description;
             ids_rec.rsp.new_event = gl->rsp.new_event;
@@ -955,7 +954,6 @@ int Hids::PushWafRecord(GrayList* gl) {
             ids_rec.agr.reproduced = gl->agr.reproduced;
             
             ids_rec.rsp.profile = gl->rsp.profile;
-            ids_rec.rsp.ipblock_type = gl->rsp.ipblock_type;
             ids_rec.rsp.new_category = gl->rsp.new_category;
             ids_rec.rsp.new_description = gl->rsp.new_description;
             ids_rec.rsp.new_event = gl->rsp.new_event;
@@ -1063,28 +1061,6 @@ void Hids::SendAlert(int s, GrayList*  gl) {
             sk.alert.status = "modified_new";
         }   
         
-        if (gl->rsp.ipblock_type.compare("none") != 0) {
-            
-            if (gl->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
-                
-                if (!IsHomeNetwork(rec.srcip)) {
-                    ExecCmd(rec.srcip, "src");
-                    sk.alert.severity = 3;
-                    sk.alert.list_cats.push_back("srcip_blocked");
-                }
-                
-            } else {
-                if (gl->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
-                    
-                    if (!IsHomeNetwork(rec.dstip)) {
-                        ExecCmd(rec.dstip, "dst");
-                        sk.alert.severity = 3;
-                        sk.alert.list_cats.push_back("dstip_blocked");
-                    }
-                    
-                }
-            }
-        }
     }
     
     sk.alert.event_json.assign(reply->str, GetBufferSize(reply->str));
@@ -1158,28 +1134,6 @@ void Hids::SendWafAlert(int s, GrayList*  gl) {
             sk.alert.status = "modified_new";
         }   
         
-        if (gl->rsp.ipblock_type.compare("none") != 0) {
-            
-            if (gl->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
-                
-                if (!IsHomeNetwork(rec.srcip)) {
-                    ExecCmd(rec.srcip, "src");
-                    sk.alert.severity = 3;
-                    sk.alert.list_cats.push_back("srcip_blocked");
-                }
-                
-            } else {
-                if (gl->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
-                    
-                    if (!IsHomeNetwork(rec.dstip)) {
-                        ExecCmd(rec.dstip, "dst");
-                        sk.alert.severity = 3;
-                        sk.alert.list_cats.push_back("dstip_blocked");
-                    }
-                    
-                }
-            }
-        }
     }
     
     sk.alert.event_json.assign(reply->str, GetBufferSize(reply->str));

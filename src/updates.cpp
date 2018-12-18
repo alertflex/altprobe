@@ -140,15 +140,6 @@ void Updates::onMessage(const Message* message) {
                         return;
                     }
                 } 
-            
-                if (!type.compare("ip_block")) {
-                    
-                    string ip = pt.get<string>("ip");
-                    string type = pt.get<string>("ip_type");
-                    
-                    if (!IsHomeNetwork(ip)) ExecCmd(ip, type);
-    
-                }
             } 
             
         } catch (const std::exception & ex) {

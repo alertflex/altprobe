@@ -25,13 +25,6 @@ collector:
   # period generation of reports for netflow and IDS statistics in sec, if 0 then this functionality is off (default 300)
   report_timer: 300  
   
-  # arguments for firewall-cmd, it  allows of blocking of suspicious IP by executed command for firewalld with below-listed args
-  # string $IPADDRESS is a template and will be replaced by certain IP
-  # block_ipsrc: "--add-rich-rule=\"rule family='ipv4' source address='$IPADDRESS' reject\""
-  block-ipsrc: "none"
-  # block_ipdst: "--add-rich-rule=\"rule family='ipv4' destination address='$IPADDRESS' protocol value='ip' reject\""
-  block-ipdst: "none"
-  
   # path to MaxMind Geo DB
   geo_db: "/etc/alertflex/geo/GeoLiteCity.dat"
   

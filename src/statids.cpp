@@ -821,68 +821,22 @@ void StatIds::UpdateHidsAlerts() {
                 
                 if (i->event == ids_rec.event) {
                 
-                    if (i->rsp.ipblock_type.compare("none") == 0) {
-                
-                        //get current time
-                        current_time = time(NULL);
-                        i->count++;    
-                        if ((i->alert_time + i->agr.in_period) < current_time) {
-                            if (i->count >= i->agr.reproduced) {
-                                SendHidsAlert(i, i->count);
-                                hids_alerts_list.erase(i);
-                                return;
-                            }
-                            else {
-                                hids_alerts_list.erase(i);
-                                goto new_hids_alert;
-                            }
+                    //get current time
+                    current_time = time(NULL);
+                    i->count++;    
+                    if ((i->alert_time + i->agr.in_period) < current_time) {
+                        if (i->count >= i->agr.reproduced) {
+                            SendHidsAlert(i, i->count);
+                            hids_alerts_list.erase(i);
                             return;
                         }
-                    } else {
-                        
-                        if (i->rsp.ipblock_type.compare("src") == 0) {
-                            
-                            if(i->src_ip.compare(ids_rec.src_ip) == 0) {
-                                
-                                current_time = time(NULL);
-                                i->count++;    
-                                if ((i->alert_time + i->agr.in_period) < current_time) {
-                                    if (i->count >= i->agr.reproduced) {
-                                        SendHidsAlert(i, i->count);
-                                        hids_alerts_list.erase(i);
-                                        return;
-                                    }
-                                    else {
-                                        hids_alerts_list.erase(i);
-                                        goto new_hids_alert;
-                                    }
-                                    return;
-                                }
-                            }
-                            
-                        } else {
-                        
-                            if(i->dst_ip.compare(ids_rec.dst_ip) == 0) {
-                                
-                                current_time = time(NULL);
-                                i->count++;    
-                                if ((i->alert_time + i->agr.in_period) < current_time) {
-                                    if (i->count >= i->agr.reproduced) {
-                                        SendHidsAlert(i, i->count);
-                                        hids_alerts_list.erase(i);
-                                        return;
-                                    }
-                                    else {
-                                        hids_alerts_list.erase(i);
-                                        goto new_hids_alert;
-                                    }
-                                    return;
-                                }
-                            }
-                            
+                        else {
+                            hids_alerts_list.erase(i);
+                            goto new_hids_alert;
                         }
-                        
+                        return;
                     }
+                    
                 }
             }  
         }
@@ -931,21 +885,6 @@ void StatIds::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     if (r->rsp.profile.compare("none") != 0) sk.alert.action = r->rsp.profile;
     else sk.alert.action = "none";
     
-    if (r->rsp.ipblock_type.compare("none") != 0) {
-            
-        if (r->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
-            ExecCmd(sk.alert.srcip, "src");
-            sk.alert.severity = 3;
-            sk.alert.list_cats.push_back("srcip_blocked");
-        } else {
-            if (r->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
-                ExecCmd(sk.alert.dstip, "dst");
-                sk.alert.severity = 3;
-                sk.alert.list_cats.push_back("dstip_blocked");
-            }
-        }
-    }
-        
     sk.alert.location = r->location;
         
     sk.alert.info = "Message has been repeated ";
@@ -980,64 +919,19 @@ void StatIds::UpdateNidsAlerts() {
             if (i->ids.compare(ids_rec.ids) == 0)  {
                 if (i->event == ids_rec.event) {
                     
-                    if (i->rsp.ipblock_type.compare("none") == 0) {
-                        //get current time
-                        current_time = time(NULL);
-                        i->count++;  
-                        if ((i->alert_time + i->agr.in_period) < current_time) {
-                            if (i->count >= i->agr.reproduced) {
-                                SendNidsAlert(i, i->count);
-                                nids_alerts_list.erase(i);
-                            }
-                            else {
-                                nids_alerts_list.erase(i);
-                                goto new_nids_alert;
-                            }
-                            return;
+                    //get current time
+                    current_time = time(NULL);
+                    i->count++;  
+                    if ((i->alert_time + i->agr.in_period) < current_time) {
+                        if (i->count >= i->agr.reproduced) {
+                            SendNidsAlert(i, i->count);
+                            nids_alerts_list.erase(i);
                         }
-                    } else {
-                        
-                        if (i->rsp.ipblock_type.compare("src") == 0) {
-                            
-                            if(i->src_ip.compare(ids_rec.src_ip) == 0) {
-                                
-                                //get current time
-                                current_time = time(NULL);
-                                i->count++;  
-                                if ((i->alert_time + i->agr.in_period) < current_time) {
-                                    if (i->count >= i->agr.reproduced) {
-                                        SendNidsAlert(i, i->count);
-                                        nids_alerts_list.erase(i);
-                                    }
-                                    else {
-                                        nids_alerts_list.erase(i);
-                                        goto new_nids_alert;
-                                    }
-                                    return;
-                                }   
-                            }
-                            
-                        } else {
-                        
-                            if(i->dst_ip.compare(ids_rec.dst_ip) == 0) {
-                                
-                                //get current time
-                                current_time = time(NULL);
-                                i->count++;  
-                                if ((i->alert_time + i->agr.in_period) < current_time) {
-                                    if (i->count >= i->agr.reproduced) {
-                                        SendNidsAlert(i, i->count);
-                                        nids_alerts_list.erase(i);
-                                    }
-                                    else {
-                                        nids_alerts_list.erase(i);
-                                        goto new_nids_alert;
-                                    }
-                                    return;
-                                }
-                            }
+                        else {
+                            nids_alerts_list.erase(i);
+                            goto new_nids_alert;
                         }
-                        
+                        return;
                     }
                 }
             }  
@@ -1085,21 +979,6 @@ void StatIds::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     if (r->rsp.new_description.compare("") != 0)  sk.alert.description = r->rsp.new_description;
     else sk.alert.description = r->desc;
     
-    if (r->rsp.ipblock_type.compare("none") != 0) {
-            
-        if (r->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
-            ExecCmd(sk.alert.srcip, "src");
-            sk.alert.severity = 3;
-            sk.alert.list_cats.push_back("srcip_blocked");
-        } else {
-            if (r->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
-                ExecCmd(sk.alert.dstip, "dst");
-                sk.alert.severity = 3;
-                sk.alert.list_cats.push_back("dstip_blocked");
-            }
-        }
-    }
-        
     sk.alert.location = "";       
     
     sk.alert.info = "Message has been repeated ";
@@ -1135,64 +1014,19 @@ void StatIds::UpdateWafAlerts() {
             if (i->ids.compare(ids_rec.ids) == 0)  {
                 if (i->event == ids_rec.event) {
                     
-                    if (i->rsp.ipblock_type.compare("none") == 0) {
-                        
-                        //get current time
-                        current_time = time(NULL);
-                        i->count++;  
-                        if ((i->alert_time + i->agr.in_period) < current_time) {
-                            if (i->count >= i->agr.reproduced) {
-                                SendWafAlert(i, i->count);
-                                waf_alerts_list.erase(i);
-                            }
-                            else {
-                                waf_alerts_list.erase(i);
-                                goto new_waf_alert;
-                            }
-                            return;
+                    //get current time
+                    current_time = time(NULL);
+                    i->count++;  
+                    if ((i->alert_time + i->agr.in_period) < current_time) {
+                        if (i->count >= i->agr.reproduced) {
+                            SendWafAlert(i, i->count);
+                            waf_alerts_list.erase(i);
                         }
-                    } else {
-                        
-                        if (i->rsp.ipblock_type.compare("src") == 0) {
-                            
-                            if(i->src_ip.compare(ids_rec.src_ip) == 0) {
-                            
-                                //get current time
-                                current_time = time(NULL);
-                                i->count++;  
-                                if ((i->alert_time + i->agr.in_period) < current_time) {
-                                    if (i->count >= i->agr.reproduced) {
-                                        SendWafAlert(i, i->count);
-                                        waf_alerts_list.erase(i);
-                                    }
-                                    else {
-                                        waf_alerts_list.erase(i);
-                                        goto new_waf_alert;
-                                    }
-                                    return;
-                                }
-                            }
-                            
-                        } else {
-                        
-                            if(i->dst_ip.compare(ids_rec.dst_ip) == 0) {
-                            
-                                //get current time
-                                current_time = time(NULL);
-                                i->count++;  
-                                if ((i->alert_time + i->agr.in_period) < current_time) {
-                                    if (i->count >= i->agr.reproduced) {
-                                        SendWafAlert(i, i->count);
-                                        waf_alerts_list.erase(i);
-                                    }
-                                    else {
-                                        waf_alerts_list.erase(i);
-                                        goto new_waf_alert;
-                                    }
-                                    return;
-                                }       
-                            }
+                        else {
+                            waf_alerts_list.erase(i);
+                            goto new_waf_alert;
                         }
+                        return;
                     }
                 }
             }  
@@ -1240,21 +1074,6 @@ void StatIds::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
     if (r->rsp.new_description.compare("") != 0)  sk.alert.description = r->rsp.new_description;
     else sk.alert.description = r->desc;
     
-    if (r->rsp.ipblock_type.compare("none") != 0) {
-            
-        if (r->rsp.ipblock_type.compare("src") == 0 && sk.alert.srcip.compare("") != 0) {
-            ExecCmd(sk.alert.srcip, "src");
-            sk.alert.severity = 3;
-            sk.alert.list_cats.push_back("srcip_blocked");
-        } else {
-            if (r->rsp.ipblock_type.compare("dst") == 0 && sk.alert.dstip.compare("") != 0) {
-                ExecCmd(sk.alert.dstip, "dst");
-                sk.alert.severity = 3;
-                sk.alert.list_cats.push_back("dstip_blocked");
-            }
-        }
-    }
-        
     sk.alert.location = "";       
     
     sk.alert.info = "Message has been repeated ";
