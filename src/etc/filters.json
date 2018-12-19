@@ -138,7 +138,6 @@
             }]
         },
         "metrics": {
-            "severity":  2,
             "log": true,
             "thresholds": [{
                 "agent": "win10",
@@ -177,7 +176,6 @@
             }]
         },
         "netflow": {
-            "top_talkers":  10,
             "log": true,
             "thresholds": [{
                 "network": "192.168.1.2",

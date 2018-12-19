@@ -207,14 +207,12 @@ class NetflowPolicy {
 public:
     
     bool log;
-    int top_talkers;
     
     std::vector<Threshold*> th;
     
     void Reset() {
         
         log = false;
-        top_talkers = 0;
         th.clear();
     }
     
@@ -224,14 +222,12 @@ class MetricPolicy {
 public:
     
     bool log;
-    int severity;
-        
+            
     std::vector<Threshold*> th;
     
     void Reset() {
         
         log = false;
-        severity = 0;
         th.clear();
     }
     

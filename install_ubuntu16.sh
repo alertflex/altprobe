@@ -49,7 +49,22 @@ fi
 
 sudo sed -i "s/_node_id/$NODE_ID/g" /etc/alertflex/alertflex.yaml
 sudo chmod go-rwx /etc/alertflex/alertflex.yaml
-sudo cp ../configs/rc.local /etc/
+
+sudo bash -c 'cat << EOF > /lib/systemd/system/altprobe.service
+[Unit]
+Description=Altprobe
+After=syslog.target network-online.target
+
+[Service]
+Type=forking
+User=root
+ExecStart=/usr/local/bin/altprobe start
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+
+sudo systemctl enable altprobe
 
 cd ..
 
@@ -65,16 +80,20 @@ then
 	sudo make install-full
 	sudo ldconfig
 	cd ..
-	sudo bash -c 'cat << EOF > /etc/init/suricata.conf
-# suricata
-description "Intruder Detection System Daemon" 
-start on runlevel [2345]
-stop on runlevel [!2345]
-respawn
-expect fork
-exec suricata -D --pidfile /var/run/suricata.pid -c /etc/suricata/suricata.yaml -i _monitoring_interface
+	sudo bash -c 'cat << EOF > /lib/systemd/system/suricata.service
+[Unit]
+Description=Suricata Intrusion Detection Service
+After=syslog.target network-online.target
+
+[Service]
+ExecStart=/usr/bin/suricata -c /etc/suricata/suricata.yaml -i _monitoring_interface
+
+[Install]
+WantedBy=multi-user.target
 EOF'
-	sudo sed -i "s/_monitoring_interface/$INTERFACE/g" /etc/init/suricata.conf
+	sudo sed -i "s/_monitoring_interface/$INTERFACE/g" /lib/systemd/system/suricata.service
+	sudo systemctl enable suricata
+	
 	if [ $EXTRACT_FILES == yes ]
 	then
 		sudo cp ./configs/suricata-files.yaml /etc/suricata/suricata.yaml
@@ -106,8 +125,8 @@ then
 	sudo apt-get update
 	curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-6.2.2-amd64.deb
 	sudo dpkg -i filebeat-6.2.2-amd64.deb
-	sudo update-rc.d filebeat defaults 95 10
 	sudo cp ./configs/filebeat.yml /etc/filebeat/
+	sudo systemctl enable filebeat
 	
 fi
 cd ..

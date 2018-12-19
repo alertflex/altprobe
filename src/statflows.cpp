@@ -80,14 +80,10 @@ void StatFlows::ProcessFlows() {
         switch(flows_rec.flows_type) {
             case 1:
                 UpdateThresholds();
-                UpdateTopTalkers();
                 UpdateCountries();
                 UpdateApplications();
                 break;
             case 2:
-                UpdateDnsQueries();
-                break;
-            case 3:
                 UpdateSshSessions(); 
                 break;
             default:
@@ -102,14 +98,10 @@ void StatFlows::ProcessFlows() {
 
 void StatFlows::RoutineJob() {
     
-    mem_mon.top_talkers = top_talkers.size();
-    FlushTopTalkers();
     mem_mon.countries = countries.size();
     FlushCountries();
     mem_mon.applications = applications.size();
     FlushApplications();
-    mem_mon.dns_queries = dns_queries.size();
-    FlushDnsQueries();
     mem_mon.ssh_sessions = ssh_sessions.size();
     FlushSshSessions();
     FlushTraffic();
@@ -237,104 +229,6 @@ void StatFlows::FlushTraffic() {
     traffics.clear();
 }
 
-
-
-void StatFlows::UpdateTopTalkers() {
-    
-    std::vector<TopTalker>::iterator i, end;
-    
-    for(i = top_talkers.begin(), end = top_talkers.end(); i != end; ++i) {
-        if (i->ref_id.compare(flows_rec.ref_id) == 0)  {      
-            
-            if (i->ids.compare(flows_rec.ids) == 0)  {
-                
-                if ((i->src_ip.compare(flows_rec.src_ip) == 0) && (i->dst_ip.compare(flows_rec.dst_ip) == 0)) { 
-                    i->counter = i->counter + flows_rec.bytes;
-                    return;
-                }
-            
-                if ((i->src_ip.compare(flows_rec.dst_ip) == 0) && (i->dst_ip.compare(flows_rec.src_ip) == 0)) { 
-                    i->counter = i->counter + flows_rec.bytes;
-                    return;
-                }
-            }
-        }
-    }  
-    
-    
-    top_talkers.push_back(TopTalker(flows_rec.ref_id, flows_rec.ids, flows_rec.src_ip, flows_rec.dst_ip, flows_rec.src_agent, flows_rec.dst_agent, flows_rec.bytes));
-    
-}
-
-bool sortTalkers(TopTalker left, TopTalker right) {
-    
-    return left.counter > right.counter;
- 
-} 
-
-void StatFlows::FlushTopTalkers() {
-    
-    boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
-    
-    report = "{ \"type\": \"flows_talker\", \"data\" : [ ";
-        
-    std::sort(top_talkers.begin(), top_talkers.end(), sortTalkers);
-    
-    std::vector<Agent>::iterator it_ag, end_ag;
-    std::vector<TopTalker>::iterator it_tlk, end_tlk;
-    string agent;
-    
-    for(it_ag = fs.agents_list.begin(), end_ag = fs.agents_list.end(); it_ag != end_ag; ++it_ag) {
-        
-        agent = it_ag->name;
-        int i = fs.filter.traf.top_talkers;
-                
-        for(it_tlk = top_talkers.begin(), end_tlk = top_talkers.end(); it_tlk != end_tlk && 0 < i; ++it_tlk) {
-            
-            if (agent.compare(it_tlk->src_agent) == 0 || agent.compare(it_tlk->dst_agent) == 0) {
-                
-                i--;
-            
-                report += "{ \"ref_id\": \"";
-                report += it_tlk->ref_id;
-        
-                report += "\", \"ids\": \"";
-                report += it_tlk->ids;
-            
-                report += "\", \"srcip\": \"";
-                report += it_tlk->src_ip;
-            
-                report += "\", \"dstip\": \"";
-                report += it_tlk->dst_ip;
-            
-                report += "\", \"srcagent\": \"";
-                report += it_tlk->src_agent;
-            
-                report += "\", \"dstagent\": \"";
-                report += it_tlk->dst_agent;
-            
-                report += "\", \"traffic\": ";
-                report += std::to_string(it_tlk->counter);
-            
-                report += ", \"time_of_survey\": \"";
-                report += GetNodeTime();
-                report += "\" } ,";
-            }
-        }
-    }
-    
-    report.resize(report.size() - 1);
-    report += " ] }";
-    
-    // SysLog((char*) report.c_str());
-    
-    q_stats_flow.push(report);
-    
-    report.clear();
-    top_talkers.clear();
-    
-}
-
 void StatFlows::UpdateApplications() {
     
     bool src = false;
@@ -405,105 +299,6 @@ void StatFlows::FlushApplications() {
     applications.clear();
 }
 
-
-void StatFlows::UpdateDnsQueries() {
-    
-    bool src = false;
-    bool dst = false;
-    std::vector<DnsQuery>::iterator i, end;
-    
-    for(i = dns_queries.begin(), end = dns_queries.end(); i != end; ++i) {
-        if (i->ref_id.compare(flows_rec.ref_id) == 0)  {
-            if (i->ids.compare(flows_rec.ids) == 0)  {
-                if (i->query.compare(flows_rec.info1) == 0) {
-                    
-                    if (i->agent.compare(flows_rec.src_agent) == 0) {
-                        i->counter++;
-                        src = true;
-                        continue;
-                    }
-            
-                    if (i->agent.compare(flows_rec.dst_agent) == 0) {
-                        i->counter++;
-                        dst = true;
-                        continue;
-                    }
-                }
-            }
-        }
-    }  
-    
-    if (src || dst) return;
-    
-    if (flows_rec.dst_agent.compare("ext_net") != 0) {
-        dns_queries.push_back(DnsQuery(flows_rec.ref_id, flows_rec.ids, flows_rec.info1, flows_rec.dst_agent));
-    }
-    if (flows_rec.src_agent.compare("ext_net") != 0) {
-        dns_queries.push_back(DnsQuery(flows_rec.ref_id, flows_rec.ids, flows_rec.info1, flows_rec.src_agent));
-    }
-}
-
-bool sortDns(DnsQuery left, DnsQuery right) {
-    
-    return left.counter > right.counter;
- 
-} 
-
-void StatFlows::FlushDnsQueries() {
-    
-    boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
-    
-    report = "{ \"type\": \"flows_dns\", \"data\" : [ ";
-    
-    std::sort(dns_queries.begin(), dns_queries.end(), sortDns);
-        
-    std::vector<Agent>::iterator it_ag, end_ag;
-    std::vector<DnsQuery>::iterator it_dns, end_dns;
-    string agent;
-    
-    for(it_ag = fs.agents_list.begin(), end_ag = fs.agents_list.end(); it_ag != end_ag; ++it_ag) {
-        
-        agent = it_ag->name;
-        int i = fs.filter.traf.top_talkers;
-                
-        for(it_dns = dns_queries.begin(), end_dns = dns_queries.end(); it_dns != end_dns && 0 < i; ++it_dns) {
-            
-            if (agent.compare(it_dns->agent) == 0) {
-                
-                i--;
-            
-                report += "{ \"ref_id\": \"";
-                report += it_dns->ref_id;
-        
-                report += "\", \"ids\": \"";
-                report += it_dns->ids;
-            
-                report += "\", \"query\": \"";
-                report += it_dns->query;
-            
-                report += "\", \"agent\": \"";
-                report += it_dns->agent;
-                
-                report += "\", \"counter\": ";
-                report += std::to_string(it_dns->counter);
-            
-                report += ", \"time_of_survey\": \"";
-                report += GetNodeTime();
-                report += "\" } ,";
-            
-            }
-        }
-    }
-    
-    report.resize(report.size() - 1);
-    report += " ] }";
-    
-    q_stats_flow.push(report);
-    
-    report.clear();
-    dns_queries.clear();
-    
-}
 
 void StatFlows::UpdateCountries() {
     

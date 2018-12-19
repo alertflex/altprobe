@@ -5,7 +5,5 @@ echo "**********************************"
 echo
 altprobe status
 echo
-service suricata status
-echo
 /var/ossec/bin/ossec-control status
 echo

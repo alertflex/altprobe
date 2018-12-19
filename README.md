@@ -58,7 +58,7 @@ Graylog statistics about IDS alerts categories, applications protocols and Geo I
 
 ## Requirements
 
-Altprobe was tested under Ubuntu version 14.04 with Wazuh HIDS (OSSEC fork) version 3.2, ModSecurity 3.0 and Nginx, Suricata NIDS version 4.0.3
+Altprobe was tested under Ubuntu version 16.04 with Wazuh HIDS (OSSEC fork) version 3.2, ModSecurity 3.0 and Nginx, Suricata NIDS version 4.0.3
 
 ## Installation instructions
 
@@ -79,8 +79,6 @@ NOTE:
 * It is recommended to start of installation Alertflex collector (Altprobe) after a finish of installation Alertflex controller
 
 * Installation and configuration of IDS OSSEC/Wazuh and Suricata IDS are not parts of Alertflex solution. Although install script for Altprobe includes these procedures, it comes with NO WARRANTY!
-
-* The collector’s install script will replace file /etc/rc.local by a new one, if you use this file for something else, backup it for keeping the previous configuration
 
 * For the distributed configuration all nodes should be reachable over a network via DNS names or host names (use these names in file ``env.sh`` as values for parameters)
 
