@@ -69,8 +69,8 @@ Download installation files
 
 Fill in collector specific parameters in file ``env.sh`` and start installation		
     
-    $ chmod u+x install_ubuntu.sh
-    ./install_ubuntu.sh
+    $ chmod u+x install_ubuntu16.sh
+    ./install_ubuntu16.sh
 
 For the distributed configuration with SSL connections, you need to perform extra steps, see installation instructions for AlertflexCtrl
 
