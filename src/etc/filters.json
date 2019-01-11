@@ -14,12 +14,12 @@
 
     "alias": [{
         "agent_name": "centos7",
-        "host_name": "centos7",
-        "ip": "indef"
+        "host_linked": "centos7",
+        "ip_linked": "indef"
     }, {
         "agent_name": "win10",
-        "host_name": "indef",
-        "ip": "192.168.1.2"
+        "host_linked": "indef",
+        "ip_linked": "192.168.1.2"
     }],
 
     "sources": { 
