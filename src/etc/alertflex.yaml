@@ -26,7 +26,7 @@ collector:
   report_timer: 300  
   
   # path to MaxMind Geo DB
-  geo_db: "/etc/alertflex/geo/GeoLiteCity.dat"
+  geo_db: "none"
   
   # Altprobe reads via Wazuh API an OSSEC agents status (use report_timer for period of reading)
   wazuh_host: "127.0.0.1"
