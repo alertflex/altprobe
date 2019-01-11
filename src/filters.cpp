@@ -76,8 +76,8 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             Alias* al = new Alias;
             
             al->agent_name = n_alias.second.get<string>("agent_name");
-            al->host_name = n_alias.second.get<string>("host_name");
-            al->ip = n_alias.second.get<string>("ip");
+            al->host_name = n_alias.second.get<string>("host_linked");
+            al->ip = n_alias.second.get<string>("ip_linked");
                         
             if (al->ip.compare("indef") == 0) {
                 
