@@ -265,7 +265,7 @@ int Controller::SendMessage(Event* e) {
                 
             string strNodeId(node_id);
             byte_message->setStringProperty("node_id", strNodeId);
-            byte_message->setStringProperty("ref_id", "nsm_solution");
+            byte_message->setStringProperty("ref_id", e->ref_id);
             byte_message->setIntProperty("msg_type", msg_type);
                 
             vector<unsigned char> vec;

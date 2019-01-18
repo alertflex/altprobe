@@ -99,6 +99,7 @@ void RemLog::ProcessLogs() {
         //string output = "logs compressed = " + s;
         //SysLog((char*) output.c_str());
         bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
         bd.event_type = 2;
         sk.SendMessage(&bd);
         

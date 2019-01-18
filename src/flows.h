@@ -30,7 +30,7 @@ public:
     string info2; 
     
     void Reset() {
-        ref_id = "nsm_solution";
+        ref_id.clear();
         flows_type = 0;
         src_ip.clear();
         src_agent.clear();

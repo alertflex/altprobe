@@ -50,6 +50,7 @@ then
     sudo sed -i "s/_amq_host/$AMQ_BROKER/g" /etc/alertflex/alertflex.yaml
 fi
 
+sudo sed -i "s/_project_id/$PROJECT_ID/g" /etc/alertflex/filters.json
 sudo sed -i "s/_node_id/$NODE_ID/g" /etc/alertflex/alertflex.yaml
 sudo chmod go-rwx /etc/alertflex/alertflex.yaml
 

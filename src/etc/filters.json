@@ -1,6 +1,6 @@
 {
     "filter_desc": "test_v01",
-    "ref_id": "nsm_solution",
+    "ref_id": "_project_id",
     
     "home_net": [{
         "network": "192.168.1.0",
