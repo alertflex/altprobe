@@ -806,30 +806,12 @@ void Nids::PushFlowsRecord() {
             break;
         
         case 2: // dns record
-            
-            flows_rec.ref_id = fs.filter.ref_id;
-            flows_rec.flows_type = 2;
-            
-            flows_rec.src_ip = rec.src_ip;
-            flows_rec.dst_ip = rec.dst_ip;
-            
-            flows_rec.src_agent = rec.src_agent;
-            flows_rec.dst_agent = rec.dst_agent;
-            
-            flows_rec.ids = rec.ids;
-            
-            flows_rec.info1 = rec.dns.rrname;
-            flows_rec.info2 = rec.dns.rdata;
-    
-            flows_rec.bytes = rec.netflow.bytes;
-    
-            q_flows.push(flows_rec);
             break;
             
         case 3: // ssh record
                         
             flows_rec.ref_id = fs.filter.ref_id;
-            flows_rec.flows_type = 3;
+            flows_rec.flows_type = 2;
             
             flows_rec.src_ip = rec.src_ip;
             flows_rec.dst_ip = rec.dst_ip;

@@ -29,31 +29,6 @@ public:
     }
 };
 
-class TopTalker : public Counter {
-public:  
-    string src_ip;
-    string dst_ip;
-    string src_agent;
-    string dst_agent;
-    
-                
-    void Reset() {
-        src_ip.clear();
-        dst_ip.clear();
-        src_agent.clear();
-        dst_agent.clear();
-        ids.clear();
-        counter = 0;
-    }
-        
-    TopTalker (string ref, string i, string s, string d, string sa, string da, unsigned long c) : Counter(ref, i, c) {
-        src_ip = s;
-        dst_ip = d;
-        src_agent = sa;
-        dst_agent = da;
-    }
-};
-
 class Application : public Counter {
 public:  
     string app;
@@ -87,24 +62,6 @@ public:
     }
 };
 
-
-class DnsQuery : public Counter {
-public:  
-    string query;
-    string agent;
-                
-    void Reset() {
-        query.clear();
-        agent.clear();
-        ids.clear();
-        counter = 0;
-    }
-        
-    DnsQuery (string ref, string i, string q, string ag) : Counter(ref, i, 1) {
-        query = q;
-        agent = ag;
-    }
-};
 
 class SshSession : public Counter {
 public:  
@@ -147,13 +104,9 @@ public:
     FlowsBuffers mem_mon;
         
     //Statistics data
-    std::vector<TopTalker> top_talkers;
-    
     std::vector<Application> applications;
     
     std::vector<Country> countries;
-    
-    std::vector<DnsQuery> dns_queries;
     
     std::vector<SshSession> ssh_sessions;
     
@@ -169,17 +122,11 @@ public:
     void ProcessTraffic();
     void RoutineJob();
     
-    void UpdateTopTalkers();
-    void FlushTopTalkers();
-    
     void UpdateCountries();
     void FlushCountries();
     
     void UpdateApplications();
     void FlushApplications();
-    
-    void UpdateDnsQueries();
-    void FlushDnsQueries();
     
     void UpdateSshSessions();
     void FlushSshSessions();
