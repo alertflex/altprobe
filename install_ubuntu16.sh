@@ -68,6 +68,9 @@ sudo systemctl enable altprobe
 
 cd ..
 
+echo "*** Copy MaxMind geo DB ***"
+sudo cp ./configs/GeoLiteCity.dat /etc/alertflex/
+
 if [ $INSTALL_SURICATA == yes ]
 then
 	echo "*** installation suricata ***"

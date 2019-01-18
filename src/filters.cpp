@@ -179,6 +179,7 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
         // METRIC
         
         filter.metric.log = filters.get<bool>("metrics.log");
+        filter.metric.severity = filters.get<int>("metrics.severity");
         
         bpt::ptree metrics_th_list = filters.get_child("metrics.thresholds");
         BOOST_FOREACH(bpt::ptree::value_type &metrics_list, metrics_th_list) {
@@ -206,6 +207,7 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
         // NET
         
         filter.traf.log = filters.get<bool>("netflow.log");
+        filter.traf.top_talkers = filters.get<int>("netflow.top_talkers");
         
         bpt::ptree traffic_th_list = filters.get_child("netflow.thresholds");
         BOOST_FOREACH(bpt::ptree::value_type &traffic_list, traffic_th_list) {

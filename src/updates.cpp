@@ -237,7 +237,7 @@ bool Updates::Reset() {
                 // Create a ConnectionFactory
                 string strUrl(url);
             
-                unique_ptr<ConnectionFactory> connectionFactory(
+                auto_ptr<ConnectionFactory> connectionFactory(
                     ConnectionFactory::createCMSConnectionFactory(strUrl));
             
                 // Create a Connection

@@ -25,8 +25,8 @@ collector:
   # period generation of reports for netflow and IDS statistics in sec, if 0 then this functionality is off (default 300)
   report_timer: 300  
   
-  # path to MaxMind Geo DB
-  geo_db: "none"
+  # MaxMind Geo DB
+  geo_db: "/etc/alertflex/GeoLiteCity.dat"
   
   # Altprobe reads via Wazuh API an OSSEC agents status (use report_timer for period of reading)
   wazuh_host: "127.0.0.1"
