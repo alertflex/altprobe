@@ -393,7 +393,10 @@ void Nids::CreateLogPayload(int r) {
             report += ",\"_type\":\"NET\"";
             report += ",\"_source\":\"Suricata\"";
 			
-            report +=  ",\"_event_time\":\"";
+			report +=  ",\"_project_id\":\"";
+            report +=  fs.filter.ref_id;
+			
+            report +=  "\",\"_event_time\":\"";
             report +=  rec.time_stamp;
             
             report += "\",\"_collected_time\":\"";
@@ -460,7 +463,10 @@ void Nids::CreateLogPayload(int r) {
             report += ",\"_type\":\"NET\"";
             report += ",\"_source\":\"Suricata\"";
 		
-            report +=  ",\"_event_time\":\"";
+            report +=  ",\"_project_id\":\"";
+            report +=  fs.filter.ref_id;
+			
+            report +=  "\",\"_event_time\":\"";
             report +=  rec.time_stamp;
             
             report += "\",\"_collected_time\":\"";
@@ -537,7 +543,10 @@ void Nids::CreateLogPayload(int r) {
             report += ",\"_type\":\"NET\"";
             report += ",\"_source\":\"Suricata\"";
 		
-            report +=  ",\"_event_time\":\"";
+            report +=  ",\"_project_id\":\"";
+            report +=  fs.filter.ref_id;
+			
+            report +=  "\",\"_event_time\":\"";
             report +=  rec.time_stamp;
             
             report += "\",\"_collected_time\":\"";
@@ -596,7 +605,10 @@ void Nids::CreateLogPayload(int r) {
             report += ",\"_type\":\"NET\"";
             report += ",\"_source\":\"Suricata\"";
 			
-            report +=  ",\"_event_time\":\"";
+            report +=  ",\"_project_id\":\"";
+            report +=  fs.filter.ref_id;
+			
+            report +=  "\",\"_event_time\":\"";
             report +=  rec.time_stamp;
             
             report += "\",\"_collected_time\":\"";

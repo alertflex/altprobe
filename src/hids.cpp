@@ -725,8 +725,11 @@ void Hids::CreateLog() {
     report += "\", \"_manager\":\"";
     report += rec.hostname;
     
-    report += "\", \"_event_time\":\"";
-    report += rec.timestamp;
+    report +=  "\",\"_project_id\":\"";
+    report +=  fs.filter.ref_id;
+			
+    report +=  "\",\"_event_time\":\"";
+    report +=  rec.timestamp;
     
     report += "\",\"_collected_time\":\"";
     report += GetGraylogFormat();
@@ -804,8 +807,11 @@ void Hids::CreateWafLog() {
     report += "\", \"_manager\":\"";
     report += rec.hostname;
     
-    report += "\", \"_event_time\":\"";
-    report += rec.timestamp;
+    report +=  "\",\"_project_id\":\"";
+    report +=  fs.filter.ref_id;
+			
+    report +=  "\",\"_event_time\":\"";
+    report +=  rec.timestamp;
     
     report += "\",\"_collected_time\":\"";
     report += GetGraylogFormat();
