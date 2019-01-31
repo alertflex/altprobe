@@ -40,7 +40,7 @@ public:
     
     static char url[OS_HEADER_SIZE];
     static char cert[OS_HEADER_SIZE];
-    static char key[OS_HEADER_SIZE];
+    static char user[OS_HEADER_SIZE];
     static char pwd[OS_HEADER_SIZE];
     static char path[OS_HEADER_SIZE];
     
@@ -56,7 +56,7 @@ public:
     Controller () {
         memset(url, 0, sizeof(url));
         memset(cert, 0, sizeof(cert));
-        memset(key, 0, sizeof(key));
+        memset(user, 0, sizeof(user));
         memset(pwd, 0, sizeof(pwd));
         memset(path, 0, sizeof(path));
         

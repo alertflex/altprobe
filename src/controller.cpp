@@ -14,7 +14,7 @@ mutex Controller::m_controller;
 
 char Controller::url[OS_HEADER_SIZE];
 char Controller::cert[OS_HEADER_SIZE];
-char Controller::key[OS_HEADER_SIZE];
+char Controller::user[OS_HEADER_SIZE];
 char Controller::pwd[OS_HEADER_SIZE];
 char Controller::path[OS_HEADER_SIZE];
 
@@ -26,8 +26,8 @@ int Controller::GetConfig() {
     ConfigYaml* cy = new ConfigYaml( "controller");
     
     cy->addKey("amq");
-    cy->addKey("key");
     cy->addKey("cert");
+    cy->addKey("user");
     cy->addKey("pwd");
     cy->addKey("path");
     
@@ -50,16 +50,11 @@ int Controller::GetConfig() {
         return 0;
     }
     
-    strncpy(key, (char*) cy->getParameter("key").c_str(), sizeof(key));
+    strncpy(user, (char*) cy->getParameter("user").c_str(), sizeof(user));
     
-    if (!strcmp (key, "")) {
-        SysLog("config file error: parameter controller key");
+    if (!strcmp (user, "")) {
+        SysLog("config file error: parameter controller user");
         return 0;
-    }
-    
-    if (!strcmp (key, "none")) {
-        ssl = false;
-        return 1;
     }
     
     strncpy(cert, (char*) cy->getParameter("cert").c_str(), sizeof(cert));
@@ -70,7 +65,6 @@ int Controller::GetConfig() {
     
     if (!strcmp (cert, "none")) {
         ssl = false;
-        return 1;
     }
     
     strncpy(pwd, (char*) cy->getParameter("pwd").c_str(), sizeof(pwd));
@@ -80,11 +74,6 @@ int Controller::GetConfig() {
         return 0;
     }
     
-    if (!strcmp (pwd, "none")) {
-        ssl = false;
-        return 1;
-    }
-  
     return 1;
 }
 
@@ -100,8 +89,6 @@ int Controller::Open() {
                 
                 if (ssl) {
                     decaf::lang::System::setProperty( "decaf.net.ssl.trustStore", cert );
-                    decaf::lang::System::setProperty("decaf.net.ssl.keyStore", key); 
-                    decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword", pwd); 
                 }
                 
                 // Create a ConnectionFactory
@@ -111,7 +98,8 @@ int Controller::Open() {
                     ConnectionFactory::createCMSConnectionFactory(strUrl));
             
                 // Create a Connection
-                connection = connectionFactory->createConnection();
+                connection = connectionFactory->createConnection(user,pwd);
+                
                 connection->start();
             }
         

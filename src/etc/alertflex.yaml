@@ -12,9 +12,8 @@ collector:
   # save events/logs to local path - /var/log/alertflex, if controller isn't available
   # max size (MB) of the log file, if size more than this value, collector switches to the next log file
   log_size: 100
-  # alerts threshold, if the threshold is exceeded, collector omits all others alerts 
-  # until Redis list is not empty (redirection of alerts to logs still will not be interrupted)
-  # also special alert about multiple alerts will appear (it will inform an operator that anti-flooding is on)
+  # alerts threshold, if the threshold is exceeded, collector omits all others alerts until Redis list is not empty
+  # also special alert about multiple alerts will appear (redirection of alerts to logs will not interrupted)
   alerts_threshold: 100
   
   # TIMERS
@@ -25,14 +24,14 @@ collector:
   # period generation of reports for netflow and IDS statistics in sec, if 0 then this functionality is off (default 300)
   report_timer: 300  
   
-  # MaxMind Geo DB
-  geo_db: "/etc/alertflex/GeoLiteCity.dat"
+  # path to MaxMind Geo DB
+  geo_db: "none"
   
   # Altprobe reads via Wazuh API an OSSEC agents status (use report_timer for period of reading)
   wazuh_host: "127.0.0.1"
   wazuh_port: 55000  
-  wazuh_user: "_wazuh_user"
-  wazuh_pwd: "_wazuh_pwd"
+  wazuh_user: "foo"
+  wazuh_pwd: "bar"
   
   # Altprobe reads sources events from Redis list by pop API call
   redis_host: "127.0.0.1"
@@ -50,12 +49,14 @@ sources:
   
 controller:
   # send alerts and statistics to Controller (ActiveMQ interface)
-  amq: "tcp://127.0.0.1:61616"
-  key: "none"
+  amq: "tcp://_amq_host:61616"
+  user: "_amq_user"
+  pwd: "_amq_pwd"
   cert: "none"
   path: "jms/alertflex/"
-  pwd: "none"
-  
+
+
+
   
 
   

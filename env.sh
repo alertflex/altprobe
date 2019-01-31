@@ -17,11 +17,14 @@ export INSTALL_WAZUH=yes
 export WAZUH_USER=foo
 export WAZUH_PWD=bar
 
-# if AMQ_PWD=none, ssl connection between collector and controller is disabled
-# NOTE! in case ssl enabled, use AMQ_PWD with same value as in file tpd.sh from controller installation forlder
+# NOTE! settings for connection between collector and broker (alertflex controller)
+export AMQ_HOST=af-ctrl
+export AMQ_USER=admin
 export AMQ_PWD=*****
-# NOTE! add hostname/dns name of broker (alertflex controller)
-export AMQ_BROKER=af-ctrl
+
+# if AMQ_SSL=none, ssl/tls transport is disabled
+export AMQ_SSL=yes
+
 
 
 

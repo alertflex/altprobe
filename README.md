@@ -1,7 +1,9 @@
 # Altprobe
 
 Altprobe is a component of the Alertflex project, it has functional of a collector according to SIEM/Log Management terminologies.
-In tandem with Alertflex controller, Altprobe can integrate a Wazuh Host IDS (OSSEC fork) and Suricata Network IDS with log management platform Graylog, monitoring platform Grafana and threat intelligence platform MISP. 
+In tandem with Alertflex controller (see [AlertflexCtrl repository](https://github.com/olegzhr/AlertflexCtrl/blob/master/README.md) ), 
+Altprobe can integrate a Wazuh Host IDS (OSSEC fork) and Suricata Network IDS
+with log management platform Graylog, monitoring platform Grafana and threat intelligence platform MISP. 
 ![](https://github.com/olegzhr/altprobe/blob/master/img/arch.png)
 
 ## Functionalities of Altprobe
@@ -43,15 +45,14 @@ In tandem with Alertflex controller, Altprobe can integrate a Wazuh Host IDS (OS
 
 Below, screenshots of Grafana and Graylog web forms for events from Altprobe
 
+Graylog statistics for IDS alerts categories, applications protocols and Geo IP netflow map
+![](https://github.com/olegzhr/altprobe/blob/master/img/graylog.jpg)
+
 Grafana alerts dashboard (https://grafana.com/dashboards/9228)
 ![](https://github.com/olegzhr/altprobe/blob/master/img/alerts_dashboard.jpg)
 
 Grafana metrics dashboard (https://grafana.com/dashboards/9234)
 ![](https://github.com/olegzhr/altprobe/blob/master/img/metrics_dashboard.jpg)
-
-Graylog statistics about IDS alerts categories, applications protocols and Geo IP netflow map
-![](https://github.com/olegzhr/altprobe/blob/master/img/graylog.jpg)
-
 
 
 ## Requirements
@@ -70,15 +71,11 @@ Fill in collector specific parameters in file ``env.sh`` and start installation
     $ chmod u+x install_ubuntu16.sh
     ./install_ubuntu16.sh
 
-For the distributed configuration with SSL connections, you need to perform extra steps, see installation instructions for AlertflexCtrl
-
 NOTE:
 
 * It is recommended to start of installation Alertflex collector (Altprobe) after a finish of installation Alertflex controller
 
 * Installation and configuration of IDS OSSEC/Wazuh and Suricata IDS are not parts of Alertflex solution. Although install script for Altprobe includes these procedures, it comes with NO WARRANTY!
-
-* For the distributed configuration all nodes should be reachable over a network via DNS names or host names (use these names in file ``env.sh`` as values for parameters)
 
 * For enabling events from Sysmon via Wazuh IDS, please, change level of ``rule_id 185001`` instead 0  to other value. See file ``/var/ossec/ruleset/rules0330-sysmon_rules.xml``
 

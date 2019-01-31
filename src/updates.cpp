@@ -26,8 +26,6 @@ int Updates::Open() {
                 
                 if (ssl) {
                     decaf::lang::System::setProperty( "decaf.net.ssl.trustStore", cert );
-                    decaf::lang::System::setProperty("decaf.net.ssl.keyStore", key); 
-                    decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword", pwd); 
                 }
                 
                 // Create a ConnectionFactory
@@ -37,7 +35,7 @@ int Updates::Open() {
                     ConnectionFactory::createCMSConnectionFactory(strUrl));
             
                 // Create a Connection
-                connection = connectionFactory->createConnection();
+                connection = connectionFactory->createConnection(user,pwd);
                 connection->start();
                 connection->setExceptionListener(this);
             }
