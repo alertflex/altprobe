@@ -125,10 +125,12 @@ install:
 	chmod u+x ./scripts/alertflex-start.sh
 	chmod u+x ./scripts/alertflex-status.sh
 	chmod u+x ./scripts/alertflex-stop.sh
+	chmod u+x ./scripts/alertflex-update.sh
 	cp ./scripts/alertflex-restart.sh /usr/local/bin/altprobe-restart
 	cp ./scripts/alertflex-start.sh /usr/local/bin/altprobe-start
 	cp ./scripts/alertflex-stop.sh /usr/local/bin/altprobe-stop
 	cp ./scripts/alertflex-status.sh /usr/local/bin/altprobe-status
+	cp ./scripts/alertflex-update.sh /usr/local/bin/altprobe-update
 	if [ ! -d "/etc/alertflex" ]; then\
 		mkdir /etc/alertflex;\
 	fi;
@@ -141,10 +143,12 @@ update:
 	chmod u+x ./scripts/alertflex-start.sh
 	chmod u+x ./scripts/alertflex-status.sh
 	chmod u+x ./scripts/alertflex-stop.sh
+	chmod u+x ./scripts/alertflex-update.sh
 	cp ./scripts/alertflex-restart.sh /usr/local/bin/altprobe-restart
 	cp ./scripts/alertflex-start.sh /usr/local/bin/altprobe-start
 	cp ./scripts/alertflex-stop.sh /usr/local/bin/altprobe-stop
 	cp ./scripts/alertflex-status.sh /usr/local/bin/altprobe-status
+	cp ./scripts/alertflex-update.sh /usr/local/bin/altprobe-update
 	
 # include project implementation makefile
 include nbproject/Makefile-impl.mk

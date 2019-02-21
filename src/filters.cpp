@@ -17,14 +17,11 @@ int FiltersSingleton::GetFiltersConfig() {
     
     if (!status) {
         
-        
-        ifstream file(FILTERS_FILE);
-        string str; 
-        
         ifstream filters_config;
         filters_config.open(FILTERS_FILE);
         stringstream strStream;
         strStream << filters_config.rdbuf();
+        filters_config.close();
         
         if (ParsFiltersConfig(strStream.str())) {
             status = 1;
@@ -75,9 +72,9 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             
             Alias* al = new Alias;
             
-            al->agent_name = n_alias.second.get<string>("agent_name");
-            al->host_name = n_alias.second.get<string>("host_linked");
-            al->ip = n_alias.second.get<string>("ip_linked");
+            al->agent_name = n_alias.second.get<string>("agent");
+            al->host_name = n_alias.second.get<string>("host");
+            al->ip = n_alias.second.get<string>("ip");
                         
             if (al->ip.compare("indef") == 0) {
                 

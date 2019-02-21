@@ -8,10 +8,13 @@
 #ifndef UPDATES_H
 #define	UPDATES_H
 
-using namespace std;
-
+#include <boost/asio.hpp>
+#include "base64.h"
 #include "controller.h"
 #include "filters.h"
+
+using boost::asio::ip::tcp;
+using namespace std;
 
 class Updates : public Controller,
         public ExceptionListener,
@@ -40,7 +43,9 @@ public:
     void RoutineJob();
     void onMessage(const Message* message);
     void onException(const CMSException& ex AMQCPP_UNUSED);
-    int IsHomeNetwork(string ip);    
+    int IsHomeNetwork(string ip);   
+    int SendArToWazuh(string agent, string json);
+    int SendToIpset(string ip);
 };
 
 #endif	/* UPDATES_H */

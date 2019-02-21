@@ -111,6 +111,7 @@ void RemStat::ProcessLogs() {
         in.push(boost::iostreams::gzip_compressor());
         in.push(ss);
         boost::iostreams::copy(in, comp);
+        boost::iostreams::close(in);
 
         int rep_size = comp.str().length();
         IncrementEventsCounter();

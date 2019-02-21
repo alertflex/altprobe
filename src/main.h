@@ -76,5 +76,7 @@
 #define FILTERS_FILE "/etc/alertflex/filters.json"
 #define PID_FILE "/var/run/alertflex.pid"
 #define DAEMON_NAME "alertflex"
+#define OSSEC_CONFIG "etc/ossec.conf"
+#define SURI_CONFIG "suricata.yaml"
 
 #endif	/* MAIN_H */

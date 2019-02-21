@@ -43,13 +43,9 @@ sudo make
 sudo make install
 sudo mkdir -pv /etc/alertflex/
 
-if [ $AMQ_SSL != none ]
-then
-	sudo cp ./etc/alertflex-ssl.yaml /etc/alertflex/alertflex.yaml
-fi
-
 sudo sed -i "s/_project_id/$PROJECT_ID/g" /etc/alertflex/filters.json
 sudo sed -i "s/_node_id/$NODE_ID/g" /etc/alertflex/alertflex.yaml
+sudo sed -i "s/_sensor_id/$SENSOR_ID/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_amq_host/$AMQ_HOST/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_amq_user/$AMQ_USER/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_amq_pwd/$AMQ_PWD/g" /etc/alertflex/alertflex.yaml

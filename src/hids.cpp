@@ -883,7 +883,7 @@ int Hids::PushRecord(GrayList* gl) {
     
     ids_rec.agent = rec.agent;
     ids_rec.user = rec.user;
-    ids_rec.ids = rec.hostname;
+    ids_rec.ids = sensor_id;
     ids_rec.action = "none";
                 
     if (rec.file.filename.compare("") == 0) {
@@ -945,7 +945,7 @@ int Hids::PushWafRecord(GrayList* gl) {
     ids_rec.dst_ip = rec.dstip;
     
     ids_rec.agent = rec.agent;
-    ids_rec.ids = rec.hostname;
+    ids_rec.ids = sensor_id;
     ids_rec.action = "none";
                 
     ids_rec.location = rec.location;
@@ -1001,7 +1001,7 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     sk.alert.source = "Wazuh";
     
     sk.alert.user = rec.user;
-    sk.alert.sensor = rec.hostname;
+    sk.alert.sensor = sensor_id;
     sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = rec.timestamp;
         
@@ -1072,7 +1072,7 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     sk.alert.event_json.assign(reply->str, GetBufferSize(reply->str));
         
     sk.SendAlert();
-        
+    
 }
 
 void Hids::SendWafAlert(int s, GrayList*  gl) {

@@ -34,13 +34,6 @@ namespace bpt = boost::property_tree;
 class Collector : public Source {
 public: 
     
-    bool ossecServerStatus;
-    // Wazuh config parameters
-    static char wazuh_host[OS_HEADER_SIZE];
-    static int wazuh_port;
-    static char wazuh_user[OS_HEADER_SIZE];
-    static char wazuh_pwd[OS_HEADER_SIZE];
-    
     std::vector<Agent> agents_list;
     
     Hids* hids;
@@ -50,6 +43,10 @@ public:
     RemStat* rem_stat;
     StatFlows* stat_flows;
     StatIds* stat_ids;
+    
+    BinData bd;
+    Rule rd;
+    std::stringstream strStream, comp;
     
     string ref_id;
     
@@ -62,8 +59,8 @@ public:
         rem_stat = rs;
         stat_flows = f;
         stat_ids = i;
-                
-        ossecServerStatus = false;
+        
+        wazuhServerStatus = false;
         agents_list.clear();
     }
         
@@ -74,9 +71,21 @@ public:
     
     int Go();
     void RoutineJob();
+    void UpdateFilters();
+    void UpdateSuriConfig();
+    void UpdateOssecConfig();
+    void UpdateSuriRules();
+    void UpdateOssecRules();
     
     void ParsAgentsStatus(string status);
     string GetAgentsStatus();
+    
+    void ResetStreams() {
+        comp.str("");
+        comp.clear();
+        strStream.str("");
+        strStream.clear();
+    }
 };
 
 #endif	/* COLLECTOR_H */

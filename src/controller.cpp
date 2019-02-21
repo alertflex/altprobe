@@ -152,16 +152,16 @@ int Controller::SendMessage(Event* e) {
     
     try {
         
-        if (!msg_type) {
+        if (msg_type == 0) {
             
             // Create an alert
-            string strMsg("Collector message");
-            auto_ptr<TextMessage> message(session->createTextMessage(strMsg));
+            string strEventJson(((Alert*) e)->event_json);
+            auto_ptr<TextMessage> message(session->createTextMessage(strEventJson));
             
             string strProbeId(node_id);
             message->setStringProperty("node_id", strProbeId);
             
-            message->setIntProperty("msg_type", 1);
+            message->setIntProperty("msg_type", 0);
                 
             string strAlertUuid(((Alert*) e)->alert_uuid);
             message->setStringProperty("alert_uuid", strAlertUuid);
@@ -240,9 +240,6 @@ int Controller::SendMessage(Event* e) {
             
             message->setStringProperty("collr_time", GetNodeTime());
             
-            string strEventJson(((Alert*) e)->event_json);
-            message->setStringProperty("event_json", strEventJson);  
-            
             producer->send(message.get());
             
                     
@@ -255,6 +252,15 @@ int Controller::SendMessage(Event* e) {
             byte_message->setStringProperty("node_id", strNodeId);
             byte_message->setStringProperty("ref_id", e->ref_id);
             byte_message->setIntProperty("msg_type", msg_type);
+            
+            if (msg_type == 4 || msg_type == 5) {
+                byte_message->setStringProperty("sensor", sensor_id);
+            }
+            
+            if (msg_type == 6 || msg_type == 7) {
+                byte_message->setStringProperty("sensor", sensor_id);
+                byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
+            }
                 
             vector<unsigned char> vec;
             string msg_comp = ((BinData*) e)->data;

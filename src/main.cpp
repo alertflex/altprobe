@@ -343,7 +343,7 @@ int InitThreads(void)
     //collector
     if (collr.GetStatus()) {
         if (!collr.Open()) {
-            daemon_log(LOG_ERR,"cannot open monitorint of Collector service");
+            daemon_log(LOG_ERR,"cannot open monitor of Collector service");
             return 0;
         }
     

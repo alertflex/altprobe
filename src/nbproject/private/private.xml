@@ -6,6 +6,14 @@
     </data>
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group/>
+        <group>
+            <file>file:/root/NetBeansProjects/collector/Makefile</file>
+            <file>file:/root/NetBeansProjects/collector/cobject.h</file>
+            <file>file:/root/NetBeansProjects/collector/etc/alertflex.yaml</file>
+            <file>file:/root/NetBeansProjects/collector/updates.cpp</file>
+            <file>file:/root/NetBeansProjects/collector/scripts/alertflex-update.sh</file>
+            <file>file:/root/NetBeansProjects/collector/cobject.cpp</file>
+            <file>file:/root/NetBeansProjects/collector/collector.cpp</file>
+        </group>
     </open-files>
 </project-private>

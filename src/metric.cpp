@@ -712,7 +712,7 @@ void Metric::SendAlert(Threshold* th) {
     sk.alert.user = "none";
     
     string strNodeId(node_id);
-    sk.alert.sensor = strNodeId;
+    sk.alert.sensor = sensor_id;
     sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = GetNodeTime();
     

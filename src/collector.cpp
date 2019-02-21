@@ -4,12 +4,12 @@
  *
  */
 
-#include "collector.h"
+#include <sstream>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 
-char Collector::wazuh_host[OS_HEADER_SIZE];
-int Collector::wazuh_port = 0;
-char Collector::wazuh_user[OS_HEADER_SIZE];
-char Collector::wazuh_pwd[OS_HEADER_SIZE];
+#include "collector.h"
 
 
 int Collector::GetConfig() {
@@ -19,62 +19,6 @@ int Collector::GetConfig() {
     
     if (sk.GetReportsPeriod()) status = 1;
     
-    ConfigYaml* cy = new ConfigYaml( "collector");
-    
-    cy->addKey("wazuh_host");
-    cy->addKey("wazuh_port");
-    cy->addKey("wazuh_user");
-    cy->addKey("wazuh_pwd");
-        
-    cy->ParsConfig();
-    
-    strncpy(wazuh_host, (char*) cy->getParameter("wazuh_host").c_str(), sizeof(wazuh_host));
-    if (!strcmp (wazuh_host, "none")) { 
-        ossecServerStatus =false;
-        SysLog("config file notification: interface to Wazuh server is disabled");
-        return 1;
-    }
-    
-    if (!strcmp (wazuh_host, "")) { 
-        ossecServerStatus =false;
-        SysLog("config file notification: interface to Wazuh server is disabled");
-        return 1;
-    }
-    
-    wazuh_port = stoi(cy->getParameter("wazuh_port"));
-    if (wazuh_port == 0) { 
-        ossecServerStatus =false;
-        SysLog("config file notification: interface to Wazuh server is disabled");
-        return 1;
-    }
-    
-    strncpy(wazuh_user, (char*) cy->getParameter("wazuh_user").c_str(), sizeof(wazuh_user));
-    if (!strcmp (wazuh_user, "none")) { 
-        ossecServerStatus =false;
-        SysLog("config file notification: interface to Wazuh server is disabled");
-        return 1;
-    }
-    
-    if (!strcmp (wazuh_user, "")) { 
-        ossecServerStatus =false;
-        SysLog("config file notification: interface to Wazuh server is disabled");
-        return 1;
-    }
-    
-    strncpy(wazuh_pwd, (char*) cy->getParameter("wazuh_pwd").c_str(), sizeof(wazuh_pwd));
-    if (!strcmp (wazuh_pwd, "none")) { 
-        ossecServerStatus =false;
-        SysLog("config file notification: interface to Wazuh server is disabled");
-        return 1;
-    }
-    
-    if (!strcmp (wazuh_pwd, "")) { 
-        ossecServerStatus =false;
-        SysLog("config file notification: interface to Wazuh server is disabled");
-        return 1;
-    }
-    
-    ossecServerStatus = true;
     return 1;
     
 }
@@ -86,14 +30,14 @@ int  Collector::Open() {
     
     ref_id = hids->fs.filter.ref_id;
     
-    if (ossecServerStatus) {
+    if (wazuhServerStatus) {
         string payload = GetAgentsStatus();
         if (!payload.empty()){
             SysLog("connection between Wazuh server and Altprobe is established");
             ParsAgentsStatus(payload);
         }
         else {
-            ossecServerStatus = false;
+            wazuhServerStatus = false;
             SysLog("error of connection between Wazuh server and Altprobe");
         }
     }
@@ -113,7 +57,21 @@ int Collector::Go(void) {
     struct timeval start, end;
     long seconds = 0;
             
-    while(1) {    
+    while(1) {  
+        
+        if(update_timer == 1) {
+            
+            string cmd = "alertflex-update";
+            system(cmd.c_str());
+            
+            UpdateFilters();
+            UpdateSuriConfig();
+            UpdateOssecConfig();
+            UpdateSuriRules();
+            UpdateOssecRules();
+            update_timer = 0;
+        }
+        
         gettimeofday(&start, NULL);
         while (sk.GetReportsPeriod() > seconds) {
             gettimeofday(&end, NULL);
@@ -303,7 +261,7 @@ void Collector::RoutineJob() {
     ss.str("");
     ss.clear();
         
-    if (ossecServerStatus) {
+    if (wazuhServerStatus) {
         string payload = GetAgentsStatus();
         if (!payload.empty()) {
             
@@ -497,6 +455,214 @@ void Collector::ParsAgentsStatus (string status) {
     return;
 }
 
+void Collector::UpdateFilters() {
+    
+    try {
+        
+        ifstream filters_config;
+        filters_config.open(FILTERS_FILE,ios::binary);
+        strStream << filters_config.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        //string s = std::to_string(rep_size);
+        //string output = "logs compressed = " + s;
+        // SysLog((char*) strStream.str().c_str());
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 3;
+        sk.SendMessage(&bd);
+        
+        filters_config.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+    } 
+    
+    return;
+}
+
+void Collector::UpdateSuriConfig() {
+    
+    try {
+        
+        ifstream suri_config;
+        string dir_path(suri_path);
+        string file_name(SURI_CONFIG);
+        string file_path = dir_path + file_name;
+        //SysLog((char*) file_path.c_str());
+        suri_config.open(file_path,ios::binary);
+        strStream << suri_config.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        //string s = std::to_string(rep_size);
+        //string output = "logs compressed = " + s;
+        // SysLog((char*) strStream.str().c_str());
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 4;
+        sk.SendMessage(&bd);
+        
+        suri_config.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+    } 
+    
+    return;
+}
+
+void Collector::UpdateOssecConfig() {
+    
+    try {
+        
+        ifstream ossec_config;
+        string dir_path(wazuh_path);
+        string file_name(OSSEC_CONFIG);
+        string file_path = dir_path + file_name;
+        
+        ossec_config.open(file_path,ios::binary);
+        strStream << ossec_config.rdbuf();
+            
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        boost::iostreams::close(in);
+
+        //string s = std::to_string(rep_size);
+        //string output = "logs compressed = " + s;
+        // SysLog((char*) strStream.str().c_str());
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 5;
+        sk.SendMessage(&bd);
+        
+        ossec_config.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+    } 
+    
+    return;
+}
+
+void Collector::UpdateSuriRules() {
+    
+    try {
+        
+        string root(suri_path);
+        string rules(suri_rules);
+        
+        path p (root + rules);
+
+        directory_iterator end_itr;
+        
+        // cycle through the directory
+        int i = 0;
+        path file_path;
+        string file_name;
+        
+        for (directory_iterator itr(p); itr != end_itr; ++itr, i++) {
+            
+            if (is_regular_file(itr->path())) {
+                
+                file_path = itr->path();
+                file_name = file_path.filename().string();
+                ifstream suri_rules;
+                suri_rules.open(file_path.string(),ios::binary);
+                strStream << suri_rules.rdbuf();
+        
+                boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+                in.push(boost::iostreams::gzip_compressor());
+                in.push(strStream);
+                boost::iostreams::copy(in, comp);
+                
+                rd.data = comp.str();
+                rd.name_rule = file_name;
+                rd.ref_id = fs.filter.ref_id;
+                rd.event_type = 6;
+                sk.SendMessage(&rd);
+        
+                suri_rules.close();
+                boost::iostreams::close(in);
+                ResetStreams();
+            }
+        }
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+    } 
+    
+    return;
+}
+
+
+void Collector::UpdateOssecRules() {
+    
+    try {
+        
+        string root(wazuh_path);
+        string rules(wazuh_rules);
+        
+        path p (root + rules);
+        
+        directory_iterator end_itr;
+        
+        // cycle through the directory
+        int i = 0;
+        path file_path;
+        string file_name;
+        
+        for (directory_iterator itr(p); itr != end_itr; ++itr, i++) {
+            
+            if (is_regular_file(itr->path())) {
+                
+                file_path = itr->path();
+                file_name = file_path.filename().string();
+                ifstream ossec_rules;
+                ossec_rules.open(file_path.string(),ios::binary);
+                strStream << ossec_rules.rdbuf();
+        
+                boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+                in.push(boost::iostreams::gzip_compressor());
+                in.push(strStream);
+                boost::iostreams::copy(in, comp);
+                
+                rd.data = comp.str();
+                rd.name_rule = file_name;
+                rd.ref_id = fs.filter.ref_id;
+                rd.event_type = 7;
+                sk.SendMessage(&rd);
+        
+                ossec_rules.close();
+                boost::iostreams::close(in);
+                ResetStreams();
+            }
+        }
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+    } 
+    
+    return;
+}
 
 
 
