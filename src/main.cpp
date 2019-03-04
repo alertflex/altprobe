@@ -14,6 +14,7 @@
 #include "statflows.h"
 #include "statids.h"
 #include "hids.h"
+#include "waf.h"
 #include "metric.h"
 #include "misc.h"
 #include "nids.h"
@@ -86,17 +87,19 @@ void * thread_misc(void *arg) {
     pthread_exit(0);
 }
 
-Hids hids("ossec");
-pthread_t pthread_hids;
+Waf waf("modsec");
+pthread_t pthread_waf;
 
-void* exit_thread_hids_arg;
-void exit_thread_hids(void* arg) { hids.Close(); }
+void* exit_thread_waf_arg;
+void exit_thread_waf(void* arg) { waf.Close(); }
 
-void * thread_hids(void *arg) {
+void * thread_waf(void *arg) {
     
-    pthread_cleanup_push(exit_thread_hids, exit_thread_hids_arg);
+    pthread_cleanup_push(exit_thread_waf, exit_thread_waf_arg);
     
-    while (hids.Go()) { }
+    waf.sensor = waf.sensor_id + "-waf";
+    
+    while (waf.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
@@ -112,7 +115,27 @@ void * thread_nids(void *arg) {
     
     pthread_cleanup_push(exit_thread_nids, exit_thread_nids_arg);
     
+    nids.sensor = nids.sensor_id + "-nids";
+    
     while (nids.Go()) { }
+    
+    pthread_cleanup_pop(1);
+    pthread_exit(0);
+}
+
+Hids hids("wazuh");
+pthread_t pthread_hids;
+
+void* exit_thread_hids_arg;
+void exit_thread_hids(void* arg) { hids.Close(); }
+
+void * thread_hids(void *arg) {
+    
+    pthread_cleanup_push(exit_thread_hids, exit_thread_hids_arg);
+    
+    hids.sensor = hids.sensor_id + "-hids";
+    
+    while (hids.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
@@ -167,7 +190,7 @@ void * thread_updates(void *arg) {
 }
 
 
-Collector collr(&hids, &nids, &met, &remlog, &remstat, &statflows, &statids);
+Collector collr(&hids, &nids, &waf, &misc, &met, &remlog, &remstat, &statflows, &statids);
 pthread_t pthread_collr;
 
 void* exit_thread_collr_arg;
@@ -202,6 +225,9 @@ int LoadConfig(void)
     
     //nids
     if (!nids.GetConfig()) return 0;
+    
+    //waf
+    if (!waf.GetConfig()) return 0;
     
     //remlog
     if (!remlog.GetConfig()) return 0;
@@ -301,6 +327,19 @@ int InitThreads(void)
         } 
     }
     
+    //waf
+    if (waf.GetStatus()) {
+        if (!waf.Open()) {
+            daemon_log(LOG_ERR,"cannot open Modsec server");
+            return 0;
+        }
+            
+        if (pthread_create(&pthread_waf, NULL, thread_waf, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for Modsec");
+            return 0;
+        }
+    } 
+    
     //remlog
     if (remlog.GetStatus()) {
         if (!remlog.Open()) {
@@ -392,6 +431,12 @@ void KillsThreads(void)
     if (nids.GetStatus()) {
         pthread_cancel(pthread_nids);
         pthread_join(pthread_nids, NULL);
+    }
+    
+    //waf
+    if (waf.GetStatus()) {
+        pthread_cancel(pthread_waf);
+        pthread_join(pthread_waf, NULL);
     }
     
     //remlog

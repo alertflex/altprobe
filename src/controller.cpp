@@ -253,15 +253,32 @@ int Controller::SendMessage(Event* e) {
             byte_message->setStringProperty("ref_id", e->ref_id);
             byte_message->setIntProperty("msg_type", msg_type);
             
-            if (msg_type == 4 || msg_type == 5) {
-                byte_message->setStringProperty("sensor", sensor_id);
+            switch (msg_type) {
+                case 4 :
+                    byte_message->setStringProperty("sensor", sensor_id + "-nids");
+                    break;
+                case 5 :
+                    byte_message->setStringProperty("sensor", sensor_id + "-hids");
+                    break;
+                case 6 :
+                    byte_message->setStringProperty("sensor", sensor_id + "-waf");
+                    break;
+                case 7 :
+                    byte_message->setStringProperty("sensor", sensor_id + "-nids");
+                    byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
+                    break;
+                case 8 :
+                    byte_message->setStringProperty("sensor", sensor_id + "-hids");
+                    byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
+                    break;
+                case 9 :
+                    byte_message->setStringProperty("sensor", sensor_id + "-waf");
+                    byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
+                    break;
+                default:
+                    break;
             }
             
-            if (msg_type == 6 || msg_type == 7) {
-                byte_message->setStringProperty("sensor", sensor_id);
-                byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
-            }
-                
             vector<unsigned char> vec;
             string msg_comp = ((BinData*) e)->data;
             const char* c = msg_comp.c_str();

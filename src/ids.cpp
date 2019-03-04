@@ -9,3 +9,4 @@
 
 boost::lockfree::spsc_queue<IdsRecord> q_hids{IDS_QUEUE_SIZE};
 boost::lockfree::spsc_queue<IdsRecord> q_nids{IDS_QUEUE_SIZE};
+boost::lockfree::spsc_queue<IdsRecord> q_waf{IDS_QUEUE_SIZE};

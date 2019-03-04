@@ -45,22 +45,40 @@ collector:
   redis_port: 6379 
   
 sources:
-  # redis list for events from Wazuh IDS/OSSEC 
-  ossec: "altprobe_hids"
   # redis list for metrics from ElasticStack Metricbeat  
   metricbeat: "altprobe_metrics"
   # redis list for events from Altprobe clients 
   misc: "altprobe_misc"
+  # redis list for events from Modsecurity WAF
+  modsec: "altprobe_waf"
   # redis list for events from Suricata IDS 
   suricata: "altprobe_nids"
+  # redis list for events from Wazuh IDS/OSSEC 
+  wazuh: "altprobe_hids"
+  
+  # modsec_path: "/etc/nginx/modsec/"
+  # modsec_iprep: "owasp-modsecurity-crs-3.0.2/rules/"
+  # modsec_rules: "owasp-modsecurity-crs-3.0.2/rules/"
+  
+  modsec_path: "none"
+  modsec_iprep: "none"
+  modsec_rules: "none"
+  
+  suri_path: "/etc/suricata/"
+  suri_iprep: "iprep/"
+  suri_rules: "rules/"
+  
+  # suri_path: "none"
+  # suri_iprep: "none"
+  # suri_rules: "none"
   
   wazuh_path: "/var/ossec/"
   wazuh_iprep: "etc/lists/"
   wazuh_rules: "ruleset/rules/"
   
-  suri_path: "/etc/suricata/"
-  suri_iprep: "iprep/"
-  suri_rules: "rules/"
+  # wazuh_path: "none"
+  # wazuh_iprep: "none"
+  # wazuh_rules: "none"
   
 controller:
   # send alerts and statistics to Controller (ActiveMQ interface)

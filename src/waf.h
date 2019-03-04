@@ -17,6 +17,14 @@
 #include <string>
 #include <vector>
 
+#include "hiredis.h"
+
+#include "sinks.h"
+#include "ids.h"
+#include "filters.h"
+#include "config.h"
+#include "source.h"
+
 using namespace std;
 
 //  ModeSecurity record                              
@@ -48,7 +56,7 @@ public:
 
 
 //  ModeSecurity record                              
-class ModsecRecord {
+class ModsecRecord : CollectorObject {
 public:    
     
     bool mod_rec;
@@ -83,6 +91,54 @@ public:
         parameters.clear();
     }
 };
+
+namespace bpt = boost::property_tree;
+
+class Waf : public Source {
+public:
+    
+    // ModSecurity record
+    ModsecRecord rec;
+    
+    string event_time;
+        
+    bpt::ptree pt;
+    stringstream ss;
+    
+    Waf (string skey) : Source(skey) {
+        ClearRecords();
+        ResetStreams();
+        
+    }
+    
+    void ResetStreams() {
+        ss.str("");
+        ss.clear();
+    }
+    
+    void ResetJsontree() {
+        pt.clear();
+    }
+    
+    int Go();
+    
+    int ParsJson (char* redis_payload);
+    
+    GrayList* CheckGrayList();
+    void CreateLog();
+    void SendAlert (int s, GrayList*  gl);
+    int PushRecord(GrayList* gl);
+        
+    void ClearRecords() {
+        event_time.clear();
+	rec.Reset();
+        jsonPayload.clear();
+        ResetJsontree();
+    }
+    
+};
+
+extern boost::lockfree::spsc_queue<string> q_logs_waf;
 
 #endif /* WAF_H */
 

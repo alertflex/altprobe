@@ -20,6 +20,8 @@
 #include "flows.h"
 #include "hids.h"
 #include "nids.h"
+#include "waf.h"
+#include "misc.h"
 #include "metric.h"
 #include "statflows.h"
 #include "statids.h"
@@ -38,6 +40,8 @@ public:
     
     Hids* hids;
     Nids* nids; 
+    Waf* waf; 
+    Misc* misc; 
     Metric* met;
     RemLog* rem_log;
     RemStat* rem_stat;
@@ -50,11 +54,13 @@ public:
     
     string ref_id;
     
-    Collector(Hids* h, Nids* n, Metric* m, RemLog* rl, RemStat* rs, StatFlows* f, StatIds* i) {
+    Collector(Hids* h, Nids* n, Waf* w, Misc* mi, Metric* me, RemLog* rl, RemStat* rs, StatFlows* f, StatIds* i) {
     
         hids = h;
         nids = n;
-        met = m;
+        waf = w;
+        misc = mi;
+        met = me;
         rem_log = rl;
         rem_stat = rs;
         stat_flows = f;
@@ -73,9 +79,11 @@ public:
     void RoutineJob();
     void UpdateFilters();
     void UpdateSuriConfig();
+    void UpdateModsecConfig();
     void UpdateOssecConfig();
     void UpdateSuriRules();
     void UpdateOssecRules();
+    void UpdateModsecRules();
     
     void ParsAgentsStatus(string status);
     string GetAgentsStatus();

@@ -12,6 +12,7 @@
 #include "source.h"
 #include "hids.h"
 #include "nids.h"
+#include "waf.h"
 
 using namespace std;
 

@@ -54,6 +54,8 @@ int StatIds::Go(void) {
                 FlushHidsAlert();
                 mem_mon.nids_alerts_list = nids_alerts_list.size();
                 FlushNidsAlert();
+                // mem_mon.waf_alerts_list = waf_alerts_list.size();
+                FlushWafAlert();
             }
         }
         RoutineJob();
@@ -70,7 +72,7 @@ void StatIds::ProcessStatistic() {
     
     counter = 0;
     
-    while (!q_nids.empty() || !q_hids.empty()) {
+    while (!q_nids.empty() || !q_hids.empty() || !q_waf.empty()) {
         
         if (!q_nids.empty()) {
             q_nids.pop(ids_rec);
@@ -79,6 +81,11 @@ void StatIds::ProcessStatistic() {
         
         if (!q_hids.empty()) {
             q_hids.pop(ids_rec);
+            PushRecord();
+        }
+        
+        if (!q_waf.empty()) {
+            q_waf.pop(ids_rec);
             PushRecord();
         }
     }       

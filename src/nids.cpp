@@ -194,7 +194,7 @@ int Nids::ParsJson (char* redis_payload) {
         else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
-        rec.ids = sensor_id;
+        rec.ids = sensor;
         rec.protocol = pt.get<string>("proto","");
                 
         // alert record
@@ -239,7 +239,7 @@ int Nids::ParsJson (char* redis_payload) {
         else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
-        rec.ids = sensor_id;
+        rec.ids = sensor;
         
         rec.protocol = pt.get<string>("proto","");
         
@@ -289,7 +289,7 @@ int Nids::ParsJson (char* redis_payload) {
         else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
-        rec.ids = sensor_id;
+        rec.ids = sensor;
         rec.protocol = pt.get<string>("proto","");
         
         rec.ssh.client_proto = pt.get<string>("ssh.client.proto_version","indef");
@@ -324,7 +324,7 @@ int Nids::ParsJson (char* redis_payload) {
         else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
-        rec.ids = sensor_id;
+        rec.ids = sensor;
         rec.protocol = pt.get<string>("proto","");
         
         rec.netflow.app_proto = pt.get<string>("app_proto","indef");
@@ -345,7 +345,7 @@ int Nids::ParsJson (char* redis_payload) {
     
     if (event_type.compare("stats") == 0) {
         
-        net_stat.ids = sensor_id;
+        net_stat.ids = sensor;
         
         net_stat.ref_id = fs.filter.ref_id;
         net_stat.invalid = pt.get<long>("stats.decoder.invalid",0);
@@ -393,7 +393,7 @@ void Nids::CreateLogPayload(int r) {
             report += ",\"_type\":\"NET\"";
             report += ",\"_source\":\"Suricata\"";
 			
-			report +=  ",\"_project_id\":\"";
+            report +=  ",\"_project_id\":\"";
             report +=  fs.filter.ref_id;
 			
             report +=  "\",\"_event_time\":\"";

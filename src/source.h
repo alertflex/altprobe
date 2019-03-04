@@ -22,6 +22,8 @@ using namespace std;
 
 class Source : public CollectorObject {
 public:
+    string sensor;
+    
     int status;
     string config_key;
     string redis_key;

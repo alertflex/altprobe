@@ -49,66 +49,38 @@ int Hids::Go(void) {
         
         if (res != 0 ) {  
             
-            if (mr.mod_rec) {
-                
-                if (fs.filter.waf.log ) CreateWafLog();
+            if (fs.filter.hids.log ) CreateLog();
             
-                if (alerts_counter <= sk.alerts_threshold) {
+            if (alerts_counter <= sk.alerts_threshold) {
             
-                    gl = CheckWafGrayList();
+                gl = CheckGrayList();
             
-                    int severity = PushWafRecord(gl);
+                int severity = PushRecord(gl);
                 
-                    if (gl != NULL) {
-                        if (gl->rsp.profile.compare("suppress") != 0) SendWafAlert(severity, gl);
-                    } else {
-                        if (fs.filter.waf.severity.threshold <= severity) {
-                            
-                            SendWafAlert(severity, NULL);
-                        }
-                    } 
-                
-                    if (sk.alerts_threshold != 0) {
-            
-                        if (alerts_counter < sk.alerts_threshold) alerts_counter++;
-                        else {
-                            SendAlertMultiple(2);
-                            alerts_counter++;
-                        }
-                    }
-                }
-                
-            } else {
-                
-                
-                if (fs.filter.hids.log ) CreateLog();
-            
-                if (alerts_counter <= sk.alerts_threshold) {
-            
-                    gl = CheckGrayList();
-            
-                    int severity = PushRecord(gl);
-                
-                    if (gl != NULL) {
-                        if (gl->rsp.profile.compare("suppress") != 0) SendAlert(severity, gl);
+                if (gl != NULL) {
+                    
+                    if (gl->rsp.profile.compare("suppress") != 0) SendAlert(severity, gl);
                         
-                    } else {
-                        if (fs.filter.hids.severity.threshold <= severity) {
-                            SendAlert(severity, NULL);
-                        }
-                    } 
+                } else {
+                        
+                    if (fs.filter.hids.severity.threshold <= severity) {
+                            
+                        SendAlert(severity, NULL);
+                    
+                    }
+                } 
                 
                     if (sk.alerts_threshold != 0) {
             
-                        if (alerts_counter < sk.alerts_threshold) alerts_counter++;
-                        else {
-                            SendAlertMultiple(1);
-                            alerts_counter++;
-                        }
+                    if (alerts_counter < sk.alerts_threshold) alerts_counter++;
+                    else {
+                        SendAlertMultiple(1);
+                        alerts_counter++;
                     }
                 }
             }
-        } 
+        }
+        
         freeReplyObject(reply);
     } 
     else {
@@ -141,31 +113,6 @@ GrayList* Hids::CheckGrayList() {
     
     return NULL;
 }
-
-GrayList* Hids::CheckWafGrayList() {
-    
-    if (fs.filter.waf.gl.size() != 0) {
-        
-        std::vector<GrayList*>::iterator i, end;
-        
-        for (i = fs.filter.waf.gl.begin(), end = fs.filter.waf.gl.end(); i != end; ++i) {
-            
-            int event_id = (*i)->event;
-            if (event_id == rec.rule.id) {
-                
-                string agent = (*i)->host;
-                
-                if (agent.compare("all") == 0 || agent.compare(rec.agent) == 0) {
-                
-                    return (*i);
-                }
-            }
-        }
-    }
-    
-    return NULL;
-}
-
 
 int Hids::ParsJson(char* redis_payload) {
     
@@ -599,97 +546,73 @@ int Hids::ParsJson(char* redis_payload) {
     
     string dec_name = pt.get<string>("decoder.name","");
         
+    rec.srcip = pt.get<string>("data.srcip","");
+        
+    rec.rule.id = pt.get<int>("rule.id",0);
     
-    if (dec_name.compare("nginx-errorlog") == 0 && mr.IsModsec(full_log)) {
+    rec.rule.level = pt.get<int>("rule.level",0);
+    
+    rec.rule.desc = desc;
+    ReplaceAll(rec.rule.desc, "\"", "");
+    ReplaceAll(rec.rule.desc, "\\", "\\\\\\\\");
+    
+    rec.rule.info = pt.get<string>("rule.info","");
+    
+   try {
+    
+        groups_cats = pt.get_child("rule.groups");
         
-        mr.ParsRecord(full_log);
-        
-        rec.rule.id = mr.ma.id;
-        
-        rec.rule.level = mr.ma.severity;
-        
-        rec.rule.desc = mr.ma.msg;
-        rec.rule.info = mr.ma.file;
-        rec.location = mr.ma.uri;
-        rec.srcip = mr.ma.hostname;
-        
-        std::vector<string>::iterator it, end;
-        int i = 0;
-        for (vector<string>::const_iterator it = mr.ma.list_tags.begin(); it != mr.ma.list_tags.end(); ++it, i++) {
-        
-            rec.rule.list_cats.push_back(*it);
+        BOOST_FOREACH(bpt::ptree::value_type &v, groups_cats) {
+            assert(v.first.empty()); // array elements have no names
+            rec.rule.list_cats.push_back(v.second.data());
         }
-        
-    } else {
-        
-        rec.srcip = pt.get<string>("data.srcip","");
-        
-        rec.rule.id = pt.get<int>("rule.id",0);
+    } catch (bpt::ptree_bad_path& e) {}
     
-        rec.rule.level = pt.get<int>("rule.level",0);
+    try {
     
-        rec.rule.desc = desc;
-        ReplaceAll(rec.rule.desc, "\"", "");
-        ReplaceAll(rec.rule.desc, "\\", "\\\\\\\\");
+        pcidss_cats = pt.get_child("rule.pci_dss");
+        BOOST_FOREACH(bpt::ptree::value_type &v, pcidss_cats) {
+            assert(v.first.empty()); // array elements have no names
+            string pcidss = "pci_dss_" + v.second.data();
+            rec.rule.list_cats.push_back(pcidss);
+        }  
     
-        rec.rule.info = pt.get<string>("rule.info","");
-    
-        try {
-    
-            groups_cats = pt.get_child("rule.groups");
-        
-            BOOST_FOREACH(bpt::ptree::value_type &v, groups_cats) {
-                assert(v.first.empty()); // array elements have no names
-                rec.rule.list_cats.push_back(v.second.data());
-            }
-        } catch (bpt::ptree_bad_path& e) {}
-    
-        try {
-    
-            pcidss_cats = pt.get_child("rule.pci_dss");
-            BOOST_FOREACH(bpt::ptree::value_type &v, pcidss_cats) {
-                assert(v.first.empty()); // array elements have no names
-                string pcidss = "pci_dss_" + v.second.data();
-                rec.rule.list_cats.push_back(pcidss);
-            }  
-    
-        } catch (bpt::ptree_bad_path& e) {}
+    } catch (bpt::ptree_bad_path& e) {}
     
         rec.location = loc;
         ReplaceAll(rec.location, "\"", "");
         ReplaceAll(rec.location, "\\", "\\\\\\\\");
         
-        rec.file.filename = pt.get<string>("syscheck.path","");
-        ReplaceAll(rec.file.filename, "\"", "");
-        ReplaceAll(rec.file.filename, "\\", "\\\\\\\\");
+    rec.file.filename = pt.get<string>("syscheck.path","");
+    ReplaceAll(rec.file.filename, "\"", "");
+    ReplaceAll(rec.file.filename, "\\", "\\\\\\\\");
     
-        rec.file.md5_before = pt.get<string>("syscheck.md5_before","");
+    rec.file.md5_before = pt.get<string>("syscheck.md5_before","");
     
-        rec.file.md5_after = pt.get<string>("syscheck.md5_after","");
+    rec.file.md5_after = pt.get<string>("syscheck.md5_after","");
     
-        rec.file.sha1_before = pt.get<string>("syscheck.sha1_before","");
+    rec.file.sha1_before = pt.get<string>("syscheck.sha1_before","");
     
-        rec.file.sha1_after = pt.get<string>("syscheck.sha1_after","");
+    rec.file.sha1_after = pt.get<string>("syscheck.sha1_after","");
     
-        rec.file.owner_before = pt.get<string>("syscheck.owner_before","");
+    rec.file.owner_before = pt.get<string>("syscheck.owner_before","");
         
-        rec.file.owner_after = pt.get<string>("syscheck.owner_after","");
+    rec.file.owner_after = pt.get<string>("syscheck.owner_after","");
            
-        rec.file.gowner_before = pt.get<string>("syscheck.gowner_before","");
+    rec.file.gowner_before = pt.get<string>("syscheck.gowner_before","");
     
-        rec.file.gowner_after = pt.get<string>("syscheck.gowner_after","");
+    rec.file.gowner_after = pt.get<string>("syscheck.gowner_after","");
         
         
-        string user = pt.get<string>("data.srcuser","");
+    string user = pt.get<string>("data.srcuser","");
         
-        if (user.compare("") == 0) {
+    if (user.compare("") == 0) {
             
-            user = pt.get<string>("data.dstuser","");
+        user = pt.get<string>("data.dstuser","");
         
-        }
-        
-        rec.user = user;
     }
+        
+    rec.user = user;
     
     ResetStreams();
     
@@ -790,67 +713,6 @@ void Hids::CreateLog() {
     report.clear();
 }
 
-void Hids::CreateWafLog() {
-    
-    report = "{\"version\": \"1.1\",\"host\":\"";
-    report += node_id;
-    report += "\",\"short_message\":\"alert-waf\"";
-    report += ",\"full_message\":\"Alert from ModSecurity/NGINX\"";
-    report += ",\"level\":";
-    report += std::to_string(7);
-    report += ",\"_type\":\"NET\"";
-    report += ",\"_source\":\"Modsecurity\"";
-        
-    report += ",\"_agent\":\"";
-    report += rec.agent;
-    
-    report += "\", \"_manager\":\"";
-    report += rec.hostname;
-    
-    report +=  "\",\"_project_id\":\"";
-    report +=  fs.filter.ref_id;
-			
-    report +=  "\",\"_event_time\":\"";
-    report +=  rec.timestamp;
-    
-    report += "\",\"_collected_time\":\"";
-    report += GetGraylogFormat();
-		
-    report += "\",\"_description\":\"";
-    report += rec.rule.desc;
-    
-    report += "\",\"_severity\":";
-    report += std::to_string(rec.rule.level);
-    
-    report += ",\"_sidid\":";
-    report += std::to_string(rec.rule.id);
-	
-    report += ",\"_group_name\":\"";
-    
-    int j = 0;
-    for (string i : rec.rule.list_cats) {
-        if (j != 0 && j < rec.rule.list_cats.size()) report += ", ";
-        report += i;
-            
-        j++;    
-    }
-    
-    report += "\",\"_info\":\"";
-    report += rec.rule.info;
-    report += "\",\"_target\":\"";
-    report += rec.location;
-    report += "\",\"_srcip\":\"";
-    report += rec.srcip;
-    report += "\",\"_dstip\":\"";
-    report += rec.dstip;
-    report += "\"}";
-    
-    q_logs_hids.push(report);
-    
-    report.clear();
-}
-
-
 int Hids::PushRecord(GrayList* gl) {
     
     // create new IDS record
@@ -883,7 +745,7 @@ int Hids::PushRecord(GrayList* gl) {
     
     ids_rec.agent = rec.agent;
     ids_rec.user = rec.user;
-    ids_rec.ids = sensor_id;
+    ids_rec.ids = sensor;
     ids_rec.action = "none";
                 
     if (rec.file.filename.compare("") == 0) {
@@ -907,63 +769,6 @@ int Hids::PushRecord(GrayList* gl) {
             ids_rec.rsp.new_event = gl->rsp.new_event;
             ids_rec.rsp.new_severity = gl->rsp.new_severity;
             
-        }
-    }
-            
-    q_hids.push(ids_rec);
-    
-    return ids_rec.severity;
-}
-
-int Hids::PushWafRecord(GrayList* gl) {
-    // create new IDS record
-    IdsRecord ids_rec;
-            
-    ids_rec.ref_id = fs.filter.ref_id;
-    
-    ids_rec.event = rec.rule.id;
-            
-    copy(rec.rule.list_cats.begin(),rec.rule.list_cats.end(),back_inserter(ids_rec.list_cats));
-    
-    if (rec.rule.level < fs.filter.waf.severity.level2) {
-        ids_rec.severity = 3;
-    } else {
-        if (rec.rule.level < fs.filter.waf.severity.level1) {
-            ids_rec.severity = 2;
-        } else {
-            if (rec.rule.level < fs.filter.waf.severity.level0) {
-                ids_rec.severity = 1;
-            } else {
-                ids_rec.severity = 0;
-            }
-        }
-    }
-    
-    ids_rec.desc = rec.rule.desc;
-                
-    ids_rec.src_ip = rec.srcip;
-    ids_rec.dst_ip = rec.dstip;
-    
-    ids_rec.agent = rec.agent;
-    ids_rec.ids = sensor_id;
-    ids_rec.action = "none";
-                
-    ids_rec.location = rec.location;
-    ids_rec.ids_type = 4;
-    
-        
-    if (gl != NULL) {
-        
-        if (gl->agr.reproduced > 0) {
-            
-            ids_rec.agr.in_period = gl->agr.in_period;
-            ids_rec.agr.reproduced = gl->agr.reproduced;
-            
-            ids_rec.rsp.profile = gl->rsp.profile;
-            ids_rec.rsp.new_category = gl->rsp.new_category;
-            ids_rec.rsp.new_description = gl->rsp.new_description;
-            ids_rec.rsp.new_event = gl->rsp.new_event;
-            ids_rec.rsp.new_severity = gl->rsp.new_severity;
         }
     }
             
@@ -1001,7 +806,7 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     sk.alert.source = "Wazuh";
     
     sk.alert.user = rec.user;
-    sk.alert.sensor = sensor_id;
+    sk.alert.sensor = sensor;
     sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = rec.timestamp;
         
@@ -1073,79 +878,6 @@ void Hids::SendAlert(int s, GrayList*  gl) {
         
     sk.SendAlert();
     
-}
-
-void Hids::SendWafAlert(int s, GrayList*  gl) {
-    
-    sk.alert.ref_id =  fs.filter.ref_id;
-    
-    if (!mr.ma.list_tags.empty())
-        copy(mr.ma.list_tags.begin(),mr.ma.list_tags.end(),back_inserter(sk.alert.list_cats));
-    else 
-        sk.alert.list_cats.push_back("waf");
-    
-    sk.alert.severity = s;
-    sk.alert.score = rec.rule.level;
-    sk.alert.event = rec.rule.id;
-    sk.alert.action = "none";
-    sk.alert.description = rec.rule.desc;
-        
-    sk.alert.status = "processed_new";
-    
-    sk.alert.srcip = rec.srcip;
-    sk.alert.dstip = rec.dstip;
-        
-    sk.alert.source = "Modsecurity";
-    sk.alert.type = "NET";
-    
-    sk.alert.srcagent = "none";
-    sk.alert.dstagent = "none";
-    
-    sk.alert.srcport = 0;
-    sk.alert.dstport = 0;
-        
-    sk.alert.user = rec.user;
-    sk.alert.sensor = rec.agent;
-    sk.alert.filter = fs.filter.desc;
-    sk.alert.event_time = rec.timestamp;
-        
-    sk.alert.location = rec.location;
-        
-    sk.alert.info = rec.rule.info;
-    
-    if (gl != NULL) {
-            
-        if (gl->rsp.profile.compare("none") != 0) {
-            sk.alert.action = gl->rsp.profile;
-            sk.alert.status = "modified_new";
-        } 
-        
-        if (gl->rsp.new_event != 0) {
-            sk.alert.event = gl->rsp.new_event;
-            sk.alert.status = "modified_new";
-        }    
-            
-        if (gl->rsp.new_severity != 0) {
-            sk.alert.severity = gl->rsp.new_severity;
-            sk.alert.status = "modified_new";
-        }   
-            
-        if (gl->rsp.new_category.compare("") != 0) {
-            sk.alert.list_cats.push_back(gl->rsp.new_category);
-            sk.alert.status = "modified_new";
-        }   
-                
-        if (gl->rsp.new_description.compare("") != 0) {
-            sk.alert.description = gl->rsp.new_description;
-            sk.alert.status = "modified_new";
-        }   
-        
-    }
-    
-    sk.alert.event_json.assign(reply->str, GetBufferSize(reply->str));
-        
-    sk.SendAlert();
-        
 }
 
     

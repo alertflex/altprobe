@@ -78,5 +78,9 @@
 #define DAEMON_NAME "alertflex"
 #define OSSEC_CONFIG "etc/ossec.conf"
 #define SURI_CONFIG "suricata.yaml"
+#define MODSEC_CONFIG "modsecurity.conf"
+#define WAZUH_IPREP "etc/ossec.conf"
+#define SURI_IPREP "suricata.yaml"
+#define MODSEC_IPREP "modsecurity.conf"
 
 #endif	/* MAIN_H */
