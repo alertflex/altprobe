@@ -81,9 +81,6 @@ NOTE:
 
 * For enabling an network activities events from Auditd, please, use the command: ``auditctl -a exit,always -F arch=b64 -S connect -k linux-connects``, key value ``linux-connects`` is important!
 
-* For integration Nginx and ModSecurity 3.0 with Wazuh IDS, add string ``error_log  /var/log/nginx/error.log info;`` to file  nginx.conf. 
-Example of modified Modsec rules for Wazuh, see in file [0260-nginx_rules.xml](https://github.com/olegzhr/Altprobe/blob/master/configs/0260-nginx_rules.xml)
-
 * For integration Metricbeat with Altprobe 
 
 in the file ``/etc/metricbeat/metricbeat.yml`` set next parameters:
