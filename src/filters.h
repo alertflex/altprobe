@@ -55,9 +55,11 @@ class Network {
 public:
     string network;
     string netmask;
+    string node;
     bool alert_suppress;
         
     void Reset() {
+        node.clear();
         network.clear();
         netmask.clear();
         alert_suppress = false;

@@ -75,7 +75,7 @@ public:
     long ResetEventsCounter();
     void IncrementEventsCounter();
     void SendAlertMultiple(int type);
-    int IsHomeNetwork(string ip);
+    string GetAgent(string ip);
     bool SuppressAlert(string ip);
     
 };

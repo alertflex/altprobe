@@ -60,6 +60,7 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             
             Network* net = new Network();
             
+            net->network = h_nets.second.get<string>("node");
             net->network = h_nets.second.get<string>("network");
             net->netmask = h_nets.second.get<string>("netmask");
             net->alert_suppress = h_nets.second.get<bool>("alert_suppress");
@@ -311,7 +312,7 @@ string FiltersSingleton::GetAgentNameByIP(string ip) {
         }
     }
     
-    return "home_net";
+    return "unknown";
 }
 
 Alias* FiltersSingleton::GetAliasByAgentName(string n) {

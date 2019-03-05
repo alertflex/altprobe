@@ -183,15 +183,11 @@ int Nids::ParsJson (char* redis_payload) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
-        rec.src_type = IsHomeNetwork(rec.src_ip);
-        if (rec.src_type == 0) rec.src_agent = "ext_net";
-        else rec.src_agent = fs.GetAgentNameByIP(rec.src_ip);
+        rec.src_agent = GetAgent(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
-        rec.dst_type = IsHomeNetwork(rec.dst_ip);
-        if (rec.dst_type == 0) rec.dst_agent = "ext_net";
-        else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
+        rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
         rec.ids = sensor;
@@ -228,15 +224,11 @@ int Nids::ParsJson (char* redis_payload) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
-        rec.src_type = IsHomeNetwork(rec.src_ip);
-        if (rec.src_type == 0) rec.src_agent = "ext_net";
-        else rec.src_agent = fs.GetAgentNameByIP(rec.src_ip);
+        rec.src_agent = GetAgent(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
-        rec.dst_type = IsHomeNetwork(rec.dst_ip);
-        if (rec.dst_type == 0) rec.dst_agent = "ext_net";
-        else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
+        rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
         rec.ids = sensor;
@@ -278,15 +270,11 @@ int Nids::ParsJson (char* redis_payload) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
-        rec.src_type = IsHomeNetwork(rec.src_ip);
-        if (rec.src_type == 0) rec.src_agent = "ext_net";
-        else rec.src_agent = fs.GetAgentNameByIP(rec.src_ip);
+        rec.src_agent = GetAgent(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
-        rec.dst_type = IsHomeNetwork(rec.dst_ip);
-        if (rec.dst_type == 0) rec.dst_agent = "ext_net";
-        else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
+        rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
         rec.ids = sensor;
@@ -313,15 +301,11 @@ int Nids::ParsJson (char* redis_payload) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
-        rec.src_type = IsHomeNetwork(rec.src_ip);
-        if (rec.src_type == 0) rec.src_agent = "ext_net";
-        else rec.src_agent = fs.GetAgentNameByIP(rec.src_ip);
+        rec.src_agent = GetAgent(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
-        rec.dst_type = IsHomeNetwork(rec.dst_ip);
-        if (rec.dst_type == 0) rec.dst_agent = "ext_net";
-        else rec.dst_agent = fs.GetAgentNameByIP(rec.dst_ip);
+        rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
         rec.ids = sensor;

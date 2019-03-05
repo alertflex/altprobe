@@ -110,12 +110,10 @@ public:
     string iface;
     long flow_id;
         
-    int src_type;
     string src_agent;
     string src_ip;
     unsigned int src_port;
     
-    int dst_type;
     string dst_agent;
     string dst_ip;
     unsigned int dst_port;
@@ -140,11 +138,9 @@ public:
         time_stamp.clear();
         iface.clear();
         flow_id = 0;
-        src_type = 0;
         src_agent.clear();
         src_ip.clear();
         src_port = 0;
-        dst_type = 0;
         dst_agent.clear();
         dst_ip.clear();
         dst_port = 0;
