@@ -44,7 +44,6 @@ sudo make install
 sudo mkdir -pv /etc/alertflex/
 
 sudo sed -i "s/_project_id/$PROJECT_ID/g" /etc/alertflex/filters.json
-sudo sed -i "s/_node_id/$NODE_ID/g" /etc/alertflex/filters.json
 sudo sed -i "s/_node_id/$NODE_ID/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_sensor_id/$SENSOR_ID/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_amq_host/$AMQ_HOST/g" /etc/alertflex/alertflex.yaml
