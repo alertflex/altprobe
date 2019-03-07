@@ -42,17 +42,9 @@ with log management platform Graylog, monitoring platform Grafana and threat int
 
 ## Screenshots
 
-Below, screenshots of Grafana and Graylog web forms for events from Altprobe
+Below, screenshot of Graylog web forms for events from Altprobe
 
-Graylog statistics for IDS alerts categories, applications protocols and Geo IP netflow map
 ![](https://github.com/olegzhr/altprobe/blob/master/img/graylog.jpg)
-
-Grafana alerts dashboard (https://grafana.com/dashboards/9228)
-![](https://github.com/olegzhr/altprobe/blob/master/img/alerts_dashboard.jpg)
-
-Grafana metrics dashboard (https://grafana.com/dashboards/9234)
-![](https://github.com/olegzhr/altprobe/blob/master/img/metrics_dashboard.jpg)
-
 
 ## Requirements
 
@@ -71,8 +63,6 @@ Fill in collector specific parameters in file ``env.sh`` and start installation
     ./install_ubuntu16.sh
 
 NOTE:
-
-* It is recommended to start of installation Alertflex collector (Altprobe) after a finish of installation Alertflex controller
 
 * Installation and configuration of IDS OSSEC/Wazuh and Suricata IDS are not parts of Alertflex solution. Although install script for Altprobe includes these procedures, it comes with NO WARRANTY!
 
