@@ -7,7 +7,7 @@ with log management platform Graylog and threat intelligence platform MISP.
 
 ## Functionalities of Altprobe
 
-* Reads events in JSON format from Suricata NIDS, Wazuh HIDS, Modsecurity WAF, Elastic Metricbeat through a server Redis
+* Reads events in JSON format from Suricata NIDS, Wazuh HIDS, Modsecurity WAF, Elastic Metricbeat
 * Based on filtering policies, Collector retrieves high priority events from data streams created by security sensors, makes aggregation and normalization for these events. This allows to simplify the management of alerts and incidents, reduces noise from minor events.
 * High priority events (alerts) are immediately sent to the central node.
 * All log events, host metrics, statistics are sent to the Controller inside of pre-accumulated and compressed data set, this implements the "Anti-flooding" algorithm to prevent large bursts of events on the controller side.
