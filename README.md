@@ -2,7 +2,7 @@
 
 Altprobe is a component of the Alertflex project, it has functional of a collector according to SIEM/Log Management terminologies.
 In tandem with Alertflex controller, Altprobe can integrate a Wazuh Host IDS (OSSEC fork) and Suricata Network IDS
-with log management platform Graylog, monitoring platform Grafana and threat intelligence platform MISP. 
+with log management platform Graylog and threat intelligence platform MISP. 
 ![](https://github.com/olegzhr/altprobe/blob/master/img/arch.png)
 
 ## Functionalities of Altprobe
