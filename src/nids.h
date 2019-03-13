@@ -157,7 +157,12 @@ public:
 namespace bpt = boost::property_tree;
 
 class Nids : public Source {
-public:  
+public: 
+    
+    FILE *fp;
+    fpos_t fp_pos;
+    
+    char file_payload[OS_PAYLOAD_SIZE];
     
     //Suricata record
     SuricataRecord rec;
@@ -183,9 +188,12 @@ public:
         pt.clear();
     }
     
+    virtual int Open();
+    virtual void Close();
+    int ReadFile(void);
     int Go();
     
-    int ParsJson (char* redis_payload);
+    int ParsJson ();
     GrayList* CheckGrayList();
     bool CheckFlowsLog(int r);
     void CreateLogPayload(int r);
@@ -193,7 +201,7 @@ public:
     int PushIdsRecord(GrayList* gl);
     void PushFlowsRecord();
     string CountryByIp(string ip);
-        
+            
     void ClearRecords() {
         rec.Reset();
         net_stat.Reset();

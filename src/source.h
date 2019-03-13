@@ -61,6 +61,8 @@ public:
         config_key = ckey;
         status = 0;
         events_counter = 0;
+        alerts_counter = 0;
+        maxmind_state = 0;
     }
     
     virtual int GetConfig();

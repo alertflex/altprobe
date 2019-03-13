@@ -16,6 +16,75 @@
 boost::lockfree::spsc_queue<string> q_logs_hids{LOG_QUEUE_SIZE};
 boost::lockfree::spsc_queue<string> q_compliance{LOG_QUEUE_SIZE};
 
+int Hids::Open() {
+    
+    char level[OS_HEADER_SIZE];
+    
+    if (!sk.Open()) return 0;
+    
+    if (status == 1) {
+        
+        if (wazuhlog_status) {
+            
+            fp = fopen(wazuh_log, "r");
+            if(fopen == NULL) {
+                SysLog("failed open wazuh log file");
+                return 0;
+            }
+            fseek(fp,0,SEEK_END);
+      
+        } else {
+        
+            c = redisConnect(sk.redis_host, sk.redis_port);
+    
+            if (c != NULL && c->err) {
+                // handle error
+                sprintf(level, "failed open redis server interface: %s\n", c->errstr);
+                SysLog(level);
+                return 0;
+            }
+        }
+    }
+    
+    if (!strcmp (maxmind_path, "none")) maxmind_state = 0;
+    else {
+        gi = GeoIP_open(maxmind_path, GEOIP_INDEX_CACHE);
+
+        if (gi == NULL) {
+            SysLog("error opening maxmind database\n");
+            maxmind_state = 0;
+        }
+        else maxmind_state = 1;
+    }
+    
+    return 1;
+}
+
+void Hids::Close() {
+    
+    sk.Close();
+    
+    if (status == 1) {
+        
+        if (wazuhlog_status) {
+            if (fp != NULL) fclose(fp);
+        } else redisFree(c);
+    }
+    
+    if (maxmind_state != 0) GeoIP_delete(gi);
+}
+
+int Hids::ReadFile(void) {
+    
+    if (fgets(file_payload, OS_PAYLOAD_SIZE, fp) == NULL) {
+        
+        if (feof(fp)) return 0;
+        
+        return -1;
+    }
+    return 1;
+}
+
 int Hids::Go(void) {
     
     GrayList* gl;
@@ -25,29 +94,50 @@ int Hids::Go(void) {
         
     if (status) {
         
-        // read data 
-        reply = (redisReply *) redisCommand( c, (const char *) redis_key.c_str());
-        
-        if (!reply) {
-            freeReplyObject(reply);
-            return 1;
-        }
-        
-        if (reply->type == REDIS_REPLY_STRING) {
-            res = ParsJson(reply->str);
-        } else {
-            freeReplyObject(reply);
-            usleep(GetGosleepTimer()*60);
+        if (wazuhlog_status) {
             
-            alerts_counter = 0;
-            return 1;
-        }
+            res = ReadFile();
+            
+            if (res == -1) {
+                SysLog("failed reading wazuh events from log");
+                return 1;
+            }
         
-        boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
+            if (res == 0) {
+                
+                usleep(GetGosleepTimer()*60);
+                alerts_counter = 0;
+                return 1;
+                
+            } else res = ParsJson();
+        
+        
+        } else {
+        
+            // read data 
+            reply = (redisReply *) redisCommand( c, (const char *) redis_key.c_str());
+        
+            if (!reply) {
+                freeReplyObject(reply);
+                return 1;
+            }
+        
+            if (reply->type == REDIS_REPLY_STRING) {
+                res = ParsJson();
+            } else {
+                freeReplyObject(reply);
+                usleep(GetGosleepTimer()*60);
+            
+                alerts_counter = 0;
+                return 1;
+            }
+        }
         
         IncrementEventsCounter();
         
         if (res != 0 ) {  
+            
+            boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
             
             if (fs.filter.hids.log ) CreateLog();
             
@@ -81,7 +171,7 @@ int Hids::Go(void) {
             }
         }
         
-        freeReplyObject(reply);
+        if (!wazuhlog_status) freeReplyObject(reply);
     } 
     else {
         usleep(GetGosleepTimer()*60);
@@ -114,25 +204,33 @@ GrayList* Hids::CheckGrayList() {
     return NULL;
 }
 
-int Hids::ParsJson(char* redis_payload) {
+int Hids::ParsJson() {
     
     string message;
     
-    jsonPayload.assign(reply->str, GetBufferSize(reply->str));
-    
     try {
     
-        ss1 << redis_payload;
-        bpt::read_json(ss1, pt1);
+        if (!wazuhlog_status) {
+            
+            jsonPayload.assign(reply->str, GetBufferSize(reply->str));
+            ss1 << jsonPayload;
+            
+            bpt::read_json(ss1, pt1);
     
-        message = pt1.get<string>("message","");
+            message = pt1.get<string>("message","");
         
-        if ((message.compare("") == 0)) {
-            ResetStreams();
-            return 0;
+            if ((message.compare("") == 0)) {
+                ResetStreams();
+                return 0;
+            }
+            ss << message;
+        
+        }  else {
+            jsonPayload.assign(file_payload, GetBufferSize(file_payload));
+            ss << jsonPayload;
         }
-    
-        ss << message;
+        
+        
         bpt::read_json(ss, pt);
     
     } catch (const std::exception & ex) {
@@ -874,8 +972,8 @@ void Hids::SendAlert(int s, GrayList*  gl) {
         
     }
     
-    sk.alert.event_json.assign(reply->str, GetBufferSize(reply->str));
-        
+    sk.alert.event_json = jsonPayload;
+    
     sk.SendAlert();
     
 }

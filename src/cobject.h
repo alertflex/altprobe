@@ -39,6 +39,13 @@ public:
     static char wazuh_pwd[OS_HEADER_SIZE];
     
     static bool wazuhServerStatus;
+    
+    static char suri_log[OS_BUFFER_SIZE]; 
+    static bool surilog_status;
+    static char wazuh_log[OS_BUFFER_SIZE];
+    static bool wazuhlog_status;
+    static char modsec_log[OS_BUFFER_SIZE];
+    static bool modseclog_status;
         
     static char suri_path[OS_BUFFER_SIZE]; 
     static char suri_rules[OS_BUFFER_SIZE];
@@ -64,6 +71,9 @@ public:
         wazuhServerStatus = true;
         arStatus = true;
         uploadStatus = true;
+        surilog_status = true;
+        wazuhlog_status = true;
+        modseclog_status = true;
         timezone = 0;
         log_size = 0;
         startup_timer = 0;

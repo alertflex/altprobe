@@ -10,6 +10,75 @@
 
 boost::lockfree::spsc_queue<string> q_logs_nids{LOG_QUEUE_SIZE};
 
+int Nids::Open() {
+    
+    char level[OS_HEADER_SIZE];
+    
+    if (!sk.Open()) return 0;
+    
+    if (status == 1) {
+        
+        if (surilog_status) {
+            
+            fp = fopen(suri_log, "r");
+            if(fopen == NULL) {
+                SysLog("failed open suricata log file");
+                return 0;
+            }
+            fseek(fp,0,SEEK_END);
+            
+        } else {
+        
+            c = redisConnect(sk.redis_host, sk.redis_port);
+    
+            if (c != NULL && c->err) {
+                // handle error
+                sprintf(level, "failed open redis server interface: %s\n", c->errstr);
+                SysLog(level);
+                return 0;
+            }
+        }
+    }
+    
+    if (!strcmp (maxmind_path, "none")) maxmind_state = 0;
+    else {
+        gi = GeoIP_open(maxmind_path, GEOIP_INDEX_CACHE);
+
+        if (gi == NULL) {
+            SysLog("error opening maxmind database\n");
+            maxmind_state = 0;
+        }
+        else maxmind_state = 1;
+    }
+    
+    return 1;
+}
+
+void Nids::Close() {
+    
+    sk.Close();
+    
+    if (status == 1) {
+        
+        if (surilog_status) {
+            if (fp != NULL) fclose(fp);
+        } else redisFree(c);
+    }
+    
+    if (maxmind_state != 0) GeoIP_delete(gi);
+}
+
+int Nids::ReadFile(void) {
+    
+    if (fgets(file_payload, OS_PAYLOAD_SIZE - 1, fp) == NULL) {
+        
+        if (feof(fp)) return 0;
+        
+        return -1;
+    }
+    return 1;
+}
+
 int Nids::Go(void) {
     
     // boost::shared_lock<boost::shared_mutex> lock(fs.filters_update_lock);
@@ -22,24 +91,45 @@ int Nids::Go(void) {
     
     if (status) {
         
-        // read Suricata data 
-        reply = (redisReply *) redisCommand( c, (const char *) redis_key.c_str());
-        
-        
-        if (!reply) {
-            SysLog("failed reading suricata events from redis");
-            freeReplyObject(reply);
-            return 1;
-        }
-        
-        if (reply->type == REDIS_REPLY_STRING) {
-            res = ParsJson(reply->str);
-        } else {
-            freeReplyObject(reply);
-            usleep(GetGosleepTimer()*60);
+        if (surilog_status) {
             
-            alerts_counter = 0;
-            return 1;
+            res = ReadFile();
+            
+            if (res == -1) {
+                SysLog("failed reading suricata events from log");
+                return 1;
+            }
+        
+            if (res == 0) {
+                
+                usleep(GetGosleepTimer()*60);
+                alerts_counter = 0;
+                return 1;
+                
+            } else res = ParsJson();
+        
+        
+        } else {
+        
+            // read Suricata data 
+            reply = (redisReply *) redisCommand( c, (const char *) redis_key.c_str());
+        
+        
+            if (!reply) {
+                SysLog("failed reading suricata events from redis");
+                freeReplyObject(reply);
+                return 1;
+            }
+        
+            if (reply->type == REDIS_REPLY_STRING) {
+                res = ParsJson();
+            } else {
+                freeReplyObject(reply);
+                usleep(GetGosleepTimer()*60);
+            
+                alerts_counter = 0;
+                return 1;
+            }
         }
         
         if (res != 0) {
@@ -79,7 +169,7 @@ int Nids::Go(void) {
             }
         } 
             
-        freeReplyObject(reply);
+        if (!surilog_status) freeReplyObject(reply);
     } 
     else {
         usleep(GetGosleepTimer()*60);
@@ -154,12 +244,15 @@ bool Nids::CheckFlowsLog(int r) {
 }
 
 
-int Nids::ParsJson (char* redis_payload) {
+int Nids::ParsJson () {
     
-    jsonPayload.assign(reply->str, GetBufferSize(reply->str));
+    // SysLog(payload);
+    
+    if (!surilog_status) jsonPayload.assign(reply->str, GetBufferSize(reply->str));
+    else jsonPayload.assign(file_payload, GetBufferSize(file_payload));
     
     try {
-        ss << redis_payload;
+        ss << jsonPayload;
         bpt::read_json(ss, pt);
     
     } catch (const std::exception & ex) {

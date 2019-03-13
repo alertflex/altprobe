@@ -46,20 +46,29 @@ collector:
   
 sources:
   # redis list for metrics from ElasticStack Metricbeat  
-  metricbeat: "altprobe_metrics"
+  metric: "altprobe_metrics"
+  
   # redis list for events from Altprobe clients 
   misc: "altprobe_misc"
-  # redis list for events from Modsecurity WAF
-  modsec: "altprobe_waf"
-  # redis list for events from Suricata IDS 
-  suricata: "altprobe_nids"
-  # redis list for events from Wazuh IDS/OSSEC 
-  wazuh: "altprobe_hids"
   
+  # nginx/modsecurity log file - /var/log/nginx/error.log
+  modsec_log: "none"
+  # redis list for events from Modsecurity WAF
+  modsec_redis: "altprobe_waf"
+  
+  # suricata log file - /var/log/suricata/eve.json
+  suri_log: "none"
+  # redis list for events from Suricata IDS
+  suri_redis: "altprobe_nids"
+  
+  # wazuh log file - /var/ossec/logs/alerts/alerts.json
+  wazuh_log: "/var/ossec/logs/alerts/alerts.json"  
+  # redis list for events from Wazuh IDS/OSSEC
+  wazuh_redis: "altprobe_hids"
+    
   # modsec_path: "/etc/nginx/modsec/"
   # modsec_iprep: "owasp-modsecurity-crs-3.0.2/rules/"
   # modsec_rules: "owasp-modsecurity-crs-3.0.2/rules/"
-  
   modsec_path: "none"
   modsec_iprep: "none"
   modsec_rules: "none"
@@ -67,7 +76,6 @@ sources:
   suri_path: "/etc/suricata/"
   suri_iprep: "iprep/"
   suri_rules: "rules/"
-  
   # suri_path: "none"
   # suri_iprep: "none"
   # suri_rules: "none"
@@ -75,7 +83,6 @@ sources:
   wazuh_path: "/var/ossec/"
   wazuh_iprep: "etc/lists/"
   wazuh_rules: "ruleset/rules/"
-  
   # wazuh_path: "none"
   # wazuh_iprep: "none"
   # wazuh_rules: "none"

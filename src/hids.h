@@ -113,15 +113,22 @@ namespace bpt = boost::property_tree;
 
 class Hids : public Source {
 public:
+    
+    FILE *fp;
+    fpos_t fp_pos;
+    
+    char file_payload[OS_PAYLOAD_SIZE];
+    
     //OSSEC record
     OssecRecord rec;
-        
+    
     bpt::ptree pt, pt1, groups_cats, pcidss_cats;
     stringstream ss, ss1;
     
     Hids (string skey) : Source(skey) {
         ClearRecords();
         ResetStreams();
+        fp = NULL;
     }
     
     void ResetStreams() {
@@ -138,15 +145,18 @@ public:
         pcidss_cats.clear();
     }
     
+    virtual int Open();
+    virtual void Close();
+    int ReadFile(void);
     int Go();
     
-    int ParsJson (char* redis_payload);
+    int ParsJson ();
     
     GrayList* CheckGrayList();
     void CreateLog();
     void SendAlert (int s, GrayList* gl);
     int PushRecord(GrayList* gl);
-    
+        
     void ClearRecords() {
 	rec.Reset();
         jsonPayload.clear();

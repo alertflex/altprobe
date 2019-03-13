@@ -122,14 +122,18 @@ then
 	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/alertflex/alertflex.yaml
 	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/alertflex/alertflex.yaml
 	
-	echo "*** installation filebeat***"
+fi
+
+if [ $INSTALL_FILEBEAT == yes ]
+then
+    echo "*** installation filebeat***"
 	sudo apt-get update
 	curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-6.2.2-amd64.deb
 	sudo dpkg -i filebeat-6.2.2-amd64.deb
 	sudo cp ./configs/filebeat.yml /etc/filebeat/
 	sudo systemctl enable filebeat
-	
 fi
+
 cd ..
 
 

@@ -18,6 +18,8 @@ export INSTALL_WAZUH=yes
 export WAZUH_USER=foo
 export WAZUH_PWD=bar
 
+export INSTALL_FILEBEAT=yes
+
 # NOTE! settings for connection between collector and broker (alertflex controller)
 export AMQ_HOST=af-ctrl
 export AMQ_USER=client

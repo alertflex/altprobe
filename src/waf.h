@@ -97,6 +97,11 @@ namespace bpt = boost::property_tree;
 class Waf : public Source {
 public:
     
+    FILE *fp;
+    fpos_t fp_pos;
+    
+    char file_payload[OS_PAYLOAD_SIZE];
+    
     // ModSecurity record
     ModsecRecord rec;
     
@@ -120,9 +125,12 @@ public:
         pt.clear();
     }
     
+    virtual int Open();
+    virtual void Close();
+    int ReadFile(void);
     int Go();
-    
-    int ParsJson (char* redis_payload);
+        
+    int ParsJson ();
     
     GrayList* CheckGrayList();
     void CreateLog();

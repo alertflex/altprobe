@@ -55,7 +55,7 @@ void * thread_statflows(void *arg) {
     pthread_exit(0);
 }
 
-Metric met("metricbeat");
+Metric met("metric");
 pthread_t pthread_met;
 
 void* exit_thread_met_arg;
@@ -87,7 +87,7 @@ void * thread_misc(void *arg) {
     pthread_exit(0);
 }
 
-Waf waf("modsec");
+Waf waf("modsec_redis");
 pthread_t pthread_waf;
 
 void* exit_thread_waf_arg;
@@ -105,7 +105,7 @@ void * thread_waf(void *arg) {
     pthread_exit(0);
 }
 
-Nids nids("suricata");
+Nids nids("suri_redis");
 pthread_t pthread_nids;
 
 void* exit_thread_nids_arg;
@@ -123,7 +123,7 @@ void * thread_nids(void *arg) {
     pthread_exit(0);
 }
 
-Hids hids("wazuh");
+Hids hids("wazuh_redis");
 pthread_t pthread_hids;
 
 void* exit_thread_hids_arg;
@@ -303,8 +303,8 @@ int InitThreads(void)
     
     //hids
     if (hids.GetStatus()) {
+        
         if (!hids.Open()) {
-            daemon_log(LOG_ERR,"cannot open OSSEC server");
             return 0;
         }
             
@@ -312,10 +312,12 @@ int InitThreads(void)
             daemon_log(LOG_ERR,"error creating thread for OSSEC");
             return 0;
         }
-    } 
+    }
     
+        
     //nids
     if (nids.GetStatus()) {
+        
         if (!nids.Open()) {
             daemon_log(LOG_ERR,"cannot open Suricata server");
             return 0;
@@ -329,6 +331,7 @@ int InitThreads(void)
     
     //waf
     if (waf.GetStatus()) {
+        
         if (!waf.Open()) {
             daemon_log(LOG_ERR,"cannot open Modsec server");
             return 0;
@@ -340,6 +343,7 @@ int InitThreads(void)
         }
     } 
     
+        
     //remlog
     if (remlog.GetStatus()) {
         if (!remlog.Open()) {

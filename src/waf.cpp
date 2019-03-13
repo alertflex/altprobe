@@ -130,6 +130,75 @@ int ModsecRecord::ParsRecord(const string rec) {
     return 1;
 }
 
+int Waf::Open() {
+    
+    char level[OS_HEADER_SIZE];
+    
+    if (!sk.Open()) return 0;
+    
+    if (status == 1) {
+        
+        if (modseclog_status) {
+            
+            fp = fopen(modsec_log, "r");
+            if(fopen == NULL) {
+                SysLog("failed open nginx error log file");
+                return 0;
+            }
+            fseek(fp,0,SEEK_END);
+            
+        } else {
+        
+            c = redisConnect(sk.redis_host, sk.redis_port);
+    
+            if (c != NULL && c->err) {
+                // handle error
+                sprintf(level, "failed open redis server interface: %s\n", c->errstr);
+                SysLog(level);
+                return 0;
+            }
+        }
+    }
+    
+    if (!strcmp (maxmind_path, "none")) maxmind_state = 0;
+    else {
+        gi = GeoIP_open(maxmind_path, GEOIP_INDEX_CACHE);
+
+        if (gi == NULL) {
+            SysLog("error opening maxmind database\n");
+            maxmind_state = 0;
+        }
+        else maxmind_state = 1;
+    }
+    
+    return 1;
+}
+
+void Waf::Close() {
+    
+    sk.Close();
+    
+    if (status == 1) {
+        
+        if (modseclog_status) {
+            if (fp != NULL) fclose(fp);
+        } else redisFree(c);
+    }
+    
+    if (maxmind_state != 0) GeoIP_delete(gi);
+}
+
+int Waf::ReadFile(void) {
+    
+    if (fgets(file_payload, OS_PAYLOAD_SIZE, fp) == NULL) {
+        
+        if (feof(fp)) return 0;
+        
+        return -1;
+    }
+    return 1;
+}
+
 int Waf::Go(void) {
     
     GrayList* gl;
@@ -139,29 +208,50 @@ int Waf::Go(void) {
         
     if (status) {
         
-        // read data 
-        reply = (redisReply *) redisCommand( c, (const char *) redis_key.c_str());
-        
-        if (!reply) {
-            freeReplyObject(reply);
-            return 1;
-        }
-        
-        if (reply->type == REDIS_REPLY_STRING) {
-            res = ParsJson(reply->str);
-        } else {
-            freeReplyObject(reply);
-            usleep(GetGosleepTimer()*60);
+        if (modseclog_status) {
             
-            alerts_counter = 0;
-            return 1;
-        }
+            res = ReadFile();
+            
+            if (res == -1) {
+                SysLog("failed reading modsec events from log");
+                return 1;
+            }
         
-        boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
+            if (res == 0) {
+                
+                usleep(GetGosleepTimer()*60);
+                alerts_counter = 0;
+                return 1;
+                
+            } else res = ParsJson();
+        
+        
+        } else {
+        
+            // read data 
+            reply = (redisReply *) redisCommand( c, (const char *) redis_key.c_str());
+        
+            if (!reply) {
+                freeReplyObject(reply);
+                return 1;
+            }
+        
+            if (reply->type == REDIS_REPLY_STRING) {
+                res = ParsJson();
+            } else {
+                freeReplyObject(reply);
+                usleep(GetGosleepTimer()*60);
+            
+                alerts_counter = 0;
+                return 1;
+            }
+        }
         
         IncrementEventsCounter();
         
         if (res != 0 ) {  
+            
+            boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
             
             if (rec.mod_rec) {
                 
@@ -193,7 +283,7 @@ int Waf::Go(void) {
                 }
             } 
         } 
-        freeReplyObject(reply);
+        if (!modseclog_status) freeReplyObject(reply);
     } 
     else {
         usleep(GetGosleepTimer()*60);
@@ -228,28 +318,30 @@ GrayList* Waf::CheckGrayList() {
 
 
 
-int Waf::ParsJson(char* redis_payload) {
+int Waf::ParsJson() {
     
     try {
-    
-        ss << redis_payload;
-        bpt::read_json(ss, pt);
-    
-        jsonPayload = pt.get<string>("message","");
         
-        event_time = pt.get<string>("@timestamp","");
+        if (!modseclog_status) jsonPayload.assign(reply->str, GetBufferSize(reply->str));
+        else jsonPayload.assign(file_payload, GetBufferSize(file_payload));
         
-        if ((jsonPayload.compare("") == 0)) {
+	if ((jsonPayload.compare("") == 0)) {
             ResetStreams();
             return 0;
         }
+    
+	if (!modseclog_status) {
+            ss << jsonPayload;
+            bpt::read_json(ss, pt);
+            jsonPayload = pt.get<string>("message","");
+            event_time = pt.get<string>("@timestamp","");
+        } else {
+            event_time = GetGraylogFormat();
+        }       
         
         if (rec.IsModsec(jsonPayload)) {
-            
             rec.ParsRecord(jsonPayload);
-            
             ResetStreams();
-            
             if(SuppressAlert(rec.ma.hostname)) return 0;
                         
             return 1;
@@ -445,7 +537,7 @@ void Waf::SendAlert(int s, GrayList*  gl) {
         
     }
     
-    sk.alert.event_json.assign(reply->str, GetBufferSize(reply->str));
+    sk.alert.event_json = jsonPayload;
         
     sk.SendAlert();
         

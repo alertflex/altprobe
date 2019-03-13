@@ -40,6 +40,13 @@ char CollectorObject::wazuh_pwd[OS_HEADER_SIZE];
 
 bool CollectorObject::wazuhServerStatus;
 
+char CollectorObject::suri_log[OS_BUFFER_SIZE]; 
+bool CollectorObject::surilog_status;
+char CollectorObject::wazuh_log[OS_BUFFER_SIZE];
+bool CollectorObject::wazuhlog_status;
+char CollectorObject::modsec_log[OS_BUFFER_SIZE];
+bool CollectorObject::modseclog_status;
+
 char CollectorObject::suri_path[OS_BUFFER_SIZE];
 char CollectorObject::suri_rules[OS_BUFFER_SIZE];
 char CollectorObject::suri_iprep[OS_BUFFER_SIZE];
@@ -171,16 +178,20 @@ int CollectorObject::GetConfig() {
     if (!strcmp (remote_upload, "false")) { 
         uploadStatus = false;
         SysLog("config file notification: remote upload of filters, rules and configs disabled");
-        return 1;
     }
-    strncpy(remote_upload, (char*) cy->getParameter("remote_upload").c_str(), sizeof(remote_upload));
-    if (!strcmp (remote_upload, "false")) {
+    
+    if (!strcmp (remote_upload, "")) { 
         uploadStatus = false;
         SysLog("config file notification: remote upload of filters, rules and configs disabled");
-        return 1;
     }
     
     cy = new ConfigYaml( "sources");
+    
+    cy->addKey("suri_log");
+    
+    cy->addKey("wazuh_log");
+    
+    cy->addKey("modsec_log");
     
     cy->addKey("suri_path");
     
@@ -202,49 +213,67 @@ int CollectorObject::GetConfig() {
     
     cy->ParsConfig();
     
-    strncpy(suri_path, (char*) cy->getParameter("suri_path").c_str(), sizeof(suri_path));
-    if (!strcmp (suri_path, "none")) { 
-        SysLog("config file notification: remote update disabled, missing suri_path");
+    strncpy(suri_log, (char*) cy->getParameter("suri_log").c_str(), sizeof(suri_log));
+    if (!strcmp (suri_log, "none")) { 
+        surilog_status = false;
     }
     
-    strncpy(suri_rules, (char*) cy->getParameter("suri_rules").c_str(), sizeof(suri_rules));
-    if (!strcmp (suri_rules, "none")) { 
-        SysLog("config file notification: remote update disabled, missing suri_rules");
+    strncpy(wazuh_log, (char*) cy->getParameter("wazuh_log").c_str(), sizeof(wazuh_log));
+    if (!strcmp (wazuh_log, "none")) { 
+        wazuhlog_status = false;
     }
     
-    strncpy(suri_iprep, (char*) cy->getParameter("suri_iprep").c_str(), sizeof(suri_iprep));
-    if (!strcmp (suri_iprep, "none")) { 
-        SysLog("config file notification: remote update disabled, missing suri_iprep");
+    strncpy(modsec_log, (char*) cy->getParameter("modsec_log").c_str(), sizeof(modsec_log));
+    if (!strcmp (modsec_log, "none")) { 
+        modseclog_status = false;
     }
     
-    strncpy(wazuh_path, (char*) cy->getParameter("wazuh_path").c_str(), sizeof(wazuh_path));
-    if (!strcmp (wazuh_path, "none")) { 
-        SysLog("config file notification: remote update disabled, missing wazuh_path");
-    }
+    if (uploadStatus) {
     
-    strncpy(wazuh_rules, (char*) cy->getParameter("wazuh_rules").c_str(), sizeof(wazuh_rules));
-    if (!strcmp (wazuh_rules, "none")) { 
-        SysLog("config file notification: remote update disabled, missing wazuh_rules");
-    }
+        strncpy(suri_path, (char*) cy->getParameter("suri_path").c_str(), sizeof(suri_path));
+        if (!strcmp (suri_path, "none")) { 
+            SysLog("config file notification: remote update disabled, missing suri_path");
+        }
     
-    strncpy(wazuh_iprep, (char*) cy->getParameter("wazuh_iprep").c_str(), sizeof(wazuh_iprep));
-    if (!strcmp (wazuh_iprep, "none")) { 
-        SysLog("config file notification: remote update disabled, missing wazuh_iprep");
-    }
+        strncpy(suri_rules, (char*) cy->getParameter("suri_rules").c_str(), sizeof(suri_rules));
+        if (!strcmp (suri_rules, "none")) { 
+            SysLog("config file notification: remote update disabled, missing suri_rules");
+        }
     
-    strncpy(modsec_path, (char*) cy->getParameter("modsec_path").c_str(), sizeof(modsec_path));
-    if (!strcmp (modsec_path, "none")) { 
-        SysLog("config file notification: remote update disabled, missing modsec_path");
-    }
+        strncpy(suri_iprep, (char*) cy->getParameter("suri_iprep").c_str(), sizeof(suri_iprep));
+        if (!strcmp (suri_iprep, "none")) { 
+            SysLog("config file notification: remote update disabled, missing suri_iprep");
+        }
     
-    strncpy(modsec_rules, (char*) cy->getParameter("modsec_rules").c_str(), sizeof(modsec_rules));
-    if (!strcmp (modsec_rules, "none")) { 
-        SysLog("config file notification: remote update disabled, missing modsec_rules");
-    }
+        strncpy(wazuh_path, (char*) cy->getParameter("wazuh_path").c_str(), sizeof(wazuh_path));
+        if (!strcmp (wazuh_path, "none")) { 
+            SysLog("config file notification: remote update disabled, missing wazuh_path");
+        }
     
-    strncpy(modsec_iprep, (char*) cy->getParameter("modsec_iprep").c_str(), sizeof(modsec_iprep));
-    if (!strcmp (modsec_iprep, "none")) { 
-        SysLog("config file notification: remote update disabled, missing modsec_iprep");
+        strncpy(wazuh_rules, (char*) cy->getParameter("wazuh_rules").c_str(), sizeof(wazuh_rules));
+        if (!strcmp (wazuh_rules, "none")) { 
+            SysLog("config file notification: remote update disabled, missing wazuh_rules");
+        }
+    
+        strncpy(wazuh_iprep, (char*) cy->getParameter("wazuh_iprep").c_str(), sizeof(wazuh_iprep));
+        if (!strcmp (wazuh_iprep, "none")) { 
+            SysLog("config file notification: remote update disabled, missing wazuh_iprep");
+        }
+    
+        strncpy(modsec_path, (char*) cy->getParameter("modsec_path").c_str(), sizeof(modsec_path));
+        if (!strcmp (modsec_path, "none")) { 
+            SysLog("config file notification: remote update disabled, missing modsec_path");
+        }
+    
+        strncpy(modsec_rules, (char*) cy->getParameter("modsec_rules").c_str(), sizeof(modsec_rules));
+        if (!strcmp (modsec_rules, "none")) { 
+            SysLog("config file notification: remote update disabled, missing modsec_rules");
+        }
+    
+        strncpy(modsec_iprep, (char*) cy->getParameter("modsec_iprep").c_str(), sizeof(modsec_iprep));
+        if (!strcmp (modsec_iprep, "none")) { 
+            SysLog("config file notification: remote update disabled, missing modsec_iprep");
+        }
     }
     
     return 1;
