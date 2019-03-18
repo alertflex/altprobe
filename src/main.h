@@ -83,8 +83,8 @@
 #define OSSEC_CONFIG "etc/ossec.conf"
 #define SURI_CONFIG "suricata.yaml"
 #define MODSEC_CONFIG "modsecurity.conf"
-#define WAZUH_IPREP "etc/ossec.conf"
-#define SURI_IPREP "suricata.yaml"
-#define MODSEC_IPREP "modsecurity.conf"
+#define WAZUH_IPREP "cdb-misp"
+#define SURI_IPREP "iprep-misp.list"
+#define MODSEC_IPREP "ipblock-misp.txt"
 
 #endif	/* MAIN_H */

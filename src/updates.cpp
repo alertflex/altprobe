@@ -139,12 +139,13 @@ void Updates::onMessage(const Message* message) {
                 inbuf.push(ss);
                 boost::iostreams::copy(inbuf, decomp);
                 boost::iostreams::close(inbuf);
+                
+                ofstream ostream;
+                string cmd;
         
                 if (!content_type.compare("filters") && uploadStatus) {
                     
                     fs.ParsFiltersConfig(decomp.str());
-                    
-                    ofstream ostream;
                     
                     try { 
                         
@@ -167,9 +168,6 @@ void Updates::onMessage(const Message* message) {
                     
                     try { 
                     
-                        ofstream ostream;
-                        string cmd;
-                        
                         if (sensor_id.compare(sensor)) return;
                         
                         int sensor_type = message->getIntProperty("sensor_type");
@@ -180,7 +178,7 @@ void Updates::onMessage(const Message* message) {
                                 string file_name(SURI_CONFIG);
                                 string file_path = dir_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd = "service suricata restart";
+                                cmd = "/etc/alertflex/scripts/restart-suri.sh";
                                 }
                                 break;
                             
@@ -189,7 +187,7 @@ void Updates::onMessage(const Message* message) {
                                 string file_name(OSSEC_CONFIG);
                                 string file_path = dir_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd = dir_path + "bin/ossec-control restart";
+                                cmd = "/etc/alertflex/scripts/restart-wazuh.sh";
                                 }
                                 break;
                                 
@@ -198,7 +196,7 @@ void Updates::onMessage(const Message* message) {
                                 string file_name(MODSEC_CONFIG);
                                 string file_path = dir_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd = "nginx -s reload";
+                                cmd = "/etc/alertflex/scripts/restart-modsec.sh";
                                 }
                                 break;
                                 
@@ -209,12 +207,8 @@ void Updates::onMessage(const Message* message) {
                         ostream << decomp.str();
                         ostream.close();
                         
-                        if (arStatus) {
-                            system(cmd.c_str());
-                            string log = "cmd: " + cmd;
-                            SysLog((char*) log.c_str());
-                        }
-                        
+                        if (arStatus) system(cmd.c_str());
+                    
                     } catch (std::ostream::failure e) {
                         SysLog("Exception for local filters file.");
                     }
@@ -225,9 +219,6 @@ void Updates::onMessage(const Message* message) {
                     
                     try { 
                     
-                        ofstream ostream;
-                        string cmd;
-                        
                         if (sensor_id.compare(sensor)) return;
                         
                         int sensor_type = message->getIntProperty("sensor_type");
@@ -241,8 +232,7 @@ void Updates::onMessage(const Message* message) {
                                 string rules_path(suri_rules);
                                 string file_path = dir_path + rules_path + rule_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd = "suricatasc -c reload-rules";
-                                //suricata-update ???
+                                cmd = "/etc/alertflex/scripts/rulesup-suri.sh";
                                 }
                                 break;
                             
@@ -251,9 +241,7 @@ void Updates::onMessage(const Message* message) {
                                 string rules_path(wazuh_rules);
                                 string file_path = dir_path + rules_path + rule_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd = dir_path + "bin/ossec-control restart";
-                                // cmd = "/var/ossec/bin/ossec-makelists"; 
-                                // cmd = dir_path + "bin/update-ruleset -r";
+                                cmd = "/etc/alertflex/scripts/rulesup-wazuh.sh";
                                 }
                                 break;
                             
@@ -262,7 +250,7 @@ void Updates::onMessage(const Message* message) {
                                 string rules_path(modsec_rules);
                                 string file_path = dir_path + rules_path + rule_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd = "nginx -s reload";
+                                cmd = "/etc/alertflex/scripts/rulesup-modsec.sh";
                                 }
                                 break;
                                 
@@ -273,12 +261,8 @@ void Updates::onMessage(const Message* message) {
                         ostream << decomp.str();
                         ostream.close();
                         
-                        if (arStatus && rule_reload == 1) {
-                            system(cmd.c_str());
-                            string log = "cmd: " + cmd;
-                            SysLog((char*) log.c_str());
-                        }
-                            
+                        if (arStatus && rule_reload == 1) system(cmd.c_str());
+                    
                     } catch (std::ostream::failure e) {
                         SysLog("Exception for local filters file.");
                             
@@ -290,10 +274,6 @@ void Updates::onMessage(const Message* message) {
                     
                     try { 
                     
-                        ofstream ostream;
-                        string cmd1;
-                        string cmd2;
-                        
                         if (sensor_id.compare(sensor)) return;
                         
                         int sensor_type = message->getIntProperty("sensor_type");
@@ -305,8 +285,7 @@ void Updates::onMessage(const Message* message) {
                                 string file_name(SURI_IPREP);
                                 string file_path = dir_path + iprep_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd1 = "suricatasc -c reload-rules";
-                                //suricata-update ???
+                                cmd = "/etc/alertflex/scripts/iprepup-suri.sh";
                                 }
                                 break;
                                 
@@ -316,8 +295,7 @@ void Updates::onMessage(const Message* message) {
                                 string file_name(WAZUH_IPREP);
                                 string file_path = dir_path + iprep_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd1 = dir_path + "bin/ossec-makelists"; 
-                                cmd2 = dir_path + "bin/update-ruleset -r";
+                                cmd = "/etc/alertflex/scripts/iprepup-wazuh.sh"; 
                                 }
                                 break;
                                 
@@ -327,7 +305,7 @@ void Updates::onMessage(const Message* message) {
                                 string file_name(MODSEC_IPREP);
                                 string file_path = dir_path + iprep_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd1 = "nginx -s reload";
+                                cmd = "/etc/alertflex/scripts/iprepup-modsec.sh";
                                 }
                                 break;
                                 
@@ -338,13 +316,8 @@ void Updates::onMessage(const Message* message) {
                         ostream << decomp.str();
                         ostream.close();
                         
-                        if (arStatus) {
-                            system(cmd1.c_str());
-                            if (sensor_type == 1) system(cmd2.c_str());
-                            string log = "cmd: " + cmd1;
-                            SysLog((char*) log.c_str());
-                        }
-                            
+                        if (arStatus) system(cmd.c_str());
+                        
                     } catch (std::ostream::failure e) {
                         SysLog("Exception for local filters file.");
                             
