@@ -112,7 +112,7 @@ void Collector::RoutineJob() {
     ss << ", \"nids\": ";
     ss << to_string(cnids);
     
-    ss << "\", \"waf\": ";
+    ss << ", \"waf\": ";
     ss << to_string(cwaf);
         
     ss << ", \"misc\": ";
