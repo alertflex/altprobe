@@ -140,8 +140,7 @@ how to see a collector errors:
 
 ## Support
 
-Please [open an issue on GitHub](https://github.com/olegzhr/altprobe/issues) or send an email to <info@alertflex.org>,
-if you'd like to report a bug or request a feature 
+Please [open an issue on GitHub](https://github.com/olegzhr/altprobe/issues), if you'd like to report a bug or request a feature 
 
 
 ## Old version of Altprobe 
