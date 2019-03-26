@@ -75,17 +75,7 @@ sudo cp ./configs/GeoLiteCity.dat /etc/alertflex/
 if [ $INSTALL_SURICATA == yes ]
 then
     echo "*** installation suricata ***"
-    sudo yum -y install libpcap-devel pcre-devel libyaml-devel file-devel jansson-devel nss-devel libcap-ng-devel libnet-devel tar libnetfilter_queue-devel lua-devel libpcap-devel pcre-devel libyaml-devel file-devel mariadb-devel jansson-devel nss-devel libcap-ng-devel libnet-devel libnetfilter_queue-devel ethtool libpcap libpcap-devel file-devel libcap-ng-devel
-
-	wget "http://www.openinfosecfoundation.org/download/suricata-4.0.3.tar.gz"
-	tar -xvzf suricata-4.0.3.tar.gz
-	cd suricata-4.0.3
-	autoreconf -f -i
-	./configure --enable-hiredis --prefix=/usr --sysconfdir=/etc --localstatedir=/var --enable-libjansson --with-libnss-libraries=/usr/lib --with-libnss-includes=/usr/include/nss/ --with-libnspr-libraries=/usr/lib --with-libnspr-includes=/usr/include/nspr
-	sudo make
-	sudo make install-full
-	sudo ldconfig
-	cd ..
+    sudo yum -y install suricata
 	sudo bash -c 'cat << EOF > /lib/systemd/system/suricata.service
 [Unit]
 Description=Suricata Intrusion Detection Service
@@ -98,14 +88,6 @@ ExecStart=/usr/bin/suricata -c /etc/suricata/suricata.yaml -i _monitoring_interf
 WantedBy=multi-user.target
 EOF'
 	sudo sed -i "s/_monitoring_interface/$INTERFACE/g" /lib/systemd/system/suricata.service
-	if [ $EXTRACT_FILES == yes ]
-	then
-		sudo cp ./configs/suricata-files.yaml /etc/suricata/suricata.yaml
-		sudo cp ./configs/files.rules /etc/suricata/rules
-	else
-		sudo cp ./configs/suricata.yaml /etc/suricata/
-	fi
-	
 	sudo systemctl enable suricata
 fi
 

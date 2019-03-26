@@ -71,37 +71,28 @@ sudo cp ./configs/GeoLiteCity.dat /etc/alertflex/
 
 if [ $INSTALL_SURICATA == yes ]
 then
-	echo "*** installation suricata ***"
-	wget "http://www.openinfosecfoundation.org/download/suricata-4.0.3.tar.gz"
-	tar -xvzf suricata-4.0.3.tar.gz
-	cd suricata-4.0.3
-	autoreconf -f -i
-	./configure --enable-hiredis --prefix=/usr --sysconfdir=/etc --localstatedir=/var --enable-libjansson --with-libnss-libraries=/usr/lib --with-libnss-includes=/usr/include/nss/ --with-libnspr-libraries=/usr/lib --with-libnspr-includes=/usr/include/nspr
-	sudo make
-	sudo make install-full
-	sudo ldconfig
-	cd ..
+	sudo add-apt-repository ppa:oisf/suricata-stable
+	sudo apt-get update
+	sudo apt-get -y install suricata
+
+	sudo suricata-update enable-source oisf/trafficid
+	sudo suricata-update enable-source et/open
+	sudo suricata-update enable-source ptresearch/attackdetection
+	sudo suricata-update update-sources
+	sudo suricata-update
+
 	sudo bash -c 'cat << EOF > /lib/systemd/system/suricata.service
 [Unit]
 Description=Suricata Intrusion Detection Service
 After=syslog.target network-online.target
-
 [Service]
 ExecStart=/usr/bin/suricata -c /etc/suricata/suricata.yaml -i _monitoring_interface
-
 [Install]
 WantedBy=multi-user.target
 EOF'
+
 	sudo sed -i "s/_monitoring_interface/$INTERFACE/g" /lib/systemd/system/suricata.service
 	sudo systemctl enable suricata
-	
-	if [ $EXTRACT_FILES == yes ]
-	then
-		sudo cp ./configs/suricata-files.yaml /etc/suricata/suricata.yaml
-		sudo cp ./configs/files.rules /etc/suricata/rules
-	else
-		sudo cp ./configs/suricata.yaml /etc/suricata/
-	fi
 fi
 
 if [ $INSTALL_WAZUH == yes ]

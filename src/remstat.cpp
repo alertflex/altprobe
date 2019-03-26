@@ -103,7 +103,7 @@ void RemStat::ProcessLogs() {
         report += " ] }";
         stats_list.clear();
         
-        // SysLog((char*) report.c_str());
+        //SysLog((char*) report.c_str());
         
         ss << report;
         

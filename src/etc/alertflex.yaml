@@ -45,47 +45,41 @@ collector:
   redis_port: 6379 
   
 sources:
-  # redis list for metrics from ElasticStack Metricbeat  
+  # for reading of events from metricbeat and altprobe client (misc) only Redis intefrace can be used 
   metric: "altprobe_metrics"
-  
-  # redis list for events from Altprobe clients 
   misc: "altprobe_misc"
   
-  # nginx/modsecurity log file - /var/log/nginx/error.log
+  # Altprobe can read events of suricata, wazuh and modsec directly from log files
+  # if xxx_log is "none" redis interface will be used
+  # if command logrotate for logs is enabled, consider using the logrotate option - copytruncate
+  # modsec_log: "/var/log/nginx/error.log"
   modsec_log: "none"
-  # redis list for events from Modsecurity WAF
-  modsec_redis: "altprobe_waf"
-  
-  # suricata log file - /var/log/suricata/eve.json
-  suri_log: "none"
-  # redis list for events from Suricata IDS
-  suri_redis: "altprobe_nids"
-  
-  # wazuh log file - /var/ossec/logs/alerts/alerts.json
-  wazuh_log: "/var/ossec/logs/alerts/alerts.json"  
-  # redis list for events from Wazuh IDS/OSSEC
-  wazuh_redis: "altprobe_hids"
-    
-  # modsec_path: "/etc/nginx/modsec/"
-  # modsec_iprep: "owasp-modsecurity-crs-3.0.2/rules/"
-  # modsec_rules: "owasp-modsecurity-crs-3.0.2/rules/"
+  modsec_redis: "altprobe_waf" 
+  # path for config file - /etc/nginx/modsec/main.conf
   modsec_path: "none"
-  modsec_iprep: "none"
-  modsec_rules: "none"
+  # path for update ip-reputation list and rules - /etc/nginx/modsec/rules
+  # need add rule - SecRule REQUEST_HEADERS:User-Agent "@pmFromFile /etc/nginx/modsec/rules/waf-black.list" "id:167"
+  modsec_iprep: "rules/" 
+  # OWASP CRS rules 
+  owasp_path: "none"
+  # owasp_path: "/usr/local/owasp-modsecurity-crs-3.0.2/"
+  owasp_rules: "rules/"
   
-  suri_path: "/etc/suricata/"
+  suri_log: "/var/log/suricata/eve.json"
+  suri_redis: "altprobe_nids"
+  # path for config file - /etc/suricata/suricata.yaml
+  suri_path: "/etc/suricata/" 
+  # path for update ip-reputation list - /etc/suricata/iprep/nids-black.list
+  # set in file suricata.yaml the param - default-reputation-path: /etc/suricata/iprep & param - reputation-files:
   suri_iprep: "iprep/"
-  suri_rules: "rules/"
-  # suri_path: "none"
-  # suri_iprep: "none"
-  # suri_rules: "none"
   
+  wazuh_log: "/var/ossec/logs/alerts/alerts.json"
+  wazuh_redis: "altprobe_hids"
+  # path for config file - /var/ossec/etc/ossec.conf
   wazuh_path: "/var/ossec/"
+  # path for update ip-reputation list - /var/ossec/etc/lists/hids-black.list
+  # add to ossec.conf <ruleset><list>etc/lists/hids-black.list</list>
   wazuh_iprep: "etc/lists/"
-  wazuh_rules: "ruleset/rules/"
-  # wazuh_path: "none"
-  # wazuh_iprep: "none"
-  # wazuh_rules: "none"
   
 controller:
   # send alerts and statistics to Controller (ActiveMQ interface)

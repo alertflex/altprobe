@@ -221,16 +221,15 @@ void Updates::onMessage(const Message* message) {
                     
                         if (sensor_id.compare(sensor)) return;
                         
-                        int sensor_type = message->getIntProperty("sensor_type");
+                        int rules_type = message->getIntProperty("rules_type");
                     
                         string rule_name = message->getStringProperty("rule_name");
                         int rule_reload = message->getIntProperty("rule_reload");
                     
-                        switch (sensor_type) {
+                        switch (rules_type) {
                             case 0 : {
-                                string dir_path(suri_path);
-                                string rules_path(suri_rules);
-                                string file_path = dir_path + rules_path + rule_name;
+                                string rules_path(SURI_RULES_PATH);
+                                string file_path = rules_path + rule_name;
                                 ostream.open(file_path, ios_base::trunc);
                                 cmd = "/etc/alertflex/scripts/rulesup-suri.sh";
                                 }
@@ -238,7 +237,7 @@ void Updates::onMessage(const Message* message) {
                             
                             case 1 : {
                                 string dir_path(wazuh_path);
-                                string rules_path(wazuh_rules);
+                                string rules_path(WAZUH_DECODERS_LOCAL);
                                 string file_path = dir_path + rules_path + rule_name;
                                 ostream.open(file_path, ios_base::trunc);
                                 cmd = "/etc/alertflex/scripts/rulesup-wazuh.sh";
@@ -246,14 +245,23 @@ void Updates::onMessage(const Message* message) {
                                 break;
                             
                             case 2 : {
+                                string dir_path(wazuh_path);
+                                string rules_path(WAZUH_RULES_LOCAL);
+                                string file_path = dir_path + rules_path + rule_name;
+                                ostream.open(file_path, ios_base::trunc);
+                                cmd = "/etc/alertflex/scripts/rulesup-wazuh.sh";
+                                }
+                                break;
+                                
+                            case 3 : {
                                 string dir_path(modsec_path);
-                                string rules_path(modsec_rules);
+                                string rules_path(modsec_iprep);
                                 string file_path = dir_path + rules_path + rule_name;
                                 ostream.open(file_path, ios_base::trunc);
                                 cmd = "/etc/alertflex/scripts/rulesup-modsec.sh";
                                 }
                                 break;
-                                
+                            
                             default:
                                 return;
                         }

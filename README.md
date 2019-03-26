@@ -1,7 +1,8 @@
 # Altprobe Collector
 
 Altprobe has functional of a collector according to SIEM/Log Management terminologies.
-In tandem with Controller, Altprobe can integrate a Wazuh Host IDS (OSSEC fork), Suricata Network IDS, WAF Modsecurity with log management platform Graylog and threat intelligence platform MISP. 
+In tandem with Controller, Altprobe can integrate a Wazuh Host IDS (OSSEC fork) and Suricata Network IDS
+with log management platform Graylog and threat intelligence platform MISP. 
 
 ## Functionalities of Altprobe
 

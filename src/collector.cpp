@@ -70,7 +70,10 @@ int Collector::Go(void) {
             UpdateModsecConfig();
             UpdateSuriRules();
             UpdateOssecRules();
+            UpdateModsecRule();
             UpdateModsecRules();
+            UpdateOwaspRule();
+            UpdateOwaspRules();
             update_timer = 0;
         }
         
@@ -614,14 +617,11 @@ void Collector::UpdateModsecConfig() {
 
 void Collector::UpdateSuriRules() {
     
-    if (!strcmp (suri_rules, "none")) return; 
+    if (!strcmp (suri_path, "none")) return; 
     
     try {
         
-        string root(suri_path);
-        string rules(suri_rules);
-        
-        path p (root + rules);
+        path p (SURI_RULES_PATH);
 
         directory_iterator end_itr;
         
@@ -666,12 +666,12 @@ void Collector::UpdateSuriRules() {
 
 void Collector::UpdateOssecRules() {
     
-    if (!strcmp (wazuh_rules, "none")) return; 
+    if (!strcmp (wazuh_path, "none")) return; 
     
     try {
         
         string root(wazuh_path);
-        string rules(wazuh_rules);
+        string rules(WAZUH_RULES_PATH);
         
         path p (root + rules);
         
@@ -716,14 +716,142 @@ void Collector::UpdateOssecRules() {
     return;
 }
 
-void Collector::UpdateModsecRules() {
+void Collector::UpdateModsecRule() {
     
-    if (!strcmp (modsec_rules, "none")) return; 
+    if (!strcmp (modsec_path, "none")) return; 
     
     try {
         
         string root(modsec_path);
-        string rules(modsec_rules);
+        string rule(MODSEC_RULES_FILE);
+                
+        path file_path(root + rule);
+        string file_name = file_path.filename().string();
+        
+        ifstream modsec_rules;
+        modsec_rules.open(file_path.string(),ios::binary);
+        strStream << modsec_rules.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+                
+        rd.data = comp.str();
+        rd.name_rule = file_name;
+        rd.ref_id = fs.filter.ref_id;
+        rd.event_type = 9;
+        sk.SendMessage(&rd);
+        
+        modsec_rules.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+    
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+    } 
+    
+    return;
+}
+
+void Collector::UpdateModsecRules() {
+    
+    if (!strcmp (modsec_path, "none")) return; 
+    
+    try {
+        
+        string root(modsec_path);
+        string rules(MODSEC_RULES_PATH);
+        
+        path p (root + rules);
+
+        directory_iterator end_itr;
+        
+        // cycle through the directory
+        int i = 0;
+        path file_path;
+        string file_name;
+        
+        for (directory_iterator itr(p); itr != end_itr; ++itr, i++) {
+            
+            if (is_regular_file(itr->path())) {
+                
+                file_path = itr->path();
+                file_name = file_path.filename().string();
+                ifstream modsec_rules;
+                modsec_rules.open(file_path.string(),ios::binary);
+                strStream << modsec_rules.rdbuf();
+        
+                boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+                in.push(boost::iostreams::gzip_compressor());
+                in.push(strStream);
+                boost::iostreams::copy(in, comp);
+                
+                rd.data = comp.str();
+                rd.name_rule = file_name;
+                rd.ref_id = fs.filter.ref_id;
+                rd.event_type = 9;
+                sk.SendMessage(&rd);
+        
+                modsec_rules.close();
+                boost::iostreams::close(in);
+                ResetStreams();
+            }
+        }
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+    } 
+    
+    return;
+}
+
+void Collector::UpdateOwaspRule() {
+    
+    if (!strcmp (owasp_path, "none")) return; 
+    
+    try {
+        
+        string root(owasp_path);
+        string rule(OWASP_CONFIG);
+                
+        path file_path(root + rule);
+        string file_name = file_path.filename().string();
+        
+        ifstream modsec_rules;
+        modsec_rules.open(file_path.string(),ios::binary);
+        strStream << modsec_rules.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+                
+        rd.data = comp.str();
+        rd.name_rule = file_name;
+        rd.ref_id = fs.filter.ref_id;
+        rd.event_type = 9;
+        sk.SendMessage(&rd);
+        
+        modsec_rules.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+    
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+    } 
+    
+    return;
+}
+
+void Collector::UpdateOwaspRules() {
+    
+    if (!strcmp (owasp_path, "none")) return; 
+    
+    try {
+        
+        string root(owasp_path);
+        string rules(owasp_rules);
         
         path p (root + rules);
 

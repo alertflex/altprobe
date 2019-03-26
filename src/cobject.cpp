@@ -48,16 +48,16 @@ char CollectorObject::modsec_log[OS_BUFFER_SIZE];
 bool CollectorObject::modseclog_status;
 
 char CollectorObject::suri_path[OS_BUFFER_SIZE];
-char CollectorObject::suri_rules[OS_BUFFER_SIZE];
 char CollectorObject::suri_iprep[OS_BUFFER_SIZE];
 
 char CollectorObject::wazuh_path[OS_BUFFER_SIZE];
-char CollectorObject::wazuh_rules[OS_BUFFER_SIZE];
 char CollectorObject::wazuh_iprep[OS_BUFFER_SIZE];
 
 char CollectorObject::modsec_path[OS_BUFFER_SIZE];
-char CollectorObject::modsec_rules[OS_BUFFER_SIZE];
 char CollectorObject::modsec_iprep[OS_BUFFER_SIZE];
+
+char CollectorObject::owasp_path[OS_BUFFER_SIZE];
+char CollectorObject::owasp_rules[OS_BUFFER_SIZE];
 
 char CollectorObject::SysLogInfo[OS_LONG_HEADER_SIZE];
 
@@ -195,21 +195,19 @@ int CollectorObject::GetConfig() {
     
     cy->addKey("suri_path");
     
-    cy->addKey("suri_rules");
-    
     cy->addKey("suri_iprep");
     
     cy->addKey("wazuh_path");
-    
-    cy->addKey("wazuh_rules");
     
     cy->addKey("wazuh_iprep");
     
     cy->addKey("modsec_path");
     
-    cy->addKey("modsec_rules");
-    
     cy->addKey("modsec_iprep");
+    
+    cy->addKey("owasp_path");
+    
+    cy->addKey("owasp_rules");
     
     cy->ParsConfig();
     
@@ -235,11 +233,6 @@ int CollectorObject::GetConfig() {
             SysLog("config file notification: remote update disabled, missing suri_path");
         }
     
-        strncpy(suri_rules, (char*) cy->getParameter("suri_rules").c_str(), sizeof(suri_rules));
-        if (!strcmp (suri_rules, "none")) { 
-            SysLog("config file notification: remote update disabled, missing suri_rules");
-        }
-    
         strncpy(suri_iprep, (char*) cy->getParameter("suri_iprep").c_str(), sizeof(suri_iprep));
         if (!strcmp (suri_iprep, "none")) { 
             SysLog("config file notification: remote update disabled, missing suri_iprep");
@@ -248,11 +241,6 @@ int CollectorObject::GetConfig() {
         strncpy(wazuh_path, (char*) cy->getParameter("wazuh_path").c_str(), sizeof(wazuh_path));
         if (!strcmp (wazuh_path, "none")) { 
             SysLog("config file notification: remote update disabled, missing wazuh_path");
-        }
-    
-        strncpy(wazuh_rules, (char*) cy->getParameter("wazuh_rules").c_str(), sizeof(wazuh_rules));
-        if (!strcmp (wazuh_rules, "none")) { 
-            SysLog("config file notification: remote update disabled, missing wazuh_rules");
         }
     
         strncpy(wazuh_iprep, (char*) cy->getParameter("wazuh_iprep").c_str(), sizeof(wazuh_iprep));
@@ -265,14 +253,19 @@ int CollectorObject::GetConfig() {
             SysLog("config file notification: remote update disabled, missing modsec_path");
         }
     
-        strncpy(modsec_rules, (char*) cy->getParameter("modsec_rules").c_str(), sizeof(modsec_rules));
-        if (!strcmp (modsec_rules, "none")) { 
-            SysLog("config file notification: remote update disabled, missing modsec_rules");
-        }
-    
         strncpy(modsec_iprep, (char*) cy->getParameter("modsec_iprep").c_str(), sizeof(modsec_iprep));
         if (!strcmp (modsec_iprep, "none")) { 
             SysLog("config file notification: remote update disabled, missing modsec_iprep");
+        }
+        
+        strncpy(owasp_path, (char*) cy->getParameter("owasp_path").c_str(), sizeof(owasp_path));
+        if (!strcmp (owasp_path, "none")) { 
+            SysLog("config file notification: remote update disabled, missing owasp_path");
+        }
+    
+        strncpy(owasp_rules, (char*) cy->getParameter("owasp_rules").c_str(), sizeof(owasp_rules));
+        if (!strcmp (owasp_rules, "none")) { 
+            SysLog("config file notification: remote update disabled, missing owasp_rules");
         }
     }
     

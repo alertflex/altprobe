@@ -80,11 +80,25 @@
 #define FILTERS_FILE "/etc/alertflex/filters.json"
 #define PID_FILE "/var/run/alertflex.pid"
 #define DAEMON_NAME "alertflex"
+
 #define OSSEC_CONFIG "etc/ossec.conf"
 #define SURI_CONFIG "suricata.yaml"
-#define MODSEC_CONFIG "modsecurity.conf"
-#define WAZUH_IPREP "cdb-misp"
-#define SURI_IPREP "iprep-misp.list"
-#define MODSEC_IPREP "ipblock-misp.txt"
+#define MODSEC_CONFIG "main.conf"
+#define OWASP_CONFIG "crs-setup.conf"
+
+#define WAZUH_IPREP "hids-black.list"
+#define SURI_IPREP "nids-black.list"
+#define MODSEC_IPREP "waf-black.list"
+
+#define WAZUH_RULES_PATH "ruleset/rules/"
+#define WAZUH_DECODERS_PATH "ruleset/decoders/"
+#define WAZUH_RULES_LOCAL "etc/rules/"
+#define WAZUH_DECODERS_LOCAL "etc/decoders/"
+
+#define SURI_RULES_PATH "/var/lib/suricata/rules/"
+#define SURI_RULES_FILE "suricata.rules"
+
+#define MODSEC_RULES_PATH "rules/"
+#define MODSEC_RULES_FILE "modsecurity.conf"
 
 #endif	/* MAIN_H */
