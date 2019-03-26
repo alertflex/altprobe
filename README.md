@@ -60,6 +60,8 @@ Fill in collector specific parameters in file ``env.sh`` and start installation
     
     $ chmod u+x install_ubuntu16.sh
     ./install_ubuntu16.sh
+    
+After the finish of installation Altprobe, make a copy of file ``Broker.pem`` to dir /etc/alertflex/ of Collector node from Controller node install dir (file Broker.pem should be created automatically during installation of Controller).
 
 NOTE:
 
