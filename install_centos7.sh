@@ -13,10 +13,7 @@ fi
 echo "*** Installation alertflex collector started***"
 sudo yum -y install epel-release
 sudo yum -y update
-sudo yum -y install pcre pcre2 autoconf automake gcc make libtool libnet-devel libyaml libyaml-devel zlib zlib-devel libcap-ng file-libs libdaemon-devel GeoIP GeoIP-devel GeoIP-data boost-devel boost-thread libmicrohttpd logrotate autoconf-archive m4 git ntp openssl-libs openssl-devel curl ldconfig
-
-echo "*** installation redis and hiredis lib***"
-sudo yum -y install redis hiredis hiredis-devel
+sudo yum -y install pcre pcre2 autoconf automake gcc make libtool libnet-devel libyaml libyaml-devel zlib zlib-devel libcap-ng file-libs libdaemon-devel GeoIP GeoIP-devel GeoIP-data boost-devel boost-thread libmicrohttpd logrotate autoconf-archive m4 git ntp openssl-libs openssl-devel curl ldconfig redis hiredis hiredis-devel
 sudo systemctl enable redis
 
 echo "*** installation activemq ***"
