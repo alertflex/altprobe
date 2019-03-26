@@ -1,4 +1,4 @@
-# Altprobe Collector
+# Alertflex Collector (Altprobe)
 
 Altprobe has functional of a collector according to SIEM/Log Management terminologies.
 In tandem with Controller, Altprobe can integrate a Wazuh Host IDS (OSSEC fork) and Suricata Network IDS
