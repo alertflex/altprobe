@@ -1,8 +1,6 @@
 # Alertflex Collector (Altprobe)
 
 Altprobe has functional of a collector according to SIEM/Log Management terminologies.
-In tandem with Controller, Altprobe can integrate a Wazuh Host IDS (OSSEC fork) and Suricata Network IDS
-with log management platform Graylog and threat intelligence platform MISP. 
 
 ## Functionalities of Altprobe
 
@@ -40,8 +38,7 @@ with log management platform Graylog and threat intelligence platform MISP.
 * Network activity of windows process from Sysmon
 
 ## Screenshots
-
-Below, screenshot of Graylog web forms for events from Altprobe
+In tandem with Alertflex Controller, Altprobe can integrate a Wazuh Host IDS (OSSEC fork) and Suricata Network IDS with log management platform Graylog and threat intelligence platform MISP. Below, screenshot of Graylog web forms for events from Altprobe
 
 ![](https://github.com/olegzhr/altprobe/blob/master/img/graylog.jpg)
 
