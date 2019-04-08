@@ -49,15 +49,14 @@ public:
         
     static char suri_path[OS_BUFFER_SIZE]; 
     static char suri_iprep[OS_BUFFER_SIZE];
+    static char suri_rules[OS_BUFFER_SIZE];
     
     static char wazuh_path[OS_BUFFER_SIZE];
     static char wazuh_iprep[OS_BUFFER_SIZE];
-    
+        
     static char modsec_path[OS_BUFFER_SIZE];
     static char modsec_iprep[OS_BUFFER_SIZE];
-    
-    static char owasp_path[OS_BUFFER_SIZE];
-    static char owasp_rules[OS_BUFFER_SIZE];
+    static char modsec_rules[OS_BUFFER_SIZE];
     
     char collector_time[OS_DATETIME_SIZE]; 
     

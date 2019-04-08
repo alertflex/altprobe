@@ -228,7 +228,7 @@ void Updates::onMessage(const Message* message) {
                     
                         switch (rules_type) {
                             case 0 : {
-                                string rules_path(SURI_RULES_PATH);
+                                string rules_path(suri_rules);
                                 string file_path = rules_path + rule_name;
                                 ostream.open(file_path, ios_base::trunc);
                                 cmd = "/etc/alertflex/scripts/rulesup-suri.sh";
@@ -254,9 +254,8 @@ void Updates::onMessage(const Message* message) {
                                 break;
                                 
                             case 3 : {
-                                string dir_path(modsec_path);
                                 string rules_path(modsec_iprep);
-                                string file_path = dir_path + rules_path + rule_name;
+                                string file_path = rules_path + rule_name;
                                 ostream.open(file_path, ios_base::trunc);
                                 cmd = "/etc/alertflex/scripts/rulesup-modsec.sh";
                                 }
@@ -288,30 +287,27 @@ void Updates::onMessage(const Message* message) {
                     
                         switch (sensor_type) {
                             case 0 : {
-                                string dir_path(suri_path);
                                 string iprep_path(suri_iprep);
                                 string file_name(SURI_IPREP);
-                                string file_path = dir_path + iprep_path + file_name;
+                                string file_path = iprep_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
                                 cmd = "/etc/alertflex/scripts/iprepup-suri.sh";
                                 }
                                 break;
                                 
                             case 1 : {
-                                string dir_path(wazuh_path);
                                 string iprep_path(wazuh_iprep);
                                 string file_name(WAZUH_IPREP);
-                                string file_path = dir_path + iprep_path + file_name;
+                                string file_path = iprep_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
                                 cmd = "/etc/alertflex/scripts/iprepup-wazuh.sh"; 
                                 }
                                 break;
                                 
                             case 2 : {
-                                string dir_path(modsec_path);
                                 string iprep_path(modsec_iprep);
                                 string file_name(MODSEC_IPREP);
-                                string file_path = dir_path + iprep_path + file_name;
+                                string file_path = iprep_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
                                 cmd = "/etc/alertflex/scripts/iprepup-modsec.sh";
                                 }

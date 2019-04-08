@@ -84,7 +84,6 @@
 #define OSSEC_CONFIG "etc/ossec.conf"
 #define SURI_CONFIG "suricata.yaml"
 #define MODSEC_CONFIG "main.conf"
-#define OWASP_CONFIG "crs-setup.conf"
 
 #define WAZUH_IPREP "hids-black.list"
 #define SURI_IPREP "nids-black.list"
@@ -95,10 +94,8 @@
 #define WAZUH_RULES_LOCAL "etc/rules/"
 #define WAZUH_DECODERS_LOCAL "etc/decoders/"
 
-#define SURI_RULES_PATH "/var/lib/suricata/rules/"
 #define SURI_RULES_FILE "suricata.rules"
 
-#define MODSEC_RULES_PATH "rules/"
-#define MODSEC_RULES_FILE "modsecurity.conf"
+#define MODSEC_RULES_FILE "crs-setup.conf"
 
 #endif	/* MAIN_H */

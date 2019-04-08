@@ -85,9 +85,7 @@ public:
     void UpdateOssecRules();
     void UpdateModsecRule();
     void UpdateModsecRules();
-    void UpdateOwaspRule();
-    void UpdateOwaspRules();
-    
+        
     void ParsAgentsStatus(string status);
     string GetAgentsStatus();
     
