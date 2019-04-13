@@ -367,7 +367,7 @@ void Waf::CreateLog() {
     report += ",\"_type\":\"NET\"";
     report += ",\"_source\":\"Modsecurity\"";
         
-    report +=  ",\"_project_id\":\"";
+    report +=  "\",\"_project_id\":\"";
     report +=  fs.filter.ref_id;
 			
     report +=  "\",\"_event_time\":\"";

@@ -284,6 +284,7 @@ public:
     static void UpdateAgentsList(string id, string ip, string name, string status, 
         string date, string version, string manager, string os_platf, string os_ver, string os_name);
     static string GetAgentNameByIP(string ip);
+    static string GetAgentIdByName(string name);
     static Alias* GetAliasByAgentName(string name);
         
     int GetStatus() { return status; }

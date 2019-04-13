@@ -52,6 +52,8 @@ sources:
   # Altprobe can read events of suricata, wazuh and modsec directly from log files
   # if xxx_log is "none" redis interface will be used
   # if command logrotate for logs is enabled, consider using the logrotate option - copytruncate
+  
+  # modsec_log: "/var/log/nginx/error.log"
   modsec_log: "none"
   modsec_redis: "altprobe_waf" 
   # path for config file - /etc/nginx/modsec/
@@ -62,9 +64,10 @@ sources:
   # owasp_rules: "/usr/local/owasp-modsecurity-crs-3.0.2/"
   modsec_rules: "/usr/local/owasp-modsecurity-crs-3.0.2/"
   
+  # suri_log: "/var/log/suricata/eve.json"
   suri_log: "none"
   suri_redis: "altprobe_nids"
-  # path for config file - /etc/suricata/suricata.yaml
+  # path to config file - /etc/suricata/suricata.yaml
   suri_path: "/etc/suricata/" 
   # path for update ip-reputation list - /etc/suricata/iprep/nids-black.list
   # set in file suricata.yaml the param - default-reputation-path: /etc/suricata/iprep & param - reputation-files:
@@ -74,7 +77,7 @@ sources:
   
   wazuh_log: "/var/ossec/logs/alerts/alerts.json"
   wazuh_redis: "altprobe_hids"
-  # path for config file - /var/ossec/etc/ossec.conf
+  # path to config file - /var/ossec/etc/ossec.conf
   wazuh_path: "/var/ossec/"
   # path for update ip-reputation list - /var/ossec/etc/lists/hids-black.list
   # add to ossec.conf <ruleset><list>etc/lists/hids-black.list</list>

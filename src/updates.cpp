@@ -327,32 +327,40 @@ void Updates::onMessage(const Message* message) {
                             
                     }
                 }
-            }
-        }  else {  
+            
+            } else {  
         
-            const TextMessage* textMessage = dynamic_cast<const TextMessage*> (message);
+                const TextMessage* textMessage = dynamic_cast<const TextMessage*> (message);
         
-            string text = textMessage->getText();
-            stringstream ss(text);
-        
-            try {
-        
-                bpt::ptree pt;
-                bpt::read_json(ss, pt);
-        
-                if (!content_type.compare("active_response") && arStatus) {
-                    
-                    string agent = pt.get<string>("agent");
-                    string response = pt.get<string>("response");
-                    
-                    SendArToWazuh(agent, response);
-                    
-                    string log = "ar: " + response;
-                    SysLog((char*) log.c_str());
-                }
+                string text = textMessage->getText();
+                stringstream ss(text);
                 
-            } catch (const std::exception & ex) {
-                SysLog((char*) ex.what());
+                if (sensor_id.compare("master")) {
+        
+                    try {
+        
+                        bpt::ptree pt;
+                        bpt::read_json(ss, pt);
+        
+                        if (!content_type.compare("active_response") && arStatus) {
+                    
+                            string agent_name = pt.get<string>("agent");
+                            string json = pt.get<string>("json");
+                                                        
+                            // convert agent to number
+                            
+                            string agent_id = fs.GetAgentIdByName(agent_name);
+                    
+                            if (!agent_id.empty()) SendArToWazuh(agent_id, json);
+                    
+                            string log = "ar_json: " + json;
+                            SysLog((char*) log.c_str());
+                        }
+                
+                    } catch (const std::exception & ex) {
+                        SysLog((char*) ex.what());
+                    }
+                }
             }
         }
         

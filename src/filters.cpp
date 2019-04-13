@@ -315,12 +315,26 @@ string FiltersSingleton::GetAgentNameByIP(string ip) {
     return "unknown";
 }
 
-Alias* FiltersSingleton::GetAliasByAgentName(string n) {
+string FiltersSingleton::GetAgentIdByName(string name) {
+    
+    std::vector<Agent>::iterator i_ag, end_ag;
+    
+    for(i_ag = agents_list.begin(), end_ag = agents_list.end(); i_ag != end_ag; ++i_ag) {
+        if (i_ag->name.compare(name) == 0) {
+            return i_ag->id;
+        }
+    }
+    
+    
+    return "";
+}
+
+Alias* FiltersSingleton::GetAliasByAgentName(string name) {
     
     std::vector<Alias*>::iterator i, end;
     
     for(i = filter.alias.begin(), end = filter.alias.end(); i != end; ++i) {
-        if ((*i)->agent_name.compare(n) == 0) {
+        if ((*i)->agent_name.compare(name) == 0) {
              return (*i); 
         } 
     }
