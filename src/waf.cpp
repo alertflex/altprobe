@@ -30,6 +30,9 @@ void ModsecRecord::RemoveAuditParametersName(const string field, const string st
     int l = str.length() - b - 2;
     
     buffer = str.substr(b, l);
+    
+    buffer.erase(0, 2);
+    buffer.erase(buffer.size() - 1);   
 }
 
 void ModsecRecord::CheckAuditFields(const string str) {
@@ -38,21 +41,23 @@ void ModsecRecord::CheckAuditFields(const string str) {
     
     if(str.find("file") == 0) {
         
-        RemoveAuditParametersName("file", str);
-        ma.file = buffer;
+        try {
+        
+            RemoveAuditParametersName("file", str);
+            ma.file = buffer;
+        
+        } catch (const std::exception & ex) {
+            ma.file = "";
+        }
         
         return;
     }
     
     if(str.find("id") == 0) {
         
-        RemoveAuditParametersName("id", str);
-        
         try {
             
-            buffer.erase(0, 2);
-            buffer.erase(buffer.size() - 1);   
-            
+            RemoveAuditParametersName("id", str);
             ma.id = std::stoi(buffer);
 
         } catch (const std::exception & ex) {
@@ -64,14 +69,11 @@ void ModsecRecord::CheckAuditFields(const string str) {
     
     if(str.find("severity") == 0) {
         
-        RemoveAuditParametersName("severity", str);
         
         try {
-            
-           buffer.erase(0, 2);
-           buffer.erase(buffer.size() - 1);   
-                                   
-           ma.severity = std::stoi(buffer);
+           
+            RemoveAuditParametersName("severity", str);
+            ma.severity = std::stoi(buffer);
 
         } catch (const std::exception & ex) {
             ma.severity = 0;
@@ -82,32 +84,55 @@ void ModsecRecord::CheckAuditFields(const string str) {
     
     if(str.find("tag") == 0) {
             
-        RemoveAuditParametersName("tag", str);
-        ma.list_tags.push_back(buffer);
+        try {
+            
+            RemoveAuditParametersName("tag", str);
+            ma.list_tags.push_back(buffer);
+        
+        } catch (const std::exception & ex) {
+        }
         
         return;
     }
     
     if(str.find("msg") == 0) {
         
-        RemoveAuditParametersName("msg", str);
-        ma.msg = buffer;
+        try {
+        
+            RemoveAuditParametersName("msg", str);
+            ma.msg = buffer;
+        
+        } catch (const std::exception & ex) {
+            ma.msg = "";
+        }
         
         return;
     }
     
     if(str.find("hostname") == 0) {
         
-        RemoveAuditParametersName("hostname", str);
-        ma.hostname = buffer;
+        try {
+        
+            RemoveAuditParametersName("hostname", str);
+            ma.hostname = buffer;
+        
+        } catch (const std::exception & ex) {
+            ma.hostname = "";
+        }
         
         return;
     }
     
     if(str.find("uri") == 0) {
         
-        RemoveAuditParametersName("uri", str);
-        ma.uri = buffer;
+        try {
+        
+            RemoveAuditParametersName("uri", str);
+            ma.uri = buffer;
+        
+        } catch (const std::exception & ex) {
+            ma.uri = "";
+        }
         
         return;
     }
