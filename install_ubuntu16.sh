@@ -58,6 +58,7 @@ then
 	sudo add-apt-repository --yes ppa:oisf/suricata-stable
 	sudo apt-get update
 	sudo apt-get -y install suricata
+	sudo cp ./configs/suricata.yaml /etc/suricata/
 
 	sudo suricata-update enable-source oisf/trafficid
 	sudo suricata-update enable-source et/open
@@ -76,7 +77,6 @@ WantedBy=multi-user.target
 EOF'
 
 	sudo sed -i "s/_monitoring_interface/$INTERFACE/g" /etc/systemd/system/suricata.service
-	sudo cp ./configs/suricata.yaml /etc/suricata/
 	sudo systemctl enable suricata
 fi
 
