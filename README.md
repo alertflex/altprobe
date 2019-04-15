@@ -50,6 +50,8 @@ Altprobe was tested under Ubuntu version 16.04 with Wazuh HIDS (OSSEC fork) vers
 
 ## Installation instructions
 
+Create user ``alertflex`` and log in under this user
+
 Download installation files
 
     $ git clone git://github.com/olegzhr/Altprobe.git
