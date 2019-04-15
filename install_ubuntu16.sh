@@ -48,22 +48,6 @@ sudo sed -i "s/_amq_user/$AMQ_USER/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_amq_pwd/$AMQ_PWD/g" /etc/alertflex/alertflex.yaml
 sudo chmod go-rwx /etc/alertflex/alertflex.yaml
 
-sudo bash -c 'cat << EOF > /lib/systemd/system/altprobe.service
-[Unit]
-Description=Altprobe
-After=syslog.target network-online.target
-
-[Service]
-Type=forking
-User=root
-ExecStart=/usr/local/bin/altprobe start
-
-[Install]
-WantedBy=multi-user.target
-EOF'
-
-sudo systemctl enable altprobe
-
 cd ..
 
 echo "*** Copy MaxMind geo DB ***"
@@ -81,7 +65,7 @@ then
 	sudo suricata-update update-sources
 	sudo suricata-update
 
-	sudo bash -c 'cat << EOF > /lib/systemd/system/suricata.service
+	sudo bash -c 'cat << EOF > /etc/systemd/system/suricata.service
 [Unit]
 Description=Suricata Intrusion Detection Service
 After=syslog.target network-online.target
@@ -91,7 +75,8 @@ ExecStart=/usr/bin/suricata -c /etc/suricata/suricata.yaml -i _monitoring_interf
 WantedBy=multi-user.target
 EOF'
 
-	sudo sed -i "s/_monitoring_interface/$INTERFACE/g" /lib/systemd/system/suricata.service
+	sudo sed -i "s/_monitoring_interface/$INTERFACE/g" /etc/systemd/system/suricata.service
+	sudo cp ./configs/suricata.yaml /etc/suricata/
 	sudo systemctl enable suricata
 fi
 
@@ -113,7 +98,36 @@ then
 	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/alertflex/alertflex.yaml
 	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/alertflex/alertflex.yaml
 	
+	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
+[Unit]
+Description=Altprobe
+After=wazuh-manager.service wazuh-api.service
+
+[Service]
+Type=forking
+User=root
+ExecStart=/usr/local/bin/altprobe start
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+else
+	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
+[Unit]
+Description=Altprobe
+After=syslog.target network-online.target
+
+[Service]
+Type=forking
+User=root
+ExecStart=/usr/local/bin/altprobe start
+
+[Install]
+WantedBy=multi-user.target
+EOF'
 fi
+
+sudo systemctl enable altprobe
 
 if [ $INSTALL_FILEBEAT == yes ]
 then
