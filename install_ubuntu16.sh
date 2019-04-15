@@ -55,7 +55,7 @@ sudo cp ./configs/GeoLiteCity.dat /etc/alertflex/
 
 if [ $INSTALL_SURICATA == yes ]
 then
-	sudo add-apt-repository ppa:oisf/suricata-stable
+	sudo add-apt-repository --yes ppa:oisf/suricata-stable
 	sudo apt-get update
 	sudo apt-get -y install suricata
 

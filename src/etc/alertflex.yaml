@@ -51,7 +51,7 @@ sources:
   
   # Altprobe can read events of suricata, wazuh and modsec directly from log files
   # if xxx_log is "none" redis interface will be used
-  # if command logrotate for logs is enabled, consider using the logrotate option - copytruncate
+  # NOTE! do not use this feature if logrotate (or similar) for logs is enabled, or consider using the logrotate option - copytruncate
   
   # modsec_log: "/var/log/nginx/error.log"
   modsec_log: "none"
@@ -75,7 +75,8 @@ sources:
   # /var/lib/suricata/rules/ or /etc/suricata/rules/
   suri_rules: "/etc/suricata/rules/"
   
-  wazuh_log: "/var/ossec/logs/alerts/alerts.json"
+  # wazuh_log: "/var/ossec/logs/alerts/alerts.json"
+  wazuh_log: "none"
   wazuh_redis: "altprobe_hids"
   # path to config file - /var/ossec/etc/ossec.conf
   wazuh_path: "/var/ossec/"

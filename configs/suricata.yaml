@@ -154,8 +154,8 @@ outputs:
             # Enable the logging of tagged packets for rules using the
             # "tag" keyword.
             tagged-packets: yes
-        #- http:
-            #extended: yes     # enable this for extended logging information
+        # - http:
+            # extended: yes     # enable this for extended logging information
             # custom allows additional http fields to be included in eve-log
             # the example below adds three additional fields when uncommented
             #custom: [Accept-Encoding, Accept-Language, Authorization]
@@ -189,16 +189,16 @@ outputs:
             # Answer types to log.
             # Default: all
             #types: [a, aaaa, cname, mx, ns, ptr, txt]
-        #- tls:
-            #extended: yes     # enable this for extended logging information
+        # - tls:
+            # extended: yes     # enable this for extended logging information
             # output TLS transaction where the session is resumed using a
             # session id
             #session-resumption: no
             # custom allows to control which tls fields that are included
             # in eve-log
             #custom: [subject, issuer, session_resumed, serial, fingerprint, sni, version, not_before, not_after, certificate, chain, ja3]
-        #- files:
-            #force-magic: no   # force logging magic on all logged files
+        # - files:
+            # force-magic: no   # force logging magic on all logged files
             # force logging of checksums, available hash functions are md5,
             # sha1 and sha256
             #force-hash: [md5]
@@ -206,7 +206,7 @@ outputs:
         #    alerts: yes      # log alerts that caused drops
         #    flows: all       # start or all: 'start' logs only a single drop
         #                     # per flow direction. All logs each dropped pkt.
-        #- smtp:
+        # - smtp:
             #extended: yes # enable this for extended logging information
             # this includes: bcc, message-id, subject, x_mailer, user-agent
             # custom fields logging from the list:
@@ -227,12 +227,12 @@ outputs:
         #- krb5
         #- dhcp:
             # DHCP logging requires Rust.
-            #enabled: yes
+            # enabled: yes
             # When extended mode is on, all DHCP messages are logged
             # with full detail. When extended mode is off (the
             # default), just enough information to map a MAC address
             # to an IP address is logged.
-            #extended: no
+            # extended: no
         - ssh
         - stats:
             totals: yes       # stats for all threads merged together
