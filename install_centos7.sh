@@ -47,23 +47,7 @@ sudo sed -i "s/_amq_host/$AMQ_HOST/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_amq_user/$AMQ_USER/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_amq_pwd/$AMQ_PWD/g" /etc/alertflex/alertflex.yaml
 sudo chmod go-rwx /etc/alertflex/alertflex.yaml
-
-sudo bash -c 'cat << EOF > /lib/systemd/system/altprobe.service
-[Unit]
-Description=Altprobe
-After=syslog.target network-online.target
-
-[Service]
-Type=forking
-User=root
-ExecStart=/usr/local/bin/altprobe start
-
-[Install]
-WantedBy=multi-user.target
-EOF'
-
-sudo systemctl enable altprobe
-
+sudo mv /usr/local/bin/* /usr/sbin/
 cd ..
 
 echo "*** Copy MaxMind geo DB ***"
@@ -73,18 +57,26 @@ if [ $INSTALL_SURICATA == yes ]
 then
     echo "*** installation suricata ***"
     sudo yum -y install suricata
-	sudo bash -c 'cat << EOF > /lib/systemd/system/suricata.service
+	sudo cp ./configs/suricata.yaml /etc/suricata/
+	
+	sudo suricata-update enable-source oisf/trafficid
+	sudo suricata-update enable-source et/open
+	sudo suricata-update enable-source ptresearch/attackdetection
+	sudo suricata-update update-sources
+	sudo suricata-update
+	
+	sudo bash -c 'cat << EOF > /etc/systemd/system/suricata.service
 [Unit]
 Description=Suricata Intrusion Detection Service
 After=syslog.target network-online.target
 
 [Service]
-ExecStart=/usr/bin/suricata -c /etc/suricata/suricata.yaml -i _monitoring_interface
+ExecStart=/usr/sbin/suricata -c /etc/suricata/suricata.yaml -i _monitoring_interface
 
 [Install]
 WantedBy=multi-user.target
 EOF'
-	sudo sed -i "s/_monitoring_interface/$INTERFACE/g" /lib/systemd/system/suricata.service
+	sudo sed -i "s/_monitoring_interface/$INTERFACE/g" /etc/systemd/system/suricata.service
 	sudo systemctl enable suricata
 fi
 
@@ -111,8 +103,37 @@ EOF'
 	sudo systemctl enable wazuh-api
 	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/alertflex/alertflex.yaml
 	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/alertflex/alertflex.yaml
+	
+	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
+[Unit]
+Description=Altprobe
+After=wazuh-manager.service wazuh-api.service
 
+[Service]
+Type=forking
+User=root
+ExecStart=/usr/sbin/altprobe start
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+else
+sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
+[Unit]
+Description=Altprobe
+After=syslog.target network-online.target
+
+[Service]
+Type=forking
+User=root
+ExecStart=/usr/sbin/altprobe start
+
+[Install]
+WantedBy=multi-user.target
+EOF'
 fi
+
+sudo systemctl enable altprobe
 
 if [ $INSTALL_FILEBEAT == yes ]
 then
