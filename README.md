@@ -1,8 +1,6 @@
 # Alertflex Collector (Altprobe)
 
-Altprobe is a component of the Alertflex project. Alertflex controller is a component of the Alertflex project. The project implements an IDS security event management solution which is based on five levels: Collection, Streaming, Analysis, Storage, Access. For working in a distributed IT environment, the solution consists of separate software components Collector, Controller, Web Management Console, and Worker. Collector (Altprobe) is located in the network domain where security sensors are installed (Host IDS, File Integrity Monitor, Network IDS, Web Application Firewall). Together with security sensors, Collector logically forms a cloud or on-premises node. Alertflex Controller, Console and Worker make up the central node. The central node may be geographically located in the cloud, in a remote office or on the MSSP side of the provider. To exchange messages between the cloud node and the central node, the ActiveMQ message broker is used. The security of connections between nodes is implemented on the basis of support for SSL / TLS protocols built into ActiveMQ. Through the use of microservices based architecture, the solution can be easily scaled from the stand-alone appliance configuration to the distributed configuration with several nodes (see high-level diagram below).
-
-![](https://github.com/olegzhr/altprobe/blob/master/img/arch.png)
+Altprobe is a component of the Alertflex project. 
 
 ## Functionalities of Altprobe
 
