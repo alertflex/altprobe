@@ -115,8 +115,7 @@ class Hids : public Source {
 public:
     
     FILE *fp;
-    fpos_t fp_pos;
-    
+    int eof_counter;
     char file_payload[OS_PAYLOAD_SIZE];
     
     //OSSEC record
@@ -128,7 +127,7 @@ public:
     Hids (string skey) : Source(skey) {
         ClearRecords();
         ResetStreams();
-        fp = NULL;
+        eof_counter = 0;
     }
     
     void ResetStreams() {

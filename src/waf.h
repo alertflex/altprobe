@@ -98,8 +98,7 @@ class Waf : public Source {
 public:
     
     FILE *fp;
-    fpos_t fp_pos;
-    
+    int eof_counter;
     char file_payload[OS_PAYLOAD_SIZE];
     
     // ModSecurity record
@@ -113,7 +112,7 @@ public:
     Waf (string skey) : Source(skey) {
         ClearRecords();
         ResetStreams();
-        
+        eof_counter = 0;
     }
     
     void ResetStreams() {

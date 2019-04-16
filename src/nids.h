@@ -160,8 +160,7 @@ class Nids : public Source {
 public: 
     
     FILE *fp;
-    fpos_t fp_pos;
-    
+    int eof_counter;
     char file_payload[OS_PAYLOAD_SIZE];
     
     //Suricata record
@@ -177,6 +176,7 @@ public:
     Nids (string skey) : Source(skey) {
         ClearRecords();
         ResetStream();
+        eof_counter = 0;
     }
     
     void ResetStream() {

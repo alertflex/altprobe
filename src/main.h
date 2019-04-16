@@ -98,4 +98,6 @@
 
 #define MODSEC_RULES_FILE "crs-setup.conf"
 
+#define EOF_COUNTER 100
+
 #endif	/* MAIN_H */

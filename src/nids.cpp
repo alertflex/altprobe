@@ -72,10 +72,29 @@ int Nids::ReadFile(void) {
     
     if (fgets(file_payload, OS_PAYLOAD_SIZE - 1, fp) == NULL) {
         
-        if (feof(fp)) return 0;
+        if (feof(fp)) {
+                
+            if(eof_counter > EOF_COUNTER) {
+                    
+                int old_pos = ftell(fp);
+                fseek(fp,0,SEEK_END);
+                int new_pos = ftell(fp);
+                    
+                if(old_pos > new_pos) {
+                    // file was truncated
+                    fseek(fp,0,SEEK_SET);
+                } else fseek(fp,old_pos,SEEK_SET);
+                
+                eof_counter = 0;
+                    
+            } else eof_counter++;
+            
+            return 0;
+        }
         
-        return -1;
+        return -1; 
     }
+    
     return 1;
 }
 
