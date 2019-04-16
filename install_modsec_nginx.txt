@@ -1,0 +1,77 @@
+*** nginx install instruction from https://tutorialforlinux.com/2016/09/23/installing-latest-nginx-on-ubuntu-14-04-trusty-lts/
+
+1) Login as Super User 
+sudo su
+
+2) Set Up the Nginx Mainline Apt Repo
+echo "deb http://nginx.org/packages/mainline/ubuntu/ xenial nginx" | sudo tee -a /etc/apt/sources.list.d/nginx.list
+echo "deb-src http://nginx.org/packages/mainline/ubuntu/ xenial nginx" | sudo tee -a /etc/apt/sources.list.d/nginx.list
+
+3) Add the Signing Key
+cd ~
+wget http://nginx.org/keys/nginx_signing.key
+apt-key add nginx_signing.key
+rm nginx_signing.key
+
+4) exit from su and install nginx
+sudo apt-get update
+sudo apt-get install nginx
+
+5) check version nginx (nginx version was: nginx/1.15.12)
+nginx -v
+
+*** Modsec install instruction from https://www.nginx.com/blog/compiling-and-installing-modsecurity-for-open-source-nginx/
+
+6) Install Prerequisite Packages
+
+sudo apt-get install -y apt-utils autoconf automake build-essential git libcurl4-openssl-dev libgeoip-dev liblmdb-dev libpcre++-dev libtool libxml2-dev libyajl-dev pkgconf wget zlib1g-dev
+	
+7) Download and Compile the ModSecurity 3.0 Source Code
+	
+git clone --depth 1 -b v3/master --single-branch https://github.com/SpiderLabs/ModSecurity
+
+8) Change to the ModSecurity directory and compile the source code:
+
+cd ModSecurity
+git submodule init
+git submodule update
+./build.sh
+./configure
+make
+sudo make install
+
+9) Download the NGINX Connector for ModSecurity and Compile It as a Dynamic Module
+
+9.1) Clone the GitHub repository:
+cd ..
+git clone --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git
+
+9.2) Download the source code corresponding to the installed version of NGINX (the complete sources are required even though only the dynamic module is being compiled):
+wget http://nginx.org/download/nginx-1.15.12.tar.gz
+tar zxvf nginx-1.15.12.tar.gz
+
+9.3) Compile the dynamic module and copy it to the standard directory for modules:
+cd nginx-1.15.12
+./configure --with-compat --add-dynamic-module=../ModSecurity-nginx
+make modules
+sudo cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules
+
+10) Configure modsec and install rules
+sudo mkdir /etc/nginx/modsec
+cd /etc/nginx/modsec
+sudo wget https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended
+sudo mv modsecurity.conf-recommended modsecurity.conf
+
+11) Enabling the OWASP CRS
+cd ~
+wget https://github.com/SpiderLabs/owasp-modsecurity-crs/archive/v3.0.2.tar.gz
+tar -xzvf v3.0.2.tar.gz
+sudo mv owasp-modsecurity-crs-3.0.2 /usr/local
+sudo cp /usr/local/owasp-modsecurity-crs-3.0.2/crs-setup.conf.example /usr/local/owasp-modsecurity-crs-3.0.2/crs-setup.conf
+
+12) Copy configs and Reload the NGINX configuration.
+sudo nginx -s reload
+
+
+
+
