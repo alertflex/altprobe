@@ -115,7 +115,9 @@ class Hids : public Source {
 public:
     
     FILE *fp;
-    int eof_counter;
+    struct stat buf;
+    unsigned long file_size;
+    int ferror_counter;
     char file_payload[OS_PAYLOAD_SIZE];
     
     //OSSEC record
@@ -127,7 +129,7 @@ public:
     Hids (string skey) : Source(skey) {
         ClearRecords();
         ResetStreams();
-        eof_counter = 0;
+        ferror_counter = 0;
     }
     
     void ResetStreams() {
@@ -146,7 +148,8 @@ public:
     
     virtual int Open();
     virtual void Close();
-    int ReadFile(void);
+    int ReadFile();
+    void IsFileModified();
     int Go();
     
     int ParsJson ();

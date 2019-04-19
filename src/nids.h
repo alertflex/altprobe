@@ -160,7 +160,9 @@ class Nids : public Source {
 public: 
     
     FILE *fp;
-    int eof_counter;
+    struct stat buf;
+    unsigned long file_size;
+    int ferror_counter;
     char file_payload[OS_PAYLOAD_SIZE];
     
     //Suricata record
@@ -176,7 +178,7 @@ public:
     Nids (string skey) : Source(skey) {
         ClearRecords();
         ResetStream();
-        eof_counter = 0;
+        ferror_counter = 0;
     }
     
     void ResetStream() {
@@ -190,7 +192,8 @@ public:
     
     virtual int Open();
     virtual void Close();
-    int ReadFile(void);
+    int ReadFile();
+    void IsFileModified();
     int Go();
     
     int ParsJson ();

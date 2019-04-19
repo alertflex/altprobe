@@ -170,8 +170,11 @@ int Waf::Open() {
                 SysLog("failed open nginx error log file");
                 return 0;
             }
-            fseek(fp,0,SEEK_END);
             
+            fseek(fp,0,SEEK_END);
+            stat(modsec_log, &buf);    
+            file_size = (unsigned long) buf.st_size;
+    
         } else {
         
             c = redisConnect(sk.redis_host, sk.redis_port);
@@ -213,35 +216,63 @@ void Waf::Close() {
     if (maxmind_state != 0) GeoIP_delete(gi);
 }
 
-int Waf::ReadFile(void) {
+void Waf::IsFileModified() {
     
-    if (fgets(file_payload, OS_PAYLOAD_SIZE, fp) == NULL) {
+    int ret = stat(modsec_log, &buf);
+    if (ret == 0) {
+                
+        unsigned long current_size = (unsigned long) buf.st_size;
         
-        if (feof(fp)) {
-                
-            if(eof_counter > EOF_COUNTER) {
-                    
-                int old_pos = ftell(fp);
-                fseek(fp,0,SEEK_END);
-                int new_pos = ftell(fp);
-                    
-                if(old_pos > new_pos) {
-                    // file was truncated
-                    fseek(fp,0,SEEK_SET);
-                } else fseek(fp,old_pos,SEEK_SET);
-                
-                eof_counter = 0;
-                    
-            } else eof_counter++;
+        if (current_size < file_size) {
             
-            return 0;
+            if (fp != NULL) fclose(fp);
+            fp = fopen(modsec_log, "r");
+                        
+            if (fp == NULL) return;
+            else {
+                
+                fseek(fp,0,SEEK_SET);
+                int ret = stat(modsec_log, &buf);
+                
+                if (ret != 0) {
+                    fp = NULL;
+                    return;
+                }
+                
+                file_size = (unsigned long) buf.st_size;
+                return;
+            }
         }
         
-        return -1; 
-    }
+        file_size = current_size;
+        return;
+    } 
     
-    return 1;
+    fp = NULL;
 }
+
+int Waf::ReadFile() {
+    
+    if (fp == NULL) IsFileModified();
+    else {
+            
+        if (fgets(file_payload, OS_PAYLOAD_SIZE, fp) != NULL) {
+                
+            ferror_counter = 0;
+            return 1;
+                    
+        } else ferror_counter++;
+            
+        if(ferror_counter > EOF_COUNTER) {
+            
+            IsFileModified();
+            ferror_counter = 0;
+                    
+        }
+    } 
+    
+    return 0;
+}    
 
 int Waf::Go(void) {
     

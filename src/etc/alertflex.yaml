@@ -51,7 +51,6 @@ sources:
   
   # Altprobe can read events of suricata, wazuh and modsec directly from log files
   # if xxx_log is "none" redis interface will be used
-  # NOTE! do not use this feature if logrotate (or similar) for logs is enabled, or consider using the logrotate option - copytruncate
   
   # modsec_log: "/var/log/nginx/error.log"
   modsec_log: "none"
