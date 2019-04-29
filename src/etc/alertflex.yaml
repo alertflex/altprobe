@@ -74,8 +74,8 @@ sources:
   # /var/lib/suricata/rules/ or /etc/suricata/rules/
   suri_rules: "/etc/suricata/rules/"
   
-  # wazuh_log: "/var/ossec/logs/alerts/alerts.json"
-  wazuh_log: "none"
+  wazuh_log: "/var/ossec/logs/alerts/alerts.json"
+  # wazuh_log: "none"
   wazuh_redis: "altprobe_hids"
   # path to config file - /var/ossec/etc/ossec.conf
   wazuh_path: "/var/ossec/"
