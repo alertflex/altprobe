@@ -4,11 +4,6 @@ Altprobe is a component of the Alertflex project. For more information, please s
 
 ## Support
 
-Please [open an issue on GitHub](https://github.com/olegzhr/altprobe/issues), if you'd like to report a bug or request a feature 
-
-
-## Old version of Altprobe 
-
-Previous version of altprobe (single package with support Ntop nProbe, ZeroMQ as sources and output to MySQL) is available under branch ``old_version``
-
+Please [open an issue on GitHub](https://github.com/olegzhr/altprobe/issues), if you'd like to report a bug or request a feature.
+Have a question or need tech support, please send an email to address: info@alertflex.org
 
