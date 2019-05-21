@@ -212,9 +212,12 @@ int Nids::Go(void) {
                 }
             } else {
                 
-                if(CheckFlowsLog(res)) PushFlowsRecord();
-                else {
-                    if (fs.filter.traf.log) PushFlowsRecord();
+                if (res < 5) {
+                
+                    if(CheckFlowsLog(res)) PushFlowsRecord();
+                    else {
+                        if (fs.filter.traf.log) PushFlowsRecord();
+                    }
                 }
             }
         } 
@@ -282,8 +285,9 @@ bool Nids::CheckFlowsLog(int r) {
                         case 3: // ssh record
                             if (!(*i)->parameter.compare("ssh")) return log;
                             break;
-                        default: // netflow record
+                        case 4: // netflow record
                             if (!(*i)->parameter.compare(rec.protocol)) return log;
+                            break;
                     }
                 }
             }
@@ -463,6 +467,40 @@ int Nids::ParsJson () {
         rec.netflow.start = pt.get<string>("netflow.start","");
         rec.netflow.end = pt.get<string>("netflow.end","");
         rec.netflow.age = pt.get<int>("netflow.age",0);
+        
+        ResetStream();
+        return rec.event_type;
+    } 
+    
+    if (event_type.compare("fileinfo") == 0) {
+        
+        rec.event_type = 5;
+        
+        rec.time_stamp = pt.get<string>("timestamp","");
+        
+        rec.iface = pt.get<string>("in_iface","");
+        
+        rec.flow_id = pt.get<long>("flow_id",0);
+        
+        rec.src_ip = pt.get<string>("src_ip","");
+        rec.src_agent = GetAgent(rec.src_ip);
+        rec.src_port = pt.get<int>("src_port",0);
+        
+        rec.dst_ip = pt.get<string>("dest_ip","");
+        rec.dst_agent = GetAgent(rec.dst_ip);
+        rec.dst_port = pt.get<int>("dest_port",0);
+        
+        rec.ids = sensor;
+        rec.protocol = pt.get<string>("proto","");
+        
+        rec.file.app_proto = pt.get<string>("app_proto","indef");
+        if (rec.file.app_proto.compare("") == 0) rec.netflow.app_proto = "indef";
+        if (rec.file.app_proto.compare("failed") == 0) rec.netflow.app_proto = "indef";
+        
+        rec.file.name = pt.get<string>("fileinfo.filename","");
+        rec.file.size = pt.get<int>("fileinfo.size",0);
+        rec.file.state = pt.get<string>("fileinfo.state","");
+        rec.file.md5 = pt.get<string>("fileinfo.md5","");
         
         ResetStream();
         return rec.event_type;
@@ -791,6 +829,74 @@ void Nids::CreateLogPayload(int r) {
 			
             report += "\"}";
             break;
+            
+        case 5: // file record
+		
+            report = "{\"version\": \"1.1\",\"host\":\"";
+            report += node_id;
+            report += "\",\"short_message\":\"file-nids\"";
+            report += ",\"full_message\":\"File event from Suricata NIDS\"";
+            report += ",\"level\":";
+            report += std::to_string(7);
+            report += ",\"_type\":\"NET\"";
+            report += ",\"_source\":\"Suricata\"";
+			
+            report +=  ",\"_project_id\":\"";
+            report +=  fs.filter.ref_id;
+			
+            report +=  "\",\"_event_time\":\"";
+            report +=  rec.time_stamp;
+            
+            report += "\",\"_collected_time\":\"";
+            report += GetGraylogFormat();
+			
+            report += "\",\"_protocol\":\"";
+            report += rec.protocol;
+			
+            report += "\",\"_app_proto\":\"";
+            report += rec.file.app_proto;
+			
+            report +=  "\",\"_iface\":\"";
+            report +=  rec.iface;
+            
+            report +=  "\",\"_flow_id\":";
+            report +=  std::to_string(rec.flow_id);
+			
+            report += ",\"_srcip\":\"";
+            report += rec.src_ip;
+			
+            report += "\",\"_dstip\":\"";
+            report += rec.dst_ip;
+            
+            report +=  "\",\"_ids\":\"";
+            report +=  rec.ids;
+			
+            report += "\",\"_srcip_host\":\"";
+            report += rec.src_agent;
+			
+            report += "\",\"_dstip_host\":\"";
+            report += rec.dst_agent;
+			
+            report += "\",\"_srcport\":";
+            report += std::to_string(rec.src_port);
+			
+            report += ",\"_dstport\":";
+            report += std::to_string(rec.dst_port);
+			
+            report += ",\"_filename\":\"";
+            report += rec.file.name;
+			
+            report += "\",\"_size\":";
+            report += std::to_string(rec.file.size);
+			
+            report += ",\"_state\":\"";
+            report += rec.file.state;
+			
+            report += "\",\"_md5\":\"";
+            report += rec.file.md5;
+			
+            report += "\"}";
+            break;
     }
     
     q_logs_nids.push(report);
@@ -992,6 +1098,9 @@ void Nids::PushFlowsRecord() {
             flows_rec.src_country = CountryByIp(rec.src_ip);
     
             q_flows.push(flows_rec);
+            break;
+            
+        case 5: // file record
             break;
         
         default:

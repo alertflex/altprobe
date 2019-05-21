@@ -99,6 +99,25 @@ public:
     }
 };
 
+class SuricataFile
+{
+public:
+    string name;
+    unsigned int size;
+    string state;
+    string md5;
+    string app_proto;
+        
+    void Reset() {
+        
+        name.clear();
+        size = 0;
+        state.clear();
+        md5.clear();
+        app_proto.clear();
+    }
+};
+
 //  Suricata record                              
 class SuricataRecord {
 public:
@@ -129,6 +148,8 @@ public:
     SuricataSsh ssh;
     //  Record  Flow
     SuricataNetflow netflow;
+    //  Record  File
+    SuricataFile file;
     
     
     void Reset() {
@@ -151,6 +172,7 @@ public:
         dns.Reset();
         ssh.Reset();
         netflow.Reset();
+        file.Reset();
     }
 };
 

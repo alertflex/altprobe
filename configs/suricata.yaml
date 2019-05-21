@@ -197,11 +197,11 @@ outputs:
             # custom allows to control which tls fields that are included
             # in eve-log
             #custom: [subject, issuer, session_resumed, serial, fingerprint, sni, version, not_before, not_after, certificate, chain, ja3]
-        # - files:
+        - files:
             # force-magic: no   # force logging magic on all logged files
             # force logging of checksums, available hash functions are md5,
             # sha1 and sha256
-            #force-hash: [md5]
+            force-hash: [md5]
         #- drop:
         #    alerts: yes      # log alerts that caused drops
         #    flows: all       # start or all: 'start' logs only a single drop
