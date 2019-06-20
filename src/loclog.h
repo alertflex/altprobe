@@ -21,7 +21,6 @@ using namespace boost::filesystem;
 
 class LocLog : public CollectorObject {
 public:
-    static string log_path;
     static string file_template;
     static std::mutex write_lock;
     

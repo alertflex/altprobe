@@ -13,40 +13,46 @@ int Controller::mq_counter = 0;
 mutex Controller::m_controller;
 
 char Controller::url[OS_HEADER_SIZE];
-char Controller::cert[OS_HEADER_SIZE];
 char Controller::user[OS_HEADER_SIZE];
 char Controller::pwd[OS_HEADER_SIZE];
-char Controller::path[OS_HEADER_SIZE];
+char Controller::cert[OS_HEADER_SIZE];
+char Controller::key[OS_HEADER_SIZE];
+char Controller::key_pwd[OS_HEADER_SIZE];
+char Controller::queue[OS_HEADER_SIZE];
 
 Connection* Controller::connection = NULL;
-bool Controller::ssl = true;
+bool Controller::ssl_broker = true;
+bool Controller::ssl_client = true;
+bool Controller::user_pwd = true;
 
 int Controller::GetConfig() {
        
     ConfigYaml* cy = new ConfigYaml( "controller");
     
-    cy->addKey("amq");
-    cy->addKey("cert");
+    cy->addKey("url");
     cy->addKey("user");
     cy->addKey("pwd");
-    cy->addKey("path");
+    cy->addKey("cert");
+    cy->addKey("key");
+    cy->addKey("key_pwd");
+    cy->addKey("queue");
     
     cy->ParsConfig();
     
-    strncpy(url, (char*) cy->getParameter("amq").c_str(), sizeof(url));
+    strncpy(url, (char*) cy->getParameter("url").c_str(), sizeof(url));
     if (!strcmp (url, "none")) { 
         SysLog("config file notification: ActiveMQ interface is disabled");
         return 0;
     }
     
     if (!strcmp (url, "")) { 
-        SysLog("config file error: parameter controller amq");
+        SysLog("config file error: parameter controller url");
         return 0;
     }
     
-    strncpy(path, (char*) cy->getParameter("path").c_str(), sizeof(path));
-    if (!strcmp (path, "")) {
-        SysLog("config file error: parameter controller path");
+    strncpy(queue, (char*) cy->getParameter("queue").c_str(), sizeof(queue));
+    if (!strcmp (queue, "")) {
+        SysLog("config file error: parameter controller queue");
         return 0;
     }
     
@@ -57,14 +63,8 @@ int Controller::GetConfig() {
         return 0;
     }
     
-    strncpy(cert, (char*) cy->getParameter("cert").c_str(), sizeof(cert));
-    if (!strcmp (cert, "")) {
-        SysLog("config file error: parameter controller cert");
-        return 0;
-    }
-    
-    if (!strcmp (cert, "none")) {
-        ssl = false;
+    if (!strcmp (user, "none")) {
+        user_pwd = false;
     }
     
     strncpy(pwd, (char*) cy->getParameter("pwd").c_str(), sizeof(pwd));
@@ -74,6 +74,33 @@ int Controller::GetConfig() {
         return 0;
     }
     
+    strncpy(cert, (char*) cy->getParameter("cert").c_str(), sizeof(cert));
+    if (!strcmp (cert, "")) {
+        SysLog("config file error: parameter controller cert");
+        return 0;
+    }
+    
+    if (!strcmp (cert, "none")) {
+        ssl_broker = false;
+    }
+    
+    strncpy(key, (char*) cy->getParameter("key").c_str(), sizeof(key));
+    if (!strcmp (key, "")) {
+        SysLog("config file error: parameter controller key");
+        return 0;
+    }
+    
+    strncpy(key_pwd, (char*) cy->getParameter("key_pwd").c_str(), sizeof(key_pwd));
+    if (!strcmp (key_pwd, "")) {
+        SysLog("config file error: parameter controller key_pwd");
+        return 0;
+    }
+    
+    if (!strcmp (key_pwd, "none")) {
+        ssl_client = false;
+    }
+    
+       
     return 1;
 }
 
@@ -87,9 +114,18 @@ int Controller::Open() {
             if (connection == NULL) {
                 activemq::library::ActiveMQCPP::initializeLibrary();
                 
-                if (ssl) {
+                if (ssl_broker) {
                     decaf::lang::System::setProperty( "decaf.net.ssl.trustStore", cert );
-                }
+                } 
+                
+                if (ssl_client) {
+                    decaf::lang::System::setProperty("decaf.net.ssl.keyStore", key); 
+                    decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword", key_pwd); 
+                } 
+                
+                /* else {
+                    System::getProperty("decaf.net.ssl.disablePeerVerification", "false");
+                }*/
                 
                 // Create a ConnectionFactory
                 string strUrl(url);
@@ -98,7 +134,11 @@ int Controller::Open() {
                     ConnectionFactory::createCMSConnectionFactory(strUrl));
             
                 // Create a Connection
-                connection = connectionFactory->createConnection(user,pwd);
+                if (user_pwd) {
+                    connection = connectionFactory->createConnection(user,pwd);
+                } else {
+                    connection = connectionFactory->createConnection();
+                }
                 
                 connection->start();
             }
@@ -111,7 +151,7 @@ int Controller::Open() {
             }
             
             // Create the destination (Topic or Queue)
-            string strQueue(path);
+            string strQueue(queue);
             
             strQueue = strQueue + "controller";
             
@@ -333,14 +373,29 @@ bool Controller::Reset() {
             
             if (connection == NULL) {
                 
+                activemq::library::ActiveMQCPP::initializeLibrary();
+                
+                if (ssl_broker) {
+                    decaf::lang::System::setProperty( "decaf.net.ssl.trustStore", cert );
+                } 
+                
+                if (ssl_client) {
+                    decaf::lang::System::setProperty("decaf.net.ssl.keyStore", key); 
+                    decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword", key_pwd); 
+                } 
+                
                 // Create a ConnectionFactory
                 string strUrl(url);
             
                 unique_ptr<ConnectionFactory> connectionFactory(
                     ConnectionFactory::createCMSConnectionFactory(strUrl));
-                
-                connection = connectionFactory->createConnection();
-                connection->start();
+            
+                // Create a Connection
+                if (user_pwd) {
+                    connection = connectionFactory->createConnection(user,pwd);
+                } else {
+                    connection = connectionFactory->createConnection();
+                }
             }
             
             if (session == NULL) {
@@ -355,7 +410,7 @@ bool Controller::Reset() {
             
             if (destination == NULL) {
                 // Create the destination (Topic or Queue)
-                string strQueue(path);
+                string strQueue(queue);
             
                 strQueue = strQueue + "controller";
             

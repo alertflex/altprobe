@@ -39,13 +39,17 @@ public:
     static mutex m_controller;
     
     static char url[OS_HEADER_SIZE];
-    static char cert[OS_HEADER_SIZE];
     static char user[OS_HEADER_SIZE];
     static char pwd[OS_HEADER_SIZE];
-    static char path[OS_HEADER_SIZE];
+    static char cert[OS_HEADER_SIZE];
+    static char key[OS_HEADER_SIZE];
+    static char key_pwd[OS_HEADER_SIZE];
+    static char queue[OS_HEADER_SIZE];
     
     static Connection* connection;
-    static bool ssl;
+    static bool ssl_broker;
+    static bool ssl_client;
+    static bool user_pwd;
     
     Session* session;
     Destination* destination;
@@ -55,10 +59,12 @@ public:
     
     Controller () {
         memset(url, 0, sizeof(url));
-        memset(cert, 0, sizeof(cert));
         memset(user, 0, sizeof(user));
         memset(pwd, 0, sizeof(pwd));
-        memset(path, 0, sizeof(path));
+        memset(cert, 0, sizeof(cert));
+        memset(key, 0, sizeof(key));
+        memset(key_pwd, 0, sizeof(key_pwd));
+        memset(queue, 0, sizeof(queue));
         
         session = NULL;
         destination = NULL;

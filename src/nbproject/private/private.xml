@@ -4,16 +4,21 @@
         <activeConfTypeElem>1</activeConfTypeElem>
         <activeConfIndexElem>0</activeConfIndexElem>
     </data>
-    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="1">
+        <file>
+            <url>main.cpp</url>
+            <bookmark id="1">
+                <name/>
+                <line>5</line>
+                <key/>
+            </bookmark>
+        </file>
+    </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/root/NetBeansProjects/collector/Makefile</file>
-            <file>file:/root/NetBeansProjects/collector/cobject.h</file>
-            <file>file:/root/NetBeansProjects/collector/etc/alertflex.yaml</file>
-            <file>file:/root/NetBeansProjects/collector/updates.cpp</file>
-            <file>file:/root/NetBeansProjects/collector/scripts/alertflex-update.sh</file>
-            <file>file:/root/NetBeansProjects/collector/cobject.cpp</file>
-            <file>file:/root/NetBeansProjects/collector/collector.cpp</file>
+            <file>file:/root/NetBeansProjects/collector/controller.cpp</file>
+            <file>file:/root/NetBeansProjects/collector/main.cpp</file>
+            <file>file:/root/NetBeansProjects/collector/controller.h</file>
         </group>
     </open-files>
 </project-private>

@@ -7,7 +7,6 @@
 #include "config.h"
 #include "loclog.h"
 
-string LocLog::log_path = "/var/log/alertflex/";
 string LocLog::file_template = "alerts";
 bool LocLog::state = false;
 

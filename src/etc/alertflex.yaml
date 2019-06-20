@@ -9,17 +9,18 @@ collector:
   sensor: "_sensor_id"
   
   # allow remote management of collector from controller
-  active_response: "true"
-  remote_upload: "true"
+  active_response: "false"
+  update_local: "false"
       
   # time difference between collector and controller's, timezones in hours
   time_zone: 0
-  # save events/logs to local path - /var/log/alertflex, if controller isn't available
-  # max size (MB) of the log file, if size more than this value, collector switches to the next log file
-  log_size: 100
   # alerts threshold, if the threshold is exceeded, collector omits all others alerts until Redis list is not empty
   # also special alert about multiple alerts will appear (redirection of alerts to logs will not interrupted)
   alerts_threshold: 100
+  # save events/logs to local path - /var/log/alertflex, if controller isn't available
+  log_path: "/var/log/alertflex/"
+  # max size (MB) of the log file, if size more than this value, collector switches to the next log file
+  log_size: 100
   
   # TIMERS
   # delay on collector startup in sec (default 30)
@@ -30,7 +31,7 @@ collector:
   report_timer: 300  
   # run update of rules on sensor side after that sync them with central node
   update_timer: 1
-    
+  
   # path to MaxMind Geo DB
   geo_db: "/etc/alertflex/GeoLiteCity.dat"
   
@@ -44,59 +45,40 @@ collector:
   redis_host: "127.0.0.1"
   redis_port: 6379 
   
+controller:
+  # send alerts and statistics to Controller (ActiveMQ interface)
+  url: "_amq_url"
+  user: "_amq_user"
+  pwd: "_amq_pwd"
+  cert: "_amq_cert"
+  key: "_amq_key"
+  key_pwd: "_key_pwd"
+  queue: "jms/alertflex/"
+  
 sources:
   # for reading of events from metricbeat and altprobe client (misc) only Redis intefrace can be used 
+  
   metric: "altprobe_metrics"
   misc: "altprobe_misc"
   
   # Altprobe can read events of suricata, wazuh and modsec directly from log files
   # if xxx_log is "none" redis interface will be used
   
-  # modsec_log: "/var/log/nginx/error.log"
-  modsec_log: "none"
+  modsec_log: "_modsec_log"
   modsec_redis: "altprobe_waf" 
-  # path for config file - /etc/nginx/modsec/
-  modsec_path: "none"
-  # path for update ip-reputation list and rules - /etc/nginx/modsec/rules/
-  # need add rule - SecRule REQUEST_HEADERS:User-Agent "@pmFromFile /etc/nginx/modsec/rules/waf-black.list" "id:167"
-  modsec_iprep: "/etc/nginx/modsec/rules/" 
-  # owasp_rules: "/usr/local/owasp-modsecurity-crs-3.0.2/"
+  modsec_conf: "/etc/nginx/modsec/"
   modsec_rules: "/usr/local/owasp-modsecurity-crs-3.0.2/"
+  modsec_local: "/etc/nginx/modsec/rules/"
   
-  # suri_log: "/var/log/suricata/eve.json"
-  suri_log: "none"
-  suri_redis: "altprobe_nids"
-  # path to config file - /etc/suricata/suricata.yaml
-  suri_path: "/etc/suricata/" 
-  # path for update ip-reputation list - /etc/suricata/iprep/nids-black.list
-  # set in file suricata.yaml the param - default-reputation-path: /etc/suricata/iprep & param - reputation-files:
-  suri_iprep: "/etc/suricata/iprep/"
-  # /var/lib/suricata/rules/ or /etc/suricata/rules/
-  suri_rules: "/etc/suricata/rules/"
+  suri_log: "_suri_log"
+  suri_redis: "altprobe_nids" 
+  suri_conf: "/etc/suricata/"
+  suri_rules: "/var/lib/suricata/rules/"
+  suri_local: "/etc/suricata/rules/"
   
-  wazuh_log: "/var/ossec/logs/alerts/alerts.json"
-  # wazuh_log: "none"
-  wazuh_redis: "altprobe_hids"
-  # path to config file - /var/ossec/etc/ossec.conf
-  wazuh_path: "/var/ossec/"
-  # path for update ip-reputation list - /var/ossec/etc/lists/hids-black.list
-  # add to ossec.conf <ruleset><list>etc/lists/hids-black.list</list>
-  wazuh_iprep: "/var/ossec/etc/lists/"
+  wazuh_log: "_wazuh_log"
+  wazuh_redis: "altprobe_hids" 
+  wazuh_conf: "/var/ossec/etc/"
+  wazuh_rules: "/var/ossec/ruleset/"
+  wazuh_local: "/var/ossec/etc/"
   
-controller:
-  # send alerts and statistics to Controller (ActiveMQ interface)
-  amq: "ssl://_amq_host:61617"
-  user: "_amq_user"
-  pwd: "_amq_pwd"
-  cert: "/etc/alertflex/Broker.pem"
-  path: "jms/alertflex/"
-
-
-
-  
-
-  
-  
-
-
-

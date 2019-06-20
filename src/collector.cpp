@@ -501,12 +501,12 @@ void Collector::UpdateFilters() {
 
 void Collector::UpdateSuriConfig() {
     
-    if (!strcmp (suri_path, "none")) return; 
+    if (!strcmp (suri_conf, "none")) return; 
     
     try {
         
         ifstream suri_config;
-        string dir_path(suri_path);
+        string dir_path(suri_conf);
         string file_name(SURI_CONFIG);
         string file_path = dir_path + file_name;
         //SysLog((char*) file_path.c_str());
@@ -540,12 +540,12 @@ void Collector::UpdateSuriConfig() {
 
 void Collector::UpdateOssecConfig() {
     
-    if (!strcmp (wazuh_path, "none")) return; 
+    if (!strcmp (wazuh_conf, "none")) return; 
     
     try {
         
         ifstream ossec_config;
-        string dir_path(wazuh_path);
+        string dir_path(wazuh_conf);
         string file_name(OSSEC_CONFIG);
         string file_path = dir_path + file_name;
         
@@ -580,12 +580,12 @@ void Collector::UpdateOssecConfig() {
 
 void Collector::UpdateModsecConfig() {
     
-    if (!strcmp (modsec_path, "none")) return; 
+    if (!strcmp (modsec_conf, "none")) return; 
     
     try {
         
         ifstream modsec_config;
-        string dir_path(modsec_path);
+        string dir_path(modsec_conf);
         string file_name(MODSEC_CONFIG);
         string file_path = dir_path + file_name;
         //SysLog((char*) file_path.c_str());
@@ -615,7 +615,7 @@ void Collector::UpdateModsecConfig() {
 
 void Collector::UpdateSuriRules() {
     
-    if (!strcmp (suri_path, "none")) return; 
+    if (!strcmp (suri_rules, "none")) return; 
     
     try {
         
@@ -664,11 +664,11 @@ void Collector::UpdateSuriRules() {
 
 void Collector::UpdateOssecRules() {
     
-    if (!strcmp (wazuh_path, "none")) return; 
+    if (!strcmp (wazuh_rules, "none")) return; 
     
     try {
         
-        string root(wazuh_path);
+        string root(wazuh_rules);
         string rules(WAZUH_RULES_PATH);
         
         path p (root + rules);
@@ -716,7 +716,7 @@ void Collector::UpdateOssecRules() {
 
 void Collector::UpdateModsecRule() {
     
-    if (!strcmp (modsec_path, "none")) return; 
+    if (!strcmp (modsec_rules, "none")) return; 
     
     try {
         
@@ -754,7 +754,7 @@ void Collector::UpdateModsecRule() {
 
 void Collector::UpdateModsecRules() {
     
-    if (!strcmp (modsec_path, "none")) return; 
+    if (!strcmp (modsec_rules, "none")) return; 
     
     try {
         

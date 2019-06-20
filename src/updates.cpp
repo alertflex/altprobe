@@ -39,9 +39,14 @@ int Updates::Open() {
             if (connection == NULL) {
                 activemq::library::ActiveMQCPP::initializeLibrary();
                 
-                if (ssl) {
+                if (ssl_broker) {
                     decaf::lang::System::setProperty( "decaf.net.ssl.trustStore", cert );
-                }
+                } 
+                
+                if (ssl_client) {
+                    decaf::lang::System::setProperty("decaf.net.ssl.keyStore", key); 
+                    decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword", key_pwd); 
+                } 
                 
                 // Create a ConnectionFactory
                 string strUrl(url);
@@ -50,7 +55,13 @@ int Updates::Open() {
                     ConnectionFactory::createCMSConnectionFactory(strUrl));
             
                 // Create a Connection
-                connection = connectionFactory->createConnection(user,pwd);
+                if (user_pwd) {
+                    connection = connectionFactory->createConnection(user,pwd);
+                } else {
+                    connection = connectionFactory->createConnection();
+                }
+                
+                
                 connection->start();
                 connection->setExceptionListener(this);
             }
@@ -63,7 +74,7 @@ int Updates::Open() {
             }
             
             // Create the destination (Topic or Queue)
-            string strTopic(path);
+            string strTopic(queue);
             
             strTopic = strTopic + fs.filter.ref_id;
             //strTopic = strTopic + project_id;
@@ -143,7 +154,7 @@ void Updates::onMessage(const Message* message) {
                 ofstream ostream;
                 string cmd;
         
-                if (!content_type.compare("filters") && uploadStatus) {
+                if (!content_type.compare("filters") && ulStatus) {
                     
                     fs.ParsFiltersConfig(decomp.str());
                     
@@ -164,7 +175,7 @@ void Updates::onMessage(const Message* message) {
                     
                 }
                 
-                if (!content_type.compare("config") && uploadStatus) {
+                if (!content_type.compare("config") && ulStatus) {
                     
                     try { 
                     
@@ -174,7 +185,7 @@ void Updates::onMessage(const Message* message) {
                     
                         switch (sensor_type) {
                             case 0 : {
-                                string dir_path(suri_path);
+                                string dir_path(suri_conf);
                                 string file_name(SURI_CONFIG);
                                 string file_path = dir_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
@@ -183,7 +194,7 @@ void Updates::onMessage(const Message* message) {
                                 break;
                             
                             case 1 : {
-                                string dir_path(wazuh_path);
+                                string dir_path(wazuh_conf);
                                 string file_name(OSSEC_CONFIG);
                                 string file_path = dir_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
@@ -192,7 +203,7 @@ void Updates::onMessage(const Message* message) {
                                 break;
                                 
                             case 2 : {
-                                string dir_path(modsec_path);
+                                string dir_path(modsec_conf);
                                 string file_name(MODSEC_CONFIG);
                                 string file_path = dir_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
@@ -215,7 +226,7 @@ void Updates::onMessage(const Message* message) {
                         
                 }
                 
-                if (!content_type.compare("rules") && uploadStatus) {
+                if (!content_type.compare("rules") && ulStatus) {
                     
                     try { 
                     
@@ -228,7 +239,7 @@ void Updates::onMessage(const Message* message) {
                     
                         switch (rules_type) {
                             case 0 : {
-                                string rules_path(suri_rules);
+                                string rules_path(suri_local);
                                 string file_path = rules_path + rule_name;
                                 ostream.open(file_path, ios_base::trunc);
                                 cmd = "/etc/alertflex/scripts/rulesup-suri.sh";
@@ -236,7 +247,7 @@ void Updates::onMessage(const Message* message) {
                                 break;
                             
                             case 1 : {
-                                string dir_path(wazuh_path);
+                                string dir_path(wazuh_local);
                                 string rules_path(WAZUH_DECODERS_LOCAL);
                                 string file_path = dir_path + rules_path + rule_name;
                                 ostream.open(file_path, ios_base::trunc);
@@ -245,7 +256,7 @@ void Updates::onMessage(const Message* message) {
                                 break;
                             
                             case 2 : {
-                                string dir_path(wazuh_path);
+                                string dir_path(wazuh_local);
                                 string rules_path(WAZUH_RULES_LOCAL);
                                 string file_path = dir_path + rules_path + rule_name;
                                 ostream.open(file_path, ios_base::trunc);
@@ -254,7 +265,7 @@ void Updates::onMessage(const Message* message) {
                                 break;
                                 
                             case 3 : {
-                                string rules_path(modsec_iprep);
+                                string rules_path(modsec_local);
                                 string file_path = rules_path + rule_name;
                                 ostream.open(file_path, ios_base::trunc);
                                 cmd = "/etc/alertflex/scripts/rulesup-modsec.sh";
@@ -277,7 +288,7 @@ void Updates::onMessage(const Message* message) {
                 }
                 
                 
-                if (!content_type.compare("iprep") && uploadStatus) {
+                if (!content_type.compare("iprep") && ulStatus) {
                     
                     try { 
                     
@@ -287,7 +298,7 @@ void Updates::onMessage(const Message* message) {
                     
                         switch (sensor_type) {
                             case 0 : {
-                                string iprep_path(suri_iprep);
+                                string iprep_path(suri_local);
                                 string file_name(SURI_IPREP);
                                 string file_path = iprep_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
@@ -296,7 +307,7 @@ void Updates::onMessage(const Message* message) {
                                 break;
                                 
                             case 1 : {
-                                string iprep_path(wazuh_iprep);
+                                string iprep_path(wazuh_local);
                                 string file_name(WAZUH_IPREP);
                                 string file_path = iprep_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
@@ -305,7 +316,7 @@ void Updates::onMessage(const Message* message) {
                                 break;
                                 
                             case 2 : {
-                                string iprep_path(modsec_iprep);
+                                string iprep_path(modsec_local);
                                 string file_name(MODSEC_IPREP);
                                 string file_path = iprep_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
@@ -451,6 +462,17 @@ bool Updates::Reset() {
             
             if (connection == NULL) {
                 
+                activemq::library::ActiveMQCPP::initializeLibrary();
+                
+                if (ssl_broker) {
+                    decaf::lang::System::setProperty( "decaf.net.ssl.trustStore", cert );
+                } 
+                
+                if (ssl_client) {
+                    decaf::lang::System::setProperty("decaf.net.ssl.keyStore", key); 
+                    decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword", key_pwd); 
+                } 
+                
                 // Create a ConnectionFactory
                 string strUrl(url);
             
@@ -458,7 +480,13 @@ bool Updates::Reset() {
                     ConnectionFactory::createCMSConnectionFactory(strUrl));
             
                 // Create a Connection
-                connection = connectionFactory->createConnection();
+                // Create a Connection
+                if (user_pwd) {
+                    connection = connectionFactory->createConnection(user,pwd);
+                } else {
+                    connection = connectionFactory->createConnection();
+                }
+                
                 connection->start();
                 connection->setExceptionListener(this);
             }
@@ -476,7 +504,7 @@ bool Updates::Reset() {
             
             if (destination == NULL) {
                 // Create the destination (Topic or Queue)
-                string strTopic(path);
+                string strTopic(queue);
             
                 strTopic = strTopic + "collector";
             

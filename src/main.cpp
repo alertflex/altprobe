@@ -468,13 +468,205 @@ void KillsThreads(void)
     }
 }
 
+void cleanup() {
+    
+    daemon_log(LOG_INFO, "exiting...");
+    daemon_retval_send(255);
+    daemon_signal_done();
+    daemon_pid_file_remove();
+    
+}
+
+int start(pid_t pid) {
+    
+    int ret;
+    
+    if (!LoadConfig()) return 1;
+    
+    int startup_timer = statids.GetStartupTimer();
+        
+    /* Prepare for return value passing from the initialization procedure of the daemon process */
+    if (daemon_retval_init() < 0) {
+        
+        daemon_log(LOG_ERR, "failed to create pipe");
+        
+        return 1;
+    }
+
+    /* Do the fork */
+    if ((pid = daemon_fork()) < 0) {
+
+        /* Exit on error */
+        daemon_retval_done();
+        
+        return 1;
+
+    } else if (pid) { /* The parent */
+        
+        /* Wait for timeout in seconds for the return value passed from the daemon process */
+        if ((ret = daemon_retval_wait(startup_timer)) < 0) {
+            
+            daemon_log(LOG_ERR, "could not receive return value from alertflex collector process: %s", strerror(errno));
+            
+            return 255;
+        }
+
+        daemon_log(ret != 0 ? LOG_ERR : LOG_INFO, "alertflex collector started with code %i", ret);
+        
+        return ret;
+
+    } else { /* The daemon */
+        
+        int fd, quit = 0;
+        fd_set fds;
+
+        /* Close FDs */
+        if (daemon_close_all(-1) < 0) {
+            daemon_log(LOG_ERR, "failed to close all file descriptors: %s", strerror(errno));
+
+            /* Send the error condition to the parent process */
+            daemon_retval_send(1);
+            
+            cleanup();
+            return 1;
+        }
+
+        /* Create the PID file */
+        if (daemon_pid_file_create() < 0) {
+            daemon_log(LOG_ERR, "could not create PID file (%s)", strerror(errno));
+            daemon_retval_send(2);
+            
+            cleanup();
+            return 1;
+        }
+
+        /* Initialize signal handling */
+        if (daemon_signal_init(SIGINT, SIGTERM, SIGQUIT, SIGHUP, SIGUSR1, 0) < 0) {
+            daemon_log(LOG_ERR, "could not register signal handlers (%s)", strerror(errno));
+            daemon_retval_send(3);
+            
+            cleanup();
+            return 1;
+        }
+
+        /*... do some further init work here */
+        if (!InitThreads()) {
+            
+            daemon_retval_send(4);
+            
+            KillsThreads();
+            cleanup();
+            return 1;
+        }
+
+        /* Send OK to parent process */
+        daemon_retval_send(0);
+
+        daemon_log(LOG_INFO, "alertflex collector has been successfully started");
+
+        /* Prepare for select() on the signal fd */
+        FD_ZERO(&fds);
+        fd = daemon_signal_fd();
+        FD_SET(fd, &fds);
+        
+        while (!quit) {
+            fd_set fds2 = fds;
+
+            /* Wait for an incoming signal */
+            if (select(FD_SETSIZE, &fds2, 0, 0, 0) < 0) {
+
+                /* If we've been interrupted by an incoming signal, continue */
+                if (errno == EINTR)
+                    continue;
+
+                daemon_log(LOG_ERR, "select(): %s", strerror(errno));
+                break;
+            }
+
+            /* Check if a signal has been recieved */
+            if (FD_ISSET(fd, &fds2)) {
+                
+                int sig;
+
+                /* Get signal */
+                if ((sig = daemon_signal_next()) <= 0) {
+                    daemon_log(LOG_ERR, "daemon_signal_next() failed: %s", strerror(errno));
+                    break;
+                }
+
+                /* Dispatch signal */
+                switch (sig) {
+                    case SIGHUP:
+                    case SIGINT:
+                    case SIGQUIT:
+                    case SIGTERM:
+                        daemon_log(LOG_WARNING, "got SIGHUP, SIGINT, SIGQUIT or SIGTERM");
+                        quit = 1;
+                        break;
+
+                }
+            }
+        }
+        
+        KillsThreads();
+        cleanup();
+    }
+    
+    return 0;
+}
+
+static void sigHandler (int signo) {
+    KillsThreads();
+    printf ("got SIGHUP, SIGINT, SIGQUIT or SIGTERM\n");
+    exit (EXIT_SUCCESS);
+}
+
+int startD(int pid) {
+    
+    if (!LoadConfig()) return 1;
+    
+    if (!InitThreads()) {
+            
+        KillsThreads();
+        return 1;
+    }
+    
+    if (signal (SIGINT, sigHandler) == SIG_ERR) {
+        fprintf (stderr, "Cannot handle SIGINT!\n");
+        KillsThreads();
+        exit (EXIT_FAILURE);
+    }
+    
+    if (signal (SIGHUP, sigHandler) == SIG_ERR) {
+        fprintf (stderr, "Cannot handle SIGHUP!\n");
+        KillsThreads();
+        exit (EXIT_FAILURE);
+    }
+    
+    if (signal (SIGQUIT, sigHandler) == SIG_ERR) {
+        fprintf (stderr, "Cannot handle SIGQUIT!\n");
+        KillsThreads();
+        exit (EXIT_FAILURE);
+    }
+    
+    if (signal (SIGTERM, sigHandler) == SIG_ERR) {
+        fprintf (stderr, "Cannot handle SIGTERM!\n");
+        KillsThreads();
+        exit (EXIT_FAILURE);
+    }
+    
+    for (;;) {
+        pause ();
+        return 0;
+    }
+}
+
 
 int main(int argc, char *argv[]) {
+    
     pid_t pid;
     int ret;
     
-    
-
     /* Reset signal handlers */
     if (daemon_reset_sigs(-1) < 0) {
         daemon_log(LOG_ERR, "failed to reset all signal handlers: %s", strerror(errno));
@@ -492,12 +684,28 @@ int main(int argc, char *argv[]) {
     
     /* Check if we are called with parameters */
     if (argc == 2) {
+        
         if (!strcmp(argv[1], "start")) {
-             if ((pid = daemon_pid_file_is_running()) >= 0)
-                  // daemon_log(LOG_ERR, "AlertFlex collector is already running with PID %u.", pid);
-                  printf( "alertflex collector is already running with PID %u\n", pid);
-             else goto start;
-             return 0;
+            
+            if ((pid = daemon_pid_file_is_running()) >= 0)
+                
+                // daemon_log(LOG_ERR, "AlertFlex collector is already running with PID %u.", pid);
+                printf( "alertflex collector is already running with PID %u\n", pid);
+            
+            else return start(pid);
+            return 0;
+        }
+        
+        if (!strcmp(argv[1], "startd")) {
+            
+            if ((pid = daemon_pid_file_is_running()) >= 0)
+                
+                // daemon_log(LOG_ERR, "AlertFlex collector is already running with PID %u.", pid);
+                printf( "alertflex collector is already running with PID %u\n", pid);
+            
+            else return startD(pid);
+            
+            return 0;
         }
         
         if (!strcmp(argv[1], "stop")) {
@@ -522,131 +730,11 @@ int main(int argc, char *argv[]) {
         }
     }
     
-    // daemon_log(LOG_ERR, "usage: ./afcollector {start|stop|status}");
-    printf( "usage: ./alertflex {start|stop|status}\n");
+    // daemon_log(LOG_ERR, "usage: ./altprobe {start|stop|status}");
+    printf( "usage: ./altprobe {start|startd|stop|status}\n");
+    
     return 0;
 
-start:    
-    if (!LoadConfig()) return 1;
-    int startup_timer = statids.GetStartupTimer();
-        
-    /* Prepare for return value passing from the initialization procedure of the daemon process */
-    if (daemon_retval_init() < 0) {
-        daemon_log(LOG_ERR, "failed to create pipe");
-        return 1;
-    }
-
-    /* Do the fork */
-    if ((pid = daemon_fork()) < 0) {
-
-        /* Exit on error */
-        daemon_retval_done();
-        return 1;
-
-    } else if (pid) { /* The parent */
-        
-        int ret;
-        
-        /* Wait for timeout in seconds for the return value passed from the daemon process */
-        if ((ret = daemon_retval_wait(startup_timer)) < 0) {
-            daemon_log(LOG_ERR, "could not receive return value from alertflex collector process: %s", strerror(errno));
-            return 255;
-        }
-
-        daemon_log(ret != 0 ? LOG_ERR : LOG_INFO, "alertflex collector started with code %i", ret);
-        return ret;
-
-    } else { /* The daemon */
-        int fd, quit = 0;
-        fd_set fds;
-
-        /* Close FDs */
-        if (daemon_close_all(-1) < 0) {
-            daemon_log(LOG_ERR, "failed to close all file descriptors: %s", strerror(errno));
-
-            /* Send the error condition to the parent process */
-            daemon_retval_send(1);
-            goto finish;
-        }
-
-        /* Create the PID file */
-        if (daemon_pid_file_create() < 0) {
-            daemon_log(LOG_ERR, "could not create PID file (%s)", strerror(errno));
-            daemon_retval_send(2);
-            goto finish;
-        }
-
-        /* Initialize signal handling */
-        if (daemon_signal_init(SIGINT, SIGTERM, SIGQUIT, SIGHUP, SIGUSR1, 0) < 0) {
-            daemon_log(LOG_ERR, "could not register signal handlers (%s)", strerror(errno));
-            daemon_retval_send(3);
-            goto finish;
-        }
-
-        /*... do some further init work here */
-        if (!InitThreads()) {
-            daemon_retval_send(4);
-            goto finish;
-        }
-
-        /* Send OK to parent process */
-        daemon_retval_send(0);
-
-        daemon_log(LOG_INFO, "alertflex collector has been successfully started");
-
-        /* Prepare for select() on the signal fd */
-        FD_ZERO(&fds);
-        fd = daemon_signal_fd();
-        FD_SET(fd, &fds);
-
-        while (!quit) {
-            fd_set fds2 = fds;
-
-            /* Wait for an incoming signal */
-            if (select(FD_SETSIZE, &fds2, 0, 0, 0) < 0) {
-
-                /* If we've been interrupted by an incoming signal, continue */
-                if (errno == EINTR)
-                    continue;
-
-                daemon_log(LOG_ERR, "select(): %s", strerror(errno));
-                break;
-            }
-
-            /* Check if a signal has been recieved */
-            if (FD_ISSET(fd, &fds2)) {
-                int sig;
-
-                /* Get signal */
-                if ((sig = daemon_signal_next()) <= 0) {
-                    daemon_log(LOG_ERR, "daemon_signal_next() failed: %s", strerror(errno));
-                    break;
-                }
-
-                /* Dispatch signal */
-                switch (sig) {
-                    case SIGHUP:
-                    case SIGINT:
-                    case SIGQUIT:
-                    case SIGTERM:
-                        daemon_log(LOG_WARNING, "got SIGHUP, SIGINT, SIGQUIT or SIGTERM");
-                        quit = 1;
-                        break;
-
-                }
-            }
-        }
-
-        /* Do a cleanup */
-finish:
-        daemon_log(LOG_INFO, "exiting...");
-        KillsThreads();
-        daemon_retval_send(255);
-        daemon_signal_done();
-        daemon_pid_file_remove();
-
-        return 0;
-    }
 }
 
 

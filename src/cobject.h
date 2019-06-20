@@ -20,13 +20,14 @@ public:
     static string sensor_id;
     
     static char active_response[OS_HEADER_SIZE];
-    static char remote_upload[OS_HEADER_SIZE];
+    static char update_local[OS_HEADER_SIZE];
         
     static bool arStatus;
-    static bool uploadStatus;
+    static bool ulStatus;
                 
     static int timezone;
     static int log_size;
+    static char log_path[OS_BUFFER_SIZE]; 
     
     static long startup_timer;
     static long gosleep_timer;
@@ -47,15 +48,16 @@ public:
     static char modsec_log[OS_BUFFER_SIZE];
     static bool modseclog_status;
         
-    static char suri_path[OS_BUFFER_SIZE]; 
-    static char suri_iprep[OS_BUFFER_SIZE];
+    static char suri_conf[OS_BUFFER_SIZE]; 
+    static char suri_local[OS_BUFFER_SIZE];
     static char suri_rules[OS_BUFFER_SIZE];
     
-    static char wazuh_path[OS_BUFFER_SIZE];
-    static char wazuh_iprep[OS_BUFFER_SIZE];
+    static char wazuh_conf[OS_BUFFER_SIZE];
+    static char wazuh_local[OS_BUFFER_SIZE];
+    static char wazuh_rules[OS_BUFFER_SIZE];
         
-    static char modsec_path[OS_BUFFER_SIZE];
-    static char modsec_iprep[OS_BUFFER_SIZE];
+    static char modsec_conf[OS_BUFFER_SIZE];
+    static char modsec_local[OS_BUFFER_SIZE];
     static char modsec_rules[OS_BUFFER_SIZE];
     
     char collector_time[OS_DATETIME_SIZE]; 
@@ -68,7 +70,7 @@ public:
         sensor_id.clear();
         wazuhServerStatus = true;
         arStatus = true;
-        uploadStatus = true;
+        ulStatus = true;
         surilog_status = true;
         wazuhlog_status = true;
         modseclog_status = true;

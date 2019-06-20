@@ -81,18 +81,18 @@
 #define PID_FILE "/var/run/alertflex.pid"
 #define DAEMON_NAME "alertflex"
 
-#define OSSEC_CONFIG "etc/ossec.conf"
+#define OSSEC_CONFIG "ossec.conf"
 #define SURI_CONFIG "suricata.yaml"
 #define MODSEC_CONFIG "main.conf"
 
 #define WAZUH_IPREP "hids-black.list"
 #define SURI_IPREP "nids-black.list"
-#define MODSEC_IPREP "waf-black.list"
+#define MODSEC_IPREP "lists/waf-black.list"
 
-#define WAZUH_RULES_PATH "ruleset/rules/"
-#define WAZUH_DECODERS_PATH "ruleset/decoders/"
-#define WAZUH_RULES_LOCAL "etc/rules/"
-#define WAZUH_DECODERS_LOCAL "etc/decoders/"
+#define WAZUH_RULES_PATH "rules/"
+#define WAZUH_DECODERS_PATH "decoders/"
+#define WAZUH_RULES_LOCAL "rules/"
+#define WAZUH_DECODERS_LOCAL "decoders/"
 
 #define SURI_RULES_FILE "suricata.rules"
 

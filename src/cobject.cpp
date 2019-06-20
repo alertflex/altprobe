@@ -21,12 +21,13 @@ string CollectorObject::node_id;
 string CollectorObject::sensor_id;
 
 char CollectorObject::active_response[OS_HEADER_SIZE];
-char CollectorObject::remote_upload[OS_HEADER_SIZE];
+char CollectorObject::update_local[OS_HEADER_SIZE];
 
 bool CollectorObject::arStatus;
-bool CollectorObject::uploadStatus;
+bool CollectorObject::ulStatus;
 
 int CollectorObject::timezone;
+char CollectorObject::log_path[OS_BUFFER_SIZE]; 
 int CollectorObject::log_size;
 
 long CollectorObject::gosleep_timer;
@@ -47,15 +48,16 @@ bool CollectorObject::wazuhlog_status;
 char CollectorObject::modsec_log[OS_BUFFER_SIZE];
 bool CollectorObject::modseclog_status;
 
-char CollectorObject::suri_path[OS_BUFFER_SIZE];
-char CollectorObject::suri_iprep[OS_BUFFER_SIZE];
+char CollectorObject::suri_conf[OS_BUFFER_SIZE];
+char CollectorObject::suri_local[OS_BUFFER_SIZE];
 char CollectorObject::suri_rules[OS_BUFFER_SIZE];
 
-char CollectorObject::wazuh_path[OS_BUFFER_SIZE];
-char CollectorObject::wazuh_iprep[OS_BUFFER_SIZE];
+char CollectorObject::wazuh_conf[OS_BUFFER_SIZE];
+char CollectorObject::wazuh_local[OS_BUFFER_SIZE];
+char CollectorObject::wazuh_rules[OS_BUFFER_SIZE];
 
-char CollectorObject::modsec_path[OS_BUFFER_SIZE];
-char CollectorObject::modsec_iprep[OS_BUFFER_SIZE];
+char CollectorObject::modsec_conf[OS_BUFFER_SIZE];
+char CollectorObject::modsec_local[OS_BUFFER_SIZE];
 char CollectorObject::modsec_rules[OS_BUFFER_SIZE];
 
 char CollectorObject::SysLogInfo[OS_LONG_HEADER_SIZE];
@@ -68,9 +70,10 @@ int CollectorObject::GetConfig() {
     cy->addKey("sensor");
     
     cy->addKey("active_response");
-    cy->addKey("remote_upload");
+    cy->addKey("update_local");
            
     cy->addKey("time_zone");
+    cy->addKey("log_path");
     cy->addKey("log_size");
     
     cy->addKey("startup_timer");
@@ -102,6 +105,16 @@ int CollectorObject::GetConfig() {
     
     log_size = stoi(cy->getParameter("log_size"));
     if (log_size == 0) log_size = 100;
+    
+    strncpy(log_path, (char*) cy->getParameter("log_path").c_str(), sizeof(log_path));
+    
+    if (!strcmp (log_path, "none")) { 
+        strncpy(log_path, "var/log/alertflex", sizeof(log_path));
+    }
+    
+    if (!strcmp (log_path, "")) { 
+        strncpy(log_path, "var/log/alertflex", sizeof(log_path));
+    }
     
     gosleep_timer = stoi(cy->getParameter("sleep_timer"));
     
@@ -173,15 +186,15 @@ int CollectorObject::GetConfig() {
         SysLog("config file notification: active response is disabled");
     }
     
-    strncpy(remote_upload, (char*) cy->getParameter("remote_upload").c_str(), sizeof(remote_upload));
-    if (!strcmp (remote_upload, "false")) { 
-        uploadStatus = false;
-        SysLog("config file notification: remote upload of filters, rules and configs disabled");
+    strncpy(update_local, (char*) cy->getParameter("update_local").c_str(), sizeof(update_local));
+    if (!strcmp (update_local, "false")) { 
+        ulStatus = false;
+        SysLog("config file notification: update_local for filters, rules and configs disabled");
     }
     
-    if (!strcmp (remote_upload, "")) { 
-        uploadStatus = false;
-        SysLog("config file notification: remote upload of filters, rules and configs disabled");
+    if (!strcmp (update_local, "")) { 
+        ulStatus = false;
+        SysLog("config file notification: update_local for filters, rules and configs disabled");
     }
     
     cy = new ConfigYaml( "sources");
@@ -192,19 +205,21 @@ int CollectorObject::GetConfig() {
     
     cy->addKey("modsec_log");
     
-    cy->addKey("suri_path");
+    cy->addKey("suri_conf");
     
-    cy->addKey("suri_iprep");
+    cy->addKey("suri_local");
     
     cy->addKey("suri_rules");
     
-    cy->addKey("wazuh_path");
+    cy->addKey("wazuh_conf");
     
-    cy->addKey("wazuh_iprep");
+    cy->addKey("wazuh_local");
     
-    cy->addKey("modsec_path");
+    cy->addKey("wazuh_rules");
     
-    cy->addKey("modsec_iprep");
+    cy->addKey("modsec_conf");
+    
+    cy->addKey("modsec_local");
     
     cy->addKey("modsec_rules");
     
@@ -225,46 +240,51 @@ int CollectorObject::GetConfig() {
         modseclog_status = false;
     }
     
-    if (uploadStatus) {
+    if (ulStatus) {
     
-        strncpy(suri_path, (char*) cy->getParameter("suri_path").c_str(), sizeof(suri_path));
-        if (!strcmp (suri_path, "none")) { 
-            SysLog("config file notification: remote update disabled, missing suri_path");
+        strncpy(suri_conf, (char*) cy->getParameter("suri_conf").c_str(), sizeof(suri_conf));
+        if (!strcmp (suri_conf, "none")) { 
+            SysLog("config file notification: suri_conf update disabled");
         }
     
-        strncpy(suri_iprep, (char*) cy->getParameter("suri_iprep").c_str(), sizeof(suri_iprep));
-        if (!strcmp (suri_iprep, "none")) { 
-            SysLog("config file notification: remote update disabled, missing suri_iprep");
+        strncpy(suri_local, (char*) cy->getParameter("suri_local").c_str(), sizeof(suri_local));
+        if (!strcmp (suri_local, "none")) { 
+            SysLog("config file notification: suri_local update disabled");
         }
         
          strncpy(suri_rules, (char*) cy->getParameter("suri_rules").c_str(), sizeof(suri_rules));
         if (!strcmp (suri_rules, "none")) { 
-            SysLog("config file notification: remote update disabled, missing suri_rules");
+            SysLog("config file notification: suri_rules update disabled");
         }
     
-        strncpy(wazuh_path, (char*) cy->getParameter("wazuh_path").c_str(), sizeof(wazuh_path));
-        if (!strcmp (wazuh_path, "none")) { 
-            SysLog("config file notification: remote update disabled, missing wazuh_path");
+        strncpy(wazuh_conf, (char*) cy->getParameter("wazuh_conf").c_str(), sizeof(wazuh_conf));
+        if (!strcmp (wazuh_conf, "none")) { 
+            SysLog("config file notification: wazuh_conf update disabled");
         }
     
-        strncpy(wazuh_iprep, (char*) cy->getParameter("wazuh_iprep").c_str(), sizeof(wazuh_iprep));
-        if (!strcmp (wazuh_iprep, "none")) { 
-            SysLog("config file notification: remote update disabled, missing wazuh_iprep");
+        strncpy(wazuh_local, (char*) cy->getParameter("wazuh_local").c_str(), sizeof(wazuh_local));
+        if (!strcmp (wazuh_local, "none")) { 
+            SysLog("config file notification: wazuh_local update disabled");
+        }
+        
+        strncpy(wazuh_rules, (char*) cy->getParameter("wazuh_rules").c_str(), sizeof(wazuh_rules));
+        if (!strcmp (wazuh_rules, "none")) { 
+            SysLog("config file notification: wazuh_rules update disabled");
         }
     
-        strncpy(modsec_path, (char*) cy->getParameter("modsec_path").c_str(), sizeof(modsec_path));
-        if (!strcmp (modsec_path, "none")) { 
-            SysLog("config file notification: remote update disabled, missing modsec_path");
+        strncpy(modsec_conf, (char*) cy->getParameter("modsec_conf").c_str(), sizeof(modsec_conf));
+        if (!strcmp (modsec_conf, "none")) { 
+            SysLog("config file notification: modsec_conf update disabled");
         }
     
-        strncpy(modsec_iprep, (char*) cy->getParameter("modsec_iprep").c_str(), sizeof(modsec_iprep));
-        if (!strcmp (modsec_iprep, "none")) { 
-            SysLog("config file notification: remote update disabled, missing modsec_iprep");
+        strncpy(modsec_local, (char*) cy->getParameter("modsec_local").c_str(), sizeof(modsec_local));
+        if (!strcmp (modsec_local, "none")) { 
+            SysLog("config file notification:  modsec_local update disabled");
         }
         
         strncpy(modsec_rules, (char*) cy->getParameter("modsec_rules").c_str(), sizeof(modsec_rules));
         if (!strcmp (modsec_rules, "none")) { 
-            SysLog("config file notification: remote update disabled, missing modsec_rules");
+            SysLog("config file notification: modsec_rules disabled");
         }
     }
     
