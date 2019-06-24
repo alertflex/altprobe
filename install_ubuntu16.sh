@@ -40,7 +40,6 @@ cd src
 sudo make
 sudo make install
 
-sudo sed -i "s/_project_id/$PROJECT_ID/g" /etc/alertflex/filters.json
 sudo sed -i "s/_node_id/$NODE_ID/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_sensor_id/$SENSOR_ID/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/alertflex/alertflex.yaml
@@ -49,6 +48,7 @@ sudo sed -i "s/_amq_url/$AMQ_URL/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_amq_user/$AMQ_USER/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_amq_pwd/$AMQ_PWD/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_amq_cert/$AMQ_CERT/g" /etc/alertflex/alertflex.yaml
+sudo sed -i "s/_cert_verify/$CERT_VERIFY/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_amq_key/$AMQ_KEY/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_key_pwd/$KEY_PWD/g" /etc/alertflex/alertflex.yaml
 sudo sed -i "s/_modsec_log/$MODSEC_LOG/g" /etc/alertflex/alertflex.yaml
@@ -62,7 +62,7 @@ cd ..
 echo "*** Copy MaxMind geo DB ***"
 sudo cp ./configs/GeoLiteCity.dat /etc/alertflex/
 
-if [ $INSTALL_SURICATA == yes ]
+if [ $INSTALL_SURICATA == true ]
 then
 	sudo add-apt-repository --yes ppa:oisf/suricata-stable
 	sudo apt-get update
@@ -89,7 +89,7 @@ EOF'
 	sudo systemctl enable suricata
 fi
 
-if [ $INSTALL_WAZUH == yes ]
+if [ $INSTALL_WAZUH == true ]
 then
 	
 	echo "*** installation OSSEC/WAZUH server ***"
@@ -138,7 +138,7 @@ fi
 
 sudo systemctl enable altprobe
 
-if [ $INSTALL_FILEBEAT == yes ]
+if [ $INSTALL_FILEBEAT == true ]
 then
     echo "*** installation filebeat***"
 	sudo apt-get update

@@ -9,8 +9,8 @@ collector:
   sensor: "_sensor_id"
   
   # allow remote management of collector from controller
-  active_response: "false"
-  update_local: "false"
+  active_response: "true"
+  update_local: "true"
       
   # time difference between collector and controller's, timezones in hours
   time_zone: 0
@@ -51,6 +51,7 @@ controller:
   user: "_amq_user"
   pwd: "_amq_pwd"
   cert: "_amq_cert"
+  cert_verify: "_cert_verify"
   key: "_amq_key"
   key_pwd: "_key_pwd"
   queue: "jms/alertflex/"
@@ -81,4 +82,3 @@ sources:
   wazuh_conf: "/var/ossec/etc/"
   wazuh_rules: "/var/ossec/ruleset/"
   wazuh_local: "/var/ossec/etc/"
-  

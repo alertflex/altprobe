@@ -37,10 +37,19 @@ int Updates::Open() {
     do {
         try {
             if (connection == NULL) {
+                
                 activemq::library::ActiveMQCPP::initializeLibrary();
                 
                 if (ssl_broker) {
+                    
                     decaf::lang::System::setProperty( "decaf.net.ssl.trustStore", cert );
+                    
+                    if (ssl_verify) {
+                        decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "false");
+                    } else {
+                        decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "true");
+                    }
+                    
                 } 
                 
                 if (ssl_client) {
@@ -61,9 +70,7 @@ int Updates::Open() {
                     connection = connectionFactory->createConnection();
                 }
                 
-                
                 connection->start();
-                connection->setExceptionListener(this);
             }
             
             // Create a Session
@@ -92,7 +99,7 @@ int Updates::Open() {
  
         } catch (CMSException& e) {
         
-            if (conn_attempts > 20) {
+            if (conn_attempts > 10) {
                 SysLog("activeMQ operation error");
                 string str = e.getMessage();
                 const char * c = str.c_str();
@@ -462,24 +469,12 @@ bool Updates::Reset() {
             
             if (connection == NULL) {
                 
-                activemq::library::ActiveMQCPP::initializeLibrary();
-                
-                if (ssl_broker) {
-                    decaf::lang::System::setProperty( "decaf.net.ssl.trustStore", cert );
-                } 
-                
-                if (ssl_client) {
-                    decaf::lang::System::setProperty("decaf.net.ssl.keyStore", key); 
-                    decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword", key_pwd); 
-                } 
-                
                 // Create a ConnectionFactory
                 string strUrl(url);
             
-                unique_ptr<ConnectionFactory> connectionFactory(
+                auto_ptr<ConnectionFactory> connectionFactory(
                     ConnectionFactory::createCMSConnectionFactory(strUrl));
             
-                // Create a Connection
                 // Create a Connection
                 if (user_pwd) {
                     connection = connectionFactory->createConnection(user,pwd);
@@ -488,7 +483,6 @@ bool Updates::Reset() {
                 }
                 
                 connection->start();
-                connection->setExceptionListener(this);
             }
             
             if (session == NULL) {

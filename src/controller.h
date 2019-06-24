@@ -42,6 +42,7 @@ public:
     static char user[OS_HEADER_SIZE];
     static char pwd[OS_HEADER_SIZE];
     static char cert[OS_HEADER_SIZE];
+    static char cert_verify[OS_HEADER_SIZE];
     static char key[OS_HEADER_SIZE];
     static char key_pwd[OS_HEADER_SIZE];
     static char queue[OS_HEADER_SIZE];
@@ -49,6 +50,7 @@ public:
     static Connection* connection;
     static bool ssl_broker;
     static bool ssl_client;
+    static bool ssl_verify;
     static bool user_pwd;
     
     Session* session;
@@ -62,6 +64,7 @@ public:
         memset(user, 0, sizeof(user));
         memset(pwd, 0, sizeof(pwd));
         memset(cert, 0, sizeof(cert));
+        memset(cert_verify, 0, sizeof(cert_verify));
         memset(key, 0, sizeof(key));
         memset(key_pwd, 0, sizeof(key_pwd));
         memset(queue, 0, sizeof(queue));

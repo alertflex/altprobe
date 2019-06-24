@@ -16,9 +16,10 @@
     </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/root/NetBeansProjects/collector/etc/alertflex.yaml</file>
+            <file>file:/root/NetBeansProjects/collector/etc/filters.json</file>
             <file>file:/root/NetBeansProjects/collector/controller.cpp</file>
             <file>file:/root/NetBeansProjects/collector/main.cpp</file>
-            <file>file:/root/NetBeansProjects/collector/controller.h</file>
         </group>
     </open-files>
 </project-private>

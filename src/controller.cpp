@@ -16,6 +16,7 @@ char Controller::url[OS_HEADER_SIZE];
 char Controller::user[OS_HEADER_SIZE];
 char Controller::pwd[OS_HEADER_SIZE];
 char Controller::cert[OS_HEADER_SIZE];
+char Controller::cert_verify[OS_HEADER_SIZE];
 char Controller::key[OS_HEADER_SIZE];
 char Controller::key_pwd[OS_HEADER_SIZE];
 char Controller::queue[OS_HEADER_SIZE];
@@ -23,6 +24,7 @@ char Controller::queue[OS_HEADER_SIZE];
 Connection* Controller::connection = NULL;
 bool Controller::ssl_broker = true;
 bool Controller::ssl_client = true;
+bool Controller::ssl_verify = true;
 bool Controller::user_pwd = true;
 
 int Controller::GetConfig() {
@@ -33,6 +35,7 @@ int Controller::GetConfig() {
     cy->addKey("user");
     cy->addKey("pwd");
     cy->addKey("cert");
+    cy->addKey("cert_verify");
     cy->addKey("key");
     cy->addKey("key_pwd");
     cy->addKey("queue");
@@ -84,10 +87,25 @@ int Controller::GetConfig() {
         ssl_broker = false;
     }
     
+    strncpy(cert_verify, (char*) cy->getParameter("cert_verify").c_str(), sizeof(cert_verify));
+    if (!strcmp (cert_verify, "")) {
+        SysLog("config file error: parameter controller cert_verify");
+        return 0;
+    }
+    
+    if (!strcmp (cert_verify, "false")) {
+        ssl_verify = false;
+    }
+    
+    
     strncpy(key, (char*) cy->getParameter("key").c_str(), sizeof(key));
     if (!strcmp (key, "")) {
         SysLog("config file error: parameter controller key");
         return 0;
+    }
+    
+    if (!strcmp (key, "none")) {
+        ssl_client = false;
     }
     
     strncpy(key_pwd, (char*) cy->getParameter("key_pwd").c_str(), sizeof(key_pwd));
@@ -112,20 +130,23 @@ int Controller::Open() {
     do {
         try {
             if (connection == NULL) {
+                
                 activemq::library::ActiveMQCPP::initializeLibrary();
                 
                 if (ssl_broker) {
+                    
                     decaf::lang::System::setProperty( "decaf.net.ssl.trustStore", cert );
+                    
+                    if (!ssl_verify) {
+                        decaf::lang::System::setProperty("decaf.net.ssl.disablePeerVerification", "true");
+                    }
+                    
                 } 
                 
                 if (ssl_client) {
                     decaf::lang::System::setProperty("decaf.net.ssl.keyStore", key); 
                     decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword", key_pwd); 
                 } 
-                
-                /* else {
-                    System::getProperty("decaf.net.ssl.disablePeerVerification", "false");
-                }*/
                 
                 // Create a ConnectionFactory
                 string strUrl(url);
@@ -141,6 +162,7 @@ int Controller::Open() {
                 }
                 
                 connection->start();
+                
             }
         
             // Create a Session
@@ -168,7 +190,7 @@ int Controller::Open() {
                  
         } catch (CMSException& e) {
         
-            if (conn_attempts > 20) {
+            if (conn_attempts > 10) {
                 SysLog("activeMQ operation error");
                 string str = e.getMessage();
                 const char * c = str.c_str();
@@ -373,21 +395,10 @@ bool Controller::Reset() {
             
             if (connection == NULL) {
                 
-                activemq::library::ActiveMQCPP::initializeLibrary();
-                
-                if (ssl_broker) {
-                    decaf::lang::System::setProperty( "decaf.net.ssl.trustStore", cert );
-                } 
-                
-                if (ssl_client) {
-                    decaf::lang::System::setProperty("decaf.net.ssl.keyStore", key); 
-                    decaf::lang::System::setProperty("decaf.net.ssl.keyStorePassword", key_pwd); 
-                } 
-                
                 // Create a ConnectionFactory
                 string strUrl(url);
             
-                unique_ptr<ConnectionFactory> connectionFactory(
+                auto_ptr<ConnectionFactory> connectionFactory(
                     ConnectionFactory::createCMSConnectionFactory(strUrl));
             
                 // Create a Connection
@@ -396,6 +407,8 @@ bool Controller::Reset() {
                 } else {
                     connection = connectionFactory->createConnection();
                 }
+                
+                connection->start();
             }
             
             if (session == NULL) {
