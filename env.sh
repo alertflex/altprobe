@@ -4,38 +4,39 @@
 # Technical project data for Alertflex collector #
 ##################################################
 
-# collector:
-# Project id, work directory and id of node (for project ID use any value in UUID format, but the same such for the controller)
-export INSTALL_PATH=/home/alertflex/Altprobe
-export NODE_ID=collr
-export SENSOR_ID=master
+# collector
+# work directory and node id and probe id
+export INSTALL_PATH=/home/alertflex/altprobe
+export PROJECT_ID=xxxxx
+export NODE_ID=xxxxx
+export PROBE_ID=xxxxx
 
-export INSTALL_SURICATA=true
-export INTERFACE=eth0
-
-export INSTALL_WAZUH=true
-# for communication between altprobe and wazuh server use next account:
-export WAZUH_USER=foo
-export WAZUH_PWD=bar
-
-# controller:
-# NOTE! settings for connection between collector and broker (alertflex controller)
+# controller
 # url: "ssl://host:61617" or "tcp://host:61616"
 export AMQ_URL='ssl:\/\/xxxxx:61617'
 export AMQ_USER=xxxxx
 export AMQ_PWD=*****
-export AMQ_CERT='\/etc\/alertflex\/Broker.pem'
+export AMQ_CERT='\/etc\/altprobe\/Broker.pem'
 export CERT_VERIFY=true
 export AMQ_KEY=none
 export KEY_PWD=none
 
-# sources:
+# sources
 # if *_LOG is "none", redis connection will use
+export FALCO_LOG=none
 export MODSEC_LOG=none
 export SURI_LOG=none
 export WAZUH_LOG='\/var\/ossec\/logs\/alerts\/alerts.json'
 
-# install filebeat package for transport of alerts from file to redis
+# install add-on packages
+export INSTALL_REDIS=true
+export INSTALL_FALCO=true
+export INSTALL_SURICATA=true
+export INTERFACE=xxx
+export INSTALL_WAZUH=true
+export WAZUH_USER=foo
+export WAZUH_PWD=bar
+# filebeat package for transport of alerts from file to redis
 export INSTALL_FILEBEAT=false
 
 

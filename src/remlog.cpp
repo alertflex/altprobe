@@ -35,7 +35,13 @@ void  RemLog::Close() {
 int RemLog::Go(void) {
     
         
-    while (!q_logs_nids.empty() || !q_logs_hids.empty() || !q_logs_waf.empty()) {
+    while (!q_logs_nids.empty() || !q_logs_hids.empty() || !q_logs_waf.empty() || !q_logs_crs.empty()) {
+        
+        if (!q_logs_crs.empty()) {
+            q_logs_crs.pop(rec);
+            logs_list.push_back(rec);
+            counter++;
+        }
         
         if (!q_logs_nids.empty()) {
             q_logs_nids.pop(rec);

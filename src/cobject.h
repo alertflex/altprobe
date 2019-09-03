@@ -20,11 +20,11 @@ public:
     static string sensor_id;
     
     static char active_response[OS_HEADER_SIZE];
-    static char update_local[OS_HEADER_SIZE];
-        
+    static char update_remote[OS_HEADER_SIZE];
+    
     static bool arStatus;
-    static bool ulStatus;
-                
+    static bool urStatus;
+    
     static int timezone;
     static int log_size;
     static char log_path[OS_BUFFER_SIZE]; 
@@ -41,12 +41,18 @@ public:
     
     static bool wazuhServerStatus;
     
+    static char falco_log[OS_BUFFER_SIZE]; 
+    static bool falcolog_status;
     static char suri_log[OS_BUFFER_SIZE]; 
     static bool surilog_status;
     static char wazuh_log[OS_BUFFER_SIZE];
     static bool wazuhlog_status;
     static char modsec_log[OS_BUFFER_SIZE];
     static bool modseclog_status;
+    
+    static char falco_conf[OS_BUFFER_SIZE]; 
+    static char falco_local[OS_BUFFER_SIZE];
+    static char falco_rules[OS_BUFFER_SIZE];
         
     static char suri_conf[OS_BUFFER_SIZE]; 
     static char suri_local[OS_BUFFER_SIZE];
@@ -69,8 +75,9 @@ public:
         node_id.clear();
         sensor_id.clear();
         wazuhServerStatus = true;
-        arStatus = true;
-        ulStatus = true;
+        arStatus = false;
+        urStatus = true;
+        falcolog_status = true;
         surilog_status = true;
         wazuhlog_status = true;
         modseclog_status = true;
@@ -150,7 +157,7 @@ public:
     string alert_uuid;
     string source;
     string type;
-    int event;
+    string event;
     int severity;
     int score;
     string description;
@@ -161,6 +168,10 @@ public:
     unsigned int srcport;
     unsigned int dstport;
     string user;
+    string process;
+    string file;
+    string agent;
+    string container;
     string sensor;
     string location;
     string action; 
@@ -178,7 +189,7 @@ public:
         alert_uuid.clear();
         source.clear();
         type.clear();
-        event =  0; 
+        event.clear(); 
         severity = 0; 
         description.clear();
         srcip.clear();
@@ -186,10 +197,13 @@ public:
         action.clear();
         location.clear();
         user.clear();
+        process.clear();
+        file.clear();
+        agent.clear();
+        container.clear();
         status.clear();
         info.clear();
         event_json.clear();
-        // new
         score = 0;
         srcagent.clear();
         dstagent.clear();

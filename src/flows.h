@@ -18,10 +18,8 @@ public:
     // 1 - netflow, 2 - dns, 3 - ssh
     int flows_type; 
     string src_ip; 
-    string src_country; 
     string src_agent;
     string dst_ip;  
-    string dst_country; 
     string dst_agent;
     string ids;
     unsigned int dst_port; 
@@ -34,10 +32,8 @@ public:
         flows_type = 0;
         src_ip.clear();
         src_agent.clear();
-        src_country.clear();
         dst_ip.clear();
         dst_agent.clear();
-        dst_country.clear();
         ids.clear();
         dst_port = 0;
         bytes = 0;
@@ -141,20 +137,6 @@ public:
     }
 };
 
-class FlowsBuffers {
-public:
-    
-    unsigned int top_talkers;
-    
-    unsigned int applications;
-    
-    unsigned int countries;
-    
-    unsigned int dns_queries;
-    
-    unsigned int ssh_sessions;
-    
-};
 
 extern boost::lockfree::spsc_queue<FlowsRecord> q_flows;
 extern boost::lockfree::spsc_queue<Traffic> q_netstat;

@@ -19,13 +19,20 @@ char Controller::cert[OS_HEADER_SIZE];
 char Controller::cert_verify[OS_HEADER_SIZE];
 char Controller::key[OS_HEADER_SIZE];
 char Controller::key_pwd[OS_HEADER_SIZE];
-char Controller::queue[OS_HEADER_SIZE];
 
 Connection* Controller::connection = NULL;
 bool Controller::ssl_broker = true;
 bool Controller::ssl_client = true;
 bool Controller::ssl_verify = true;
 bool Controller::user_pwd = true;
+
+Session* Controller::session;
+Destination* Controller::destAlerts;
+MessageProducer* Controller::producerAlerts;
+Destination* Controller::destInfo;
+MessageProducer* Controller::producerInfo;
+bool Controller::sessionTransacted;
+bool Controller::connection_status;
 
 int Controller::GetConfig() {
        
@@ -38,7 +45,7 @@ int Controller::GetConfig() {
     cy->addKey("cert_verify");
     cy->addKey("key");
     cy->addKey("key_pwd");
-    cy->addKey("queue");
+    
     
     cy->ParsConfig();
     
@@ -50,12 +57,6 @@ int Controller::GetConfig() {
     
     if (!strcmp (url, "")) { 
         SysLog("config file error: parameter controller url");
-        return 0;
-    }
-    
-    strncpy(queue, (char*) cy->getParameter("queue").c_str(), sizeof(queue));
-    if (!strcmp (queue, "")) {
-        SysLog("config file error: parameter controller queue");
         return 0;
     }
     
@@ -164,25 +165,42 @@ int Controller::Open() {
                 connection->start();
                 
             }
+            
+            if (session == NULL) {
         
-            // Create a Session
-            if (this->sessionTransacted) {
-                session = connection->createSession(Session::SESSION_TRANSACTED);
-            } else {
-                session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
+                // Create a Session
+                if (this->sessionTransacted) {
+                    session = connection->createSession(Session::SESSION_TRANSACTED);
+                } else {
+                    session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
+                }
             }
             
-            // Create the destination (Topic or Queue)
-            string strQueue(queue);
+            if (producerAlerts == NULL) {
             
-            strQueue = strQueue + "controller";
+                // Create the destination for alerts
+                string strAlerts("jms/alertflex/alerts");
             
-            destination = session->createQueue(strQueue);
+                destAlerts = session->createQueue(strAlerts);
                         
-            // Create a MessageProducer from the Session to the Topic or Queue
-            producer = session->createProducer(destination);
+                // Create a MessageProducer from the Session to Queue
+                producerAlerts = session->createProducer(destAlerts);
        
-            producer->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
+                producerAlerts->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
+            }
+            
+            if (producerInfo == NULL) {
+            
+                // Create the destination for statistics(Queue)
+                string strInfo("jms/alertflex/info");
+            
+                destInfo = session->createQueue(strInfo);
+                        
+                // Create a MessageProducer from the Session to Queue
+                producerInfo = session->createProducer(destInfo);
+       
+                producerInfo->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
+            }
         
             mq_counter++;
         
@@ -236,8 +254,9 @@ int Controller::SendMessage(Event* e) {
                 
             string strType(((Alert*) e)->type);
             message->setStringProperty("type", strType);
-                                
-            message->setIntProperty("event", ((Alert*) e)->event);
+            
+            string strEvent(((Alert*) e)->event);
+            message->setStringProperty("event", strEvent);
                     
             message->setIntProperty("severity", ((Alert*) e)->severity);
             
@@ -279,6 +298,18 @@ int Controller::SendMessage(Event* e) {
             string strUser(((Alert*) e)->user);
             message->setStringProperty("user", strUser);
             
+            string strAgent(((Alert*) e)->agent);
+            message->setStringProperty("agent", strAgent);
+            
+            string strContainer(((Alert*) e)->container);
+            message->setStringProperty("container", strContainer);
+            
+            string strProcess(((Alert*) e)->process);
+            message->setStringProperty("process", strProcess);
+            
+            string strFile(((Alert*) e)->file);
+            message->setStringProperty("file", strFile);
+            
             string strSensor(((Alert*) e)->sensor);
             message->setStringProperty("sensor", strSensor);
                 
@@ -302,7 +333,7 @@ int Controller::SendMessage(Event* e) {
             
             message->setStringProperty("collr_time", GetNodeTime());
             
-            producer->send(message.get());
+            producerAlerts->send(message.get());
             
                     
         }  else {
@@ -317,23 +348,30 @@ int Controller::SendMessage(Event* e) {
             
             switch (msg_type) {
                 case 4 :
-                    byte_message->setStringProperty("sensor", sensor_id + "-nids");
+                    byte_message->setStringProperty("sensor", sensor_id + "-crs");
                     break;
                 case 5 :
                     byte_message->setStringProperty("sensor", sensor_id + "-hids");
                     break;
                 case 6 :
-                    byte_message->setStringProperty("sensor", sensor_id + "-waf");
+                    byte_message->setStringProperty("sensor", sensor_id + "-nids");
                     break;
                 case 7 :
-                    byte_message->setStringProperty("sensor", sensor_id + "-nids");
-                    byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
+                    byte_message->setStringProperty("sensor", sensor_id + "-waf");
                     break;
                 case 8 :
-                    byte_message->setStringProperty("sensor", sensor_id + "-hids");
+                    byte_message->setStringProperty("sensor", sensor_id + "-crs");
                     byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
                     break;
                 case 9 :
+                    byte_message->setStringProperty("sensor", sensor_id + "-hids");
+                    byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
+                    break;
+                case 10 :
+                    byte_message->setStringProperty("sensor", sensor_id + "-nids");
+                    byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
+                    break;
+                case 11 :
                     byte_message->setStringProperty("sensor", sensor_id + "-waf");
                     byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
                     break;
@@ -348,7 +386,7 @@ int Controller::SendMessage(Event* e) {
                 
             byte_message->writeBytes(vec);
             
-            producer->send(byte_message);
+            producerInfo->send(byte_message);
                                     
             delete byte_message;
         }
@@ -373,14 +411,24 @@ bool Controller::Reset() {
                 connection = NULL;
             }
                 
-            if (destination != NULL) {
-                delete destination;
-                destination = NULL;
+            if (destAlerts != NULL) {
+                delete destAlerts;
+                destAlerts = NULL;
+            }
+            
+            if (destInfo != NULL) {
+                delete destInfo;
+                destInfo = NULL;
             }
         
-            if (producer != NULL) {
-                delete producer;
-                producer = NULL;
+            if (producerAlerts != NULL) {
+                delete producerAlerts;
+                producerAlerts = NULL;
+            }
+            
+            if (producerInfo != NULL) {
+                delete producerInfo;
+                producerInfo = NULL;
             }
                 
             if (session != NULL) {
@@ -398,7 +446,7 @@ bool Controller::Reset() {
                 // Create a ConnectionFactory
                 string strUrl(url);
             
-                auto_ptr<ConnectionFactory> connectionFactory(
+                unique_ptr<ConnectionFactory> connectionFactory(
                     ConnectionFactory::createCMSConnectionFactory(strUrl));
             
                 // Create a Connection
@@ -421,23 +469,34 @@ bool Controller::Reset() {
                 }
             }
             
-            if (destination == NULL) {
-                // Create the destination (Topic or Queue)
-                string strQueue(queue);
+            if (destAlerts == NULL) {
+                // Create the destination for alerts
+                string strAlerts("jms/alertflex/alerts");
             
-                strQueue = strQueue + "controller";
-            
-                destination = session->createQueue(strQueue);
+                destAlerts = session->createTopic(strAlerts);
             }
             
-            if (producer == NULL) {
-                        
-                // Create a MessageProducer from the Session to the Topic or Queue
-                producer = session->createProducer(destination);
+            if (producerAlerts == NULL) {
+                // Create a MessageProducer from the Session to the Queue
+                producerAlerts = session->createProducer(destAlerts);
        
-                producer->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
+                producerAlerts->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
             }
             
+            if (destInfo == NULL) {
+                // Create the destination for statistics(Queue)
+                string strInfo("jms/alertflex/info");
+            
+                destInfo = session->createQueue(strInfo);
+            }
+            
+            if (producerInfo == NULL) {
+                // Create a MessageProducer from the Session to the Queue
+                producerInfo = session->createProducer(destInfo);
+       
+                producerInfo->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
+            }
+                       
             connection_status = true;
         }
         
@@ -464,12 +523,20 @@ void Controller::Close() {
  
     // Destroy resources.
     try {
-        delete destination;
-        destination = NULL;
+        delete destAlerts;
+        destAlerts = NULL;
         
-        if (producer) {
-            delete producer;
-            producer = NULL;
+        if (producerAlerts) {
+            delete producerAlerts;
+            producerAlerts = NULL;
+        }
+        
+        delete destInfo;
+        destInfo = NULL;
+        
+        if (producerInfo) {
+            delete producerInfo;
+            producerInfo = NULL;
         }
         
         delete session;

@@ -37,7 +37,7 @@ void  RemStat::Close() {
 
 int RemStat::Go(void) {
     
-    while (!q_compliance.empty() || !q_stats_flow.empty() || !q_stats_ids.empty() || !q_stats_collr.empty() || !q_stats_metric.empty()) {
+    while (!q_compliance.empty() || !q_stats_flow.empty() || !q_stats_ids.empty() || !q_stats_collr.empty()) {
         
         if (!q_compliance.empty()) {
             q_compliance.pop(rec);
@@ -63,11 +63,6 @@ int RemStat::Go(void) {
             counter++;
         }  
         
-        if (!q_stats_metric.empty()) {
-            q_stats_metric.pop(rec);
-            stats_list.push_back(rec);
-            counter++;
-        }  
     }    
         
     if (counter < 100 && timeout < 10) {

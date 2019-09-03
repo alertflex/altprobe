@@ -8,8 +8,6 @@
 
 int Source::config_flag = 0;
 
-char Source::maxmind_path[OS_BUFFER_SIZE];
-
 int Source::GetConfig() {
     
     //Read sinks config
@@ -36,18 +34,6 @@ int Source::GetConfig() {
         status = 1;
     }
     
-    if (!config_flag) {
-        cy = new ConfigYaml( "collector");
-        
-        cy->addKey("geo_db");
-    
-        cy->ParsConfig();
-        
-        strncpy(maxmind_path, (char*) cy->getParameter("geo_db").c_str(), sizeof(maxmind_path));
-        
-        config_flag =  1;
-    }
-    
     return 1;
 }
 
@@ -69,17 +55,6 @@ int Source::Open() {
         }
     }
     
-    if (!strcmp (maxmind_path, "none")) maxmind_state = 0;
-    else {
-        gi = GeoIP_open(maxmind_path, GEOIP_INDEX_CACHE);
-
-        if (gi == NULL) {
-            SysLog("error opening maxmind database\n");
-            maxmind_state = 0;
-        }
-        else maxmind_state = 1;
-    }
-    
     return 1;
 }
 
@@ -89,11 +64,11 @@ void Source::Close() {
     
     if (status == 1) redisFree(c);
     
-    if (maxmind_state != 0) GeoIP_delete(gi);
 }
 
 long Source::ResetEventsCounter() {
-        unsigned long r;
+    
+    unsigned long r;
         
     m_monitor_counter.lock();
     r = events_counter;
@@ -127,17 +102,21 @@ void Source::SendAlertMultiple(int type) {
     sk.alert.event_time = GetNodeTime();
         
     switch (type) {
+        case 0:
+            sk.alert.type = "HOST";
+            sk.alert.source = "Falco";
+            break;
         case 1:
             sk.alert.type = "HOST";
             sk.alert.source = "Wazuh";
             break;
         case 2:
             sk.alert.type = "NET";
-            sk.alert.source = "Modsecurity";
+            sk.alert.source = "Suricata";
             break;
         case 3:
             sk.alert.type = "NET";
-            sk.alert.source = "Suricata";
+            sk.alert.source = "Modsecurity";
             break;
         default:
             sk.alert.type = "MISC";

@@ -21,7 +21,7 @@ using namespace std;
 
 // 3. If reproduce = 0 then msg will be replaced to new fields parameters
 
-// 4. field location = "alertflex collector"
+// 4. field location = "altprobe collector"
 
 class Agent {
     
@@ -105,14 +105,14 @@ public:
 class Response {
 public:
     string profile;
-    int new_event;
+    string new_event;
     int new_severity;
     string new_category;
     string new_description;
     
     void Reset () {
         profile.clear();
-        new_event = 0;
+        new_event.clear();
         new_category.clear();
         new_description.clear();
     }
@@ -124,14 +124,14 @@ public:
 
 class GrayList {
 public:  
-    int event;
+    string event;
     string host;
     
     Aggregator agr;
     Response rsp;
     
     void Reset () {
-        event = 0;
+        event.clear();
         host.clear();
         
     }
@@ -174,67 +174,6 @@ public:
 };
 
 
-class Threshold {
-public:
-    
-    string host;
-    string element;
-    string parameter;
-        
-    long int value_min;
-    long int value_max;
-    long int value_count;
-        
-    time_t trigger_time;
-    
-    Aggregator agr;
-    Response rsp;
-        
-    void Reset() {
-        value_count = 0;
-        value_min = 0;
-        value_max = 0;
-        trigger_time = time(NULL);
-        host.clear();
-        element.clear();
-        parameter.clear();
-    }
-    
-    Threshold () {
-        Reset();
-    }
-};
-
-class NetflowPolicy {
-public:
-    
-    bool log;
-    
-    std::vector<Threshold*> th;
-    
-    void Reset() {
-        
-        log = false;
-        th.clear();
-    }
-    
-};
-
-class MetricPolicy {
-public:
-    
-    bool log;
-            
-    std::vector<Threshold*> th;
-    
-    void Reset() {
-        
-        log = false;
-        th.clear();
-    }
-    
-};
-
 class Filters {
 public:
     string ref_id;
@@ -242,6 +181,8 @@ public:
     	
     std::vector<Network*> home_nets;
     std::vector<Alias*> alias;
+    
+    IdsPolicy crs;
            
     IdsPolicy nids;
     
@@ -249,20 +190,15 @@ public:
     
     IdsPolicy waf;
     
-    MetricPolicy metric;
-    
-    NetflowPolicy traf;
-    
     void Reset() {
         ref_id.clear();
         desc.clear();
         home_nets.clear();
         alias.clear();
+        crs.Reset();
         nids.Reset();
         hids.Reset();
         waf.Reset();
-        traf.Reset();
-        metric.Reset();
     }
 };
 

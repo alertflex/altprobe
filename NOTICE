@@ -1,8 +1,3 @@
-Altprobe includes GeoLite2 data created by MaxMind, available from
-<a href="https://www.maxmind.com">https://www.maxmind.com</a>.
-
-=======================================================================================================================
-
 Altprobe uses package https://github.com/apache/activemq-cpp, that is licensed under Apache License 2.0
 
 Copyright [yyyy] [name of copyright owner]

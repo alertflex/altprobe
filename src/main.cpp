@@ -14,8 +14,8 @@
 #include "statflows.h"
 #include "statids.h"
 #include "hids.h"
+#include "crs.h"
 #include "waf.h"
-#include "metric.h"
 #include "misc.h"
 #include "nids.h"
 #include "collector.h"
@@ -55,22 +55,6 @@ void * thread_statflows(void *arg) {
     pthread_exit(0);
 }
 
-Metric met("metric");
-pthread_t pthread_met;
-
-void* exit_thread_met_arg;
-void exit_thread_met(void* arg) { met.Close(); }
-
-void * thread_met(void *arg) {
-    
-    pthread_cleanup_push(exit_thread_met, exit_thread_met_arg);
-    
-    while (met.Go()) { }
-    
-    pthread_cleanup_pop(1);
-    pthread_exit(0);
-}
-
 Misc misc("misc");
 pthread_t pthread_misc;
 
@@ -82,6 +66,24 @@ void * thread_misc(void *arg) {
     pthread_cleanup_push(exit_thread_misc, exit_thread_misc_arg);
     
     while (misc.Go()) { }
+    
+    pthread_cleanup_pop(1);
+    pthread_exit(0);
+}
+
+Crs crs("falco_redis");
+pthread_t pthread_crs;
+
+void* exit_thread_crs_arg;
+void exit_thread_crs(void* arg) { crs.Close(); }
+
+void * thread_crs(void *arg) {
+    
+    pthread_cleanup_push(exit_thread_crs, exit_thread_crs_arg);
+    
+    crs.sensor = crs.sensor_id + "-crs";
+    
+    while (crs.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
@@ -190,7 +192,7 @@ void * thread_updates(void *arg) {
 }
 
 
-Collector collr(&hids, &nids, &waf, &misc, &met, &remlog, &remstat, &statflows, &statids);
+Collector collr(&crs, &hids, &nids, &waf, &misc, &remlog, &remstat, &statflows, &statids);
 pthread_t pthread_collr;
 
 void* exit_thread_collr_arg;
@@ -214,9 +216,6 @@ int LoadConfig(void)
     //statflow
     if (!statflows.GetConfig()) return 0;
     
-    //metrics
-    if (!met.GetConfig()) return 0;
-    
     //misc
     if (!misc.GetConfig()) return 0;
     
@@ -228,6 +227,9 @@ int LoadConfig(void)
     
     //waf
     if (!waf.GetConfig()) return 0;
+    
+    //crs
+    if (!crs.GetConfig()) return 0;
     
     //remlog
     if (!remlog.GetConfig()) return 0;
@@ -271,19 +273,6 @@ int InitThreads(void)
             
         if (pthread_create(&pthread_statflows, NULL, thread_statflows, &arg)) {
             daemon_log(LOG_ERR,"error creating thread for statflow");
-            return 0;
-        }
-    }
-    
-    //metrics
-    if (met.GetStatus()) {
-        if (!met.Open()) {
-            daemon_log(LOG_ERR,"cannot open Metrics server");
-            return 0;
-        }
-            
-        if (pthread_create(&pthread_met, NULL, thread_met, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for metrics");
             return 0;
         }
     }
@@ -343,6 +332,20 @@ int InitThreads(void)
         }
     } 
     
+    //crs
+    if (crs.GetStatus()) {
+        
+        if (!crs.Open()) {
+            daemon_log(LOG_ERR,"cannot open Falco");
+            return 0;
+        }
+            
+        if (pthread_create(&pthread_crs, NULL, thread_crs, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for Falco");
+            return 0;
+        }
+    } 
+    
         
     //remlog
     if (remlog.GetStatus()) {
@@ -386,7 +389,7 @@ int InitThreads(void)
     //collector
     if (collr.GetStatus()) {
         if (!collr.Open()) {
-            daemon_log(LOG_ERR,"cannot open monitor of Collector service");
+            daemon_log(LOG_ERR,"cannot open monitor of collector service");
             return 0;
         }
     
@@ -413,12 +416,6 @@ void KillsThreads(void)
         pthread_join(pthread_statflows, NULL);
     }
     
-    //metrics
-    if (met.GetStatus()) {
-        pthread_cancel(pthread_met);
-        pthread_join(pthread_met, NULL);
-    }
-    
     //misc
     if (misc.GetStatus()) {
         pthread_cancel(pthread_misc);
@@ -441,6 +438,12 @@ void KillsThreads(void)
     if (waf.GetStatus()) {
         pthread_cancel(pthread_waf);
         pthread_join(pthread_waf, NULL);
+    }
+    
+    //crs
+    if (crs.GetStatus()) {
+        pthread_cancel(pthread_crs);
+        pthread_join(pthread_crs, NULL);
     }
     
     //remlog
@@ -506,12 +509,12 @@ int start(pid_t pid) {
         /* Wait for timeout in seconds for the return value passed from the daemon process */
         if ((ret = daemon_retval_wait(startup_timer)) < 0) {
             
-            daemon_log(LOG_ERR, "could not receive return value from alertflex collector process: %s", strerror(errno));
+            daemon_log(LOG_ERR, "could not receive return value from altprobe collector process: %s", strerror(errno));
             
             return 255;
         }
 
-        daemon_log(ret != 0 ? LOG_ERR : LOG_INFO, "alertflex collector started with code %i", ret);
+        daemon_log(ret != 0 ? LOG_ERR : LOG_INFO, "altprobe collector started with code %i", ret);
         
         return ret;
 
@@ -562,7 +565,7 @@ int start(pid_t pid) {
         /* Send OK to parent process */
         daemon_retval_send(0);
 
-        daemon_log(LOG_INFO, "alertflex collector has been successfully started");
+        daemon_log(LOG_INFO, "altprobe collector has been successfully started");
 
         /* Prepare for select() on the signal fd */
         FD_ZERO(&fds);
@@ -690,7 +693,7 @@ int main(int argc, char *argv[]) {
             if ((pid = daemon_pid_file_is_running()) >= 0)
                 
                 // daemon_log(LOG_ERR, "AlertFlex collector is already running with PID %u.", pid);
-                printf( "alertflex collector is already running with PID %u\n", pid);
+                printf( "altprobe collector is already running with PID %u\n", pid);
             
             else return start(pid);
             return 0;
@@ -701,7 +704,7 @@ int main(int argc, char *argv[]) {
             if ((pid = daemon_pid_file_is_running()) >= 0)
                 
                 // daemon_log(LOG_ERR, "AlertFlex collector is already running with PID %u.", pid);
-                printf( "alertflex collector is already running with PID %u\n", pid);
+                printf( "altprobe collector is already running with PID %u\n", pid);
             
             else return startD(pid);
             
@@ -713,9 +716,9 @@ int main(int argc, char *argv[]) {
              /* Check if the new function daemon_pid_file_kill_wait() is available, if it is, use it. */
              if ((ret = daemon_pid_file_kill_wait(SIGTERM, 5)) < 0)
                   // daemon_log(LOG_ERR, "Failed to kill AlertFlex collector: %s.", strerror(errno));
-                  printf( "failed to kill alertflex collector: %s\n", strerror(errno));
+                  printf( "failed to kill altprobe collector: %s\n", strerror(errno));
              //else daemon_log(LOG_ERR, "AlertFlex collector is stopping.");
-             else printf( "alertflex collector is stopping\n");
+             else printf( "altprobe collector is stopping\n");
              return ret < 0 ? 1 : 0;
         }
         
@@ -723,9 +726,9 @@ int main(int argc, char *argv[]) {
              /* Check that the daemon is not rung twice a the same time */
              if ((pid = daemon_pid_file_is_running()) >= 0)
                   //daemon_log(LOG_ERR, "AlertFlex collector is running with PID %u.", pid);
-                  printf( "alertflex collector is running, process %u\n", pid);
+                  printf( "altprobe collector is running, process %u\n", pid);
              //else daemon_log(LOG_ERR, "AlertFlex collector isn't running.");
-             else printf( "alertflex collector isn't running\n");
+             else printf( "altprobe collector isn't running\n");
              return 0;
         }
     }

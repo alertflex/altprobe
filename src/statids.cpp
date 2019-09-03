@@ -50,11 +50,14 @@ int StatIds::Go(void) {
             
             if (flush_timer < seconds) {
                 flush_timer = seconds;
+                
+                mem_mon.crs_alerts_list = crs_alerts_list.size();
+                FlushCrsAlert();
                 mem_mon.hids_alerts_list = hids_alerts_list.size();
                 FlushHidsAlert();
                 mem_mon.nids_alerts_list = nids_alerts_list.size();
                 FlushNidsAlert();
-                // mem_mon.waf_alerts_list = waf_alerts_list.size();
+                mem_mon.waf_alerts_list = waf_alerts_list.size();
                 FlushWafAlert();
             }
         }
@@ -72,7 +75,7 @@ void StatIds::ProcessStatistic() {
     
     counter = 0;
     
-    while (!q_nids.empty() || !q_hids.empty() || !q_waf.empty()) {
+    while (!q_crs.empty() || !q_nids.empty() || !q_hids.empty() || !q_waf.empty()) {
         
         if (!q_nids.empty()) {
             q_nids.pop(ids_rec);
@@ -87,6 +90,10 @@ void StatIds::ProcessStatistic() {
         if (!q_waf.empty()) {
             q_waf.pop(ids_rec);
             PushRecord();
+        }
+        
+        if (!q_crs.empty()) {
+            q_crs.pop(ids_rec);
         }
     }       
         
@@ -124,6 +131,11 @@ void StatIds::PushRecord() {
         UpdateWafTarget();
         if(ids_rec.agr.reproduced != 0) UpdateWafAlerts();
     } 
+    
+    if (ids_rec.ids_type == 5) {
+        UpdateContainerStat();
+        if(ids_rec.agr.reproduced != 0) UpdateCrsAlerts();
+    } 
         
     counter++;
 }
@@ -150,9 +162,10 @@ void StatIds::RoutineJob() {
     FlushWafTarget();
     mem_mon.waf_source = waf_source.size();
     FlushWafSource();
-    
-    FlushUserEvent();
     mem_mon.user_event = user_event.size();
+    FlushUserEvent();
+    mem_mon.container_stat = container_stat.size();
+    FlushContainerStat();
 }
 
 void StatIds::UpdateNidsSrcIp() {
@@ -596,7 +609,7 @@ void StatIds::UpdateIdsCategory() {
             if (i->ref_id.compare(ids_rec.ref_id) == 0)  {
                 if (i->ids_cat.compare(j) == 0) {
                             
-                    if ((i->ids_type == 3) || (i->ids_type == 4)) {
+                    if ((i->ids_type == 3) || (i->ids_type == 4) || (i->ids_type == 5)) {
                         
                         if (i->ids_name.compare(ids_rec.ids) == 0) {
                             i->counter++;
@@ -669,9 +682,9 @@ void StatIds::UpdateIdsEvent() {
     for(i = ids_event.begin(), end = ids_event.end(); i != end; ++i) {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  {  
             
-            if (i->event == ids_rec.event) {
+            if (i->event.compare(ids_rec.event) == 0) {
                 
-                if ((i->ids_type == 3) || (i->ids_type == 4)) {
+                if ((i->ids_type == 3) || (i->ids_type == 4) || (i->ids_type == 5)) {
                         
                     if (i->ids_name.compare(ids_rec.ids) == 0) {
                         i->counter++;
@@ -707,10 +720,10 @@ void StatIds::FlushIdsEvent() {
         report += "\", \"ids_type\": ";
         report += std::to_string(it->ids_type);
             
-        report += ", \"event\": ";
-        report += std::to_string(it->event);
+        report += ", \"event\": \"";
+        report += it->event;
             
-        report += ", \"severity\": ";
+        report += "\", \"severity\": ";
         report += std::to_string(it->severity);
             
         report += ", \"counter\": ";
@@ -748,7 +761,7 @@ void StatIds::UpdateUserEvent() {
     for(i = user_event.begin(), end = user_event.end(); i != end; ++i) {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  {  
             
-            if (i->event == ids_rec.event) {
+            if (i->event.compare(ids_rec.event) == 0) {
                 
                 if (i->agent.compare(ids_rec.agent) == 0) {
                     
@@ -779,10 +792,10 @@ void StatIds::FlushUserEvent() {
         report += "{ \"ref_id\": \"";
         report += it->ref_id;
             
-        report += "\", \"event\": ";
-        report += std::to_string(it->event);
+        report += "\", \"event\": \"";
+        report += it->event;
             
-        report += ", \"severity\": ";
+        report += "\", \"severity\": ";
         report += std::to_string(it->severity);
             
         report += ", \"counter\": ";
@@ -817,6 +830,158 @@ void StatIds::FlushUserEvent() {
     user_event.clear();
 }
 
+void StatIds::UpdateContainerStat() {
+    
+    std::vector<ContainerStat>::iterator i, end;
+    
+    for(i = container_stat.begin(), end = container_stat.end(); i != end; ++i) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {  
+            
+            if (i->ids_name.compare(ids_rec.ids) == 0) {
+                
+                if (i->container.compare(ids_rec.container) == 0) {
+                    
+                    i->counter++;
+                    return;
+                }
+            }
+        }
+    } 
+    
+    if (ids_rec.container.compare("") != 0)
+        container_stat.push_back(ContainerStat( ids_rec.ref_id, ids_rec.ids, ids_rec.container));
+}
+
+void StatIds::FlushContainerStat() {
+    
+    report = "{ \"type\": \"container_stat\", \"data\" : [ ";
+        
+    std::vector<ContainerStat>::iterator it, end;
+            
+    for(it = container_stat.begin(), end = container_stat.end(); it != end; ++it) {
+                    
+        report += "{ \"ref_id\": \"";
+        report += it->ref_id;
+            
+        report += "\", \"ids\": \"";
+        report += it->ids_name;
+            
+        report += "\", \"container\": \"";
+        report += it->container;
+            
+        report += "\", \"counter\": ";
+        report += std::to_string(it->counter);
+            
+        report += ", \"time_of_survey\": \"";
+        report += GetNodeTime();
+            
+        report += "\" } ,";
+            
+    }
+    
+    report.resize(report.size() - 1);
+    report += " ] }";
+     
+    //SysLog((char*) report.c_str());
+    q_stats_ids.push(report);
+    
+    report.clear();
+    user_event.clear();
+}
+
+void StatIds::UpdateCrsAlerts() {
+    std::list<IdsRecord>::iterator i, end;
+    time_t current_time;
+    
+    for(i = crs_alerts_list.begin(), end = crs_alerts_list.end(); i != end; ++i) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
+            if (i->ids.compare(ids_rec.ids) == 0)  {
+                if (i->event.compare(ids_rec.event) == 0) {
+                    
+                    //get current time
+                    current_time = time(NULL);
+                    i->count++;  
+                    if ((i->alert_time + i->agr.in_period) < current_time) {
+                        if (i->count >= i->agr.reproduced) {
+                            SendCrsAlert(i, i->count);
+                            crs_alerts_list.erase(i);
+                        }
+                        else {
+                            crs_alerts_list.erase(i);
+                            goto new_crs_alert;
+                        }
+                        return;
+                    }
+                }
+            }  
+        }
+    } 
+new_crs_alert:
+    ids_rec.count = 1;
+    crs_alerts_list.push_back(ids_rec);
+}
+
+void StatIds::SendCrsAlert(std::list<IdsRecord>::iterator r, int c) {
+    
+    sk.alert.ref_id = r->ref_id;
+    
+    sk.alert.source = "Falco";
+    sk.alert.type = "HOST";
+    
+    sk.alert.srcip = "";
+    sk.alert.dstip = "";
+    
+    sk.alert.dstport = 0;
+    sk.alert.srcport = 0;
+    sk.alert.dstagent = r->agent;
+    sk.alert.srcagent = "indef";
+    sk.alert.user = "indef";
+    sk.alert.score = 0;
+    
+    sk.alert.sensor = r->ids;
+    sk.alert.filter = fs.filter.desc;
+    sk.alert.event_time = GetNodeTime();
+    
+    if (r->rsp.new_event.compare("") != 0) sk.alert.event = r->rsp.new_event;
+    else sk.alert.event = r->event;
+        
+    if (r->rsp.new_severity != 0) sk.alert.severity = r->rsp.new_severity;
+    else sk.alert.severity = r->severity;
+        
+    copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
+    if (r->rsp.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
+              
+    if (r->rsp.profile.compare("indef") != 0) sk.alert.action = r->rsp.profile;
+    else sk.alert.action = "indef";
+        
+    if (r->rsp.new_description.compare("") != 0)  sk.alert.description = r->rsp.new_description;
+    else sk.alert.description = r->desc;
+    
+    sk.alert.location = "";       
+    
+    sk.alert.info = "Message has been repeated ";
+    sk.alert.info += std::to_string(c);
+    sk.alert.info += " times";
+    
+    sk.alert.event_json = "";
+    
+    sk.alert.status = "aggregated_new";
+    
+    sk.SendAlert();
+}
+
+void StatIds::FlushCrsAlert() {
+    std::list<IdsRecord>::iterator i, end;
+    time_t current_time;
+    
+    current_time = time(NULL);
+    
+    for(i = crs_alerts_list.begin(), end = crs_alerts_list.end(); i != end; ++i) {
+        if ((i->alert_time + i->agr.in_period) < current_time)
+            crs_alerts_list.erase(i++);
+    }
+}
+
 void StatIds::UpdateHidsAlerts() {
     std::list<IdsRecord>::iterator i, end;
     time_t current_time;
@@ -826,7 +991,7 @@ void StatIds::UpdateHidsAlerts() {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
             if (i->agent.compare(ids_rec.agent) == 0) {
                 
-                if (i->event == ids_rec.event) {
+                if (i->event.compare(ids_rec.event) == 0) {
                 
                     //get current time
                     current_time = time(NULL);
@@ -869,15 +1034,15 @@ void StatIds::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.dstport = 0;
     sk.alert.srcport = 0;
     sk.alert.dstagent = r->agent;
-    sk.alert.srcagent = "none";
-    sk.alert.user = "none";
+    sk.alert.srcagent = "indef";
+    sk.alert.user = "indef";
     sk.alert.score = 0;
     
     sk.alert.sensor = r->ids;
     sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = GetNodeTime();
         
-    if (r->rsp.new_event != 0) sk.alert.event = r->rsp.new_event;
+    if (r->rsp.new_event.compare("") != 0) sk.alert.event = r->rsp.new_event;
     else sk.alert.event = r->event;
         
     if (r->rsp.new_severity != 0) sk.alert.severity = r->rsp.new_severity;
@@ -889,8 +1054,8 @@ void StatIds::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     if (r->rsp.new_description.compare("") != 0)  sk.alert.description = r->rsp.new_description;
     else sk.alert.description = r->desc;
     
-    if (r->rsp.profile.compare("none") != 0) sk.alert.action = r->rsp.profile;
-    else sk.alert.action = "none";
+    if (r->rsp.profile.compare("indef") != 0) sk.alert.action = r->rsp.profile;
+    else sk.alert.action = "indef";
     
     sk.alert.location = r->location;
         
@@ -924,7 +1089,7 @@ void StatIds::UpdateNidsAlerts() {
     for(i = nids_alerts_list.begin(), end = nids_alerts_list.end(); i != end; ++i) {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
             if (i->ids.compare(ids_rec.ids) == 0)  {
-                if (i->event == ids_rec.event) {
+                if (i->event.compare(ids_rec.event) == 0) {
                     
                     //get current time
                     current_time = time(NULL);
@@ -963,15 +1128,15 @@ void StatIds::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.dstport = 0;
     sk.alert.srcport = 0;
     sk.alert.dstagent = r->agent;
-    sk.alert.srcagent = "none";
-    sk.alert.user = "none";
+    sk.alert.srcagent = "indef";
+    sk.alert.user = "indef";
     sk.alert.score = 0;
     
     sk.alert.sensor = r->ids;
     sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = GetNodeTime();
     
-    if (r->rsp.new_event != 0) sk.alert.event = r->rsp.new_event;
+    if (r->rsp.new_event.compare("") != 0) sk.alert.event = r->rsp.new_event;
     else sk.alert.event = r->event;
         
     if (r->rsp.new_severity != 0) sk.alert.severity = r->rsp.new_severity;
@@ -980,8 +1145,8 @@ void StatIds::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
     if (r->rsp.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
               
-    if (r->rsp.profile.compare("none") != 0) sk.alert.action = r->rsp.profile;
-    else sk.alert.action = "none";
+    if (r->rsp.profile.compare("indef") != 0) sk.alert.action = r->rsp.profile;
+    else sk.alert.action = "indef";
         
     if (r->rsp.new_description.compare("") != 0)  sk.alert.description = r->rsp.new_description;
     else sk.alert.description = r->desc;
@@ -1019,7 +1184,7 @@ void StatIds::UpdateWafAlerts() {
     for(i = waf_alerts_list.begin(), end = waf_alerts_list.end(); i != end; ++i) {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
             if (i->ids.compare(ids_rec.ids) == 0)  {
-                if (i->event == ids_rec.event) {
+                if (i->event.compare(ids_rec.event) == 0) {
                     
                     //get current time
                     current_time = time(NULL);
@@ -1058,15 +1223,15 @@ void StatIds::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.dstport = 0;
     sk.alert.srcport = 0;
     sk.alert.dstagent = r->agent;
-    sk.alert.srcagent = "none";
-    sk.alert.user = "none";
+    sk.alert.srcagent = "indef";
+    sk.alert.user = "indef";
     sk.alert.score = 0;
     
     sk.alert.sensor = r->ids;
     sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = GetNodeTime();
     
-    if (r->rsp.new_event != 0) sk.alert.event = r->rsp.new_event;
+    if (r->rsp.new_event.compare("") != 0) sk.alert.event = r->rsp.new_event;
     else sk.alert.event = r->event;
         
     if (r->rsp.new_severity != 0) sk.alert.severity = r->rsp.new_severity;
@@ -1075,8 +1240,8 @@ void StatIds::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
     copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
     if (r->rsp.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
               
-    if (r->rsp.profile.compare("none") != 0) sk.alert.action = r->rsp.profile;
-    else sk.alert.action = "none";
+    if (r->rsp.profile.compare("indef") != 0) sk.alert.action = r->rsp.profile;
+    else sk.alert.action = "indef";
         
     if (r->rsp.new_description.compare("") != 0)  sk.alert.description = r->rsp.new_description;
     else sk.alert.description = r->desc;

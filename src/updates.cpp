@@ -60,7 +60,7 @@ int Updates::Open() {
                 // Create a ConnectionFactory
                 string strUrl(url);
             
-                auto_ptr<ConnectionFactory> connectionFactory(
+                unique_ptr<ConnectionFactory> connectionFactory(
                     ConnectionFactory::createCMSConnectionFactory(strUrl));
             
                 // Create a Connection
@@ -73,23 +73,22 @@ int Updates::Open() {
                 connection->start();
             }
             
-            // Create a Session
-            if (this->sessionTransacted) {
-                session = connection->createSession(Session::SESSION_TRANSACTED);
-            } else {
-                session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
+            if (session == NULL) {
+                // Create a Session
+                if (this->sessionTransacted) {
+                    session = connection->createSession(Session::SESSION_TRANSACTED);
+                } else {
+                    session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
+                }
             }
             
-            // Create the destination (Topic or Queue)
-            string strTopic(queue);
+            // Create the MessageConsumer
+            string strConsumer("jms/altprobe/" + fs.filter.ref_id);
             
-            strTopic = strTopic + fs.filter.ref_id;
-            //strTopic = strTopic + project_id;
-            
-            destination = session->createTopic(strTopic);
-            
+            Destination* consumerTopic = session->createTopic(strConsumer);
+                        
             // Create a MessageConsumer from the Session to the Topic or Queue
-            consumer = session->createConsumer(destination);
+            consumer = session->createConsumer(consumerTopic);
  
             consumer->setMessageListener(this);
             
@@ -161,7 +160,7 @@ void Updates::onMessage(const Message* message) {
                 ofstream ostream;
                 string cmd;
         
-                if (!content_type.compare("filters") && ulStatus) {
+                if (!content_type.compare("filters") && urStatus) {
                     
                     fs.ParsFiltersConfig(decomp.str());
                     
@@ -182,7 +181,7 @@ void Updates::onMessage(const Message* message) {
                     
                 }
                 
-                if (!content_type.compare("config") && ulStatus) {
+                if (!content_type.compare("config") && urStatus) {
                     
                     try { 
                     
@@ -192,29 +191,35 @@ void Updates::onMessage(const Message* message) {
                     
                         switch (sensor_type) {
                             case 0 : {
-                                string dir_path(suri_conf);
-                                string file_name(SURI_CONFIG);
+                                string dir_path(falco_conf);
+                                string file_name(FALCO_CONFIG);
                                 string file_path = dir_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd = "/etc/alertflex/scripts/restart-suri.sh";
+                                cmd = "/etc/altprobe/scripts/restart-falco.sh";
                                 }
                                 break;
-                            
                             case 1 : {
                                 string dir_path(wazuh_conf);
                                 string file_name(OSSEC_CONFIG);
                                 string file_path = dir_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd = "/etc/alertflex/scripts/restart-wazuh.sh";
+                                cmd = "/etc/altprobe/scripts/restart-wazuh.sh";
                                 }
                                 break;
-                                
                             case 2 : {
+                                string dir_path(suri_conf);
+                                string file_name(SURI_CONFIG);
+                                string file_path = dir_path + file_name;
+                                ostream.open(file_path, ios_base::trunc);
+                                cmd = "/etc/altprobe/scripts/restart-suri.sh";
+                                }
+                                break;
+                            case 3 : {
                                 string dir_path(modsec_conf);
                                 string file_name(MODSEC_CONFIG);
                                 string file_path = dir_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd = "/etc/alertflex/scripts/restart-modsec.sh";
+                                cmd = "/etc/altprobe/scripts/restart-modsec.sh";
                                 }
                                 break;
                                 
@@ -233,7 +238,7 @@ void Updates::onMessage(const Message* message) {
                         
                 }
                 
-                if (!content_type.compare("rules") && ulStatus) {
+                if (!content_type.compare("rules") && urStatus) {
                     
                     try { 
                     
@@ -246,36 +251,40 @@ void Updates::onMessage(const Message* message) {
                     
                         switch (rules_type) {
                             case 0 : {
+                                string rules_path(falco_local);
+                                string file_path = rules_path + rule_name;
+                                ostream.open(file_path, ios_base::trunc);
+                                cmd = "/etc/altprobe/scripts/rulesup-falco.sh";
+                                }
+                                break;
+                            case 1 : {
+                                string dir_path(wazuh_local);
+                                string rules_path(WAZUH_RULES);
+                                string file_path = dir_path + rules_path + rule_name;
+                                ostream.open(file_path, ios_base::trunc);
+                                cmd = "/etc/altprobe/scripts/rulesup-wazuh.sh";
+                                }
+                                break;
+                            case 2 : {
+                                string dir_path(wazuh_local);
+                                string rules_path(WAZUH_DECODERS);
+                                string file_path = dir_path + rules_path + rule_name;
+                                ostream.open(file_path, ios_base::trunc);
+                                cmd = "/etc/altprobe/scripts/rulesup-wazuh.sh";
+                                }
+                                break;
+                            case 3 : {
                                 string rules_path(suri_local);
                                 string file_path = rules_path + rule_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd = "/etc/alertflex/scripts/rulesup-suri.sh";
+                                cmd = "/etc/altprobe/scripts/rulesup-suri.sh";
                                 }
                                 break;
-                            
-                            case 1 : {
-                                string dir_path(wazuh_local);
-                                string rules_path(WAZUH_DECODERS_LOCAL);
-                                string file_path = dir_path + rules_path + rule_name;
-                                ostream.open(file_path, ios_base::trunc);
-                                cmd = "/etc/alertflex/scripts/rulesup-wazuh.sh";
-                                }
-                                break;
-                            
-                            case 2 : {
-                                string dir_path(wazuh_local);
-                                string rules_path(WAZUH_RULES_LOCAL);
-                                string file_path = dir_path + rules_path + rule_name;
-                                ostream.open(file_path, ios_base::trunc);
-                                cmd = "/etc/alertflex/scripts/rulesup-wazuh.sh";
-                                }
-                                break;
-                                
-                            case 3 : {
+                            case 4 : {
                                 string rules_path(modsec_local);
                                 string file_path = rules_path + rule_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd = "/etc/alertflex/scripts/rulesup-modsec.sh";
+                                cmd = "/etc/altprobe/scripts/rulesup-modsec.sh";
                                 }
                                 break;
                             
@@ -295,7 +304,7 @@ void Updates::onMessage(const Message* message) {
                 }
                 
                 
-                if (!content_type.compare("iprep") && ulStatus) {
+                if (!content_type.compare("iprep") && urStatus) {
                     
                     try { 
                     
@@ -304,30 +313,29 @@ void Updates::onMessage(const Message* message) {
                         int sensor_type = message->getIntProperty("sensor_type");
                     
                         switch (sensor_type) {
+                            
                             case 0 : {
-                                string iprep_path(suri_local);
-                                string file_name(SURI_IPREP);
-                                string file_path = iprep_path + file_name;
-                                ostream.open(file_path, ios_base::trunc);
-                                cmd = "/etc/alertflex/scripts/iprepup-suri.sh";
-                                }
-                                break;
-                                
-                            case 1 : {
                                 string iprep_path(wazuh_local);
                                 string file_name(WAZUH_IPREP);
                                 string file_path = iprep_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd = "/etc/alertflex/scripts/iprepup-wazuh.sh"; 
+                                cmd = "/etc/altprobe/scripts/iprepup-wazuh.sh"; 
                                 }
                                 break;
-                                
+                            case 1 : {
+                                string iprep_path(suri_local);
+                                string file_name(SURI_IPREP);
+                                string file_path = iprep_path + file_name;
+                                ostream.open(file_path, ios_base::trunc);
+                                cmd = "/etc/altprobe/scripts/iprepup-suri.sh";
+                                }
+                                break;
                             case 2 : {
                                 string iprep_path(modsec_local);
                                 string file_name(MODSEC_IPREP);
                                 string file_path = iprep_path + file_name;
                                 ostream.open(file_path, ios_base::trunc);
-                                cmd = "/etc/alertflex/scripts/iprepup-modsec.sh";
+                                cmd = "/etc/altprobe/scripts/iprepup-modsec.sh";
                                 }
                                 break;
                                 
@@ -400,32 +408,24 @@ void Updates::onException(const CMSException& ex AMQCPP_UNUSED) {
 
 void Updates::Close() {
     
-    if (connection != NULL) {
-        try {
-            connection->close();
-            
-        } catch (cms::CMSException& ex) {
-            SysLog("activeMQ operation error: connection close");
-        }
-    }
- 
     // Destroy resources.
     try {
-        delete destination;
-        destination = NULL;
-        
         if (consumer) {
+            delete consumerTopic;
+            consumerTopic = NULL;
             delete consumer;
             consumer = NULL;
         }
-        delete session;
-        session = NULL;
         
         m_controller.lock();
         mq_counter--;
         m_controller.unlock();
         
         if (mq_counter == 0) {
+            
+            delete session;
+            session = NULL;
+            
             delete connection;
             connection = NULL;
         }
@@ -447,12 +447,9 @@ bool Updates::Reset() {
                 connection = NULL;
             }
                 
-            if (destination != NULL) {
-                delete destination;
-                destination = NULL;
-            }
-        
             if (consumer != NULL) {
+                delete consumerTopic;
+                consumerTopic = NULL;
                 delete consumer;
                 consumer = NULL;
             }
@@ -472,7 +469,7 @@ bool Updates::Reset() {
                 // Create a ConnectionFactory
                 string strUrl(url);
             
-                auto_ptr<ConnectionFactory> connectionFactory(
+                unique_ptr<ConnectionFactory> connectionFactory(
                     ConnectionFactory::createCMSConnectionFactory(strUrl));
             
                 // Create a Connection
@@ -496,19 +493,14 @@ bool Updates::Reset() {
                 
             }
             
-            if (destination == NULL) {
-                // Create the destination (Topic or Queue)
-                string strTopic(queue);
-            
-                strTopic = strTopic + "collector";
-            
-                destination = session->createTopic(strTopic);
-            }
-            
             if (consumer == NULL) {
+                // Create the destination (Topic or Queue)
+                string strConsumer("jms/altprobe/" + fs.filter.ref_id);
                         
-                // Create a MessageProducer from the Session to the Topic or Queue
-                consumer = session->createConsumer(destination);
+                Destination* consumerTopic = session->createTopic(strConsumer);
+                        
+                // Create a MessageConsumer from the Session to the Topic or Queue
+                consumer = session->createConsumer(consumerTopic);
  
                 consumer->setMessageListener(this);
             }

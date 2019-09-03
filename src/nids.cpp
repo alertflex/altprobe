@@ -43,17 +43,6 @@ int Nids::Open() {
         }
     }
     
-    if (!strcmp (maxmind_path, "none")) maxmind_state = 0;
-    else {
-        gi = GeoIP_open(maxmind_path, GEOIP_INDEX_CACHE);
-
-        if (gi == NULL) {
-            SysLog("error opening maxmind database\n");
-            maxmind_state = 0;
-        }
-        else maxmind_state = 1;
-    }
-    
     return 1;
 }
 
@@ -68,7 +57,6 @@ void Nids::Close() {
         } else redisFree(c);
     }
     
-    if (maxmind_state != 0) GeoIP_delete(gi);
 }
 
 void Nids::IsFileModified() {
@@ -206,19 +194,14 @@ int Nids::Go(void) {
             
                     if (alerts_counter < sk.alerts_threshold) alerts_counter++;
                     else {
-                        SendAlertMultiple(3);
+                        SendAlertMultiple(2);
                         alerts_counter++;
                     }
                 }
             } else {
                 
-                if (res < 5) {
-                
-                    if(CheckFlowsLog(res)) PushFlowsRecord();
-                    else {
-                        if (fs.filter.traf.log) PushFlowsRecord();
-                    }
-                }
+                if (res == 3) PushFlowsRecord();
+            
             }
         } 
             
@@ -239,7 +222,7 @@ GrayList* Nids::CheckGrayList() {
         std::vector<GrayList*>::iterator i, end;
         
         for (i = fs.filter.nids.gl.begin(), end = fs.filter.nids.gl.end(); i != end; ++i) {
-            int event_id = (*i)->event;
+            int event_id = std::stoi((*i)->event);
             if (event_id == rec.alert.signature_id) {
                 
                 string agent = (*i)->host;
@@ -253,48 +236,6 @@ GrayList* Nids::CheckGrayList() {
     }
     
     return NULL;
-}
-
-
-bool Nids::CheckFlowsLog(int r) {
-    
-    if (fs.filter.traf.th.size() != 0) {
-        
-        std::vector<Threshold*>::iterator i, end;
-        
-        for (i = fs.filter.traf.th.begin(), end = fs.filter.traf.th.end(); i != end; ++i) {
-            
-            bool dest = IsIPInRange(rec.dst_ip, (*i)->host, (*i)->element);
-            
-            bool source = IsIPInRange(rec.src_ip, (*i)->host, (*i)->element);
-            
-            if (dest || source) {
-                
-                bool log = false;
-                
-                if (!(*i)->rsp.profile.compare("log-mgmt"))  log = true;
-        
-                if (!(*i)->parameter.compare("all")) return log;
-                else {
-                    
-                    switch (r) {
-            
-                        case 2: // dns record
-                            if (!(*i)->parameter.compare("dns")) return log;
-                            break;
-                        case 3: // ssh record
-                            if (!(*i)->parameter.compare("ssh")) return log;
-                            break;
-                        case 4: // netflow record
-                            if (!(*i)->parameter.compare(rec.protocol)) return log;
-                            break;
-                    }
-                }
-            }
-        }
-    }
-    
-    return false;
 }
 
 
@@ -547,8 +488,6 @@ void Nids::CreateLogPayload(int r) {
             
         case 1: // alert record
             
-            
-    
             report = "{\"version\": \"1.1\",\"host\":\"";
             report += node_id;
             report += "\",\"short_message\":\"alert-nids\"";
@@ -914,8 +853,8 @@ void Nids::SendAlert(int s, GrayList* gl) {
         
     sk.alert.severity = s; 
     sk.alert.score = rec.alert.severity;
-    sk.alert.event = rec.alert.signature_id;
-    sk.alert.action = "none";
+    sk.alert.event = std::to_string(rec.alert.signature_id);
+    sk.alert.action = "indef";
     sk.alert.description = rec.alert.signature;
         
     sk.alert.status = "processed_new";
@@ -928,16 +867,16 @@ void Nids::SendAlert(int s, GrayList* gl) {
     
     sk.alert.srcagent = rec.src_agent;
     sk.alert.dstagent = rec.dst_agent;
-    sk.alert.user = "none";
+    sk.alert.user = "indef";
             
     if (gl != NULL) {
             
-        if (gl->rsp.profile.compare("none") != 0) {
+        if (gl->rsp.profile.compare("indef") != 0) {
             sk.alert.action = gl->rsp.profile;
             sk.alert.status = "modified_new";
         } 
         
-        if (gl->rsp.new_event != 0) {
+        if (gl->rsp.new_event.compare("") != 0) {
             sk.alert.event = gl->rsp.new_event;
             sk.alert.status = "modified_new";
         }    
@@ -959,6 +898,10 @@ void Nids::SendAlert(int s, GrayList* gl) {
         
     }
         
+    sk.alert.sensor = rec.ids;
+    sk.alert.agent = "";
+    sk.alert.process = "";
+    sk.alert.container = "";
     sk.alert.sensor = rec.ids;
     sk.alert.location = std::to_string(rec.flow_id);
     sk.alert.filter = fs.filter.desc;
@@ -1044,6 +987,7 @@ void Nids::PushFlowsRecord() {
     FlowsRecord flows_rec;
     
     switch (rec.event_type) {
+        
         case 0:
             break;
         
@@ -1056,7 +1000,7 @@ void Nids::PushFlowsRecord() {
         case 3: // ssh record
                         
             flows_rec.ref_id = fs.filter.ref_id;
-            flows_rec.flows_type = 2;
+            flows_rec.flows_type = 3;
             
             flows_rec.src_ip = rec.src_ip;
             flows_rec.dst_ip = rec.dst_ip;
@@ -1075,29 +1019,6 @@ void Nids::PushFlowsRecord() {
             break;
             
         case 4: // flows record
-                        
-            flows_rec.ref_id = fs.filter.ref_id;
-            flows_rec.flows_type = 1;
-            
-            flows_rec.src_ip = rec.src_ip;
-            flows_rec.dst_ip = rec.dst_ip;
-            flows_rec.dst_port = rec.dst_port;
-            
-            flows_rec.src_agent = rec.src_agent;
-            flows_rec.dst_agent = rec.dst_agent;
-            
-    
-    
-            flows_rec.ids = rec.ids;
-    
-            flows_rec.info1 = rec.netflow.app_proto;
-    
-            flows_rec.bytes = rec.netflow.bytes;
-    
-            flows_rec.dst_country = CountryByIp(rec.dst_ip);
-            flows_rec.src_country = CountryByIp(rec.src_ip);
-    
-            q_flows.push(flows_rec);
             break;
             
         case 5: // file record
@@ -1107,24 +1028,3 @@ void Nids::PushFlowsRecord() {
             break;
     }
 }
-
-string Nids::CountryByIp(string ip) {
-    
-    GeoIPRecord *gir;
-    char **ret;
-    
-    if (maxmind_state != 0) {
-    
-        gir = GeoIP_record_by_name(gi, (const char *) ip.c_str());
-
-        if (gir != NULL) {
-            country_code = string(gir->country_code);
-            GeoIPRecord_delete(gir);
-            return country_code;
-        }
-    }
-
-    return "";
-}
-
-

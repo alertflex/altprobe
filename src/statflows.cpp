@@ -52,7 +52,6 @@ int StatFlows::Go(void) {
             
             if (flush_timer < seconds) {
                 flush_timer = seconds;
-                FlushThresholds();
             }
         }
         RoutineJob();
@@ -77,17 +76,8 @@ void StatFlows::ProcessFlows() {
         
         q_flows.pop(flows_rec);
         
-        switch(flows_rec.flows_type) {
-            case 1:
-                UpdateThresholds();
-                UpdateCountries();
-                UpdateApplications();
-                break;
-            case 2:
-                UpdateSshSessions(); 
-                break;
-            default:
-                break;
+        if (flows_rec.flows_type == 3) {
+            UpdateSshSessions(); 
         }
         
         counter++;
@@ -98,11 +88,6 @@ void StatFlows::ProcessFlows() {
 
 void StatFlows::RoutineJob() {
     
-    mem_mon.countries = countries.size();
-    FlushCountries();
-    mem_mon.applications = applications.size();
-    FlushApplications();
-    mem_mon.ssh_sessions = ssh_sessions.size();
     FlushSshSessions();
     FlushTraffic();
 }
@@ -229,151 +214,6 @@ void StatFlows::FlushTraffic() {
     traffics.clear();
 }
 
-void StatFlows::UpdateApplications() {
-    
-    bool src = false;
-    bool dst = false;
-    std::vector<Application>::iterator i, end;
-    
-    for(i = applications.begin(), end = applications.end(); i != end; ++i) {
-        if (i->ref_id.compare(flows_rec.ref_id) == 0)  { 
-            if (i->ids.compare(flows_rec.ids) == 0)  {
-                if (i->app.compare(flows_rec.info1) == 0) {
-                
-                    if (i->agent.compare(flows_rec.src_agent) == 0) {
-                        i->counter = i->counter + flows_rec.bytes;
-                        src = true;
-                        continue;
-                    }
-            
-                    if (i->agent.compare(flows_rec.dst_agent) == 0) {
-                        i->counter = i->counter + flows_rec.bytes;
-                        dst = true;
-                        continue;
-                    }
-                }
-            }
-        }
-    }
-    
-    if (src || dst) return;
-    
-    if (flows_rec.dst_agent.compare("ext_net") != 0) applications.push_back(Application(flows_rec.ref_id, flows_rec.ids, flows_rec.info1, flows_rec.dst_agent, flows_rec.bytes));
-    if (flows_rec.src_agent.compare("ext_net") != 0) applications.push_back(Application(flows_rec.ref_id, flows_rec.ids, flows_rec.info1, flows_rec.src_agent, flows_rec.bytes));
-}
-
-void StatFlows::FlushApplications() {
-        
-    report = "{ \"type\": \"flows_app\", \"data\" : [ ";
-        
-    std::vector<Application>::iterator it, end;
-        
-    for(it = applications.begin(), end = applications.end(); it != end; ++it) {
-            
-        report += "{ \"ref_id\": \"";
-        report += it->ref_id;
-        
-        report += "\", \"ids\": \"";
-        report += it->ids;
-            
-        report += "\", \"app\": \"";
-        report += it->app;
-            
-        report += "\", \"agent\": \"";
-        report += it->agent;
-                
-        report += "\", \"traffic\": ";
-        report += std::to_string(it->counter);
-            
-        report += ", \"time_of_survey\": \"";
-        report += GetNodeTime();
-        report += "\" } ,";
-    }
-    
-    report.resize(report.size() - 1);
-    report += " ] }";
-        
-    q_stats_flow.push(report);
-    
-    report.clear();
-    applications.clear();
-}
-
-
-void StatFlows::UpdateCountries() {
-    
-    bool flag_src = false, flag_dst = false, flag_both = false;
-    unsigned long traf;
-    
-    if (flows_rec.src_country.compare(flows_rec.dst_country) == 0) flag_both = true;
-    
-    std::vector<Country>::iterator i, end;
-    
-    for(i = countries.begin(), end = countries.end(); i != end; ++i) {
-        
-        if (i->ref_id.compare(flows_rec.ref_id) == 0)  { 
-            if (i->ids.compare(flows_rec.ids) == 0)  { 
-                if (i->country.compare(flows_rec.src_country) == 0) { 
-                    i->counter = i->counter + flows_rec.bytes;
-                    flag_src =true;
-                }
-            
-                if (!(flag_both && flag_src))
-                    if (i->country.compare(flows_rec.dst_country) == 0) {
-                        i->counter = i->counter + flows_rec.bytes;
-                        flag_dst = true;
-                    }
-        
-                if (flag_src && flag_dst) return;
-                if (flag_src && flag_both) return;
-            }
-        }
-    }  
-    
-    if (!flag_src) {
-        countries.push_back(Country(flows_rec.ref_id, flows_rec.ids, flows_rec.src_country, flows_rec.bytes));
-    }
-        
-    if (!flag_dst && !flag_both) {
-        countries.push_back(Country(flows_rec.ref_id, flows_rec.ids, flows_rec.dst_country, flows_rec.bytes));
-    }
-}
-
-void StatFlows::FlushCountries() {
-    
-    report = "{ \"type\": \"flows_country\", \"data\" : [ ";
-        
-    std::vector<Country>::iterator it, end;
-        
-    for(it = countries.begin(), end = countries.end(); it != end; ++it) {
-            
-        report += "{ \"ref_id\": \"";
-        report += it->ref_id;
-        
-        report += "\", \"ids\": \"";
-        report += it->ids;
-            
-        report += "\", \"country\": \"";
-        report += it->country;
-                
-        report += "\", \"traffic\": ";
-        report += std::to_string(it->counter);
-            
-        report += ", \"time_of_survey\": \"";
-        report += GetNodeTime();
-        report += "\" } ,";
-    
-    }
-    
-    report.resize(report.size() - 1);
-    report += " ] }";
-        
-    q_stats_flow.push(report);
-    
-    report.clear();
-    countries.clear();
-    
-}
 
 void StatFlows::UpdateSshSessions() {
     
@@ -444,115 +284,6 @@ void StatFlows::FlushSshSessions() {
     report.clear();
     ssh_sessions.clear();
     
-}
-
-void StatFlows::UpdateThresholds() {
-    std::vector<Threshold*>::iterator i, end;
-        
-    boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
-    
-    for ( i = fs.filter.traf.th.begin(), end = fs.filter.traf.th.end(); i != end; ++i ) {
-        
-        bool dest = IsIPInRange(flows_rec.dst_ip, (*i)->host, (*i)->element);
-        
-        bool source = IsIPInRange(flows_rec.src_ip, (*i)->host, (*i)->element);
-        
-        if (dest || source) {
-        
-            if (!(*i)->parameter.compare(flows_rec.info1) || !(*i)->parameter.compare("all")) {
-            
-                (*i)->value_count = (*i)->value_count + flows_rec.bytes;
-            }
-        }
-    }
-}
-
-void StatFlows::FlushThresholds() {
-    std::vector<Threshold*>::iterator i, end;
-    
-    boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
-    
-    for ( i = fs.filter.traf.th.begin(), end = fs.filter.traf.th.end(); i != end; ++i ) CheckThresholds(*i);
-}
-
-
-void StatFlows::CheckThresholds(Threshold* th) {
-    
-    time_t current_time = time(NULL);
-    
-    if  ((th->value_count > th->value_max) && (th->value_max != 0)) SendAlert(th, true);
-    
-    if ((th->trigger_time + th->agr.in_period) <= current_time) {
-       
-        if ((th->value_count < th->value_min) && (th->value_min != 0)) SendAlert(th, false);
-        else th->Reset();
-    }
-}
-    
-void StatFlows::SendAlert(Threshold* th, bool type_alert) {
-    
-    if (type_alert) {
-        sk.alert.description = "Traffic has been reached max limit. ";
-    } else { 
-        sk.alert.description = "Traffic has been reached min limit. ";
-    }        
-            
-    sk.alert.ref_id  = fs.filter.ref_id;
-    sk.alert.source = "Netflow";
-    sk.alert.type = "NET";
-    
-    sk.alert.score = 0;
-    sk.alert.dstip = "";
-    sk.alert.srcip = "";
-    sk.alert.dstport = 0;
-    sk.alert.srcport = 0;
-    sk.alert.dstagent = "none";
-    sk.alert.srcagent = "none";
-    sk.alert.user = "none";
-    
-    string strNodeId(node_id);
-    sk.alert.sensor = sensor_id;
-    sk.alert.filter = fs.filter.desc;
-    sk.alert.event_time = GetNodeTime();
-        
-    if ( th->rsp.new_event != 0) sk.alert.event = th->rsp.new_event;
-    else sk.alert.event = 1;
-    
-    if ( th->rsp.new_severity != 0) sk.alert.severity = th->rsp.new_severity;
-    else sk.alert.severity = 2;
-    
-    if (th->rsp.new_category.compare("") != 0) sk.alert.list_cats.push_back(th->rsp.new_category);
-    else sk.alert.list_cats.push_back("traffic threshold");
-    
-    if (th->rsp.new_description.compare("") != 0)  sk.alert.description = th->rsp.new_description;
-    else sk.alert.description = "traffic threshold";
-        
-    if (th->rsp.profile.compare("none") != 0) sk.alert.action = th->rsp.profile;
-    else sk.alert.action = "none";
-    
-    // hostname location 
-    sk.alert.location = th->host;
-        
-    sk.alert.info = "\"traffic counter\":";
-    sk.alert.info += std::to_string(th->value_count);
-    if (type_alert) {
-        sk.alert.info += ", \"max limit\":";
-        sk.alert.info += std::to_string(th->value_max);
-    } else { 
-        sk.alert.info += ", \"min limit\":";
-        sk.alert.info += std::to_string(th->value_min);
-    } 
-    sk.alert.info += ", \"app_proto\": \"";
-    sk.alert.info += th->parameter;
-    sk.alert.info += "\", \"for period in sec\": ";
-    sk.alert.info += std::to_string(th->agr.in_period);
-        
-    sk.alert.event_json = "";
-        
-    sk.alert.status = "aggregated_new";
-    sk.SendAlert();
-        
-    th->Reset();
 }
 
 

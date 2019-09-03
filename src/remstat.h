@@ -12,7 +12,6 @@
 #include "source.h"
 #include "statflows.h"
 #include "statids.h"
-#include "metric.h"
 #include "hids.h"
 
 using namespace std;

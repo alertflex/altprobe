@@ -13,6 +13,7 @@
 #include "hids.h"
 #include "nids.h"
 #include "waf.h"
+#include "crs.h"
 
 using namespace std;
 

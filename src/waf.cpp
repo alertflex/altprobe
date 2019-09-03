@@ -188,17 +188,6 @@ int Waf::Open() {
         }
     }
     
-    if (!strcmp (maxmind_path, "none")) maxmind_state = 0;
-    else {
-        gi = GeoIP_open(maxmind_path, GEOIP_INDEX_CACHE);
-
-        if (gi == NULL) {
-            SysLog("error opening maxmind database\n");
-            maxmind_state = 0;
-        }
-        else maxmind_state = 1;
-    }
-    
     return 1;
 }
 
@@ -212,8 +201,6 @@ void Waf::Close() {
             if (fp != NULL) fclose(fp);
         } else redisFree(c);
     }
-    
-    if (maxmind_state != 0) GeoIP_delete(gi);
 }
 
 void Waf::IsFileModified() {
@@ -351,7 +338,7 @@ int Waf::Go(void) {
             
                         if (alerts_counter < sk.alerts_threshold) alerts_counter++;
                         else {
-                            SendAlertMultiple(2);
+                            SendAlertMultiple(3);
                             alerts_counter++;
                         }
                     }
@@ -375,7 +362,7 @@ GrayList* Waf::CheckGrayList() {
         
         for (i = fs.filter.waf.gl.begin(), end = fs.filter.waf.gl.end(); i != end; ++i) {
             
-            int event_id = (*i)->event;
+            int event_id = std::stoi((*i)->event);
             if (event_id == rec.ma.id) {
                 
                 string agent = (*i)->host;
@@ -557,7 +544,7 @@ void Waf::SendAlert(int s, GrayList*  gl) {
     sk.alert.severity = s;
     sk.alert.score = rec.ma.severity;
     sk.alert.event = rec.ma.id;
-    sk.alert.action = "none";
+    sk.alert.action = "indef";
     sk.alert.description = rec.ma.msg;
         
     sk.alert.status = "processed_new";
@@ -568,8 +555,8 @@ void Waf::SendAlert(int s, GrayList*  gl) {
     sk.alert.source = "Modsecurity";
     sk.alert.type = "NET";
     
-    sk.alert.srcagent = "none";
-    sk.alert.dstagent = "none";
+    sk.alert.srcagent = "indef";
+    sk.alert.dstagent = "indef";
     
     sk.alert.srcport = 0;
     sk.alert.dstport = 0;
@@ -585,12 +572,12 @@ void Waf::SendAlert(int s, GrayList*  gl) {
     
     if (gl != NULL) {
             
-        if (gl->rsp.profile.compare("none") != 0) {
+        if (gl->rsp.profile.compare("indef") != 0) {
             sk.alert.action = gl->rsp.profile;
             sk.alert.status = "modified_new";
         } 
         
-        if (gl->rsp.new_event != 0) {
+        if (gl->rsp.new_event.compare("") != 0) {
             sk.alert.event = gl->rsp.new_event;
             sk.alert.status = "modified_new";
         }    

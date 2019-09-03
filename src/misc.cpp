@@ -103,7 +103,7 @@ int Misc::ParsJson(char* redis_payload) {
 
     ResetStream();
     
-    if (sk.alert.event != 0 && sk.alert.type.compare("") && sk.alert.source.compare("")) return 1;
+    if (sk.alert.event.compare("") && sk.alert.type.compare("") && sk.alert.source.compare("")) return 1;
     
     return 0;
 }

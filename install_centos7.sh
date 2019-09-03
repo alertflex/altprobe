@@ -4,23 +4,20 @@
 source ./env.sh
 
 CURRENT_PATH=`pwd`
-if [ $INSTALL_PATH != $CURRENT_PATH ]
+if [[ $INSTALL_PATH != $CURRENT_PATH ]]
 then
     echo "Please change install directory"
     exit 0
 fi
 
 echo "*** Installation alertflex collector started***"
-sudo yum -y install epel-release
-sudo yum -y update
-sudo yum -y install pcre pcre2 autoconf automake gcc make libtool libnet-devel libyaml libyaml-devel zlib zlib-devel libcap-ng file-libs libdaemon-devel GeoIP GeoIP-devel GeoIP-data boost-devel boost-thread libmicrohttpd logrotate autoconf-archive m4 git ntp openssl-libs openssl-devel curl ldconfig redis hiredis hiredis-devel
-sudo systemctl enable redis
+sudo yum -y install pcre pcre2 autoconf automake gcc make libtool libnet-devel libyaml libyaml-devel zlib zlib-devel libcap-ng file-libs libdaemon-devel boost-devel boost-thread libmicrohttpd logrotate autoconf-archive m4 git ntp openssl-libs openssl-devel curl ldconfig hiredis hiredis-devel
 
 echo "*** installation activemq ***"
 sudo yum -y install httpd-devel libapreq2-devel apr-util apr-util-devel java-1.8.0-openjdk activemq-cpp.x86_64 activemq-cpp-devel.x86_64
 
 echo "*** installation altprobe ***"
-cd ~/Altprobe/src
+cd ~/altprobe/src
 
 sudo cp ../configs/centos7_configurations.xml ./nbproject/configurations.xml
 sudo cp ../configs/centos7_Makefile-Debug.mk ./nbproject/Makefile-Debug.mk
@@ -28,31 +25,46 @@ sudo sed -i "s|activemq-cpp-3.10.0|activemq-cpp-3.9.3|g" ./controller.cpp
 
 sudo make
 sudo make install
-sudo mkdir -pv /etc/alertflex/
+sudo mkdir -pv /etc/altprobe/
 
-sudo sed -i "s/_node_id/$NODE_ID/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_sensor_id/$SENSOR_ID/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_amq_url/$AMQ_URL/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_amq_user/$AMQ_USER/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_amq_pwd/$AMQ_PWD/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_amq_cert/$AMQ_CERT/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_cert_verify/$CERT_VERIFY/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_amq_key/$AMQ_KEY/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_key_pwd/$KEY_PWD/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_modsec_log/$MODSEC_LOG/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_suri_log/$SURI_LOG/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_wazuh_log/$WAZUH_LOG/g" /etc/alertflex/alertflex.yaml
+sudo sed -i "s/_project_id/$PROJECT_ID/g" /etc/altprobe/filters.json
+sudo sed -i "s/_node_id/$NODE_ID/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_probe_id/$PROBE_ID/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_amq_url/$AMQ_URL/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_amq_user/$AMQ_USER/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_amq_pwd/$AMQ_PWD/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_amq_cert/$AMQ_CERT/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_cert_verify/$CERT_VERIFY/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_amq_key/$AMQ_KEY/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_key_pwd/$KEY_PWD/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_falco_log/$FALCO_LOG/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_modsec_log/$MODSEC_LOG/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_suri_log/$SURI_LOG/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_wazuh_log/$WAZUH_LOG/g" /etc/altprobe/altprobe.yaml
 
-sudo chmod go-rwx /etc/alertflex/alertflex.yaml
+sudo chmod go-rwx /etc/altprobe/altprobe.yaml
 sudo mv /usr/local/bin/* /usr/sbin/
 cd ..
 
-echo "*** Copy MaxMind geo DB ***"
-sudo cp ./configs/GeoLiteCity.dat /etc/alertflex/
+if [[ $INSTALL_REDIS == true ]]
+then
+	echo "*** installation redis ***"
+	sudo yum -y install redis 
+	sudo systemctl enable redis
+fi
 
-if [ $INSTALL_SURICATA == true ]
+if [[ $INSTALL_FALCO == true ]]
+then
+    echo "*** installation falco ***"
+    sudo rpm --import https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public
+	sudo curl -s -o /etc/yum.repos.d/draios.repo https://s3.amazonaws.com/download.draios.com/stable/rpm/draios.repo
+	sudo yum -y install kernel-devel-$(uname -r)
+	sudo yum -y install falco
+fi
+
+if [[ $INSTALL_SURICATA == true ]]
 then
     echo "*** installation suricata ***"
     sudo yum -y install suricata
@@ -79,7 +91,7 @@ EOF'
 	sudo systemctl enable suricata
 fi
 
-if [ $INSTALL_WAZUH == true ]
+if [[ $INSTALL_WAZUH == true ]]
 then
 
 	echo "*** installation OSSEC/WAZUH server ***"
@@ -100,8 +112,8 @@ EOF'
 	sudo yum -y install nodejs
 	sudo yum -y install wazuh-api
 	sudo systemctl enable wazuh-api
-	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/alertflex/alertflex.yaml
-	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/alertflex/alertflex.yaml
+	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
+	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
 	
 	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
 [Unit]
@@ -134,7 +146,7 @@ fi
 
 sudo systemctl enable altprobe
 
-if [ $INSTALL_FILEBEAT == true ]
+if [[ $INSTALL_FILEBEAT == true ]]
 then
     echo "*** installation filebeat***"
 	curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-6.5.1-x86_64.rpm

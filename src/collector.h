@@ -22,7 +22,7 @@
 #include "nids.h"
 #include "waf.h"
 #include "misc.h"
-#include "metric.h"
+#include "crs.h"
 #include "statflows.h"
 #include "statids.h"
 #include "remlog.h"
@@ -42,7 +42,7 @@ public:
     Nids* nids; 
     Waf* waf; 
     Misc* misc; 
-    Metric* met;
+    Crs* crs;
     RemLog* rem_log;
     RemStat* rem_stat;
     StatFlows* stat_flows;
@@ -54,13 +54,13 @@ public:
     
     string ref_id;
     
-    Collector(Hids* h, Nids* n, Waf* w, Misc* mi, Metric* me, RemLog* rl, RemStat* rs, StatFlows* f, StatIds* i) {
+    Collector(Crs* c, Hids* h, Nids* n, Waf* w, Misc* m, RemLog* rl, RemStat* rs, StatFlows* f, StatIds* i) {
     
+        crs = c;
         hids = h;
         nids = n;
         waf = w;
-        misc = mi;
-        met = me;
+        misc = m;
         rem_log = rl;
         rem_stat = rs;
         stat_flows = f;
@@ -78,12 +78,13 @@ public:
     int Go();
     void RoutineJob();
     void UpdateFilters();
+    void UpdateFalcoConfig();
     void UpdateSuriConfig();
     void UpdateModsecConfig();
     void UpdateOssecConfig();
+    void UpdateFalcoRules();
     void UpdateSuriRules();
     void UpdateOssecRules();
-    void UpdateModsecRule();
     void UpdateModsecRules();
         
     void ParsAgentsStatus(string status);

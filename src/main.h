@@ -76,27 +76,22 @@
 #define NETSTAT_QUEUE_SIZE 1000
 #define IDS_QUEUE_SIZE 200000
 
-#define CONFIG_FILE "/etc/alertflex/alertflex.yaml"
-#define FILTERS_FILE "/etc/alertflex/filters.json"
-#define PID_FILE "/var/run/alertflex.pid"
-#define DAEMON_NAME "alertflex"
+#define CONFIG_FILE "/etc/altprobe/altprobe.yaml"
+#define FILTERS_FILE "/etc/altprobe/filters.json"
+#define PID_FILE "/var/run/altprobe.pid"
+#define DAEMON_NAME "altprobe"
 
 #define OSSEC_CONFIG "ossec.conf"
 #define SURI_CONFIG "suricata.yaml"
 #define MODSEC_CONFIG "main.conf"
+#define FALCO_CONFIG "falco.yaml"
 
 #define WAZUH_IPREP "hids-black.list"
 #define SURI_IPREP "nids-black.list"
 #define MODSEC_IPREP "lists/waf-black.list"
 
-#define WAZUH_RULES_PATH "rules/"
-#define WAZUH_DECODERS_PATH "decoders/"
-#define WAZUH_RULES_LOCAL "rules/"
-#define WAZUH_DECODERS_LOCAL "decoders/"
-
-#define SURI_RULES_FILE "suricata.rules"
-
-#define MODSEC_RULES_FILE "crs-setup.conf"
+#define WAZUH_RULES "rules/"
+#define WAZUH_DECODERS "decoders/"
 
 #define EOF_COUNTER 100
 

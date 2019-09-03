@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# load technical project data for Alertflex collector
+# load technical project data for Altprobe collector
 source ./env.sh
 
 CURRENT_PATH=`pwd`
-if [ $INSTALL_PATH != $CURRENT_PATH ]
+if [[ $INSTALL_PATH != $CURRENT_PATH ]]
 then
 	echo "Please change install directory"
 	exit 0
@@ -14,8 +14,8 @@ echo "*** Installation alertflex collector started***"
 sudo add-apt-repository ppa:maxmind/ppa -y
 sudo apt-get update
 sudo apt-get -y install libpcre3 libpcre3-dbg libpcre3-dev  libnss3-dev libc6-dev libnspr4-dev build-essential autoconf automake libtool libpcap-dev libnet1-dev \
-libyaml-0-2 libyaml-dev zlib1g zlib1g-dev libcap-ng-dev libcap-ng0 libmagic-dev libjansson-dev libjansson4 libdaemon-dev libgeoip1 libgeoip-dev geoip-bin libboost-all-dev \
-make autoconf autoconf-archive m4 pkg-config git libssl-dev apt-transport-https redis-server curl python-simplejson
+libyaml-0-2 libyaml-dev zlib1g zlib1g-dev libcap-ng-dev libcap-ng0 libmagic-dev libjansson-dev libjansson4 libdaemon-dev libboost-all-dev \
+make autoconf autoconf-archive m4 pkg-config git libssl-dev apt-transport-https curl python-simplejson
 sudo ldconfig
 
 echo "*** installation hiredis***"
@@ -40,29 +40,44 @@ cd src
 sudo make
 sudo make install
 
-sudo sed -i "s/_node_id/$NODE_ID/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_sensor_id/$SENSOR_ID/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_amq_url/$AMQ_URL/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_amq_user/$AMQ_USER/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_amq_pwd/$AMQ_PWD/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_amq_cert/$AMQ_CERT/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_cert_verify/$CERT_VERIFY/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_amq_key/$AMQ_KEY/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_key_pwd/$KEY_PWD/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_modsec_log/$MODSEC_LOG/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_suri_log/$SURI_LOG/g" /etc/alertflex/alertflex.yaml
-sudo sed -i "s/_wazuh_log/$WAZUH_LOG/g" /etc/alertflex/alertflex.yaml
+sudo sed -i "s/_project_id/$PROJECT_ID/g" /etc/altprobe/filters.json
+sudo sed -i "s/_node_id/$NODE_ID/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_probe_id/$PROBE_ID/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_amq_url/$AMQ_URL/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_amq_user/$AMQ_USER/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_amq_pwd/$AMQ_PWD/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_amq_cert/$AMQ_CERT/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_cert_verify/$CERT_VERIFY/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_amq_key/$AMQ_KEY/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_key_pwd/$KEY_PWD/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_falco_log/$FALCO_LOG/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_modsec_log/$MODSEC_LOG/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_suri_log/$SURI_LOG/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_wazuh_log/$WAZUH_LOG/g" /etc/altprobe/altprobe.yaml
 
-sudo chmod go-rwx /etc/alertflex/alertflex.yaml
+sudo chmod go-rwx /etc/altprobe/altprobe.yaml
 
 cd ..
 
-echo "*** Copy MaxMind geo DB ***"
-sudo cp ./configs/GeoLiteCity.dat /etc/alertflex/
+if [[ $INSTALL_REDIS == true ]]
+then
+	echo "*** installation redis ***"
+	sudo apt-get -y install redis-server 
+fi
 
-if [ $INSTALL_SURICATA == true ]
+if [[ $INSTALL_FALCO == true ]]
+then
+    echo "*** installation falco ***"
+	curl -s https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public | sudo apt-key add -
+	sudo curl -s -o /etc/apt/sources.list.d/draios.list https://s3.amazonaws.com/download.draios.com/stable/deb/draios.list
+	sudo apt-get update
+	sudo apt-get -y install linux-headers-$(uname -r)
+	sudo apt-get -y install falco
+fi
+
+if [[ $INSTALL_SURICATA == true ]]
 then
 	sudo add-apt-repository --yes ppa:oisf/suricata-stable
 	sudo apt-get update
@@ -89,7 +104,7 @@ EOF'
 	sudo systemctl enable suricata
 fi
 
-if [ $INSTALL_WAZUH == true ]
+if [[ $INSTALL_WAZUH == true ]]
 then
 	
 	echo "*** installation OSSEC/WAZUH server ***"
@@ -104,8 +119,8 @@ then
 	curl -sL https://deb.nodesource.com/setup_6.x | sudo bash -
 	sudo apt-get -y install nodejs
 	sudo apt-get -y install wazuh-api
-	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/alertflex/alertflex.yaml
-	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/alertflex/alertflex.yaml
+	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
+	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
 	
 	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
 [Unit]
@@ -138,7 +153,7 @@ fi
 
 sudo systemctl enable altprobe
 
-if [ $INSTALL_FILEBEAT == true ]
+if [[ $INSTALL_FILEBEAT == true ]]
 then
     echo "*** installation filebeat***"
 	sudo apt-get update

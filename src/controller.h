@@ -45,19 +45,20 @@ public:
     static char cert_verify[OS_HEADER_SIZE];
     static char key[OS_HEADER_SIZE];
     static char key_pwd[OS_HEADER_SIZE];
-    static char queue[OS_HEADER_SIZE];
-    
+            
     static Connection* connection;
     static bool ssl_broker;
     static bool ssl_client;
     static bool ssl_verify;
     static bool user_pwd;
-    
-    Session* session;
-    Destination* destination;
-    MessageProducer* producer;
-    bool sessionTransacted;
-    bool connection_status;
+        
+    static Session* session;
+    static Destination* destAlerts;
+    static MessageProducer* producerAlerts;
+    static Destination* destInfo;
+    static MessageProducer* producerInfo;
+    static bool sessionTransacted;
+    static bool connection_status;
     
     Controller () {
         memset(url, 0, sizeof(url));
@@ -67,11 +68,12 @@ public:
         memset(cert_verify, 0, sizeof(cert_verify));
         memset(key, 0, sizeof(key));
         memset(key_pwd, 0, sizeof(key_pwd));
-        memset(queue, 0, sizeof(queue));
-        
+                
         session = NULL;
-        destination = NULL;
-        producer = NULL;
+        destAlerts = NULL;
+        producerAlerts = NULL;
+        destInfo = NULL;
+        producerInfo = NULL;
         sessionTransacted = false;
         connection_status = false;
     }

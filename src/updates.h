@@ -21,6 +21,7 @@ class Updates : public Controller,
         public MessageListener {
 public: 
     
+    Destination* consumerTopic;
     MessageConsumer* consumer;
     int update_status;
     

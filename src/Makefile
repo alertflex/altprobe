@@ -121,44 +121,48 @@ help: .help-post
 
 install:
 	cp ./dist/Debug/GNU-Linux/collector /usr/local/bin/altprobe
-	chmod u+x ./scripts/alertflex-restart.sh
-	chmod u+x ./scripts/alertflex-start.sh
-	chmod u+x ./scripts/alertflex-status.sh
-	chmod u+x ./scripts/alertflex-stop.sh
-	chmod u+x ./scripts/alertflex-update.sh
-	cp ./scripts/alertflex-restart.sh /usr/local/bin/altprobe-restart
-	cp ./scripts/alertflex-start.sh /usr/local/bin/altprobe-start
-	cp ./scripts/alertflex-stop.sh /usr/local/bin/altprobe-stop
-	cp ./scripts/alertflex-status.sh /usr/local/bin/altprobe-status
-	cp ./scripts/alertflex-update.sh /usr/local/bin/altprobe-update
+	chmod u+x ./scripts/altprobe-restart.sh
+	chmod u+x ./scripts/altprobe-start.sh
+	chmod u+x ./scripts/altprobe-status.sh
+	chmod u+x ./scripts/altprobe-stop.sh
+	chmod u+x ./scripts/altprobe-update.sh
+	cp ./scripts/altprobe-restart.sh /usr/local/bin/altprobe-restart
+	cp ./scripts/altprobe-start.sh /usr/local/bin/altprobe-start
+	cp ./scripts/altprobe-stop.sh /usr/local/bin/altprobe-stop
+	cp ./scripts/altprobe-status.sh /usr/local/bin/altprobe-status
+	cp ./scripts/altprobe-update.sh /usr/local/bin/altprobe-update
 	
-	if [ ! -d "/etc/alertflex" ]; then\
-		mkdir /etc/alertflex;\
+	if [ ! -d "/etc/altprobe" ]; then\
+		mkdir /etc/altprobe;\
 	fi;
-	cp ./etc/filters.json /etc/alertflex
-	cp ./etc/alertflex.yaml /etc/alertflex
+	cp ./etc/filters.json /etc/altprobe
+	cp ./etc/altprobe.yaml /etc/altprobe
 	
-	if [ ! -d "/etc/alertflex\scripts" ]; then\
-		mkdir /etc/alertflex/scripts;\
+	if [ ! -d "/etc/altprobe/scripts" ]; then\
+		mkdir /etc/altprobe/scripts;\
 	fi;
+	
 	chmod u+x ./scripts/iprepup-wazuh.sh
 	chmod u+x ./scripts/iprepup-suri.sh
 	chmod u+x ./scripts/iprepup-modsec.sh
 	chmod u+x ./scripts/rulesup-wazuh.sh
 	chmod u+x ./scripts/rulesup-suri.sh
 	chmod u+x ./scripts/rulesup-modsec.sh
+	chmod u+x ./scripts/restart-falco.sh
 	chmod u+x ./scripts/restart-wazuh.sh
 	chmod u+x ./scripts/restart-suri.sh
 	chmod u+x ./scripts/restart-modsec.sh
-	cp ./scripts/iprepup-wazuh.sh /etc/alertflex/scripts/
-	cp ./scripts/iprepup-suri.sh /etc/alertflex/scripts/
-	cp ./scripts/iprepup-modsec.sh /etc/alertflex/scripts/
-	cp ./scripts/rulesup-wazuh.sh /etc/alertflex/scripts/
-	cp ./scripts/rulesup-suri.sh /etc/alertflex/scripts/
-	cp ./scripts/rulesup-modsec.sh /etc/alertflex/scripts/
-	cp ./scripts/restart-wazuh.sh /etc/alertflex/scripts/
-	cp ./scripts/restart-suri.sh /etc/alertflex/scripts/
-	cp ./scripts/restart-modsec.sh /etc/alertflex/scripts/
+	cp ./scripts/iprepup-wazuh.sh /etc/altprobe/scripts/
+	cp ./scripts/iprepup-suri.sh /etc/altprobe/scripts/
+	cp ./scripts/iprepup-modsec.sh /etc/altprobe/scripts/
+	cp ./scripts/rulesup-falco.sh /etc/altprobe/scripts/
+	cp ./scripts/rulesup-wazuh.sh /etc/altprobe/scripts/
+	cp ./scripts/rulesup-suri.sh /etc/altprobe/scripts/
+	cp ./scripts/rulesup-modsec.sh /etc/altprobe/scripts/
+	cp ./scripts/restart-falco.sh /etc/altprobe/scripts/
+	cp ./scripts/restart-wazuh.sh /etc/altprobe/scripts/
+	cp ./scripts/restart-suri.sh /etc/altprobe/scripts/
+	cp ./scripts/restart-modsec.sh /etc/altprobe/scripts/
 	
 update:
 	cp ./dist/Debug/GNU-Linux/collector /usr/local/bin/altprobe

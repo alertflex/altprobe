@@ -225,8 +225,7 @@ public:
     void SendAlert (int s, GrayList* gl);
     int PushIdsRecord(GrayList* gl);
     void PushFlowsRecord();
-    string CountryByIp(string ip);
-            
+                
     void ClearRecords() {
         rec.Reset();
         net_stat.Reset();

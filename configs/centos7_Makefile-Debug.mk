@@ -39,13 +39,13 @@ OBJECTFILES= \
 	${OBJECTDIR}/collector.o \
 	${OBJECTDIR}/config.o \
 	${OBJECTDIR}/controller.o \
+	${OBJECTDIR}/crs.o \
 	${OBJECTDIR}/filters.o \
 	${OBJECTDIR}/flows.o \
 	${OBJECTDIR}/hids.o \
 	${OBJECTDIR}/ids.o \
 	${OBJECTDIR}/loclog.o \
 	${OBJECTDIR}/main.o \
-	${OBJECTDIR}/metric.o \
 	${OBJECTDIR}/misc.o \
 	${OBJECTDIR}/nids.o \
 	${OBJECTDIR}/remlog.o \
@@ -61,6 +61,7 @@ OBJECTFILES= \
 # C Compiler Flags
 CFLAGS=
 
+# CC Compiler Flags
 # CC Compiler Flags
 CCFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/include/hiredis -I/usr/include/activemq-cpp-3.9.3/ -I/usr/include/apr-1/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++0x
 CXXFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/include/hiredis -I/usr/include/activemq-cpp-3.9.3/ -I/usr/include/apr-1/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++0x
@@ -80,7 +81,7 @@ LDLIBSOPTIONS=-L/usr/local/lib
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/collector: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/collector ${OBJECTFILES} ${LDLIBSOPTIONS} -L/usr/lib -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -lz -lm -lrt -ldl -lpthread -lyaml -ldaemon -lactivemq-cpp -lboost_system -lboost_thread -lboost_iostreams -lhiredis -lGeoIP -lboost_filesystem -lboost_regex
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/collector ${OBJECTFILES} ${LDLIBSOPTIONS} -L/usr/lib -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -lz -lm -lrt -ldl -lpthread -lyaml -ldaemon -lactivemq-cpp -lboost_system -lboost_thread -lboost_iostreams -lhiredis -lboost_filesystem -lboost_regex
 
 ${OBJECTDIR}/cobject.o: cobject.cpp
 	${MKDIR} -p ${OBJECTDIR}
@@ -101,6 +102,11 @@ ${OBJECTDIR}/controller.o: controller.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/controller.o controller.cpp
+
+${OBJECTDIR}/crs.o: crs.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/crs.o crs.cpp
 
 ${OBJECTDIR}/filters.o: filters.cpp
 	${MKDIR} -p ${OBJECTDIR}
@@ -131,11 +137,6 @@ ${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
-
-${OBJECTDIR}/metric.o: metric.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/metric.o metric.cpp
 
 ${OBJECTDIR}/misc.o: misc.cpp
 	${MKDIR} -p ${OBJECTDIR}

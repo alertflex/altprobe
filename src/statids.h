@@ -116,13 +116,13 @@ public:
 class IdsEvent : public Ids  {
 public: 
     int ids_type;
-    unsigned int event;
+    string event;
     unsigned int severity;
     string desc;
     string agent;
     string ids_name;
     
-    IdsEvent (string id, int type, unsigned int e, unsigned int s, string d, string a, string n) : Ids(id)  {
+    IdsEvent (string id, int type, string e, unsigned int s, string d, string a, string n) : Ids(id)  {
         event = e;
         severity = s;
         ids_type = type;
@@ -134,14 +134,14 @@ public:
 
 class UserEvent : public Ids  {
 public: 
-    unsigned int event;
+    string event;
     unsigned int severity;
     string desc;
     string agent;
     string user;
     string ip;
     
-    UserEvent (string id, unsigned int e, unsigned int s, string d, string a, string u, string i) : Ids(id)  {
+    UserEvent (string id, string e, unsigned int s, string d, string a, string u, string i) : Ids(id)  {
         event = e;
         severity = s;
         desc = d;
@@ -177,6 +177,16 @@ public:
     }
 };
 
+class ContainerStat : public Ids {
+public: 
+    string container;
+    string ids_name;
+    
+    ContainerStat (string id, string n, string c) : Ids(id)  {
+        container = c;
+        ids_name = n;
+    }
+};
 
 class StatIds : public Source {
 public: 
@@ -186,6 +196,8 @@ public:
     int counter;
     
     //waiting alerts 
+    std::list<IdsRecord> crs_alerts_list;
+    
     std::list<IdsRecord> hids_alerts_list;
     
     std::list<IdsRecord> nids_alerts_list;
@@ -215,6 +227,8 @@ public:
     
     std::vector<WafTarget> waf_target;
     
+    std::vector<ContainerStat> container_stat;
+    
     virtual int Open();
     virtual void Close();
     
@@ -224,6 +238,10 @@ public:
     void PushRecord();
     void ProcessStatistic();
     void RoutineJob();
+    
+    void UpdateCrsAlerts();
+    void SendCrsAlert(std::list<IdsRecord>::iterator r, int c);
+    void FlushCrsAlert();
     
     void UpdateHidsAlerts();
     void SendHidsAlert(std::list<IdsRecord>::iterator r, int c);
@@ -269,6 +287,9 @@ public:
     
     void UpdateWafTarget();
     void FlushWafTarget();
+    
+    void UpdateContainerStat();
+    void FlushContainerStat();
     
     IdsBuffers* GetBuffers(void) {
         return &mem_mon;

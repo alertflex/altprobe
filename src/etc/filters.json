@@ -1,16 +1,16 @@
 {
     "filter_desc": "test_v01",
-    "ref_id": "nsm_solution",
+    "ref_id": "_project_id",
     
     "home_net": [{
         "network": "192.168.1.0",
         "netmask": "255.255.255.0",
-        "node": "test01",
+        "node": "collr1",
         "alert_suppress": false
     }, {
         "network": "192.168.101.10",
         "netmask": "255.255.255.255",
-        "node": "test02",
+        "node": "collr1",
         "alert_suppress": true
     }],
 
@@ -25,6 +25,44 @@
     }],
 
     "sources": { 
+        "crs": {
+            "log": true,
+            "severity": {
+                "threshold": 1,
+                "level0": 2,
+                "level1": 4,
+                "level2": 5
+            },
+            "gray_list": [{ 
+                "event": "rule 1",
+                "container": "flghost",
+                "aggregate": {
+                    "reproduced": 0,
+                    "in_period": 0
+                },
+                "response": {
+                    "profile": "indef",
+                    "new_event": "55715",
+                    "new_severity": 1,
+                    "new_category": "new cat",
+                    "new_description": "new desc"
+                }
+            }, { 
+                "event": "rule 2",
+                "container": "win10-host",
+                "aggregate": {
+                    "reproduced": 30,
+                    "in_period": 10
+                },
+                "response": {
+                    "profile": "indef",
+                    "new_event": "0",
+                    "new_severity": 0,
+                    "new_category": "new cat",
+                    "new_description": "new desc"
+                }
+            }]
+        },
         "hids": {
             "log": true,
             "severity": {
@@ -34,29 +72,29 @@
                 "level2": 10
             },
             "gray_list": [{ 
-                "event": 5715,
+                "event": "5715",
                 "agent": "flghost",
                 "aggregate": {
                     "reproduced": 0,
                     "in_period": 0
                 },
                 "response": {
-                    "profile": "none",
-                    "new_event": 55715,
+                    "profile": "indef",
+                    "new_event": "55715",
                     "new_severity": 1,
                     "new_category": "new cat",
                     "new_description": "new desc"
                 }
             }, { 
-                "event": 4572,
+                "event": "4572",
                 "agent": "win10-host",
                 "aggregate": {
                     "reproduced": 30,
                     "in_period": 10
                 },
                 "response": {
-                    "profile": "none",
-                    "new_event": 0,
+                    "profile": "indef",
+                    "new_event": "0",
                     "new_severity": 0,
                     "new_category": "new cat",
                     "new_description": "new desc"
@@ -72,29 +110,29 @@
                 "level2": 2
             },
             "gray_list": [{ 
-                "event": 2200071,
+                "event": "2200071",
                 "agent": "all",
                 "aggregate": {
                     "reproduced": 30,
                     "in_period": 10
                 },
                 "response": {
-                    "profile": "none",
-                    "new_event": 0,
+                    "profile": "indef",
+                    "new_event": "0",
                     "new_severity": 0,
                     "new_category": "new cat",
                     "new_description": "new desc"
                 }
             }, { 
-                "event": 2200072,
+                "event": "2200072",
                 "agent": "centos7-host",
                 "aggregate": {
                     "reproduced": 30,
                     "in_period": 10
                 },
                 "response": {
-                    "profile": "none",
-                    "new_event": 0,
+                    "profile": "indef",
+                    "new_event": "0",
                     "new_severity": 0,
                     "new_category": "new cat",
                     "new_description": "new desc"
@@ -110,107 +148,29 @@
                 "level2": 3
             },
             "gray_list": [{ 
-                "event": 100001,
+                "event": "100001",
                 "agent": "none",
                 "aggregate": {
                     "reproduced": 30,
                     "in_period": 10
                 },
                 "response": {
-                    "profile": "none",
-                    "new_event": 0,
+                    "profile": "indef",
+                    "new_event": "0",
                     "new_severity": 0,
                     "new_category": "new cat",
                     "new_description": "new desc"
                 }
             }, { 
-                "event": 100002,
+                "event": "100002",
                 "agent": "test01",
                 "aggregate": {
                     "reproduced": 30,
                     "in_period": 10
                 },
                 "response": {
-                    "profile": "none",
-                    "new_event": 0,
-                    "new_severity": 0,
-                    "new_category": "new cat",
-                    "new_description": "new desc"
-                }
-            }]
-        },
-        "metrics": {
-            "log": true,
-            "severity":  2,
-            "thresholds": [{
-                "agent": "win10-host",
-                "metric": "memory",
-                "parameter":"free",
-                "min": 1,
-                "max": 100000,
-                "aggregate": {
-                    "reproduced": 30,
-                    "in_period": 10
-                },
-                "response": {
-                    "profile": "none",
-                    "new_event": 0,
-                    "new_severity": 0,
-                    "new_category": "new cat",
-                    "new_description": "new desc"
-                }
-            }, {
-                "agent": "centos7-host",
-                "metric": "nginx",
-                "parameter":"active",
-                "min": 1,
-                "max": 10000,
-                "aggregate": {
-                    "reproduced": 30,
-                    "in_period": 10
-                },
-                "response": {
-                    "profile": "none",
-                    "new_event": 0,
-                    "new_severity": 0,
-                    "new_category": "new cat",
-                    "new_description": "new desc"
-                }
-            }]
-        },
-        "netflow": {
-            "log": true,
-            "top_talkers":  10,
-            "thresholds": [{
-                "network": "192.168.101.2",
-                "netmask": "255.255.255.255",
-                "appl":"none",
-                "min": 1,
-                "max": 100000,
-                "aggregate": {
-                    "reproduced": 30,
-                    "in_period": 10
-                },
-                "response": {
-                    "profile": "log-mgmt",
-                    "new_event": 0,
-                    "new_severity": 0,
-                    "new_category": "new cat",
-                    "new_description": "new desc"
-                }
-            }, {
-                "network": "192.168.1.10",
-                "netmask": "255.255.255.0",
-                "appl":"dns",
-                "min": 1,
-                "max": 10000,
-                "aggregate": {
-                    "reproduced": 30,
-                    "in_period": 10
-                },
-                "response": {
-                    "profile": "none",
-                    "new_event": 0,
+                    "profile": "indef",
+                    "new_event": "0",
                     "new_severity": 0,
                     "new_category": "new cat",
                     "new_description": "new desc"

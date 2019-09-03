@@ -21,10 +21,11 @@ string CollectorObject::node_id;
 string CollectorObject::sensor_id;
 
 char CollectorObject::active_response[OS_HEADER_SIZE];
-char CollectorObject::update_local[OS_HEADER_SIZE];
+char CollectorObject::update_remote[OS_HEADER_SIZE];
+
 
 bool CollectorObject::arStatus;
-bool CollectorObject::ulStatus;
+bool CollectorObject::urStatus;
 
 int CollectorObject::timezone;
 char CollectorObject::log_path[OS_BUFFER_SIZE]; 
@@ -41,12 +42,18 @@ char CollectorObject::wazuh_pwd[OS_HEADER_SIZE];
 
 bool CollectorObject::wazuhServerStatus;
 
+char CollectorObject::falco_log[OS_BUFFER_SIZE]; 
+bool CollectorObject::falcolog_status;
 char CollectorObject::suri_log[OS_BUFFER_SIZE]; 
 bool CollectorObject::surilog_status;
 char CollectorObject::wazuh_log[OS_BUFFER_SIZE];
 bool CollectorObject::wazuhlog_status;
 char CollectorObject::modsec_log[OS_BUFFER_SIZE];
 bool CollectorObject::modseclog_status;
+
+char CollectorObject::falco_conf[OS_BUFFER_SIZE];
+char CollectorObject::falco_local[OS_BUFFER_SIZE];
+char CollectorObject::falco_rules[OS_BUFFER_SIZE];
 
 char CollectorObject::suri_conf[OS_BUFFER_SIZE];
 char CollectorObject::suri_local[OS_BUFFER_SIZE];
@@ -67,12 +74,13 @@ int CollectorObject::GetConfig() {
     ConfigYaml* cy = new ConfigYaml( "collector");
     
     cy->addKey("node");
-    cy->addKey("sensor");
+    cy->addKey("probe");
     
     cy->addKey("active_response");
-    cy->addKey("update_local");
-           
+    cy->addKey("update_remote");
+               
     cy->addKey("time_zone");
+    
     cy->addKey("log_path");
     cy->addKey("log_size");
     
@@ -94,10 +102,10 @@ int CollectorObject::GetConfig() {
         return 0;
     }
     
-    sensor_id = cy->getParameter("sensor");
+    sensor_id = cy->getParameter("probe");
     
     if (!sensor_id.compare("")) {
-        SysLog("config file error: parameter sensor id");
+        SysLog("config file error: parameter probe id");
         return 0;
     }
     
@@ -109,11 +117,11 @@ int CollectorObject::GetConfig() {
     strncpy(log_path, (char*) cy->getParameter("log_path").c_str(), sizeof(log_path));
     
     if (!strcmp (log_path, "none")) { 
-        strncpy(log_path, "var/log/alertflex", sizeof(log_path));
+        strncpy(log_path, "var/log/altprobe", sizeof(log_path));
     }
     
     if (!strcmp (log_path, "")) { 
-        strncpy(log_path, "var/log/alertflex", sizeof(log_path));
+        strncpy(log_path, "var/log/altprobe", sizeof(log_path));
     }
     
     gosleep_timer = stoi(cy->getParameter("sleep_timer"));
@@ -176,34 +184,32 @@ int CollectorObject::GetConfig() {
     }
     
     strncpy(active_response, (char*) cy->getParameter("active_response").c_str(), sizeof(active_response));
-    if (!strcmp (active_response, "false")) { 
-        arStatus = false;
-        SysLog("config file notification: active response is disabled");
+    if (!strcmp (active_response, "true")) { 
+        arStatus = true;
+        SysLog("config file notification: active response is enabled");
     }
     
-    if (!strcmp (active_response, "")) { 
-        arStatus = false;
-        SysLog("config file notification: active response is disabled");
-    }
-    
-    strncpy(update_local, (char*) cy->getParameter("update_local").c_str(), sizeof(update_local));
-    if (!strcmp (update_local, "false")) { 
-        ulStatus = false;
-        SysLog("config file notification: update_local for filters, rules and configs disabled");
-    }
-    
-    if (!strcmp (update_local, "")) { 
-        ulStatus = false;
-        SysLog("config file notification: update_local for filters, rules and configs disabled");
+    strncpy(update_remote, (char*) cy->getParameter("update_remote").c_str(), sizeof(update_remote));
+    if (!strcmp (update_remote, "false")) { 
+        urStatus = false;
+        SysLog("config file notification: update_remote for filters, rules and configs disabled");
     }
     
     cy = new ConfigYaml( "sources");
+    
+    cy->addKey("falco_log");
     
     cy->addKey("suri_log");
     
     cy->addKey("wazuh_log");
     
     cy->addKey("modsec_log");
+    
+    cy->addKey("falco_conf");
+    
+    cy->addKey("falco_local");
+    
+    cy->addKey("falco_rules");
     
     cy->addKey("suri_conf");
     
@@ -225,6 +231,11 @@ int CollectorObject::GetConfig() {
     
     cy->ParsConfig();
     
+    strncpy(falco_log, (char*) cy->getParameter("falco_log").c_str(), sizeof(falco_log));
+    if (!strcmp (falco_log, "none")) { 
+        falcolog_status = false;
+    }
+    
     strncpy(suri_log, (char*) cy->getParameter("suri_log").c_str(), sizeof(suri_log));
     if (!strcmp (suri_log, "none")) { 
         surilog_status = false;
@@ -240,7 +251,22 @@ int CollectorObject::GetConfig() {
         modseclog_status = false;
     }
     
-    if (ulStatus) {
+    if (urStatus) {
+        
+        strncpy(falco_conf, (char*) cy->getParameter("falco_conf").c_str(), sizeof(falco_conf));
+        if (!strcmp (falco_conf, "none")) { 
+            SysLog("config file notification: falco_conf update disabled");
+        }
+    
+        strncpy(falco_local, (char*) cy->getParameter("falco_local").c_str(), sizeof(falco_local));
+        if (!strcmp (falco_local, "none")) { 
+            SysLog("config file notification: falco_local update disabled");
+        }
+        
+         strncpy(falco_rules, (char*) cy->getParameter("falco_rules").c_str(), sizeof(falco_rules));
+        if (!strcmp (falco_rules, "none")) { 
+            SysLog("config file notification: falco_rules update disabled");
+        }
     
         strncpy(suri_conf, (char*) cy->getParameter("suri_conf").c_str(), sizeof(suri_conf));
         if (!strcmp (suri_conf, "none")) { 

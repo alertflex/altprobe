@@ -49,17 +49,6 @@ int Hids::Open() {
         }
     }
     
-    if (!strcmp (maxmind_path, "none")) maxmind_state = 0;
-    else {
-        gi = GeoIP_open(maxmind_path, GEOIP_INDEX_CACHE);
-
-        if (gi == NULL) {
-            SysLog("error opening maxmind database\n");
-            maxmind_state = 0;
-        }
-        else maxmind_state = 1;
-    }
-    
     return 1;
 }
 
@@ -73,8 +62,6 @@ void Hids::Close() {
             if (fp != NULL) fclose(fp);
         } else redisFree(c);
     }
-    
-    if (maxmind_state != 0) GeoIP_delete(gi);
 }
 
 void Hids::IsFileModified() {
@@ -238,7 +225,7 @@ GrayList* Hids::CheckGrayList() {
         
         for (i = fs.filter.hids.gl.begin(), end = fs.filter.hids.gl.end(); i != end; ++i) {
             
-            int event_id = (*i)->event;
+            int event_id = std::stoi((*i)->event);
             if (event_id == rec.rule.id) {
                 
                 string agent = (*i)->host;
@@ -727,9 +714,9 @@ int Hids::ParsJson() {
     
     } catch (bpt::ptree_bad_path& e) {}
     
-        rec.location = loc;
-        ReplaceAll(rec.location, "\"", "");
-        ReplaceAll(rec.location, "\\", "\\\\\\\\");
+    rec.location = loc;
+    ReplaceAll(rec.location, "\"", "");
+    ReplaceAll(rec.location, "\\", "\\\\\\\\");
         
     rec.file.filename = pt.get<string>("syscheck.path","");
     ReplaceAll(rec.file.filename, "\"", "");
@@ -868,7 +855,7 @@ int Hids::PushRecord(GrayList* gl) {
             
     ids_rec.ref_id = fs.filter.ref_id;
     
-    ids_rec.event = rec.rule.id;
+    ids_rec.event = std::to_string(rec.rule.id);
             
     copy(rec.rule.list_cats.begin(),rec.rule.list_cats.end(),back_inserter(ids_rec.list_cats));
     
@@ -894,13 +881,13 @@ int Hids::PushRecord(GrayList* gl) {
     ids_rec.agent = rec.agent;
     ids_rec.user = rec.user;
     ids_rec.ids = sensor;
-    ids_rec.action = "none";
+    ids_rec.action = "indef";
                 
     if (rec.file.filename.compare("") == 0) {
         ids_rec.location = rec.location;
         ids_rec.ids_type = 2;
     }  else {
-        ids_rec.location = rec.file.filename;
+        ids_rec.file = rec.file.filename;
         ids_rec.ids_type = 1;
     }
         
@@ -936,8 +923,8 @@ void Hids::SendAlert(int s, GrayList*  gl) {
         
     sk.alert.severity = s;
     sk.alert.score = rec.rule.level;
-    sk.alert.event = rec.rule.id;
-    sk.alert.action = "none";
+    sk.alert.event = std::to_string(rec.rule.id);
+    sk.alert.action = "indef";
     sk.alert.description = rec.rule.desc;
         
     sk.alert.status = "processed_new";
@@ -945,8 +932,9 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     sk.alert.srcip = rec.srcip;
     sk.alert.dstip = rec.dstip;
     
-    sk.alert.srcagent = "none";
-    sk.alert.dstagent = rec.agent;
+    sk.alert.srcagent = "indef";
+    sk.alert.dstagent = "indef";
+    sk.alert.agent = rec.agent;
     
     sk.alert.srcport = 0;
     sk.alert.dstport = 0;
@@ -957,12 +945,16 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     sk.alert.sensor = sensor;
     sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = rec.timestamp;
+    
+    sk.alert.container = "indef";
+    sk.alert.process = "indef";
         
     if (rec.file.filename.compare("") == 0) {
             
         sk.alert.type = "HOST";
             
         sk.alert.location = rec.location;
+        sk.alert.file = "indef";
         
         sk.alert.info = rec.rule.info;
     }
@@ -970,7 +962,8 @@ void Hids::SendAlert(int s, GrayList*  gl) {
             
         sk.alert.type = "FILE";
             
-        sk.alert.location = rec.file.filename;
+        sk.alert.file = rec.file.filename;
+        sk.alert.location = "indef";
         
         sk.alert.info = "\"artifacts\": [";
         sk.alert.info += "{ \"dataType\": \"md5\",\"data\":\"";
@@ -995,12 +988,12 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     
     if (gl != NULL) {
             
-        if (gl->rsp.profile.compare("none") != 0) {
+        if (gl->rsp.profile.compare("indef") != 0) {
             sk.alert.action = gl->rsp.profile;
             sk.alert.status = "modified_new";
         } 
         
-        if (gl->rsp.new_event != 0) {
+        if (gl->rsp.new_event.compare("") != 0) {
             sk.alert.event = gl->rsp.new_event;
             sk.alert.status = "modified_new";
         }    

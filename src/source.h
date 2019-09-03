@@ -10,9 +10,6 @@
 #include <mutex>
 
 #include "hiredis.h"
-#include "GeoIP.h"
-#include "GeoIPCity.h"
-
 #include "sinks.h"
 #include "ids.h"
 #include "filters.h"
@@ -36,11 +33,6 @@ public:
     redisReply *reply;
     redisContext *c;
     
-    static char maxmind_path[OS_BUFFER_SIZE]; 
-    int maxmind_state;
-    GeoIP *gi;
-    string country_code;
-    
     //JSON strings for regex and log output 
     string jsonPayload;
     string report;
@@ -54,7 +46,6 @@ public:
         status = 0;
         events_counter = 0;
         alerts_counter = 0;
-        maxmind_state = 0;
     }
     
     Source (string ckey) {
@@ -62,7 +53,6 @@ public:
         status = 0;
         events_counter = 0;
         alerts_counter = 0;
-        maxmind_state = 0;
     }
     
     virtual int GetConfig();

@@ -39,13 +39,13 @@ OBJECTFILES= \
 	${OBJECTDIR}/collector.o \
 	${OBJECTDIR}/config.o \
 	${OBJECTDIR}/controller.o \
+	${OBJECTDIR}/crs.o \
 	${OBJECTDIR}/filters.o \
 	${OBJECTDIR}/flows.o \
 	${OBJECTDIR}/hids.o \
 	${OBJECTDIR}/ids.o \
 	${OBJECTDIR}/loclog.o \
 	${OBJECTDIR}/main.o \
-	${OBJECTDIR}/metric.o \
 	${OBJECTDIR}/misc.o \
 	${OBJECTDIR}/nids.o \
 	${OBJECTDIR}/remlog.o \
@@ -102,6 +102,11 @@ ${OBJECTDIR}/controller.o: controller.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/controller.o controller.cpp
 
+${OBJECTDIR}/crs.o: crs.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/crs.o crs.cpp
+
 ${OBJECTDIR}/filters.o: filters.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -131,11 +136,6 @@ ${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
-
-${OBJECTDIR}/metric.o: metric.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/metric.o metric.cpp
 
 ${OBJECTDIR}/misc.o: misc.cpp
 	${MKDIR} -p ${OBJECTDIR}

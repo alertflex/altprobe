@@ -29,40 +29,6 @@ public:
     }
 };
 
-class Application : public Counter {
-public:  
-    string app;
-    string agent;
-            
-    void Reset() {
-        app.clear();
-        agent.clear();
-        ids.clear();
-        counter = 0;
-    }
-        
-    Application (string ref, string i, string ap, string ag, unsigned long c) : Counter(ref, i, c) {
-        app = ap;
-        agent = ag;
-    }
-};
-
-class Country : public Counter {
-public:  
-    string country;
-               
-    void Reset() {
-        country.clear();
-        ids.clear();
-        counter = 0;
-    }
-        
-    Country ( string ref, string i, string cntry, unsigned long c) : Counter(ref, i, c) {
-        country = cntry;
-    }
-};
-
-
 class SshSession : public Counter {
 public:  
     string client;
@@ -101,13 +67,7 @@ public:
     
     Traffic traffic_rec;
         
-    FlowsBuffers mem_mon;
-        
     //Statistics data
-    std::vector<Application> applications;
-    
-    std::vector<Country> countries;
-    
     std::vector<SshSession> ssh_sessions;
     
     std::vector<Traffic> traffics;
@@ -122,26 +82,12 @@ public:
     void ProcessTraffic();
     void RoutineJob();
     
-    void UpdateCountries();
-    void FlushCountries();
-    
-    void UpdateApplications();
-    void FlushApplications();
-    
     void UpdateSshSessions();
     void FlushSshSessions();
     
     bool UpdateTraffic(Traffic t);
     void FlushTraffic();
         
-    void UpdateThresholds();
-    void CheckThresholds(Threshold* th);
-    void SendAlert(Threshold* th, bool type_alert);
-    void FlushThresholds();
-    
-    FlowsBuffers* GetBuffers(void) {
-        return &mem_mon;
-    }
 };
 
 extern boost::lockfree::spsc_queue<string> q_stats_flow;
