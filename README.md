@@ -1,6 +1,6 @@
 # Alertflex Collector (Altprobe)
 
-Altprobe is a component of the Alertflex project. For more information, please see [Alertflex documentation](https://alertflex.org/doc.html)
+Altprobe is a component of the Alertflex project. For more information, please see [Alertflex documentation](https://alertflex.org/doc/index.html)
 
 ## Support
 
