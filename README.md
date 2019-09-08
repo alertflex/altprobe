@@ -1,6 +1,9 @@
-# Alertflex Collector (Altprobe)
+# Alertflex IDS collector (Altprobe)
 
-Altprobe is a component of the Alertflex project. For more information, please see [Alertflex documentation](https://alertflex.org/doc/index.html)
+[![Documentation](https://img.shields.io/badge/docs-view-green.svg)](https://alertflex.org/doc/index.html)
+[![Documentation](https://img.shields.io/badge/web-view-green.svg)](https://alertflex.org)
+
+Altprobe is a component of the Alertflex project. For more information, please, see project documentation.
 
 ## Support
 
