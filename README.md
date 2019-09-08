@@ -3,7 +3,7 @@
 [![Documentation](https://img.shields.io/badge/docs-view-green.svg)](https://alertflex.org/doc/index.html)
 [![Documentation](https://img.shields.io/badge/web-view-green.svg)](https://alertflex.org)
 
-Altprobe is a component of the Alertflex project. For more information, please, see project documentation.
+Altprobe is a component of the Alertflex project. For more information, please, see [documentation](https://alertflex.org/doc/index.html).
 
 ## Support
 
