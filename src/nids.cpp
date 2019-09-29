@@ -285,7 +285,8 @@ int Nids::ParsJson () {
         rec.alert.action = pt.get<string>("alert.action","");
                 
         rec.alert.gid = pt.get<int>("alert.gid",0); 
-        rec.alert.signature_id = pt.get<int>("alert.signature_id",0); 
+        
+        rec.alert.signature_id = pt.get<long>("alert.signature_id",0); 
                 
         rec.alert.signature = pt.get<string>("alert.signature","");
         
@@ -935,7 +936,7 @@ int Nids::PushIdsRecord(GrayList* gl) {
                 
     ids_rec.list_cats.push_back(rec.alert.category);
                 
-    ids_rec.event = rec.alert.signature_id;
+    ids_rec.event = std::to_string(rec.alert.signature_id);
     ids_rec.desc = rec.alert.signature;
     ids_rec.severity = rec.alert.severity;
         

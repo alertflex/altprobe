@@ -23,7 +23,7 @@ class SuricataAlert
 public:
     string action;
     unsigned int gid;
-    unsigned int signature_id;
+    long signature_id;
     string signature;
     string category;
     unsigned int severity;

@@ -26,14 +26,13 @@ sudo make install
 cd ..
 
 echo "*** installation activemq ***"
-sudo apt-get -y install apache2-dev libapr1-dev libaprutil1-dev
-git clone https://git-wip-us.apache.org/repos/asf/activemq-cpp.git
-cd activemq-cpp/activemq-cpp
+curl -L -O http://mirror.linux-ia64.org/apache/activemq/activemq-cpp/3.9.5/activemq-cpp-library-3.9.5-src.tar.gz
+cd activemq-cpp-library-3.9.5
 ./autogen.sh
 ./configure --enable-ssl
 make
 sudo make install
-cd ../..
+cd ..
 
 echo "*** installation altprobe ***"
 cd src
