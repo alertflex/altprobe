@@ -34,6 +34,7 @@ cd activemq-cpp-library-3.9.5
 ./configure --enable-ssl
 make
 sudo make install
+sudo ldconfig
 cd ..
 
 echo "*** installation altprobe ***"
