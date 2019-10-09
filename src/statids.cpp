@@ -94,6 +94,7 @@ void StatIds::ProcessStatistic() {
         
         if (!q_crs.empty()) {
             q_crs.pop(ids_rec);
+            PushRecord();
         }
     }       
         

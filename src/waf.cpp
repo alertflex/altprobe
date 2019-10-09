@@ -505,7 +505,7 @@ int Waf::PushRecord(GrayList* gl) {
     
     ids_rec.agent = " ";
     ids_rec.ids = sensor;
-    ids_rec.action = "none";
+    ids_rec.action = "indef";
                 
     ids_rec.location = rec.ma.uri;
     ids_rec.ids_type = 4;

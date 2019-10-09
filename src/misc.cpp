@@ -75,13 +75,15 @@ int Misc::ParsJson(char* redis_payload) {
         sk.alert.dstagent = pt.get<string>("alert.dstagent","");
         sk.alert.srcagent = pt.get<string>("alert.srcagent","");
         sk.alert.user = pt.get<string>("alert.user","");
+        sk.alert.container = pt.get<string>("alert.container","");
+        sk.alert.process = pt.get<string>("alert.process","");
     
         string strNodeId(node_id);
         sk.alert.sensor = strNodeId;
         sk.alert.filter = fs.filter.desc;
         sk.alert.event_time = GetNodeTime();
     
-        sk.alert.event = pt.get<int>("alert.event",0);
+        sk.alert.event = pt.get<string>("alert.event","");
         sk.alert.severity = pt.get<int>("alert.severity",0);
         string cat = pt.get<string>("alert.cat","");
         sk.alert.list_cats.push_back(cat);

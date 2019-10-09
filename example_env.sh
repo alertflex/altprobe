@@ -22,7 +22,7 @@ export AMQ_KEY='\/etc\/altprobe\/Client.pem'
 export KEY_PWD=Password1234
 
 # sources:
-# if *_LOG is "none", redis connection will use
+# if *_LOG is "indef", redis connection will use
 export FALCO_LOG='\/var\/log\/falco.json'
 export MODSEC_LOG='\/var\/log\/nginx\/error.log'
 export SURI_LOG='\/var\/log\/suricata\/eve.json'

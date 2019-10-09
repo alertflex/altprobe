@@ -339,6 +339,7 @@ int Crs::PushRecord(GrayList* gl) {
         }
     }    
     
+    ids_rec.list_cats.push_back("falco");
     ids_rec.user = rec.fields.user_name;
     ids_rec.process = rec.fields.proc_name;
     ids_rec.container = rec.fields.container_id;

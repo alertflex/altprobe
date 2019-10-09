@@ -116,7 +116,7 @@ int CollectorObject::GetConfig() {
     
     strncpy(log_path, (char*) cy->getParameter("log_path").c_str(), sizeof(log_path));
     
-    if (!strcmp (log_path, "none")) { 
+    if (!strcmp (log_path, "indef")) { 
         strncpy(log_path, "var/log/altprobe", sizeof(log_path));
     }
     
@@ -145,7 +145,7 @@ int CollectorObject::GetConfig() {
     }
     
     strncpy(wazuh_host, (char*) cy->getParameter("wazuh_host").c_str(), sizeof(wazuh_host));
-    if (!strcmp (wazuh_host, "none")) { 
+    if (!strcmp (wazuh_host, "indef")) { 
         wazuhServerStatus =false;
         SysLog("config file notification: interface to Wazuh server is disabled");
     }
@@ -162,7 +162,7 @@ int CollectorObject::GetConfig() {
     }
     
     strncpy(wazuh_user, (char*) cy->getParameter("wazuh_user").c_str(), sizeof(wazuh_user));
-    if (!strcmp (wazuh_user, "none")) { 
+    if (!strcmp (wazuh_user, "indef")) { 
         wazuhServerStatus =false;
         SysLog("config file notification: interface to Wazuh server is disabled");
     }
@@ -173,7 +173,7 @@ int CollectorObject::GetConfig() {
     }
     
     strncpy(wazuh_pwd, (char*) cy->getParameter("wazuh_pwd").c_str(), sizeof(wazuh_pwd));
-    if (!strcmp (wazuh_pwd, "none")) { 
+    if (!strcmp (wazuh_pwd, "indef")) { 
         wazuhServerStatus =false;
         SysLog("config file notification: interface to Wazuh server is disabled");
     }
@@ -232,84 +232,84 @@ int CollectorObject::GetConfig() {
     cy->ParsConfig();
     
     strncpy(falco_log, (char*) cy->getParameter("falco_log").c_str(), sizeof(falco_log));
-    if (!strcmp (falco_log, "none")) { 
+    if (!strcmp (falco_log, "indef")) { 
         falcolog_status = false;
     }
     
     strncpy(suri_log, (char*) cy->getParameter("suri_log").c_str(), sizeof(suri_log));
-    if (!strcmp (suri_log, "none")) { 
+    if (!strcmp (suri_log, "indef")) { 
         surilog_status = false;
     }
     
     strncpy(wazuh_log, (char*) cy->getParameter("wazuh_log").c_str(), sizeof(wazuh_log));
-    if (!strcmp (wazuh_log, "none")) { 
+    if (!strcmp (wazuh_log, "indef")) { 
         wazuhlog_status = false;
     }
     
     strncpy(modsec_log, (char*) cy->getParameter("modsec_log").c_str(), sizeof(modsec_log));
-    if (!strcmp (modsec_log, "none")) { 
+    if (!strcmp (modsec_log, "indef")) { 
         modseclog_status = false;
     }
     
     if (urStatus) {
         
         strncpy(falco_conf, (char*) cy->getParameter("falco_conf").c_str(), sizeof(falco_conf));
-        if (!strcmp (falco_conf, "none")) { 
+        if (!strcmp (falco_conf, "indef")) { 
             SysLog("config file notification: falco_conf update disabled");
         }
     
         strncpy(falco_local, (char*) cy->getParameter("falco_local").c_str(), sizeof(falco_local));
-        if (!strcmp (falco_local, "none")) { 
+        if (!strcmp (falco_local, "indef")) { 
             SysLog("config file notification: falco_local update disabled");
         }
         
          strncpy(falco_rules, (char*) cy->getParameter("falco_rules").c_str(), sizeof(falco_rules));
-        if (!strcmp (falco_rules, "none")) { 
+        if (!strcmp (falco_rules, "indef")) { 
             SysLog("config file notification: falco_rules update disabled");
         }
     
         strncpy(suri_conf, (char*) cy->getParameter("suri_conf").c_str(), sizeof(suri_conf));
-        if (!strcmp (suri_conf, "none")) { 
+        if (!strcmp (suri_conf, "indef")) { 
             SysLog("config file notification: suri_conf update disabled");
         }
     
         strncpy(suri_local, (char*) cy->getParameter("suri_local").c_str(), sizeof(suri_local));
-        if (!strcmp (suri_local, "none")) { 
+        if (!strcmp (suri_local, "indef")) { 
             SysLog("config file notification: suri_local update disabled");
         }
         
          strncpy(suri_rules, (char*) cy->getParameter("suri_rules").c_str(), sizeof(suri_rules));
-        if (!strcmp (suri_rules, "none")) { 
+        if (!strcmp (suri_rules, "indef")) { 
             SysLog("config file notification: suri_rules update disabled");
         }
     
         strncpy(wazuh_conf, (char*) cy->getParameter("wazuh_conf").c_str(), sizeof(wazuh_conf));
-        if (!strcmp (wazuh_conf, "none")) { 
+        if (!strcmp (wazuh_conf, "indef")) { 
             SysLog("config file notification: wazuh_conf update disabled");
         }
     
         strncpy(wazuh_local, (char*) cy->getParameter("wazuh_local").c_str(), sizeof(wazuh_local));
-        if (!strcmp (wazuh_local, "none")) { 
+        if (!strcmp (wazuh_local, "indef")) { 
             SysLog("config file notification: wazuh_local update disabled");
         }
         
         strncpy(wazuh_rules, (char*) cy->getParameter("wazuh_rules").c_str(), sizeof(wazuh_rules));
-        if (!strcmp (wazuh_rules, "none")) { 
+        if (!strcmp (wazuh_rules, "indef")) { 
             SysLog("config file notification: wazuh_rules update disabled");
         }
     
         strncpy(modsec_conf, (char*) cy->getParameter("modsec_conf").c_str(), sizeof(modsec_conf));
-        if (!strcmp (modsec_conf, "none")) { 
+        if (!strcmp (modsec_conf, "indef")) { 
             SysLog("config file notification: modsec_conf update disabled");
         }
     
         strncpy(modsec_local, (char*) cy->getParameter("modsec_local").c_str(), sizeof(modsec_local));
-        if (!strcmp (modsec_local, "none")) { 
+        if (!strcmp (modsec_local, "indef")) { 
             SysLog("config file notification:  modsec_local update disabled");
         }
         
         strncpy(modsec_rules, (char*) cy->getParameter("modsec_rules").c_str(), sizeof(modsec_rules));
-        if (!strcmp (modsec_rules, "none")) { 
+        if (!strcmp (modsec_rules, "indef")) { 
             SysLog("config file notification: modsec_rules disabled");
         }
     }

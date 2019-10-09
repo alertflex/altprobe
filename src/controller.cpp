@@ -5,7 +5,7 @@
  * Created on February 27, 2014, 3:07 PM
  */
 #include <mutex>
-#include <activemq-cpp-3.9.5/cms/Message.h>
+#include <activemq-cpp-3.10.0/cms/Message.h>
 
 #include "controller.h"
 
@@ -50,7 +50,7 @@ int Controller::GetConfig() {
     cy->ParsConfig();
     
     strncpy(url, (char*) cy->getParameter("url").c_str(), sizeof(url));
-    if (!strcmp (url, "none")) { 
+    if (!strcmp (url, "indef")) { 
         SysLog("config file notification: ActiveMQ interface is disabled");
         return 0;
     }
@@ -67,7 +67,7 @@ int Controller::GetConfig() {
         return 0;
     }
     
-    if (!strcmp (user, "none")) {
+    if (!strcmp (user, "indef")) {
         user_pwd = false;
     }
     
@@ -84,7 +84,7 @@ int Controller::GetConfig() {
         return 0;
     }
     
-    if (!strcmp (cert, "none")) {
+    if (!strcmp (cert, "indef")) {
         ssl_broker = false;
     }
     
@@ -105,7 +105,7 @@ int Controller::GetConfig() {
         return 0;
     }
     
-    if (!strcmp (key, "none")) {
+    if (!strcmp (key, "indef")) {
         ssl_client = false;
     }
     
@@ -115,7 +115,7 @@ int Controller::GetConfig() {
         return 0;
     }
     
-    if (!strcmp (key_pwd, "none")) {
+    if (!strcmp (key_pwd, "indef")) {
         ssl_client = false;
     }
     

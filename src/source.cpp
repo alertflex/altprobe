@@ -24,7 +24,7 @@ int Source::GetConfig() {
     
     redis_key = cy->getParameter(config_key);
         
-    if (!redis_key.compare("none")) { 
+    if (!redis_key.compare("indef")) { 
             status = 0;
             string notification = "config file notification: redis interface is disabled for " + config_key;
             SysLog((char*) notification.c_str());
@@ -92,9 +92,9 @@ void Source::SendAlertMultiple(int type) {
     sk.alert.srcip = "";
     sk.alert.dstport = 0;
     sk.alert.srcport = 0;
-    sk.alert.dstagent = "none";
-    sk.alert.srcagent = "none";
-    sk.alert.user = "none";
+    sk.alert.dstagent = "indef";
+    sk.alert.srcagent = "indef";
+    sk.alert.user = "indef";
     
     string strNodeId(node_id);
     sk.alert.sensor = sensor_id;
@@ -131,7 +131,7 @@ void Source::SendAlertMultiple(int type) {
     
     sk.alert.list_cats.push_back("Multiple alert");
         
-    sk.alert.action = "none";
+    sk.alert.action = "indef";
         
     sk.alert.description = "Multiple alert";
     

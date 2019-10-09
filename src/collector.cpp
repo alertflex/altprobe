@@ -482,7 +482,7 @@ void Collector::UpdateFilters() {
 
 void Collector::UpdateFalcoConfig() {
     
-    if (!strcmp (falco_conf, "none")) return; 
+    if (!strcmp (falco_conf, "indef")) return; 
     
     try {
         
@@ -523,7 +523,7 @@ void Collector::UpdateFalcoConfig() {
 
 void Collector::UpdateOssecConfig() {
     
-    if (!strcmp (wazuh_conf, "none")) return; 
+    if (!strcmp (wazuh_conf, "indef")) return; 
     
     try {
         
@@ -563,7 +563,7 @@ void Collector::UpdateOssecConfig() {
 
 void Collector::UpdateSuriConfig() {
     
-    if (!strcmp (suri_conf, "none")) return; 
+    if (!strcmp (suri_conf, "indef")) return; 
     
     try {
         
@@ -602,7 +602,7 @@ void Collector::UpdateSuriConfig() {
 
 void Collector::UpdateModsecConfig() {
     
-    if (!strcmp (modsec_conf, "none")) return; 
+    if (!strcmp (modsec_conf, "indef")) return; 
     
     try {
         
@@ -637,7 +637,7 @@ void Collector::UpdateModsecConfig() {
 
 void Collector::UpdateFalcoRules() {
     
-    if (!strcmp (falco_rules, "none")) return; 
+    if (!strcmp (falco_rules, "indef")) return; 
     
     try {
         
@@ -687,7 +687,7 @@ void Collector::UpdateFalcoRules() {
 
 void Collector::UpdateOssecRules() {
     
-    if (!strcmp (wazuh_rules, "none")) return; 
+    if (!strcmp (wazuh_rules, "indef")) return; 
     
     try {
         
@@ -739,7 +739,7 @@ void Collector::UpdateOssecRules() {
 
 void Collector::UpdateSuriRules() {
     
-    if (!strcmp (suri_rules, "none")) return; 
+    if (!strcmp (suri_rules, "indef")) return; 
     
     try {
         
@@ -788,7 +788,7 @@ void Collector::UpdateSuriRules() {
 
 void Collector::UpdateModsecRules() {
     
-    if (!strcmp (modsec_rules, "none")) return; 
+    if (!strcmp (modsec_rules, "indef")) return; 
     
     try {
         
