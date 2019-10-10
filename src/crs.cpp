@@ -26,7 +26,7 @@ int Crs::Open() {
         if (falcolog_status) {
             
             fp = fopen(falco_log, "r");
-            if(fopen == NULL) {
+            if(fp == NULL) {
                 SysLog("failed open falco log file");
                 return 0;
             }

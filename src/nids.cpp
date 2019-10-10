@@ -21,7 +21,7 @@ int Nids::Open() {
         if (surilog_status) {
             
             fp = fopen(suri_log, "r");
-            if(fopen == NULL) {
+            if(fp == NULL) {
                 SysLog("failed open suricata log file");
                 return 0;
             }

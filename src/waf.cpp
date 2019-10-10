@@ -166,7 +166,7 @@ int Waf::Open() {
         if (modseclog_status) {
             
             fp = fopen(modsec_log, "r");
-            if(fopen == NULL) {
+            if(fp == NULL) {
                 SysLog("failed open nginx error log file");
                 return 0;
             }

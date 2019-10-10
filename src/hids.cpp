@@ -27,7 +27,7 @@ int Hids::Open() {
         if (wazuhlog_status) {
             
             fp = fopen(wazuh_log, "r");
-            if(fopen == NULL) {
+            if(fp == NULL) {
                 SysLog("failed open wazuh log file");
                 return 0;
             }
