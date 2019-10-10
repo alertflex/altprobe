@@ -1,5 +1,3 @@
-# Alertflex IDS collector (Altprobe)
-
 ## Cloud SOC
 
 ![](https://github.com/olegzhr/altprobe/blob/master/img/cloud-soc.png)
