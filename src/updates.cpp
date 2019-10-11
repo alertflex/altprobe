@@ -86,7 +86,7 @@ int Updates::Open() {
             string strConsumer("jms/altprobe/" + fs.filter.ref_id);
             
             Destination* consumerTopic = session->createTopic(strConsumer);
-                        
+            
             // Create a MessageConsumer from the Session to the Topic or Queue
             consumer = session->createConsumer(consumerTopic);
  

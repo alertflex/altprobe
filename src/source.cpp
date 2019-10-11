@@ -30,7 +30,7 @@ int Source::GetConfig() {
             SysLog((char*) notification.c_str());
     }
     else {
-        redis_key = "rpop " + redis_key;
+        redis_key = "lpop " + redis_key;
         status = 1;
     }
     
