@@ -18,14 +18,14 @@ export AMQ_USER=xxxxx
 export AMQ_PWD=*****
 export AMQ_CERT='\/etc\/altprobe\/Broker.pem'
 export CERT_VERIFY=true
-export AMQ_KEY=none
-export KEY_PWD=none
+export AMQ_KEY=indef
+export KEY_PWD=indef
 
 # sources
-# if *_LOG is "none", redis connection will use
-export FALCO_LOG=none
-export MODSEC_LOG=none
-export SURI_LOG=none
+# if *_LOG is "indef", redis connection will use
+export FALCO_LOG=indef
+export MODSEC_LOG=indef
+export SURI_LOG=indef
 export WAZUH_LOG='\/var\/ossec\/logs\/alerts\/alerts.json'
 
 # install add-on packages
