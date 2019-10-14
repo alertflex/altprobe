@@ -74,11 +74,13 @@ class Alias {
 public:
     string agent_name;
     string host_name;
+    string container_name;
     string ip;
         
     void Reset() {
         agent_name.clear();
         host_name.clear();
+        container_name.clear();
         ip.clear();
     }
     

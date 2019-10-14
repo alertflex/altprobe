@@ -150,7 +150,7 @@ void Source::SendAlertMultiple(int type) {
 
 string Source::GetAgent(string ip) {
     
-    if (ip.compare("") == 0) return "unknown";
+    if (ip.compare("") == 0) return "indef";
     
     string agent = fs.GetAgentNameByIP(ip);
     

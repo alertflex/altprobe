@@ -75,6 +75,7 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             
             al->agent_name = n_alias.second.get<string>("agent");
             al->host_name = n_alias.second.get<string>("host");
+            al->container_name = n_alias.second.get<string>("container");
             al->ip = n_alias.second.get<string>("ip");
                         
             if (al->ip.compare("indef") == 0) {
@@ -285,7 +286,7 @@ string FiltersSingleton::GetAgentNameByIP(string ip) {
         }
     }
     
-    return "unknown";
+    return "indef";
 }
 
 string FiltersSingleton::GetAgentIdByName(string name) {
