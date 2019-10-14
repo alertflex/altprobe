@@ -21,7 +21,7 @@ cd ~/altprobe/src
 
 sudo cp ../configs/centos7_configurations.xml ./nbproject/configurations.xml
 sudo cp ../configs/centos7_Makefile-Debug.mk ./nbproject/Makefile-Debug.mk
-sudo sed -i "s|activemq-cpp-3.10.0|activemq-cpp-3.9.3|g" ./controller.cpp
+sudo sed -i "s|activemq-cpp-3.9.5|activemq-cpp-3.9.3|g" ./controller.cpp
 
 sudo make
 sudo make install
