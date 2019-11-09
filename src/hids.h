@@ -123,7 +123,7 @@ public:
     //OSSEC record
     OssecRecord rec;
     
-    bpt::ptree pt, pt1, groups_cats, pcidss_cats;
+    bpt::ptree pt, pt1, groups_cats, pcidss_cats, gdpr_cats, hipaa_cats, nist_cats;
     stringstream ss, ss1;
     
     Hids (string skey) : Source(skey) {

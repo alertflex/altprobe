@@ -31,10 +31,10 @@ int  Collector::Open() {
     ref_id = hids->fs.filter.ref_id;
     
     if (wazuhServerStatus) {
-        string payload = GetAgentsStatus();
+        string payload = WazuhGet("/agents?pretty");
         if (!payload.empty()){
             SysLog("connection between Wazuh server and Altprobe is established");
-            ParsAgentsStatus(payload);
+            ParsAgents(payload);
         }
         else {
             wazuhServerStatus = false;
@@ -254,10 +254,10 @@ void Collector::RoutineJob() {
     ss.clear();
         
     if (wazuhServerStatus) {
-        string payload = GetAgentsStatus();
+        string payload = WazuhGet("/agents");
         if (!payload.empty()) {
             
-            ParsAgentsStatus(payload);
+            ParsAgents(payload);
         
             if (fs.agents_list.size() != 0) {
         
@@ -311,12 +311,27 @@ void Collector::RoutineJob() {
                 
                 report += " ] }";
                 q_stats_collr.push(report);
+                
+                for (i = fs.agents_list.begin(), end = fs.agents_list.end(); i != end; ++i) {
+                    
+                    payload = WazuhGet("/sca/" + i->id);
+                    
+                    ControllerPush(payload,"sca",i->id);
+                    
+                    payload = WazuhGet("/syscollector/" + i->id + "/processes");
+                    
+                    ControllerPush(payload,"processes",i->id);
+                    
+                    payload = WazuhGet("/syscollector/" + i->id + "/packages");
+                    
+                    ControllerPush(payload,"packages",i->id);
+                }
             }
         }
     }
 }
 
-string Collector::GetAgentsStatus() {
+string Collector::WazuhGet(string queryStr) {
     try
     {
         boost::asio::io_service io_service;
@@ -344,7 +359,7 @@ string Collector::GetAgentsStatus() {
             return "";
         }
         
-        string queryStr = "/agents?pretty";
+        // string queryStr = "/agents?pretty";
 
         tcp::resolver resolver(io_service);
         tcp::resolver::query query(ip, port);
@@ -407,35 +422,38 @@ string Collector::GetAgentsStatus() {
    
 }
 
-void Collector::ParsAgentsStatus (string status) {
+void Collector::ParsAgents (string json) {
     
-    stringstream ss(status);
+    stringstream ss(json);
     
     try {
     
         bpt::ptree pt;
         bpt::read_json(ss, pt);
         
-        int error =  pt.get<int>("error");
-    
-        int totalItems =  pt.get<int>("data.totalItems");
-    
-        bpt::ptree agents_ptree = pt.get_child("data.items");
-    
-        BOOST_FOREACH(bpt::ptree::value_type &agents, agents_ptree) {
-            
-            string id = agents.second.get<string>("id");
-            string ip = agents.second.get<string>("ip");
-            string name = agents.second.get<string>("name");
-            string status = agents.second.get<string>("status");
-            string dateAdd = agents.second.get<string>("dateAdd");
-            string version = agents.second.get<string>("version");
-            string manager_host = agents.second.get<string>("manager");
-            string os_platform = agents.second.get<string>("os.platform", "indef");
-            string os_version = agents.second.get<string>("os.version", "indef");
-            string os_name = agents.second.get<string>("os.name", "indef");
+        int err =  pt.get<int>("error");
         
-            fs.UpdateAgentsList(id, ip, name, status, dateAdd, version, manager_host, os_platform, os_version, os_name);
+        if(err == 0) {
+    
+            int totalItems =  pt.get<int>("data.totalItems");
+    
+            bpt::ptree agents_ptree = pt.get_child("data.items");
+    
+            BOOST_FOREACH(bpt::ptree::value_type &agents, agents_ptree) {
+            
+                string id = agents.second.get<string>("id");
+                string ip = agents.second.get<string>("ip");
+                string name = agents.second.get<string>("name");
+                string status = agents.second.get<string>("status");
+                string dateAdd = agents.second.get<string>("dateAdd");
+                string version = agents.second.get<string>("version");
+                string manager_host = agents.second.get<string>("manager");
+                string os_platform = agents.second.get<string>("os.platform", "indef");
+                string os_version = agents.second.get<string>("os.version", "indef");
+                string os_name = agents.second.get<string>("os.name", "indef");
+        
+                fs.UpdateAgentsList(id, ip, name, status, dateAdd, version, manager_host, os_platform, os_version, os_name);
+            }
         }
         
         pt.clear();
@@ -445,6 +463,37 @@ void Collector::ParsAgentsStatus (string status) {
     } 
     
     return;
+}
+
+void Collector::ControllerPush(string json, string type, string agent) {
+    
+    stringstream ss(json);
+    stringstream ss1;
+    
+    bpt::ptree pt;
+        
+    try {
+    
+        bpt::read_json(ss, pt);
+        
+        int err = pt.get<int>("error");
+        
+        if(err == 0) {
+        
+            pt.put("type",type);
+            pt.put("agent",agent);
+            
+            bpt::write_json(ss1, pt);
+            
+            q_stats_collr.push(ss1.str());
+            
+            pt.clear();
+            
+        }
+            
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+    } 
 }
 
 void Collector::UpdateFilters() {

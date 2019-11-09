@@ -284,7 +284,7 @@ int Hids::ParsJson() {
     
     if (loc.compare("wodle_open-scap") == 0 ) {
     
-        report = "{ \"type\": \"compliance\", \"data\": ";
+        report = "{ \"type\": \"openscap\", \"data\": ";
         
         report += "{ \"ref_id\": \"";
         report += fs.filter.ref_id;
@@ -500,6 +500,43 @@ int Hids::ParsJson() {
                 assert(v.first.empty()); // array elements have no names
                 string pcidss = "pci_dss_" + v.second.data();
                 rec.rule.list_cats.push_back(pcidss);
+            }  
+    
+        } catch (bpt::ptree_bad_path& e) {}
+        
+        try {
+    
+            hipaa_cats = pt.get_child("rule.hipaa");
+            
+            BOOST_FOREACH(bpt::ptree::value_type &v, hipaa_cats) {
+                assert(v.first.empty()); // array elements have no names
+                string hipaa = "hipaa_" + v.second.data();
+                rec.rule.list_cats.push_back(hipaa);
+            }  
+    
+        } catch (bpt::ptree_bad_path& e) {}
+        
+        
+        try {
+    
+            gdpr_cats = pt.get_child("rule.gdpr");
+            
+            BOOST_FOREACH(bpt::ptree::value_type &v, gdpr_cats) {
+                assert(v.first.empty()); // array elements have no names
+                string gdpr = "gdpr_" + v.second.data();
+                rec.rule.list_cats.push_back(gdpr);
+            }  
+    
+        } catch (bpt::ptree_bad_path& e) {}
+        
+        try {
+    
+            nist_cats = pt.get_child("rule.nist_800_53");
+            
+            BOOST_FOREACH(bpt::ptree::value_type &v, nist_cats) {
+                assert(v.first.empty()); // array elements have no names
+                string nist = "nist_800_53_" + v.second.data();
+                rec.rule.list_cats.push_back(nist);
             }  
     
         } catch (bpt::ptree_bad_path& e) {}

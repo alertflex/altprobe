@@ -33,11 +33,12 @@ using boost::asio::ip::tcp;
 using namespace std;
 namespace bpt = boost::property_tree;
 
+
 class Collector : public Source {
 public: 
     
     std::vector<Agent> agents_list;
-    
+        
     Hids* hids;
     Nids* nids; 
     Waf* waf; 
@@ -87,8 +88,9 @@ public:
     void UpdateOssecRules();
     void UpdateModsecRules();
         
-    void ParsAgentsStatus(string status);
-    string GetAgentsStatus();
+    void ParsAgents(string json);
+    void ControllerPush(string json, string type, string agent);
+    string WazuhGet(string query);
     
     void ResetStreams() {
         comp.str("");
