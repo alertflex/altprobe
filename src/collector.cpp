@@ -31,7 +31,7 @@ int  Collector::Open() {
     ref_id = hids->fs.filter.ref_id;
     
     if (wazuhServerStatus) {
-        string payload = WazuhGet("/agents?pretty");
+        string payload = WazuhGet("/agents");
         if (!payload.empty()){
             SysLog("connection between Wazuh server and Altprobe is established");
             ParsAgents(payload);
