@@ -34,14 +34,12 @@ public:
         
     virtual int Open();
     virtual void Close();
-    virtual bool Reset();
     virtual int GetConfig();
     int GetStatus() {
         return update_status;
     }
     
     int Go();
-    void RoutineJob();
     void onMessage(const Message* message);
     void onException(const CMSException& ex AMQCPP_UNUSED);
     int IsHomeNetwork(string ip);   

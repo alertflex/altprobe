@@ -7,6 +7,12 @@
 #include <mutex>
 #include <activemq-cpp-3.9.5/cms/Message.h>
 
+#include <libdaemon/dfork.h>
+#include <libdaemon/dsignal.h>
+#include <libdaemon/dlog.h>
+#include <libdaemon/dpid.h>
+#include <libdaemon/dexec.h>
+
 #include "controller.h"
 
 int Controller::mq_counter = 0;
@@ -31,8 +37,8 @@ Destination* Controller::destAlerts;
 MessageProducer* Controller::producerAlerts;
 Destination* Controller::destInfo;
 MessageProducer* Controller::producerInfo;
-bool Controller::sessionTransacted;
-bool Controller::connection_status;
+bool Controller::sessionTransacted = false;
+int Controller::connection_error = 0;
 
 int Controller::GetConfig() {
        
@@ -121,6 +127,16 @@ int Controller::GetConfig() {
     
        
     return 1;
+}
+
+void Controller::CheckStatus() {
+    if (connection_error > 10) {
+        if (daemon_pid_file_kill_wait(SIGTERM, 5) < 0)
+            // daemon_log(LOG_ERR, "Failed to kill AlertFlex collector: %s.", strerror(errno));
+            SysLog( "Failed to kill alertflex collector, update module.");
+            // else daemon_log(LOG_ERR, "AlertFlex collector is stopping.");
+        else SysLog( "Alertflex collector is stopping, update module.");
+    }
 }
 
 int Controller::Open() {
@@ -221,7 +237,6 @@ int Controller::Open() {
         
     } while (!amq_conn);
     
-    connection_status = true;
     return 1;
 }
 
@@ -394,120 +409,11 @@ int Controller::SendMessage(Event* e) {
         
     } catch (CMSException& e) {
         SysLog("ActiveMQ CMS Exception occurred.");
+        connection_error++;
         return 0;
     }
         
     return 1;
-}
-
-bool Controller::Reset() {
-    
-    try {
-        
-        if (connection_status) {
-                
-            if (connection != NULL) {
-                connection->close();
-                connection = NULL;
-            }
-                
-            if (destAlerts != NULL) {
-                delete destAlerts;
-                destAlerts = NULL;
-            }
-            
-            if (destInfo != NULL) {
-                delete destInfo;
-                destInfo = NULL;
-            }
-        
-            if (producerAlerts != NULL) {
-                delete producerAlerts;
-                producerAlerts = NULL;
-            }
-            
-            if (producerInfo != NULL) {
-                delete producerInfo;
-                producerInfo = NULL;
-            }
-                
-            if (session != NULL) {
-                delete session;
-                session = NULL;
-            }
-                
-            connection_status = false;
-        }
-            
-        if (!connection_status) {
-            
-            if (connection == NULL) {
-                
-                // Create a ConnectionFactory
-                string strUrl(url);
-            
-                unique_ptr<ConnectionFactory> connectionFactory(
-                    ConnectionFactory::createCMSConnectionFactory(strUrl));
-            
-                // Create a Connection
-                if (user_pwd) {
-                    connection = connectionFactory->createConnection(user,pwd);
-                } else {
-                    connection = connectionFactory->createConnection();
-                }
-                
-                connection->start();
-            }
-            
-            if (session == NULL) {
-        
-                // Create a Session
-                if (this->sessionTransacted) {
-                    session = connection->createSession(Session::SESSION_TRANSACTED);
-                } else {
-                    session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
-                }
-            }
-            
-            if (destAlerts == NULL) {
-                // Create the destination for alerts
-                string strAlerts("jms/alertflex/alerts");
-            
-                destAlerts = session->createTopic(strAlerts);
-            }
-            
-            if (producerAlerts == NULL) {
-                // Create a MessageProducer from the Session to the Queue
-                producerAlerts = session->createProducer(destAlerts);
-       
-                producerAlerts->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
-            }
-            
-            if (destInfo == NULL) {
-                // Create the destination for statistics(Queue)
-                string strInfo("jms/alertflex/info");
-            
-                destInfo = session->createQueue(strInfo);
-            }
-            
-            if (producerInfo == NULL) {
-                // Create a MessageProducer from the Session to the Queue
-                producerInfo = session->createProducer(destInfo);
-       
-                producerInfo->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
-            }
-                       
-            connection_status = true;
-        }
-        
-    } catch (CMSException& e) {
-        SysLog("activeMQ operation error: reset");
-        string str = e.getMessage();
-        const char * c = str.c_str();
-        SysLog((char*) c);
-    }
-    
-    return connection_status;
 }
 
 void Controller::Close() {

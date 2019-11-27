@@ -68,22 +68,11 @@ void Sinks::Close() {
 
 int Sinks::SendMessage(Event* e) { 
     
-    bool res = true;
-    
-    if (ctrl_error_counter > 0) res = ctrl.Reset();
-    
-    if (res) {
-        
-        if (!ctrl.SendMessage(e)) {
-            if (ctrl_error_counter == 0) SysLog("Error of sending alert to controller");
-            ctrl_error_counter++;
-            return 0;
-        } else ctrl_error_counter = 0;
-        
-        return 1;
+    if (!ctrl.SendMessage(e)) {
+       ctrl.CheckStatus();
+       return 0;
     }
-    
-    return 0;
+    return 1;
 }
 
 void Sinks::SendAlert(void) {

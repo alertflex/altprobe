@@ -58,7 +58,7 @@ public:
     static Destination* destInfo;
     static MessageProducer* producerInfo;
     static bool sessionTransacted;
-    static bool connection_status;
+    static int connection_error;
     
     Controller () {
         memset(url, 0, sizeof(url));
@@ -74,13 +74,11 @@ public:
         producerAlerts = NULL;
         destInfo = NULL;
         producerInfo = NULL;
-        sessionTransacted = false;
-        connection_status = false;
     }
      
     virtual int Open();
-    virtual bool Reset();
     virtual int GetConfig();
+    void CheckStatus();
     int SendMessage(Event* e);
     virtual void Close();
     

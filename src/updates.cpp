@@ -17,6 +17,7 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <iostream>
+
 #include "updates.h"
 
 
@@ -111,22 +112,16 @@ int Updates::Open() {
         
     } while (!amq_conn);
     
-    connection_status = true;
     return 1;
 }
 
 int Updates::Go(void) {
     
     sleep(1);
-    RoutineJob();
+    CheckStatus();
     
     return 1;
 }
-
-void Updates::RoutineJob() {
-    if (!connection_status) Reset();
-}
-
 
 // Called from the consumer since this class is a registered MessageListener.
 void Updates::onMessage(const Message* message) {
@@ -391,7 +386,9 @@ void Updates::onMessage(const Message* message) {
         }
         
     } catch (CMSException& e) {
-        SysLog("ActiveMQ CMS Exception occurred.");
+        SysLog("ActiveMQ CMS Exception occurred: update module");
+        connection_error++;
+        return;
     }
  
     if (this->sessionTransacted) {
@@ -403,7 +400,7 @@ void Updates::onMessage(const Message* message) {
 // registered as an ExceptionListener with the connection.
 void Updates::onException(const CMSException& ex AMQCPP_UNUSED) {
     SysLog("ActiveMQ CMS Exception occurred: update module");
-    connection_status =  false;
+    connection_error++;
 }
 
 void Updates::Close() {
@@ -435,88 +432,6 @@ void Updates::Close() {
     }
 }
 
-
-bool Updates::Reset() {
-    
-    try {
-        
-        if (connection_status) {
-                
-            if (connection != NULL) {
-                connection->close();
-                connection = NULL;
-            }
-                
-            if (consumer != NULL) {
-                delete consumerTopic;
-                consumerTopic = NULL;
-                delete consumer;
-                consumer = NULL;
-            }
-                
-            if (session != NULL) {
-                delete session;
-                session = NULL;
-            }
-                
-            connection_status = false;
-        }
-            
-        if (!connection_status) {
-            
-            if (connection == NULL) {
-                
-                // Create a ConnectionFactory
-                string strUrl(url);
-            
-                unique_ptr<ConnectionFactory> connectionFactory(
-                    ConnectionFactory::createCMSConnectionFactory(strUrl));
-            
-                // Create a Connection
-                if (user_pwd) {
-                    connection = connectionFactory->createConnection(user,pwd);
-                } else {
-                    connection = connectionFactory->createConnection();
-                }
-                
-                connection->start();
-            }
-            
-            if (session == NULL) {
-        
-                // Create a Session
-                if (this->sessionTransacted) {
-                    session = connection->createSession(Session::SESSION_TRANSACTED);
-                } else {
-                    session = connection->createSession(Session::AUTO_ACKNOWLEDGE);
-                }
-                
-            }
-            
-            if (consumer == NULL) {
-                // Create the destination (Topic or Queue)
-                string strConsumer("jms/altprobe/" + fs.filter.ref_id);
-                        
-                Destination* consumerTopic = session->createTopic(strConsumer);
-                        
-                // Create a MessageConsumer from the Session to the Topic or Queue
-                consumer = session->createConsumer(consumerTopic);
- 
-                consumer->setMessageListener(this);
-            }
-            
-            connection_status = true;
-        }
-        
-    } catch (CMSException& e) {
-        SysLog("activeMQ operation error: reset");
-        string str = e.getMessage();
-        const char * c = str.c_str();
-        SysLog((char*) c);
-    }
-    
-    return connection_status;
-}
 
 int Updates::IsHomeNetwork(string ip) {
     
