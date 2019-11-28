@@ -128,12 +128,15 @@ then
 [Unit]
 Description=Altprobe
 After=wazuh-manager.service wazuh-api.service
-
 [Service]
 Type=forking
 User=root
 ExecStart=/usr/local/bin/altprobe start
-
+ExecStop=/usr/local/bin/altprobe stop
+ExecReload=/usr/local/bin/altprobe-restart
+PIDFile=/var/run/altprobe.pid
+Restart=on-failure
+RestartSec=30s
 [Install]
 WantedBy=multi-user.target
 EOF'
@@ -142,18 +145,23 @@ else
 [Unit]
 Description=Altprobe
 After=syslog.target network-online.target
-
 [Service]
 Type=forking
 User=root
 ExecStart=/usr/local/bin/altprobe start
-
+ExecStop=/usr/local/bin/altprobe stop
+ExecReload=/usr/local/bin/altprobe-restart
+PIDFile=/var/run/altprobe.pid
+Restart=on-failure
+RestartSec=30s
 [Install]
 WantedBy=multi-user.target
 EOF'
 fi
 
-sudo systemctl enable altprobe
+sudo systemctl daemon-reload
+sudo systemctl enable altprobe.service
+sudo systemctl start altprobe.service
 
 if [[ $INSTALL_FILEBEAT == true ]]
 then
