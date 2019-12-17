@@ -80,6 +80,7 @@ public:
     virtual int GetConfig();
     void CheckStatus();
     int SendMessage(Event* e);
+    int SendAgentInfo(string ref, string node, string agent, string json);
     virtual void Close();
     
 };

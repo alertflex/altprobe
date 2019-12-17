@@ -36,8 +36,6 @@ export INTERFACE=enp0s3
 export INSTALL_WAZUH=true
 export WAZUH_USER=foo
 export WAZUH_PWD=bar
-# filebeat package for transport of alerts from file to redis
-export INSTALL_FILEBEAT=false
 
 
 

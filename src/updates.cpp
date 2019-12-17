@@ -354,16 +354,17 @@ void Updates::onMessage(const Message* message) {
                 const TextMessage* textMessage = dynamic_cast<const TextMessage*> (message);
         
                 string text = textMessage->getText();
-                stringstream ss(text);
                 
-                if (sensor_id.compare("master")) {
+                if (!sensor_id.compare("master")) {
         
                     try {
         
-                        bpt::ptree pt;
-                        bpt::read_json(ss, pt);
-        
                         if (!content_type.compare("active_response") && arStatus) {
+                            
+                            stringstream ss(text);
+                            
+                            bpt::ptree pt;
+                            bpt::read_json(ss, pt);
                     
                             string agent_name = pt.get<string>("agent");
                             string json = pt.get<string>("json");
@@ -375,7 +376,15 @@ void Updates::onMessage(const Message* message) {
                             if (!agent_id.empty()) SendArToWazuh(agent_id, json);
                     
                             string log = "ar_json: " + json;
-                            SysLog((char*) log.c_str());
+                            // SysLog((char*) log.c_str());
+                        }
+                        
+                        if (!content_type.compare("create_agent") && arStatus) {
+                            string agent_name = message->getStringProperty("agent_name");
+                            string post_response = CreateAgentWazuh(text);
+                            if (!post_response.empty()) {
+                                SendAgentInfo(fs.filter.ref_id, node, agent_name, post_response);
+                            }
                         }
                 
                     } catch (const std::exception & ex) {
@@ -481,8 +490,8 @@ int Updates::SendArToWazuh(string agent, string json) {
             return 0;
         }
         
-        string queryStr = "/active-response/" + agent + "?pretty";
-
+        string queryStr = "/active-response/" + agent;
+        
         // Get a list of endpoints corresponding to the server name.
         tcp::resolver resolver(io_service);
         tcp::resolver::query query(ip, port);
@@ -497,7 +506,7 @@ int Updates::SendArToWazuh(string agent, string json) {
         request_stream << "Host: " << hostAddress << "\r\n";
         request_stream << "Authorization: Basic "<< encoded << "\r\n";
         request_stream << "Accept: */*\r\n";
-        request_stream << "Content-Type:application/json \r\n";
+        request_stream << "Content-Type:application/json\r\n";
         request_stream << "Content-Length: " << json.length() << "\r\n";    
         request_stream << "Connection: close\r\n\r\n";  //NOTE THE Double line feed
         request_stream << json; 
@@ -558,6 +567,114 @@ int Updates::SendArToWazuh(string agent, string json) {
     }
 
     return 0;
+}
+
+string Updates::CreateAgentWazuh(string json) {
+    try
+    {
+        boost::asio::io_service io_service;
+        
+        string hostAddress;
+        string ip(wazuh_host);
+        stringstream ss;
+        ss << wazuh_port;
+        string port = ss.str();
+        
+        if (wazuh_port != 80) {
+            hostAddress = ip + ":" + port;
+        } else { 
+            
+            hostAddress = ip;
+        }
+        
+        string user(wazuh_user);
+        string pwd(wazuh_pwd);
+        string token = user + ":" + pwd;
+        
+        string encoded;
+        
+        if (!Base64::Encode(token, &encoded)) {
+            return 0;
+        }
+        
+        string queryStr = "/agents";
+
+        // Get a list of endpoints corresponding to the server name.
+        tcp::resolver resolver(io_service);
+        tcp::resolver::query query(ip, port);
+        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+
+        tcp::socket socket(io_service);
+        boost::asio::connect(socket, endpoint_iterator);
+        
+        boost::asio::streambuf request;
+        ostream request_stream(&request);
+        request_stream << "POST " << queryStr << " HTTP/1.1\r\n";  // note that you can change it if you wish to HTTP/1.0
+        request_stream << "Host: " << hostAddress << "\r\n";
+        request_stream << "Authorization: Basic "<< encoded << "\r\n";
+        request_stream << "Accept: */*\r\n";
+        request_stream << "Content-Type:application/json\r\n";
+        request_stream << "Content-Length: " << json.length() << "\r\n\r\n";
+        request_stream << json;
+        
+        boost::asio::write(socket, request);
+
+        // Read the response status line. The response streambuf will automatically
+        // grow to accommodate the entire line. The growth may be limited by passing
+        // a maximum size to the streambuf constructor.
+        
+        boost::asio::streambuf response;
+        boost::asio::read_until(socket, response, "\r\n");
+
+        // Check that response is OK.
+        istream response_stream(&response);
+        string http_version;
+        response_stream >> http_version;
+        unsigned int status_code;
+        response_stream >> status_code;
+        string status_message;
+        getline(response_stream, status_message);
+        
+        if (!response_stream || http_version.substr(0, 5) != "HTTP/") return "";
+        
+        if (status_code != 200) {
+            return "";
+        }
+        
+        // Read the response headers, which are terminated by a blank line.
+        boost::asio::read_until(socket, response, "\r\n\r\n");
+
+        // Process the response headers.
+        string header;
+        while (getline(response_stream, header) && header != "\r") { }
+        
+        stringstream  payload;
+        // Write whatever content we already have to output.
+        if (response.size() > 0) {
+            payload << &response;
+        }
+
+        // Read until EOF, writing data to output as we go.
+        boost::system::error_code error;
+        while (boost::asio::read(socket, response,boost::asio::transfer_at_least(1), error)) {
+            payload << &response;
+        }
+
+        if (error != boost::asio::error::eof) {
+            throw boost::system::system_error(error);
+        }
+        
+        //string s = std::to_string(rep_size);
+        //string output = "logs compressed = " + s;
+        //SysLog((char*) payload.str().c_str());
+        return payload.str();
+        
+    }
+    catch (std::exception& e) {
+     
+    }
+
+    return "";
 }
 
 

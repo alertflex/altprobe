@@ -152,15 +152,4 @@ fi
 
 sudo systemctl daemon-reload
 sudo systemctl enable altprobe.service
-sudo systemctl start altprobe.service
 
-if [[ $INSTALL_FILEBEAT == true ]]
-then
-    echo "*** installation filebeat***"
-	curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-6.5.1-x86_64.rpm
-	sudo rpm -vi filebeat-6.5.1-x86_64.rpm
-	sudo cp ./configs/filebeat.yml /etc/filebeat/
-	sudo systemctl enable filebeat
-fi
-
-cd ..

@@ -44,6 +44,7 @@ public:
     void onException(const CMSException& ex AMQCPP_UNUSED);
     int IsHomeNetwork(string ip);   
     int SendArToWazuh(string agent, string json);
+    string CreateAgentWazuh(string json);
 };
 
 #endif	/* UPDATES_H */

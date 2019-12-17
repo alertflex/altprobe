@@ -11,7 +11,6 @@ then
 fi
 
 echo "*** Installation alertflex collector started***"
-sudo add-apt-repository ppa:maxmind/ppa -y
 sudo apt-get update
 sudo apt-get -y install libpcre3 libpcre3-dbg libpcre3-dev  libnss3-dev libc6-dev libnspr4-dev build-essential autoconf automake libtool libpcap-dev libnet1-dev \
 libyaml-0-2 libyaml-dev zlib1g zlib1g-dev libcap-ng-dev libcap-ng0 libmagic-dev libjansson-dev libjansson4 libdaemon-dev libboost-all-dev \
@@ -161,19 +160,6 @@ fi
 
 sudo systemctl daemon-reload
 sudo systemctl enable altprobe.service
-sudo systemctl start altprobe.service
-
-if [[ $INSTALL_FILEBEAT == true ]]
-then
-    echo "*** installation filebeat***"
-	sudo apt-get update
-	curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-6.2.2-amd64.deb
-	sudo dpkg -i filebeat-6.2.2-amd64.deb
-	sudo cp ./configs/filebeat.yml /etc/filebeat/
-	sudo systemctl enable filebeat
-fi
-
-cd ..
 
 
 

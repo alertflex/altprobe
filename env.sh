@@ -29,15 +29,14 @@ export SURI_LOG=indef
 export WAZUH_LOG='\/var\/ossec\/logs\/alerts\/alerts.json'
 
 # install add-on packages
-export INSTALL_REDIS=true
-export INSTALL_FALCO=true
-export INSTALL_SURICATA=true
+export INSTALL_REDIS=false
+export INSTALL_FALCO=false
+export INSTALL_SURICATA=false
 export INTERFACE=xxx
 export INSTALL_WAZUH=true
 export WAZUH_USER=foo
 export WAZUH_PWD=bar
-# filebeat package for transport of alerts from file to redis
-export INSTALL_FILEBEAT=false
+
 
 
 

@@ -416,6 +416,24 @@ int Controller::SendMessage(Event* e) {
     return 1;
 }
 
+int Controller::SendAgentInfo(string ref, string node, string agent, string json) {
+    
+    try {
+        auto_ptr<TextMessage> message(session->createTextMessage(json));
+        message->setStringProperty("agent_name", agent);
+        message->setStringProperty("node_id", node);
+        message->setStringProperty("ref_id", ref);
+        message->setIntProperty("msg_type", 1);
+        producerInfo->send(message.get());
+    } catch (CMSException& e) {
+        SysLog("Agents info wasn't send");
+        connection_error++;
+        return 0;
+    }
+        
+    return 1;
+}
+
 void Controller::Close() {
  
     if (connection != NULL) {
