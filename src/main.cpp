@@ -619,8 +619,8 @@ int start(pid_t pid) {
 }
 
 static void sigHandler (int signo) {
+    SysLog("got SIGHUP, SIGINT, SIGQUIT or SIGTERM\n");
     KillsThreads();
-    printf ("got SIGHUP, SIGINT, SIGQUIT or SIGTERM\n");
     exit (EXIT_SUCCESS);
 }
 
