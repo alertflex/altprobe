@@ -16,7 +16,7 @@
 boost::lockfree::spsc_queue<string> q_logs_hids{LOG_QUEUE_SIZE};
 boost::lockfree::spsc_queue<string> q_compliance{LOG_QUEUE_SIZE};
 
-int Hids::Open() {
+int Hids::Open(int mode, int pid) {
     
     char level[OS_HEADER_SIZE];
     

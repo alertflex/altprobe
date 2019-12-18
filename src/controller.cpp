@@ -38,7 +38,10 @@ MessageProducer* Controller::producerAlerts;
 Destination* Controller::destInfo;
 MessageProducer* Controller::producerInfo;
 bool Controller::sessionTransacted = false;
+
 int Controller::connection_error = 0;
+int Controller::altprobe_mode = 1;
+int Controller::p_pid = 0;
 
 int Controller::GetConfig() {
        
@@ -130,12 +133,22 @@ int Controller::GetConfig() {
 }
 
 void Controller::CheckStatus() {
+    
+    connection_error++;
+    
     if (connection_error > 10) {
-        if (daemon_pid_file_kill_wait(SIGTERM, 5) < 0)
-            // daemon_log(LOG_ERR, "Failed to kill AlertFlex collector: %s.", strerror(errno));
-            SysLog( "Failed to kill alertflex collector, update module.");
-            // else daemon_log(LOG_ERR, "AlertFlex collector is stopping.");
-        else SysLog( "Alertflex collector is stopping, update module.");
+        
+        if (altprobe_mode == 1) {
+            if (daemon_pid_file_kill_wait(SIGTERM, 5) < 0)
+                // daemon_log(LOG_ERR, "Failed to kill AlertFlex collector: %s.", strerror(errno));
+                SysLog( "Failed to kill alertflex collector, update/controller module.");
+                // else daemon_log(LOG_ERR, "AlertFlex collector is stopping.");
+            else SysLog( "Alertflex collector is stopping, update/controller module.");
+        } else {
+            kill(p_pid, SIGTERM); 
+            SysLog( "Alertflex collector is stopping, update/controller module.");
+        }
+        
     }
 }
 
@@ -409,7 +422,7 @@ int Controller::SendMessage(Event* e) {
         
     } catch (CMSException& e) {
         SysLog("ActiveMQ CMS Exception occurred.");
-        connection_error++;
+        CheckStatus();
         return 0;
     }
         
@@ -427,7 +440,7 @@ int Controller::SendAgentInfo(string ref, string node, string agent, string json
         producerInfo->send(message.get());
     } catch (CMSException& e) {
         SysLog("Agents info wasn't send");
-        connection_error++;
+        CheckStatus();
         return 0;
     }
         

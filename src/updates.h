@@ -32,7 +32,7 @@ public:
         update_status = 0;
     }
         
-    virtual int Open();
+    virtual int Open(int mode, int pid);
     virtual void Close();
     virtual int GetConfig();
     int GetStatus() {

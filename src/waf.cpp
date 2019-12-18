@@ -155,7 +155,7 @@ int ModsecRecord::ParsRecord(const string rec) {
     return 1;
 }
 
-int Waf::Open() {
+int Waf::Open(int mode, int pid) {
     
     char level[OS_HEADER_SIZE];
     

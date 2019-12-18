@@ -58,7 +58,10 @@ public:
     static Destination* destInfo;
     static MessageProducer* producerInfo;
     static bool sessionTransacted;
+    
     static int connection_error;
+    static int altprobe_mode;
+    static int p_pid;
     
     Controller () {
         memset(url, 0, sizeof(url));

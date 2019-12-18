@@ -23,7 +23,7 @@ int StatFlows::GetConfig() {
 }
 
 
-int  StatFlows::Open() {
+int  StatFlows::Open(int mode, int pid) {
     
     if (!sk.Open()) return 0;
     

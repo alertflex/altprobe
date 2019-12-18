@@ -229,7 +229,7 @@ public:
     
     std::vector<ContainerStat> container_stat;
     
-    virtual int Open();
+    virtual int Open(int mode, int pid);
     virtual void Close();
     
     virtual int GetConfig();

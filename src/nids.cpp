@@ -10,7 +10,7 @@
 
 boost::lockfree::spsc_queue<string> q_logs_nids{LOG_QUEUE_SIZE};
 
-int Nids::Open() {
+int Nids::Open(int mode, int pid) {
     
     char level[OS_HEADER_SIZE];
     

@@ -30,10 +30,13 @@ int Updates::GetConfig() {
     return update_status;
 }
 
-int Updates::Open() {
+int Updates::Open(int mode, int pid) {
     
     bool amq_conn = false;
     int conn_attempts = 0;
+    
+    altprobe_mode = mode;
+    p_pid = pid;
     
     do {
         try {
@@ -396,7 +399,7 @@ void Updates::onMessage(const Message* message) {
         
     } catch (CMSException& e) {
         SysLog("ActiveMQ CMS Exception occurred: update module");
-        connection_error++;
+        CheckStatus();
         return;
     }
  
@@ -409,7 +412,7 @@ void Updates::onMessage(const Message* message) {
 // registered as an ExceptionListener with the connection.
 void Updates::onException(const CMSException& ex AMQCPP_UNUSED) {
     SysLog("ActiveMQ CMS Exception occurred: update module");
-    connection_error++;
+    CheckStatus();
 }
 
 void Updates::Close() {

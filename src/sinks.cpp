@@ -69,7 +69,6 @@ void Sinks::Close() {
 int Sinks::SendMessage(Event* e) { 
     
     if (!ctrl.SendMessage(e)) {
-       ctrl.CheckStatus();
        return 0;
     }
     return 1;

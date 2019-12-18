@@ -50,7 +50,7 @@ public:
     
     virtual int GetConfig();
     
-    virtual int Open();
+    virtual int Open(int mode, int pid);
     virtual void Close();
     
     int Go();

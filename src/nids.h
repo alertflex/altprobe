@@ -212,7 +212,7 @@ public:
         pt.clear();
     }
     
-    virtual int Open();
+    virtual int Open(int mode, int pid);
     virtual void Close();
     int ReadFile();
     void IsFileModified();

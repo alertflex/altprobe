@@ -38,7 +38,7 @@ int Source::GetConfig() {
 }
 
 
-int Source::Open() {
+int Source::Open(int mode, int pid) {
     
     char level[OS_HEADER_SIZE];
     

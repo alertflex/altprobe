@@ -247,13 +247,13 @@ int LoadConfig(void)
 }
 
        
-int InitThreads(void)
+int InitThreads(int mode, int pid)
 {
     int arg = 1;
     
     //statids
     if (statids.GetStatus()) {
-        if (!statids.Open()) {
+        if (!statids.Open(mode,pid)) {
             daemon_log(LOG_ERR,"cannot open ids stat service");
             return 0;
         }
@@ -266,7 +266,7 @@ int InitThreads(void)
     
     //traffic
     if (statflows.GetStatus()) {
-        if (!statflows.Open()) {
+        if (!statflows.Open(mode,pid)) {
             daemon_log(LOG_ERR,"cannot open statflow service");
             return 0;
         }
@@ -279,7 +279,7 @@ int InitThreads(void)
     
     //misc
     if (misc.GetStatus()) {
-        if (!misc.Open()) {
+        if (!misc.Open(mode,pid)) {
             daemon_log(LOG_ERR,"cannot open Misc server");
             return 0;
         }
@@ -293,7 +293,7 @@ int InitThreads(void)
     //hids
     if (hids.GetStatus()) {
         
-        if (!hids.Open()) {
+        if (!hids.Open(mode,pid)) {
             return 0;
         }
             
@@ -307,7 +307,7 @@ int InitThreads(void)
     //nids
     if (nids.GetStatus()) {
         
-        if (!nids.Open()) {
+        if (!nids.Open(mode,pid)) {
             daemon_log(LOG_ERR,"cannot open Suricata server");
             return 0;
         }
@@ -321,7 +321,7 @@ int InitThreads(void)
     //waf
     if (waf.GetStatus()) {
         
-        if (!waf.Open()) {
+        if (!waf.Open(mode,pid)) {
             daemon_log(LOG_ERR,"cannot open Modsec server");
             return 0;
         }
@@ -335,7 +335,7 @@ int InitThreads(void)
     //crs
     if (crs.GetStatus()) {
         
-        if (!crs.Open()) {
+        if (!crs.Open(mode,pid)) {
             daemon_log(LOG_ERR,"cannot open Falco");
             return 0;
         }
@@ -349,7 +349,7 @@ int InitThreads(void)
         
     //remlog
     if (remlog.GetStatus()) {
-        if (!remlog.Open()) {
+        if (!remlog.Open(mode,pid)) {
             daemon_log(LOG_ERR,"cannot open RemLog service");
             return 0;
         }
@@ -362,7 +362,7 @@ int InitThreads(void)
     
     //remstat
     if (remstat.GetStatus()) {
-        if (!remstat.Open()) {
+        if (!remstat.Open(mode,pid)) {
             daemon_log(LOG_ERR,"cannot open RemStat service");
             return 0;
         }
@@ -376,7 +376,7 @@ int InitThreads(void)
     // updates
     if (updates.GetStatus()) {
         
-        if (!updates.Open()) {
+        if (!updates.Open(mode,pid)) {
             daemon_log(LOG_ERR,"cannot open update service");
             return 0;
         }
@@ -388,7 +388,7 @@ int InitThreads(void)
     
     //collector
     if (collr.GetStatus()) {
-        if (!collr.Open()) {
+        if (!collr.Open(mode,pid)) {
             daemon_log(LOG_ERR,"cannot open monitor of collector service");
             return 0;
         }
@@ -553,7 +553,7 @@ int start(pid_t pid) {
         }
 
         /*... do some further init work here */
-        if (!InitThreads()) {
+        if (!InitThreads(1,pid)) {
             
             daemon_retval_send(4);
             
@@ -628,7 +628,7 @@ int startD(int pid) {
     
     if (!LoadConfig()) return 1;
     
-    if (!InitThreads()) {
+    if (!InitThreads(2,pid)) {
             
         KillsThreads();
         return 1;

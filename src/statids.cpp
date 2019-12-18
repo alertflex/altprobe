@@ -22,7 +22,7 @@ int StatIds::GetConfig() {
     return status;
 }
 
-int  StatIds::Open() {
+int  StatIds::Open(int mode, int pid) {
     
     if (!sk.Open()) return 0;
     
