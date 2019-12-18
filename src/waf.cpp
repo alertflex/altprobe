@@ -163,7 +163,7 @@ int Waf::Open() {
     
     if (status == 1) {
         
-        if (modseclog_status) {
+        if (modseclog_status == 2) {
             
             fp = fopen(modsec_log, "r");
             if(fp == NULL) {
@@ -177,14 +177,16 @@ int Waf::Open() {
     
         } else {
         
-            c = redisConnect(sk.redis_host, sk.redis_port);
+            if (modseclog_status == 1) {
+                c = redisConnect(sk.redis_host, sk.redis_port);
     
-            if (c != NULL && c->err) {
-                // handle error
-                sprintf(level, "failed open redis server interface: %s\n", c->errstr);
-                SysLog(level);
-                return 0;
-            }
+                if (c != NULL && c->err) {
+                    // handle error
+                    sprintf(level, "failed open redis server interface: %s\n", c->errstr);
+                    SysLog(level);
+                    return 0;
+                }
+            } else return 0;
         }
     }
     
@@ -197,7 +199,7 @@ void Waf::Close() {
     
     if (status == 1) {
         
-        if (modseclog_status) {
+        if (modseclog_status == 2) {
             if (fp != NULL) fclose(fp);
         } else redisFree(c);
     }
@@ -270,7 +272,7 @@ int Waf::Go(void) {
         
     if (status) {
         
-        if (modseclog_status) {
+        if (modseclog_status == 2) {
             
             res = ReadFile();
             
@@ -345,7 +347,7 @@ int Waf::Go(void) {
                 }
             } 
         } 
-        if (!modseclog_status) freeReplyObject(reply);
+        if (modseclog_status == 1) freeReplyObject(reply);
     } 
     else {
         usleep(GetGosleepTimer()*60);
@@ -384,7 +386,7 @@ int Waf::ParsJson() {
     
     try {
         
-        if (!modseclog_status) jsonPayload.assign(reply->str, GetBufferSize(reply->str));
+        if (modseclog_status == 1) jsonPayload.assign(reply->str, GetBufferSize(reply->str));
         else jsonPayload.assign(file_payload, GetBufferSize(file_payload));
         
 	if ((jsonPayload.compare("") == 0)) {
@@ -392,7 +394,7 @@ int Waf::ParsJson() {
             return 0;
         }
     
-	if (!modseclog_status) {
+	if (modseclog_status == 1) {
             ss << jsonPayload;
             bpt::read_json(ss, pt);
             jsonPayload = pt.get<string>("message","");

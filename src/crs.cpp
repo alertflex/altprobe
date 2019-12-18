@@ -23,7 +23,7 @@ int Crs::Open() {
     
     if (status == 1) {
         
-        if (falcolog_status) {
+        if (falcolog_status == 2) {
             
             fp = fopen(falco_log, "r");
             if(fp == NULL) {
@@ -37,14 +37,16 @@ int Crs::Open() {
       
         } else {
         
-            c = redisConnect(sk.redis_host, sk.redis_port);
+            if (falcolog_status == 1) {
+                c = redisConnect(sk.redis_host, sk.redis_port);
     
-            if (c != NULL && c->err) {
-                // handle error
-                sprintf(level, "failed open redis server interface: %s\n", c->errstr);
-                SysLog(level);
-                return 0;
-            }
+                if (c != NULL && c->err) {
+                    // handle error
+                    sprintf(level, "failed open redis server interface: %s\n", c->errstr);
+                    SysLog(level);
+                    return 0;
+                }
+            } else return 0;
         }
     }
     
@@ -57,7 +59,7 @@ void Crs::Close() {
     
     if (status == 1) {
         
-        if (falcolog_status) {
+        if (falcolog_status == 2) {
             if (fp != NULL) fclose(fp);
         } else redisFree(c);
     }
@@ -130,7 +132,7 @@ int Crs::Go(void) {
         
     if (status) {
         
-        if (falcolog_status) {
+        if (falcolog_status == 2) {
             
             res = ReadFile();
             
@@ -207,7 +209,7 @@ int Crs::Go(void) {
             }
         }
         
-        if (!falcolog_status) freeReplyObject(reply);
+        if (falcolog_status == 1) freeReplyObject(reply);
     } 
     else {
         usleep(GetGosleepTimer()*60);
@@ -246,7 +248,7 @@ int Crs::ParsJson() {
     
     try {
     
-        if (!falcolog_status) {
+        if (falcolog_status == 1) {
             
             jsonPayload.assign(reply->str, GetBufferSize(reply->str));
             ss1 << jsonPayload;
@@ -343,7 +345,7 @@ int Crs::PushRecord(GrayList* gl) {
     ids_rec.user = rec.fields.user_name;
     ids_rec.process = rec.fields.proc_name;
     ids_rec.container = rec.fields.container_id;
-    if (!falcolog_status) ids_rec.ids = rec.sensor;
+    if (falcolog_status == 1) ids_rec.ids = rec.sensor;
     else ids_rec.ids = sensor;
     ids_rec.action = "indef";
     ids_rec.ids_type = 5;
@@ -396,7 +398,7 @@ void Crs::SendAlert(int s, GrayList*  gl) {
     
     sk.alert.user = rec.fields.user_name;
     
-    if (!falcolog_status) sk.alert.sensor = rec.sensor;
+    if (falcolog_status == 1) sk.alert.sensor = rec.sensor;
     else sk.alert.sensor = sensor;
     
     sk.alert.filter = fs.filter.desc;

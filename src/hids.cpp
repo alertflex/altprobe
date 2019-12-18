@@ -61,7 +61,7 @@ void Hids::Close() {
     
     if (status == 1) {
         
-        if (wazuhlog_status) {
+        if (wazuhlog_status == 2) {
             if (fp != NULL) fclose(fp);
         } else redisFree(c);
     }
@@ -134,7 +134,7 @@ int Hids::Go(void) {
         
     if (status) {
         
-        if (wazuhlog_status) {
+        if (wazuhlog_status == 2) {
             
             res = ReadFile();
             
@@ -211,7 +211,7 @@ int Hids::Go(void) {
             }
         }
         
-        if (!wazuhlog_status) freeReplyObject(reply);
+        if (wazuhlog_status == 1) freeReplyObject(reply);
     } 
     else {
         usleep(GetGosleepTimer()*60);
@@ -250,7 +250,7 @@ int Hids::ParsJson() {
     
     try {
     
-        if (!wazuhlog_status) {
+        if (wazuhlog_status == 1) {
             
             jsonPayload.assign(reply->str, GetBufferSize(reply->str));
             ss1 << jsonPayload;

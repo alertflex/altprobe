@@ -18,7 +18,7 @@ int Nids::Open() {
     
     if (status == 1) {
         
-        if (surilog_status) {
+        if (surilog_status == 2) {
             
             fp = fopen(suri_log, "r");
             if(fp == NULL) {
@@ -31,15 +31,17 @@ int Nids::Open() {
             file_size = (unsigned long) buf.st_size;
             
         } else {
-        
-            c = redisConnect(sk.redis_host, sk.redis_port);
+            
+            if (surilog_status == 1) {
+                c = redisConnect(sk.redis_host, sk.redis_port);
     
-            if (c != NULL && c->err) {
-                // handle error
-                sprintf(level, "failed open redis server interface: %s\n", c->errstr);
-                SysLog(level);
-                return 0;
-            }
+                if (c != NULL && c->err) {
+                    // handle error
+                    sprintf(level, "failed open redis server interface: %s\n", c->errstr);
+                    SysLog(level);
+                    return 0;
+                }
+            }  else return 0;
         }
     }
     
@@ -52,7 +54,7 @@ void Nids::Close() {
     
     if (status == 1) {
         
-        if (surilog_status) {
+        if (surilog_status == 2) {
             if (fp != NULL) fclose(fp);
         } else redisFree(c);
     }
@@ -129,7 +131,7 @@ int Nids::Go(void) {
     
     if (status) {
         
-        if (surilog_status) {
+        if (surilog_status == 2) {
             
             res = ReadFile();
             
@@ -205,7 +207,7 @@ int Nids::Go(void) {
             }
         } 
             
-        if (!surilog_status) freeReplyObject(reply);
+        if (surilog_status == 1) freeReplyObject(reply);
     } 
     else {
         usleep(GetGosleepTimer()*60);
@@ -243,7 +245,7 @@ int Nids::ParsJson () {
     
     // SysLog(payload);
     
-    if (!surilog_status) jsonPayload.assign(reply->str, GetBufferSize(reply->str));
+    if (surilog_status == 1) jsonPayload.assign(reply->str, GetBufferSize(reply->str));
     else jsonPayload.assign(file_payload, GetBufferSize(file_payload));
     
     try {
