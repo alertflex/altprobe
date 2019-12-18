@@ -15,7 +15,7 @@
 
 boost::lockfree::spsc_queue<string> q_logs_crs{LOG_QUEUE_SIZE};
 
-int Crs::Open(int mode, int pid) {
+int Crs::Open() {
     
     char level[OS_HEADER_SIZE];
     

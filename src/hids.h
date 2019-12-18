@@ -146,7 +146,7 @@ public:
         pcidss_cats.clear();
     }
     
-    virtual int Open(int mode, int pid);
+    virtual int Open();
     virtual void Close();
     int ReadFile();
     void IsFileModified();

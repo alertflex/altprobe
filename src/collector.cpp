@@ -24,7 +24,7 @@ int Collector::GetConfig() {
 }
 
 
-int  Collector::Open(int mode, int pid) {
+int  Collector::Open() {
     
     if (!sk.Open()) return 0;
     

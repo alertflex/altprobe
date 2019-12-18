@@ -57,7 +57,7 @@ public:
     
     virtual int GetConfig();
     
-    virtual int Open(int mode, int pid);
+    virtual int Open();
     virtual void Close();
     
     virtual int GetStatus() {

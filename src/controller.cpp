@@ -41,7 +41,7 @@ bool Controller::sessionTransacted = false;
 
 int Controller::connection_error = 0;
 int Controller::altprobe_mode = 1;
-int Controller::p_pid = 0;
+pid_t Controller::p_pid = 0;
 
 int Controller::GetConfig() {
        

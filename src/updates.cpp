@@ -30,7 +30,7 @@ int Updates::GetConfig() {
     return update_status;
 }
 
-int Updates::Open(int mode, int pid) {
+int Updates::Open(int mode, pid_t pid) {
     
     bool amq_conn = false;
     int conn_attempts = 0;
@@ -121,6 +121,7 @@ int Updates::Open(int mode, int pid) {
 int Updates::Go(void) {
     
     sleep(1);
+        
     return 1;
 }
 

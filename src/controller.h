@@ -61,7 +61,7 @@ public:
     
     static int connection_error;
     static int altprobe_mode;
-    static int p_pid;
+    static pid_t p_pid;
     
     Controller () {
         memset(url, 0, sizeof(url));

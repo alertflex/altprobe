@@ -247,13 +247,13 @@ int LoadConfig(void)
 }
 
        
-int InitThreads(int mode, int pid)
+int InitThreads(int mode, pid_t pid)
 {
     int arg = 1;
     
     //statids
     if (statids.GetStatus()) {
-        if (!statids.Open(mode,pid)) {
+        if (!statids.Open()) {
             daemon_log(LOG_ERR,"cannot open ids stat service");
             return 0;
         }
@@ -266,7 +266,7 @@ int InitThreads(int mode, int pid)
     
     //traffic
     if (statflows.GetStatus()) {
-        if (!statflows.Open(mode,pid)) {
+        if (!statflows.Open()) {
             daemon_log(LOG_ERR,"cannot open statflow service");
             return 0;
         }
@@ -279,7 +279,7 @@ int InitThreads(int mode, int pid)
     
     //misc
     if (misc.GetStatus()) {
-        if (!misc.Open(mode,pid)) {
+        if (!misc.Open()) {
             daemon_log(LOG_ERR,"cannot open Misc server");
             return 0;
         }
@@ -293,7 +293,7 @@ int InitThreads(int mode, int pid)
     //hids
     if (hids.GetStatus()) {
         
-        if (!hids.Open(mode,pid)) {
+        if (!hids.Open()) {
             return 0;
         }
             
@@ -307,7 +307,7 @@ int InitThreads(int mode, int pid)
     //nids
     if (nids.GetStatus()) {
         
-        if (!nids.Open(mode,pid)) {
+        if (!nids.Open()) {
             daemon_log(LOG_ERR,"cannot open Suricata server");
             return 0;
         }
@@ -321,7 +321,7 @@ int InitThreads(int mode, int pid)
     //waf
     if (waf.GetStatus()) {
         
-        if (!waf.Open(mode,pid)) {
+        if (!waf.Open()) {
             daemon_log(LOG_ERR,"cannot open Modsec server");
             return 0;
         }
@@ -335,7 +335,7 @@ int InitThreads(int mode, int pid)
     //crs
     if (crs.GetStatus()) {
         
-        if (!crs.Open(mode,pid)) {
+        if (!crs.Open()) {
             daemon_log(LOG_ERR,"cannot open Falco");
             return 0;
         }
@@ -349,7 +349,7 @@ int InitThreads(int mode, int pid)
         
     //remlog
     if (remlog.GetStatus()) {
-        if (!remlog.Open(mode,pid)) {
+        if (!remlog.Open()) {
             daemon_log(LOG_ERR,"cannot open RemLog service");
             return 0;
         }
@@ -362,7 +362,7 @@ int InitThreads(int mode, int pid)
     
     //remstat
     if (remstat.GetStatus()) {
-        if (!remstat.Open(mode,pid)) {
+        if (!remstat.Open()) {
             daemon_log(LOG_ERR,"cannot open RemStat service");
             return 0;
         }
@@ -388,7 +388,7 @@ int InitThreads(int mode, int pid)
     
     //collector
     if (collr.GetStatus()) {
-        if (!collr.Open(mode,pid)) {
+        if (!collr.Open()) {
             daemon_log(LOG_ERR,"cannot open monitor of collector service");
             return 0;
         }
@@ -619,14 +619,17 @@ int start(pid_t pid) {
 }
 
 static void sigHandler (int signo) {
-    SysLog("got SIGHUP, SIGINT, SIGQUIT or SIGTERM\n");
+    printf ("got SIGHUP, SIGINT, SIGQUIT or SIGTERM\n");
     KillsThreads();
+    
     exit (EXIT_SUCCESS);
 }
 
-int startD(int pid) {
+int startD() {
     
     if (!LoadConfig()) return 1;
+    
+    pid_t pid = getpid();
     
     if (!InitThreads(2,pid)) {
             
@@ -706,7 +709,7 @@ int main(int argc, char *argv[]) {
                 // daemon_log(LOG_ERR, "AlertFlex collector is already running with PID %u.", pid);
                 printf( "altprobe collector is already running with PID %u\n", pid);
             
-            else return startD(pid);
+            else return startD();
             
             return 0;
         }

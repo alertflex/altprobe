@@ -21,7 +21,7 @@ int RemLog::GetConfig() {
     return status;
 }
 
-int RemLog::Open(int mode, int pid) {
+int RemLog::Open() {
     
     if (!sk.Open()) return 0;
     

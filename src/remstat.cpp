@@ -24,7 +24,7 @@ int RemStat::GetConfig() {
     return status;
 }
 
-int RemStat::Open(int mode, int pid) {
+int RemStat::Open() {
     
     if (!sk.Open()) return 0;
     
