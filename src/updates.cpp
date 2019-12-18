@@ -121,8 +121,6 @@ int Updates::Open(int mode, int pid) {
 int Updates::Go(void) {
     
     sleep(1);
-    CheckStatus();
-    
     return 1;
 }
 
