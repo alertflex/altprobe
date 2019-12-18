@@ -77,10 +77,6 @@ public:
         wazuhServerStatus = true;
         arStatus = false;
         urStatus = true;
-        falcolog_status = true;
-        surilog_status = true;
-        wazuhlog_status = true;
-        modseclog_status = true;
         timezone = 0;
         log_size = 0;
         startup_timer = 0;
