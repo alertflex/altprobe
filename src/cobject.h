@@ -42,13 +42,13 @@ public:
     static bool wazuhServerStatus;
     
     static char falco_log[OS_BUFFER_SIZE]; 
-    static bool falcolog_status;
+    static int falcolog_status;
     static char suri_log[OS_BUFFER_SIZE]; 
-    static bool surilog_status;
+    static int surilog_status;
     static char wazuh_log[OS_BUFFER_SIZE];
-    static bool wazuhlog_status;
+    static int wazuhlog_status;
     static char modsec_log[OS_BUFFER_SIZE];
-    static bool modseclog_status;
+    static int modseclog_status;
     
     static char falco_conf[OS_BUFFER_SIZE]; 
     static char falco_local[OS_BUFFER_SIZE];

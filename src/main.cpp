@@ -293,57 +293,50 @@ int InitThreads(int mode, pid_t pid)
     //hids
     if (hids.GetStatus()) {
         
-        if (!hids.Open()) {
-            return 0;
-        }
+        if (hids.Open()) {
             
-        if (pthread_create(&pthread_hids, NULL, thread_hids, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for OSSEC");
-            return 0;
-        }
+            if (pthread_create(&pthread_hids, NULL, thread_hids, &arg)) {
+                daemon_log(LOG_ERR,"error creating thread for HIDS");
+                return 0;
+            }
+        } else daemon_log(LOG_ERR,"HIDS source is disabled");
     }
     
         
     //nids
     if (nids.GetStatus()) {
         
-        if (!nids.Open()) {
-            daemon_log(LOG_ERR,"cannot open Suricata server");
-            return 0;
-        }
-        
-        if (pthread_create(&pthread_nids, NULL, thread_nids, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for Suricata.");
-            return 0;
-        } 
+        if (nids.Open()) {
+            
+            if (pthread_create(&pthread_nids, NULL, thread_nids, &arg)) {
+                daemon_log(LOG_ERR,"error creating thread for NIDS.");
+                return 0;
+            }
+        } else daemon_log(LOG_ERR,"NIDS source is disabled");
     }
     
     //waf
     if (waf.GetStatus()) {
         
-        if (!waf.Open()) {
-            daemon_log(LOG_ERR,"cannot open Modsec server");
-            return 0;
-        }
+        if (waf.Open()) {
             
-        if (pthread_create(&pthread_waf, NULL, thread_waf, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for Modsec");
-            return 0;
-        }
+            if (pthread_create(&pthread_waf, NULL, thread_waf, &arg)) {
+                daemon_log(LOG_ERR,"error creating thread for WAF");
+                return 0;
+            }
+        } else daemon_log(LOG_ERR,"WAF source is disabled");
     } 
     
     //crs
     if (crs.GetStatus()) {
         
-        if (!crs.Open()) {
-            daemon_log(LOG_ERR,"cannot open Falco");
-            return 0;
-        }
+        if (crs.Open()) {
             
-        if (pthread_create(&pthread_crs, NULL, thread_crs, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for Falco");
-            return 0;
-        }
+            if (pthread_create(&pthread_crs, NULL, thread_crs, &arg)) {
+                daemon_log(LOG_ERR,"error creating thread for CRS");
+                return 0;
+            }
+        } else daemon_log(LOG_ERR,"CRS source is disabled");
     } 
     
         

@@ -24,7 +24,7 @@ int Hids::Open() {
     
     if (status == 1) {
         
-        if (wazuhlog_status) {
+        if (wazuhlog_status == 2) {
             
             fp = fopen(wazuh_log, "r");
             if(fp == NULL) {
@@ -38,14 +38,17 @@ int Hids::Open() {
       
         } else {
         
-            c = redisConnect(sk.redis_host, sk.redis_port);
+            if (wazuhlog_status == 1) {
+            
+                c = redisConnect(sk.redis_host, sk.redis_port);
     
-            if (c != NULL && c->err) {
-                // handle error
-                sprintf(level, "failed open redis server interface: %s\n", c->errstr);
-                SysLog(level);
-                return 0;
-            }
+                if (c != NULL && c->err) {
+                    // handle error
+                    sprintf(level, "failed open redis server interface: %s\n", c->errstr);
+                    SysLog(level);
+                    return 0;
+                }
+            } else return 0;
         }
     }
     

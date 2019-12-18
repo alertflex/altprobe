@@ -43,13 +43,13 @@ char CollectorObject::wazuh_pwd[OS_HEADER_SIZE];
 bool CollectorObject::wazuhServerStatus;
 
 char CollectorObject::falco_log[OS_BUFFER_SIZE]; 
-bool CollectorObject::falcolog_status;
+int CollectorObject::falcolog_status = 2;
 char CollectorObject::suri_log[OS_BUFFER_SIZE]; 
-bool CollectorObject::surilog_status;
+int CollectorObject::surilog_status = 2;
 char CollectorObject::wazuh_log[OS_BUFFER_SIZE];
-bool CollectorObject::wazuhlog_status;
+int CollectorObject::wazuhlog_status = 2;
 char CollectorObject::modsec_log[OS_BUFFER_SIZE];
-bool CollectorObject::modseclog_status;
+int CollectorObject::modseclog_status = 2;
 
 char CollectorObject::falco_conf[OS_BUFFER_SIZE];
 char CollectorObject::falco_local[OS_BUFFER_SIZE];
@@ -233,22 +233,30 @@ int CollectorObject::GetConfig() {
     
     strncpy(falco_log, (char*) cy->getParameter("falco_log").c_str(), sizeof(falco_log));
     if (!strcmp (falco_log, "indef")) { 
-        falcolog_status = false;
+        falcolog_status = 0;
+    } else {
+        if (!strcmp (falco_log, "redis")) falcolog_status = 1;
     }
     
     strncpy(suri_log, (char*) cy->getParameter("suri_log").c_str(), sizeof(suri_log));
     if (!strcmp (suri_log, "indef")) { 
-        surilog_status = false;
+        surilog_status = 0;
+    } else {
+        if (!strcmp (suri_log, "redis")) surilog_status = 1;
     }
     
     strncpy(wazuh_log, (char*) cy->getParameter("wazuh_log").c_str(), sizeof(wazuh_log));
     if (!strcmp (wazuh_log, "indef")) { 
-        wazuhlog_status = false;
+        wazuhlog_status = 0;
+    } else {
+        if (!strcmp (wazuh_log, "redis")) wazuhlog_status = 1;
     }
     
     strncpy(modsec_log, (char*) cy->getParameter("modsec_log").c_str(), sizeof(modsec_log));
     if (!strcmp (modsec_log, "indef")) { 
-        modseclog_status = false;
+        modseclog_status = 0;
+    } else {
+        if (!strcmp (modsec_log, "redis")) modseclog_status = 1;
     }
     
     if (urStatus) {
