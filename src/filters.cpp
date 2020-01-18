@@ -108,11 +108,14 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             
             gl->event = crs_list.second.get<string>("event");
             gl->host = crs_list.second.get<string>("container");
+            gl->match = crs_list.second.get<string>("match");
             
             gl->agr.reproduced = crs_list.second.get<int>("aggregate.reproduced");  
             gl->agr.in_period = crs_list.second.get<int>("aggregate.in_period");  
             
             gl->rsp.profile = crs_list.second.get<string>("response.profile");
+            gl->rsp.new_type = crs_list.second.get<string>("response.new_type");  
+            gl->rsp.new_source = crs_list.second.get<string>("response.new_source");    
             gl->rsp.new_event = crs_list.second.get<string>("response.new_event");           
             gl->rsp.new_severity = crs_list.second.get<int>("response.new_severity");
             gl->rsp.new_category = crs_list.second.get<string>("response.new_category");
@@ -135,11 +138,14 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             
             gl->event = hids_list.second.get<string>("event");
             gl->host = hids_list.second.get<string>("agent");
+            gl->match = hids_list.second.get<string>("match");
             
             gl->agr.reproduced = hids_list.second.get<int>("aggregate.reproduced");  
             gl->agr.in_period = hids_list.second.get<int>("aggregate.in_period");  
             
             gl->rsp.profile = hids_list.second.get<string>("response.profile");
+            gl->rsp.new_type = hids_list.second.get<string>("response.new_type");  
+            gl->rsp.new_source = hids_list.second.get<string>("response.new_source");    
             gl->rsp.new_event = hids_list.second.get<string>("response.new_event");           
             gl->rsp.new_severity = hids_list.second.get<int>("response.new_severity");
             gl->rsp.new_category = hids_list.second.get<string>("response.new_category");
@@ -161,12 +167,15 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             GrayList* gl = new GrayList();
             
             gl->event = nids_list.second.get<string>("event");
-            gl->host = nids_list.second.get<string>("agent");
+            gl->host = nids_list.second.get<string>("host");
+            gl->match = nids_list.second.get<string>("match");
                         
             gl->agr.reproduced = nids_list.second.get<int>("aggregate.reproduced");  
             gl->agr.in_period = nids_list.second.get<int>("aggregate.in_period");  
             
             gl->rsp.profile = nids_list.second.get<string>("response.profile");
+            gl->rsp.new_type = nids_list.second.get<string>("response.new_type");  
+            gl->rsp.new_source = nids_list.second.get<string>("response.new_source");    
             gl->rsp.new_event = nids_list.second.get<string>("response.new_event");           
             gl->rsp.new_severity = nids_list.second.get<int>("response.new_severity");
             gl->rsp.new_category = nids_list.second.get<string>("response.new_category");
@@ -188,12 +197,15 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             GrayList* gl = new GrayList();
             
             gl->event = waf_list.second.get<string>("event");
-            gl->host = waf_list.second.get<string>("agent");
+            gl->host = waf_list.second.get<string>("host");
+            gl->match = waf_list.second.get<string>("match");
             
             gl->agr.reproduced = waf_list.second.get<int>("aggregate.reproduced");  
             gl->agr.in_period = waf_list.second.get<int>("aggregate.in_period");  
             
             gl->rsp.profile = waf_list.second.get<string>("response.profile");
+            gl->rsp.new_type = waf_list.second.get<string>("response.new_type");  
+            gl->rsp.new_source = waf_list.second.get<string>("response.new_source");    
             gl->rsp.new_event = waf_list.second.get<string>("response.new_event");           
             gl->rsp.new_severity = waf_list.second.get<int>("response.new_severity");
             gl->rsp.new_category = waf_list.second.get<string>("response.new_category");

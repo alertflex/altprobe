@@ -896,22 +896,24 @@ void StatIds::UpdateCrsAlerts() {
     
     for(i = crs_alerts_list.begin(), end = crs_alerts_list.end(); i != end; ++i) {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
-            if (i->ids.compare(ids_rec.ids) == 0)  {
-                if (i->event.compare(ids_rec.event) == 0) {
+            if (i->event.compare(ids_rec.event) == 0) {
+                if (i->container.compare("indef") == 0 || i->container.compare(ids_rec.container) == 0) {
+                    if (i->match.compare(ids_rec.match) == 0) {
                     
-                    //get current time
-                    current_time = time(NULL);
-                    i->count++;  
-                    if ((i->alert_time + i->agr.in_period) < current_time) {
-                        if (i->count >= i->agr.reproduced) {
-                            SendCrsAlert(i, i->count);
-                            crs_alerts_list.erase(i);
+                        //get current time
+                        current_time = time(NULL);
+                        i->count++;  
+                        if ((i->alert_time + i->agr.in_period) < current_time) {
+                            if (i->count >= i->agr.reproduced) {
+                                SendCrsAlert(i, i->count);
+                                crs_alerts_list.erase(i);
+                            }
+                            else {
+                                crs_alerts_list.erase(i);
+                                goto new_crs_alert;
+                            }
+                            return;
                         }
-                        else {
-                            crs_alerts_list.erase(i);
-                            goto new_crs_alert;
-                        }
-                        return;
                     }
                 }
             }  
@@ -925,9 +927,6 @@ new_crs_alert:
 void StatIds::SendCrsAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.ref_id = r->ref_id;
-    
-    sk.alert.source = "Falco";
-    sk.alert.type = "HOST";
     
     sk.alert.srcip = "";
     sk.alert.dstip = "";
@@ -943,19 +942,25 @@ void StatIds::SendCrsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = GetNodeTime();
     
-    if (r->rsp.new_event.compare("") != 0) sk.alert.event = r->rsp.new_event;
+    if (r->rsp.new_type.compare("indef") != 0) sk.alert.type = r->rsp.new_type;
+    else sk.alert.type = "HIDS";
+        
+    if (r->rsp.new_source.compare("indef") != 0)  sk.alert.source = r->rsp.new_source;
+    else sk.alert.source = "Falco";
+    
+    if (r->rsp.new_event.compare("indef") != 0) sk.alert.event = r->rsp.new_event;
     else sk.alert.event = r->event;
         
     if (r->rsp.new_severity != 0) sk.alert.severity = r->rsp.new_severity;
     else sk.alert.severity = r->severity;
         
     copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
-    if (r->rsp.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
+    if (r->rsp.new_category.compare("indef") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
               
     if (r->rsp.profile.compare("indef") != 0) sk.alert.action = r->rsp.profile;
     else sk.alert.action = "indef";
         
-    if (r->rsp.new_description.compare("") != 0)  sk.alert.description = r->rsp.new_description;
+    if (r->rsp.new_description.compare("indef") != 0)  sk.alert.description = r->rsp.new_description;
     else sk.alert.description = r->desc;
     
     sk.alert.location = "";       
@@ -989,25 +994,26 @@ void StatIds::UpdateHidsAlerts() {
     
     
     for(i = hids_alerts_list.begin(), end = hids_alerts_list.end(); i != end; ++i) {
-        if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
-            if (i->agent.compare(ids_rec.agent) == 0) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  {
+            if (i->event.compare(ids_rec.event) == 0) {
+                if (i->agent.compare("indef") == 0 || i->agent.compare(ids_rec.agent) == 0) {
+                    if (i->match.compare(ids_rec.match) == 0) {
                 
-                if (i->event.compare(ids_rec.event) == 0) {
-                
-                    //get current time
-                    current_time = time(NULL);
-                    i->count++;    
-                    if ((i->alert_time + i->agr.in_period) < current_time) {
-                        if (i->count >= i->agr.reproduced) {
-                            SendHidsAlert(i, i->count);
-                            hids_alerts_list.erase(i);
+                        //get current time
+                        current_time = time(NULL);
+                        i->count++;    
+                        if ((i->alert_time + i->agr.in_period) < current_time) {
+                            if (i->count >= i->agr.reproduced) {
+                                SendHidsAlert(i, i->count);
+                                hids_alerts_list.erase(i);
+                                return;
+                            }
+                            else {
+                                hids_alerts_list.erase(i);
+                                goto new_hids_alert;
+                            }
                             return;
                         }
-                        else {
-                            hids_alerts_list.erase(i);
-                            goto new_hids_alert;
-                        }
-                        return;
                     }
                     
                 }
@@ -1023,11 +1029,6 @@ void StatIds::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.ref_id = r->ref_id;
     
-    sk.alert.source = "Wazuh";
-        
-    if (r->ids_type == 1) sk.alert.type = "FILE";
-    else sk.alert.type = "HOST";
-    
     sk.alert.srcip = r->src_ip;
     
     sk.alert.dstip = r->dst_ip;
@@ -1042,17 +1043,26 @@ void StatIds::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.sensor = r->ids;
     sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = GetNodeTime();
+    
+    if (r->rsp.new_type.compare("indef") != 0) sk.alert.type = r->rsp.new_type;
+    else {
+        if (r->ids_type == 1) sk.alert.type = "FILE";
+        else sk.alert.type = "HOST";
+    }
         
-    if (r->rsp.new_event.compare("") != 0) sk.alert.event = r->rsp.new_event;
+    if (r->rsp.new_source.compare("indef") != 0)  sk.alert.source = r->rsp.new_source;
+    else sk.alert.source = "Wazuh";
+        
+    if (r->rsp.new_event.compare("indef") != 0) sk.alert.event = r->rsp.new_event;
     else sk.alert.event = r->event;
         
     if (r->rsp.new_severity != 0) sk.alert.severity = r->rsp.new_severity;
     else sk.alert.severity = r->severity;
         
     copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
-    if (r->rsp.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
+    if (r->rsp.new_category.compare("indef") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
                 
-    if (r->rsp.new_description.compare("") != 0)  sk.alert.description = r->rsp.new_description;
+    if (r->rsp.new_description.compare("indef") != 0)  sk.alert.description = r->rsp.new_description;
     else sk.alert.description = r->desc;
     
     if (r->rsp.profile.compare("indef") != 0) sk.alert.action = r->rsp.profile;
@@ -1089,22 +1099,24 @@ void StatIds::UpdateNidsAlerts() {
     
     for(i = nids_alerts_list.begin(), end = nids_alerts_list.end(); i != end; ++i) {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
-            if (i->ids.compare(ids_rec.ids) == 0)  {
-                if (i->event.compare(ids_rec.event) == 0) {
+            if (i->event.compare(ids_rec.event) == 0) {
+                if (i->host.compare("indef") == 0 || i->host.compare(ids_rec.src_ip) == 0 || i->host.compare(ids_rec.dst_ip) == 0) {    
+                    if (i->match.compare(ids_rec.match) == 0) {
                     
-                    //get current time
-                    current_time = time(NULL);
-                    i->count++;  
-                    if ((i->alert_time + i->agr.in_period) < current_time) {
-                        if (i->count >= i->agr.reproduced) {
-                            SendNidsAlert(i, i->count);
-                            nids_alerts_list.erase(i);
+                        //get current time
+                        current_time = time(NULL);
+                        i->count++;  
+                        if ((i->alert_time + i->agr.in_period) < current_time) {
+                            if (i->count >= i->agr.reproduced) {
+                                SendNidsAlert(i, i->count);
+                                nids_alerts_list.erase(i);
+                            }
+                            else {
+                                nids_alerts_list.erase(i);
+                                goto new_nids_alert;
+                            }
+                            return;
                         }
-                        else {
-                            nids_alerts_list.erase(i);
-                            goto new_nids_alert;
-                        }
-                        return;
                     }
                 }
             }  
@@ -1119,11 +1131,7 @@ void StatIds::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.ref_id = r->ref_id;
     
-    sk.alert.source = "Suricata";
-    sk.alert.type = "NET";
-    
     sk.alert.srcip = r->src_ip;
-    
     sk.alert.dstip = r->dst_ip;
     
     sk.alert.dstport = 0;
@@ -1137,21 +1145,29 @@ void StatIds::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = GetNodeTime();
     
-    if (r->rsp.new_event.compare("") != 0) sk.alert.event = r->rsp.new_event;
+    sk.alert.source = "Suricata";
+    sk.alert.type = "NET";
+    
+    if (r->rsp.new_type.compare("indef") != 0) sk.alert.type = r->rsp.new_type;
+    if (r->rsp.new_source.compare("indef") != 0)  sk.alert.source = r->rsp.new_source;
+    
+    if (r->rsp.new_event.compare("indef") != 0) sk.alert.event = r->rsp.new_event;
     else sk.alert.event = r->event;
         
     if (r->rsp.new_severity != 0) sk.alert.severity = r->rsp.new_severity;
     else sk.alert.severity = r->severity;
         
     copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
-    if (r->rsp.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
+    if (r->rsp.new_category.compare("indef") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
               
     if (r->rsp.profile.compare("indef") != 0) sk.alert.action = r->rsp.profile;
     else sk.alert.action = "indef";
         
-    if (r->rsp.new_description.compare("") != 0)  sk.alert.description = r->rsp.new_description;
+    if (r->rsp.new_description.compare("indef") != 0)  sk.alert.description = r->rsp.new_description;
     else sk.alert.description = r->desc;
     
+    
+        
     sk.alert.location = "";       
     
     sk.alert.info = "Message has been repeated ";
@@ -1184,22 +1200,24 @@ void StatIds::UpdateWafAlerts() {
     
     for(i = waf_alerts_list.begin(), end = waf_alerts_list.end(); i != end; ++i) {
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
-            if (i->ids.compare(ids_rec.ids) == 0)  {
-                if (i->event.compare(ids_rec.event) == 0) {
+            if (i->event.compare(ids_rec.event) == 0) {
+                if (i->host.compare("indef") == 0 || i->host.compare(ids_rec.dst_ip) == 0 || i->host.compare(ids_rec.src_ip) == 0) {
+                    if (i->match.compare(ids_rec.match) == 0) {
                     
-                    //get current time
-                    current_time = time(NULL);
-                    i->count++;  
-                    if ((i->alert_time + i->agr.in_period) < current_time) {
-                        if (i->count >= i->agr.reproduced) {
-                            SendWafAlert(i, i->count);
-                            waf_alerts_list.erase(i);
+                        //get current time
+                        current_time = time(NULL);
+                        i->count++;  
+                        if ((i->alert_time + i->agr.in_period) < current_time) {
+                            if (i->count >= i->agr.reproduced) {
+                                SendWafAlert(i, i->count);
+                                waf_alerts_list.erase(i);
+                            }
+                            else {
+                                waf_alerts_list.erase(i);
+                                goto new_waf_alert;
+                            }
+                            return;
                         }
-                        else {
-                            waf_alerts_list.erase(i);
-                            goto new_waf_alert;
-                        }
-                        return;
                     }
                 }
             }  
@@ -1214,11 +1232,7 @@ void StatIds::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.ref_id = r->ref_id;
     
-    sk.alert.source = "Modsecurity";
-    sk.alert.type = "NET";
-    
     sk.alert.srcip = r->src_ip;
-    
     sk.alert.dstip = r->dst_ip;
     
     sk.alert.dstport = 0;
@@ -1232,19 +1246,25 @@ void StatIds::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = GetNodeTime();
     
-    if (r->rsp.new_event.compare("") != 0) sk.alert.event = r->rsp.new_event;
+    sk.alert.source = "Modsecurity";
+    sk.alert.type = "NET";
+    
+    if (r->rsp.new_type.compare("indef") != 0) sk.alert.type = r->rsp.new_type;
+    if (r->rsp.new_source.compare("indef") != 0)  sk.alert.source = r->rsp.new_source;
+    
+    if (r->rsp.new_event.compare("indef") != 0) sk.alert.event = r->rsp.new_event;
     else sk.alert.event = r->event;
         
     if (r->rsp.new_severity != 0) sk.alert.severity = r->rsp.new_severity;
     else sk.alert.severity = r->severity;
         
     copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
-    if (r->rsp.new_category.compare("") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
+    if (r->rsp.new_category.compare("indef") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
               
     if (r->rsp.profile.compare("indef") != 0) sk.alert.action = r->rsp.profile;
     else sk.alert.action = "indef";
         
-    if (r->rsp.new_description.compare("") != 0)  sk.alert.description = r->rsp.new_description;
+    if (r->rsp.new_description.compare("indef") != 0)  sk.alert.description = r->rsp.new_description;
     else sk.alert.description = r->desc;
     
     sk.alert.location = "";       

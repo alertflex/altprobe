@@ -233,9 +233,15 @@ GrayList* Hids::CheckGrayList() {
                 
                 string agent = (*i)->host;
                 
-                if (agent.compare("all") == 0 || agent.compare(rec.agent) == 0) {
-                
-                    return (*i);
+                if (agent.compare("indef") == 0 || agent.compare(rec.agent) == 0) {
+                    
+                    string match = (*i)->match;
+                    
+                    if (match.compare("indef") == 0) return (*i);
+                    else {
+                        size_t found = jsonPayload.find(match); 
+                        if (found != std::string::npos) return (*i);
+                    }
                 }
             }
         }
@@ -972,6 +978,9 @@ int Hids::PushRecord(GrayList* gl) {
         
         if (gl->agr.reproduced > 0) {
             
+            ids_rec.host = "indef";
+            ids_rec.match = gl->match;
+            
             ids_rec.agr.in_period = gl->agr.in_period;
             ids_rec.agr.reproduced = gl->agr.reproduced;
             
@@ -980,6 +989,8 @@ int Hids::PushRecord(GrayList* gl) {
             ids_rec.rsp.new_description = gl->rsp.new_description;
             ids_rec.rsp.new_event = gl->rsp.new_event;
             ids_rec.rsp.new_severity = gl->rsp.new_severity;
+            ids_rec.rsp.new_type = gl->rsp.new_type;
+            ids_rec.rsp.new_source = gl->rsp.new_source;
             
         }
     }
@@ -1042,24 +1053,15 @@ void Hids::SendAlert(int s, GrayList*  gl) {
         sk.alert.file = rec.file.filename;
         sk.alert.location = "indef";
         
-        sk.alert.info = "\"artifacts\": [";
-        sk.alert.info += "{ \"dataType\": \"md5\",\"data\":\"";
+        sk.alert.info = "{\"artifacts\": [{ \"dataType\": \"md5\",\"data\":\"";
         sk.alert.info += rec.file.md5_before;
-        sk.alert.info += "\",\"message\":\"message digest before\" }, ";
-            
-        sk.alert.info += "{ \"dataType\": \"md5\",\"data\":\"";
+        sk.alert.info += "\",\"message\":\"message digest before\" }, { \"dataType\": \"md5\",\"data\":\"";
         sk.alert.info += rec.file.md5_after;
-        sk.alert.info += "\",\"message\":\"Message digest after\" }, ";
-        
-        sk.alert.info += "{ \"dataType\": \"sha1\",\"data\":\"";
+        sk.alert.info += "\",\"message\":\"Message digest after\" }, { \"dataType\": \"sha1\",\"data\":\"";
         sk.alert.info += rec.file.sha1_before;
-        sk.alert.info += "\",\"message\":\"Secure hash before\" }, ";
-            
-        sk.alert.info += "{ \"dataType\": \"sha1\",\"data\":\"";
+        sk.alert.info += "\",\"message\":\"Secure hash before\" }, { \"dataType\": \"sha1\",\"data\":\"";
         sk.alert.info += rec.file.sha1_after;
-        sk.alert.info += "\",\"message\":\"Secure hash after\" } ";
-            
-        sk.alert.info += "]";
+        sk.alert.info += "\",\"message\":\"Secure hash after\" }]}";
             
     }
     
@@ -1068,9 +1070,19 @@ void Hids::SendAlert(int s, GrayList*  gl) {
         if (gl->rsp.profile.compare("indef") != 0) {
             sk.alert.action = gl->rsp.profile;
             sk.alert.status = "modified_new";
+        }
+        
+        if (gl->rsp.new_type.compare("indef") != 0) {
+            sk.alert.type = gl->rsp.new_type;
+            sk.alert.status = "modified_new";
+        }  
+        
+        if (gl->rsp.new_source.compare("indef") != 0) {
+            sk.alert.source = gl->rsp.new_source;
+            sk.alert.status = "modified_new";
         } 
         
-        if (gl->rsp.new_event.compare("") != 0) {
+        if (gl->rsp.new_event.compare("indef") != 0) {
             sk.alert.event = gl->rsp.new_event;
             sk.alert.status = "modified_new";
         }    
@@ -1080,12 +1092,12 @@ void Hids::SendAlert(int s, GrayList*  gl) {
             sk.alert.status = "modified_new";
         }   
             
-        if (gl->rsp.new_category.compare("") != 0) {
+        if (gl->rsp.new_category.compare("indef") != 0) {
             sk.alert.list_cats.push_back(gl->rsp.new_category);
             sk.alert.status = "modified_new";
         }   
                 
-        if (gl->rsp.new_description.compare("") != 0) {
+        if (gl->rsp.new_description.compare("indef") != 0) {
             sk.alert.description = gl->rsp.new_description;
             sk.alert.status = "modified_new";
         }   

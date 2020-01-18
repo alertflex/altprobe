@@ -269,7 +269,7 @@ int Controller::SendMessage(Event* e) {
             string strProbeId(node_id);
             message->setStringProperty("node_id", strProbeId);
             
-            message->setIntProperty("msg_type", 0);
+            message->setIntProperty("msg_type", 1);
                 
             string strAlertUuid(((Alert*) e)->alert_uuid);
             message->setStringProperty("alert_uuid", strAlertUuid);

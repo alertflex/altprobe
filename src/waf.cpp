@@ -24,6 +24,33 @@ void ModsecRecord::GetAuditHeader(const string str) {
     parameters = str.substr(pointer);
 }
 
+void ModsecRecord::GetClient(const string str) {
+    
+    int i;
+    char rest_str[15];
+    
+    size_t pointer = str.find(", client: ");
+    
+    if (pointer != string::npos) {
+        
+        string check = str.substr(pointer);
+        
+        if (check.length() > 25) {
+            string client = str.substr(pointer + 10, 15);
+            strcpy(rest_str, client.c_str());
+        
+            for (i = 0; i < 15; i++) {
+                if (rest_str[i] == ',') break;
+            }
+        
+            ma.client =  client.substr(0, i);
+            return;
+        }
+    }
+    
+    ma.client = "";
+}
+
 void ModsecRecord::RemoveAuditParametersName(const string field, const string str) {
     
     int b = field.length();
@@ -151,7 +178,9 @@ int ModsecRecord::ParsRecord(const string rec) {
         
         CheckAuditFields(*it);
     }
-        
+    
+    GetClient(rec);
+    
     return 1;
 }
 
@@ -367,11 +396,17 @@ GrayList* Waf::CheckGrayList() {
             int event_id = std::stoi((*i)->event);
             if (event_id == rec.ma.id) {
                 
-                string agent = (*i)->host;
+                string host = (*i)->host;
                 
-                if (agent.compare("all") == 0 || agent.compare(sensor) == 0) {
+                if (host.compare("indef") == 0 || host.compare(rec.ma.client) == 0 || host.compare(rec.ma.hostname) == 0) {
                 
-                    return (*i);
+                    string match = (*i)->match;
+                    
+                    if (match.compare("indef") == 0) return (*i);
+                    else {
+                        size_t found = jsonPayload.find(match); 
+                        if (found != std::string::npos) return (*i);
+                    }
                 }
             }
         }
@@ -467,8 +502,10 @@ void Waf::CreateLog() {
     report += "\",\"_target\":\"";
     report += rec.ma.uri;
     report += "\",\"_srcip\":\"";
+    report += rec.ma.client;
+    report += "\",\"_dstip\":\""; 
     report += rec.ma.hostname;
-    report += "\",\"_dstip\":\" \"}";
+    report += "\"}";
     
     q_logs_waf.push(report);
     
@@ -502,10 +539,10 @@ int Waf::PushRecord(GrayList* gl) {
     
     ids_rec.desc = rec.ma.msg;
                 
-    ids_rec.src_ip = rec.ma.hostname;
-    ids_rec.dst_ip = " ";
+    ids_rec.src_ip = rec.ma.client;
+    ids_rec.dst_ip = rec.ma.hostname;
     
-    ids_rec.agent = " ";
+    ids_rec.agent = "indef";
     ids_rec.ids = sensor;
     ids_rec.action = "indef";
                 
@@ -517,6 +554,9 @@ int Waf::PushRecord(GrayList* gl) {
         
         if (gl->agr.reproduced > 0) {
             
+            ids_rec.host = gl->host;
+            ids_rec.match = gl->match;
+            
             ids_rec.agr.in_period = gl->agr.in_period;
             ids_rec.agr.reproduced = gl->agr.reproduced;
             
@@ -525,6 +565,8 @@ int Waf::PushRecord(GrayList* gl) {
             ids_rec.rsp.new_description = gl->rsp.new_description;
             ids_rec.rsp.new_event = gl->rsp.new_event;
             ids_rec.rsp.new_severity = gl->rsp.new_severity;
+            ids_rec.rsp.new_type = gl->rsp.new_type;
+            ids_rec.rsp.new_source = gl->rsp.new_source;
         }
     }
             
@@ -551,8 +593,8 @@ void Waf::SendAlert(int s, GrayList*  gl) {
         
     sk.alert.status = "processed_new";
     
-    sk.alert.srcip = rec.ma.hostname;
-    sk.alert.dstip = " ";
+    sk.alert.srcip = rec.ma.client;
+    sk.alert.dstip = rec.ma.hostname;
         
     sk.alert.source = "Modsecurity";
     sk.alert.type = "NET";
@@ -576,6 +618,16 @@ void Waf::SendAlert(int s, GrayList*  gl) {
             
         if (gl->rsp.profile.compare("indef") != 0) {
             sk.alert.action = gl->rsp.profile;
+            sk.alert.status = "modified_new";
+        } 
+        
+        if (gl->rsp.new_type.compare("indef") != 0) {
+            sk.alert.type = gl->rsp.new_type;
+            sk.alert.status = "modified_new";
+        }  
+        
+        if (gl->rsp.new_source.compare("indef") != 0) {
+            sk.alert.source = gl->rsp.new_source;
             sk.alert.status = "modified_new";
         } 
         

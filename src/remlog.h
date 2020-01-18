@@ -14,6 +14,7 @@
 #include "nids.h"
 #include "waf.h"
 #include "crs.h"
+#include "packetbeat.h"
 
 using namespace std;
 

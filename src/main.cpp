@@ -55,7 +55,7 @@ void * thread_statflows(void *arg) {
     pthread_exit(0);
 }
 
-Misc misc("misc");
+Misc misc("misc_redis");
 pthread_t pthread_misc;
 
 void* exit_thread_misc_arg;
@@ -66,6 +66,22 @@ void * thread_misc(void *arg) {
     pthread_cleanup_push(exit_thread_misc, exit_thread_misc_arg);
     
     while (misc.Go()) { }
+    
+    pthread_cleanup_pop(1);
+    pthread_exit(0);
+}
+
+Packetbeat packetbeat("packetbeat_redis");
+pthread_t pthread_packetbeat;
+
+void* exit_thread_packetbeat_arg;
+void exit_thread_packetbeat(void* arg) { packetbeat.Close(); }
+
+void * thread_packetbeat(void *arg) {
+    
+    pthread_cleanup_push(exit_thread_packetbeat, exit_thread_packetbeat_arg);
+    
+    while (packetbeat.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
@@ -192,7 +208,7 @@ void * thread_updates(void *arg) {
 }
 
 
-Collector collr(&crs, &hids, &nids, &waf, &misc, &remlog, &remstat, &statflows, &statids);
+Collector collr(&crs, &hids, &nids, &waf, &misc, &packetbeat, &remlog, &remstat, &statflows, &statids);
 pthread_t pthread_collr;
 
 void* exit_thread_collr_arg;
@@ -218,6 +234,9 @@ int LoadConfig(void)
     
     //misc
     if (!misc.GetConfig()) return 0;
+    
+    //packetbeat
+    if (!packetbeat.GetConfig()) return 0;
     
     //hids
     if (!hids.GetConfig()) return 0;
@@ -286,6 +305,19 @@ int InitThreads(int mode, pid_t pid)
             
         if (pthread_create(&pthread_misc, NULL, thread_misc, &arg)) {
             daemon_log(LOG_ERR,"error creating thread for misc");
+            return 0;
+        }
+    }
+    
+    //packetbeat
+    if (packetbeat.GetStatus()) {
+        if (!packetbeat.Open()) {
+            daemon_log(LOG_ERR,"cannot open Packetbeat server");
+            return 0;
+        }
+            
+        if (pthread_create(&pthread_packetbeat, NULL, thread_packetbeat, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for packetbeat");
             return 0;
         }
     }
@@ -413,6 +445,12 @@ void KillsThreads(void)
     if (misc.GetStatus()) {
         pthread_cancel(pthread_misc);
         pthread_join(pthread_misc, NULL);
+    }
+    
+    //packetbeat
+    if (packetbeat.GetStatus()) {
+        pthread_cancel(pthread_packetbeat);
+        pthread_join(pthread_packetbeat, NULL);
     }
     
     //hids

@@ -23,6 +23,7 @@
 #include "waf.h"
 #include "misc.h"
 #include "crs.h"
+#include "packetbeat.h"
 #include "statflows.h"
 #include "statids.h"
 #include "remlog.h"
@@ -44,6 +45,7 @@ public:
     Waf* waf; 
     Misc* misc; 
     Crs* crs;
+    Packetbeat* packetbeat;
     RemLog* rem_log;
     RemStat* rem_stat;
     StatFlows* stat_flows;
@@ -55,13 +57,14 @@ public:
     
     string ref_id;
     
-    Collector(Crs* c, Hids* h, Nids* n, Waf* w, Misc* m, RemLog* rl, RemStat* rs, StatFlows* f, StatIds* i) {
+    Collector(Crs* c, Hids* h, Nids* n, Waf* w, Misc* m, Packetbeat* p, RemLog* rl, RemStat* rs, StatFlows* f, StatIds* i) {
     
         crs = c;
         hids = h;
         nids = n;
         waf = w;
         misc = m;
+        packetbeat = p;
         rem_log = rl;
         rem_stat = rs;
         stat_flows = f;

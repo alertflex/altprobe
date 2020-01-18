@@ -34,6 +34,7 @@ public:
     unsigned int id;
     unsigned int severity;
     string hostname;
+    string client;
     string uri;
     string file; //location
     string msg;  // info
@@ -47,6 +48,7 @@ public:
         severity = 0;
         file.clear();
         msg.clear();
+        client.clear();
         hostname.clear();
         uri.clear();
         
@@ -77,6 +79,7 @@ public:
         return mod_rec;
     } 
     
+    void GetClient(const string str); 
     void GetAuditHeader(const string str); 
     void CheckAuditFields(const string str);
     void RemoveAuditParametersName(const string field, const string str);

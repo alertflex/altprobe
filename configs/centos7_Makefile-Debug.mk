@@ -48,6 +48,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/misc.o \
 	${OBJECTDIR}/nids.o \
+	${OBJECTDIR}/packetbeat.o \
 	${OBJECTDIR}/remlog.o \
 	${OBJECTDIR}/remstat.o \
 	${OBJECTDIR}/sinks.o \
@@ -61,7 +62,6 @@ OBJECTFILES= \
 # C Compiler Flags
 CFLAGS=
 
-# CC Compiler Flags
 # CC Compiler Flags
 CCFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/include/hiredis -I/usr/include/activemq-cpp-3.9.3/ -I/usr/include/apr-1/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++0x
 CXXFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/include/hiredis -I/usr/include/activemq-cpp-3.9.3/ -I/usr/include/apr-1/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++0x
@@ -147,6 +147,11 @@ ${OBJECTDIR}/nids.o: nids.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/nids.o nids.cpp
+
+${OBJECTDIR}/packetbeat.o: packetbeat.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/packetbeat.o packetbeat.cpp
 
 ${OBJECTDIR}/remlog.o: remlog.cpp
 	${MKDIR} -p ${OBJECTDIR}

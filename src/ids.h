@@ -33,10 +33,14 @@ public:
     string user;
     string agent;
     string container;
+    
                         
     std::vector<string> list_cats;
     
     // for checking of reproduce the alert
+    string match;
+    string host;
+    
     Aggregator agr;
     Response rsp;
     
@@ -61,8 +65,11 @@ public:
         file.clear();
         agent.clear();
         container.clear();
-                                        
+        
         list_cats.clear();
+        
+        match.clear();
+        host.clear();
         
         agr.reproduced = 0;
         count = 0;

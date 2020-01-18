@@ -227,11 +227,17 @@ GrayList* Nids::CheckGrayList() {
             int event_id = std::stoi((*i)->event);
             if (event_id == rec.alert.signature_id) {
                 
-                string agent = (*i)->host;
+                string host = (*i)->host;
                 
-                if (agent.compare("all") == 0 || agent.compare(rec.src_agent) == 0 || agent.compare(rec.dst_agent) == 0) {
+                if (host.compare("indef") == 0 || host.compare(rec.dst_ip) == 0 || host.compare(rec.src_ip) == 0) {
                         
-                    return (*i);
+                    string match = (*i)->match;
+                    
+                    if (match.compare("indef") == 0) return (*i);
+                    else {
+                        size_t found = jsonPayload.find(match); 
+                        if (found != std::string::npos) return (*i);
+                    }
                 }
             }
         }
@@ -533,10 +539,10 @@ void Nids::CreateLogPayload(int r) {
             report +=  "\",\"_ids\":\"";
             report +=  rec.ids;
 			
-            report += "\",\"_srcip_host\":\"";
+            report += "\",\"_srcagent\":\"";
             report += rec.src_agent;
 			
-            report += "\",\"_dstip_host\":\"";
+            report += "\",\"_dstagent\":\"";
             report += rec.dst_agent;
 			
             report +=  "\",\"_srcport\":";
@@ -597,10 +603,10 @@ void Nids::CreateLogPayload(int r) {
             report +=  "\",\"_ids\":\"";
             report +=  rec.ids;
 			
-            report += "\",\"_srcip_host\":\"";
+            report += "\",\"_srcagent\":\"";
             report += rec.src_agent;
 			
-            report += "\",\"_dstip_host\":\"";
+            report += "\",\"_dstagent\":\"";
             report += rec.dst_agent;
 			
             report +=  "\",\"_srcport\":";
@@ -674,10 +680,10 @@ void Nids::CreateLogPayload(int r) {
             report +=  "\",\"_ids\":\"";
             report +=  rec.ids;
 			
-            report += "\",\"_srcip_host\":\"";
+            report += "\",\"_srcagent\":\"";
             report += rec.src_agent;
 			
-            report += "\",\"_dstip_host\":\"";
+            report += "\",\"_dstagent\":\"";
             report += rec.dst_agent;
 			
             report +=  "\",\"_srcport\":";
@@ -742,10 +748,10 @@ void Nids::CreateLogPayload(int r) {
             report +=  "\",\"_ids\":\"";
             report +=  rec.ids;
 			
-            report += "\",\"_srcip_host\":\"";
+            report += "\",\"_srcagent\":\"";
             report += rec.src_agent;
 			
-            report += "\",\"_dstip_host\":\"";
+            report += "\",\"_dstagent\":\"";
             report += rec.dst_agent;
 			
             report += "\",\"_srcport\":";
@@ -813,10 +819,10 @@ void Nids::CreateLogPayload(int r) {
             report +=  "\",\"_ids\":\"";
             report +=  rec.ids;
 			
-            report += "\",\"_srcip_host\":\"";
+            report += "\",\"_srcagent\":\"";
             report += rec.src_agent;
 			
-            report += "\",\"_dstip_host\":\"";
+            report += "\",\"_dstagent\":\"";
             report += rec.dst_agent;
 			
             report += "\",\"_srcport\":";
@@ -879,7 +885,17 @@ void Nids::SendAlert(int s, GrayList* gl) {
             sk.alert.status = "modified_new";
         } 
         
-        if (gl->rsp.new_event.compare("") != 0) {
+        if (gl->rsp.new_type.compare("indef") != 0) {
+            sk.alert.type = gl->rsp.new_type;
+            sk.alert.status = "modified_new";
+        }  
+        
+        if (gl->rsp.new_source.compare("indef") != 0) {
+            sk.alert.source = gl->rsp.new_source;
+            sk.alert.status = "modified_new";
+        } 
+        
+        if (gl->rsp.new_event.compare("indef") != 0) {
             sk.alert.event = gl->rsp.new_event;
             sk.alert.status = "modified_new";
         }    
@@ -889,12 +905,12 @@ void Nids::SendAlert(int s, GrayList* gl) {
             sk.alert.status = "modified_new";
         }   
             
-        if (gl->rsp.new_category.compare("") != 0) {
+        if (gl->rsp.new_category.compare("indef") != 0) {
             sk.alert.list_cats.push_back(gl->rsp.new_category);
             sk.alert.status = "modified_new";
         }   
                 
-        if (gl->rsp.new_description.compare("") != 0) {
+        if (gl->rsp.new_description.compare("indef") != 0) {
             sk.alert.description = gl->rsp.new_description;
             sk.alert.status = "modified_new";
         }   
@@ -910,17 +926,11 @@ void Nids::SendAlert(int s, GrayList* gl) {
     sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = rec.time_stamp;
               
-    sk.alert.info = "\"artifacts\": [";
-    
-    sk.alert.info += " {\"dataType\": \"ip\",\"data\":\"";
+    sk.alert.info = "{\"artifacts\": [{\"dataType\": \"ip\",\"data\":\"";
     sk.alert.info += rec.src_ip;
-    sk.alert.info += "\",\"message\":\"src ip\" }, ";
-        
-    sk.alert.info += " {\"dataType\": \"ip\",\"data\":\"";
+    sk.alert.info += "\",\"message\":\"src ip\" }, {\"dataType\": \"ip\",\"data\":\"";
     sk.alert.info += rec.dst_ip;
-    sk.alert.info += "\",\"message\":\"dst ip\" } ";
-        
-    sk.alert.info += "]";
+    sk.alert.info += "\",\"message\":\"dst ip\" }]}";
         
     sk.alert.event_json = jsonPayload;
     
@@ -968,6 +978,9 @@ int Nids::PushIdsRecord(GrayList* gl) {
         
         if (gl->agr.reproduced > 0) {
             
+            ids_rec.host = gl->host;
+            ids_rec.match = gl->match;
+            
             ids_rec.agr.in_period = gl->agr.in_period;
             ids_rec.agr.reproduced = gl->agr.reproduced;
             
@@ -976,6 +989,8 @@ int Nids::PushIdsRecord(GrayList* gl) {
             ids_rec.rsp.new_description = gl->rsp.new_description;
             ids_rec.rsp.new_event = gl->rsp.new_event;
             ids_rec.rsp.new_severity = gl->rsp.new_severity;
+            ids_rec.rsp.new_type = gl->rsp.new_type;
+            ids_rec.rsp.new_source = gl->rsp.new_source;
             
         }
     }

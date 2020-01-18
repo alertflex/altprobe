@@ -107,6 +107,8 @@ public:
 class Response {
 public:
     string profile;
+    string new_type;
+    string new_source;
     string new_event;
     int new_severity;
     string new_category;
@@ -114,6 +116,8 @@ public:
     
     void Reset () {
         profile.clear();
+        new_type.clear();
+        new_source.clear();
         new_event.clear();
         new_category.clear();
         new_description.clear();
@@ -128,6 +132,7 @@ class GrayList {
 public:  
     string event;
     string host;
+    string match;
     
     Aggregator agr;
     Response rsp;
@@ -135,7 +140,7 @@ public:
     void Reset () {
         event.clear();
         host.clear();
-        
+        match.clear();
     }
     
     GrayList () {

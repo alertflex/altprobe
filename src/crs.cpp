@@ -231,9 +231,15 @@ GrayList* Crs::CheckGrayList() {
                 
                 string container = (*i)->host;
                 
-                if (container.compare("all") == 0 || container.compare(rec.fields.container_id) == 0 || container.compare(rec.fields.container_name) == 0) {
+                if (container.compare("indef") == 0 || container.compare(rec.fields.container_id) == 0 || container.compare(rec.fields.container_name) == 0) {
                 
-                    return (*i);
+                    string match = (*i)->match;
+                    
+                    if (match.compare("indef") == 0) return (*i);
+                    else {
+                        size_t found = jsonPayload.find(match); 
+                        if (found != std::string::npos) return (*i);
+                    }
                 }
             }
         }
@@ -296,17 +302,17 @@ int Crs::ParsJson() {
     
     rec.rule = pt.get<string>("rule","");
     
-    rec.fields.fd_name = pt.get<string>("output_fields.fd.name","");
+    rec.fields.fd_name = pt.get<string>("output_fields.fd.name","indef");
         
-    rec.fields.proc_cmdline = pt.get<string>("output_fields.proc.cmdline","");
+    rec.fields.proc_cmdline = pt.get<string>("output_fields.proc.cmdline","indef");
     
-    rec.fields.proc_name = pt.get<string>("output_fields.proc.name","");
+    rec.fields.proc_name = pt.get<string>("output_fields.proc.name","indef");
     
-    rec.fields.user_name = pt.get<string>("output_fields.user.name","");
+    rec.fields.user_name = pt.get<string>("output_fields.user.name","indef");
     
-    rec.fields.container_id = pt.get<string>("output_fields.container.id","");
+    rec.fields.container_id = pt.get<string>("output_fields.container.id","indef");
     
-    rec.fields.container_name = pt.get<string>("output_fields.container.name","");
+    rec.fields.container_name = pt.get<string>("output_fields.container.name","indef");
     
     ResetStreams();
     
@@ -315,7 +321,56 @@ int Crs::ParsJson() {
 
 void Crs::CreateLog() {
     
+    report = "{\"version\": \"1.1\",\"host\":\"";
+    report += node_id;
+    report += "\",\"short_message\":\"alert-crs\"";
+    report += ",\"full_message\":\"Alert from Falco\"";
+    report += ",\"level\":";
+    report += std::to_string(7);
+    report += ",\"_type\":\"HOST\"";
+    report += ",\"_source\":\"Falco\"";
+        
+    report +=  ",\"_project_id\":\"";
+    report +=  fs.filter.ref_id;
+			
+    report +=  "\",\"_event_time\":\"";
+    report +=  rec.timestamp;
     
+    report += "\",\"_collected_time\":\"";
+    report += GetGraylogFormat();
+    
+    report += "\",\"_priority\":\"";
+    report += rec.priority;
+    
+    report += "\",\"_rule\":\"";
+    report += rec.rule;
+		
+    report += "\",\"_description\":\"";
+    report += rec.output;
+    
+    report += "\",\"_file\":\"";
+    report += rec.fields.fd_name;
+    
+    report += "\",\"_user\":\"";
+    report += rec.fields.user_name;
+    
+    report += "\",\"_process\":\"";
+    report += rec.fields.proc_name;
+    
+    report += "\",\"_cmd\":\"";
+    report += rec.fields.proc_cmdline;
+    
+    report += "\",\"_container_id\":\"";
+    report += rec.fields.container_id;
+    
+    report += "\",\"_container_name\":\"";
+    report += rec.fields.container_name;
+    
+    report += "\"}";
+    
+    q_logs_crs.push(report);
+    
+    report.clear();
 }
 
 int Crs::PushRecord(GrayList* gl) {
@@ -354,6 +409,9 @@ int Crs::PushRecord(GrayList* gl) {
         
         if (gl->agr.reproduced > 0) {
             
+            ids_rec.host = gl->host;
+            ids_rec.match = gl->match;
+            
             ids_rec.agr.in_period = gl->agr.in_period;
             ids_rec.agr.reproduced = gl->agr.reproduced;
             
@@ -362,6 +420,8 @@ int Crs::PushRecord(GrayList* gl) {
             ids_rec.rsp.new_description = gl->rsp.new_description;
             ids_rec.rsp.new_event = gl->rsp.new_event;
             ids_rec.rsp.new_severity = gl->rsp.new_severity;
+            ids_rec.rsp.new_type = gl->rsp.new_type;
+            ids_rec.rsp.new_source = gl->rsp.new_source;
             
         }
     }
@@ -406,7 +466,12 @@ void Crs::SendAlert(int s, GrayList*  gl) {
         
     sk.alert.type = "HOST";
             
-    sk.alert.location = "";
+    sk.alert.location = rec.fields.proc_cmdline;
+    sk.alert.file = rec.fields.fd_name;
+    sk.alert.container = rec.fields.container_id;
+    sk.alert.user = rec.fields.user_name;
+    sk.alert.process = rec.fields.proc_name;
+    
     sk.alert.info = rec.rule;
         
     if (gl != NULL) {
@@ -416,7 +481,22 @@ void Crs::SendAlert(int s, GrayList*  gl) {
             sk.alert.status = "modified_new";
         } 
         
-        if (gl->rsp.new_event.compare("") != 0) {
+        if (gl->rsp.new_type.compare("indef") != 0) {
+            sk.alert.type = gl->rsp.new_type;
+            sk.alert.status = "modified_new";
+        }  
+        
+        if (gl->rsp.new_source.compare("indef") != 0) {
+            sk.alert.source = gl->rsp.new_source;
+            sk.alert.status = "modified_new";
+        } 
+        
+        if (gl->rsp.new_event.compare("indef") != 0) {
+            sk.alert.event = gl->rsp.new_event;
+            sk.alert.status = "modified_new";
+        }  
+        
+        if (gl->rsp.new_event.compare("indef") != 0) {
             sk.alert.event = gl->rsp.new_event;
             sk.alert.status = "modified_new";
         }    
@@ -426,12 +506,12 @@ void Crs::SendAlert(int s, GrayList*  gl) {
             sk.alert.status = "modified_new";
         }   
             
-        if (gl->rsp.new_category.compare("") != 0) {
+        if (gl->rsp.new_category.compare("indef") != 0) {
             sk.alert.list_cats.push_back(gl->rsp.new_category);
             sk.alert.status = "modified_new";
         }   
                 
-        if (gl->rsp.new_description.compare("") != 0) {
+        if (gl->rsp.new_description.compare("indef") != 0) {
             sk.alert.description = gl->rsp.new_description;
             sk.alert.status = "modified_new";
         }   
