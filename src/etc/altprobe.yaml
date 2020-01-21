@@ -9,7 +9,7 @@ collector:
   probe: "_probe_id"
   
   # allow remote management of collector from controller
-  active_response: "false"
+  active_response: "true"
   update_remote: "true"
   
   # time difference between collector and controller's, timezones in hours
