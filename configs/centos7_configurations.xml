@@ -18,7 +18,6 @@
       <itemPath>main.h</itemPath>
       <itemPath>misc.h</itemPath>
       <itemPath>nids.h</itemPath>
-      <itemPath>packetbeat.h</itemPath>
       <itemPath>remlog.h</itemPath>
       <itemPath>remstat.h</itemPath>
       <itemPath>sinks.h</itemPath>
@@ -48,7 +47,6 @@
       <itemPath>main.cpp</itemPath>
       <itemPath>misc.cpp</itemPath>
       <itemPath>nids.cpp</itemPath>
-      <itemPath>packetbeat.cpp</itemPath>
       <itemPath>remlog.cpp</itemPath>
       <itemPath>remstat.cpp</itemPath>
       <itemPath>sinks.cpp</itemPath>
@@ -142,10 +140,6 @@
       <item path="nids.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="nids.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="packetbeat.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="packetbeat.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="remlog.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -253,10 +247,6 @@
       <item path="nids.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="nids.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="packetbeat.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="packetbeat.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="remlog.cpp" ex="false" tool="1" flavor2="0">
       </item>

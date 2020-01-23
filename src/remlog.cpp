@@ -35,7 +35,7 @@ void  RemLog::Close() {
 int RemLog::Go(void) {
     
         
-    while (!q_logs_nids.empty() || !q_logs_hids.empty() || !q_logs_waf.empty() || !q_logs_crs.empty() || !q_logs_packetbeat.empty()) {
+    while (!q_logs_nids.empty() || !q_logs_hids.empty() || !q_logs_waf.empty() || !q_logs_crs.empty()) {
         
         if (!q_logs_crs.empty()) {
             q_logs_crs.pop(rec);
@@ -61,11 +61,6 @@ int RemLog::Go(void) {
             counter++;
         }
         
-        if (!q_logs_packetbeat.empty()) {
-            q_logs_packetbeat.pop(rec);
-            logs_list.push_back(rec);
-            counter++;
-        }
     }    
         
     if (counter < 100 && timeout < 10) {

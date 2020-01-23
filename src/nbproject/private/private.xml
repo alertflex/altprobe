@@ -21,8 +21,6 @@
             <file>file:/root/NetBeansProjects/collector/waf.cpp</file>
             <file>file:/root/NetBeansProjects/collector/hids.cpp</file>
             <file>file:/root/NetBeansProjects/collector/nids.cpp</file>
-            <file>file:/root/NetBeansProjects/collector/packetbeat.cpp</file>
-            <file>file:/root/NetBeansProjects/collector/packetbeat.h</file>
             <file>file:/root/NetBeansProjects/collector/etc/altprobe.yaml</file>
         </group>
     </open-files>

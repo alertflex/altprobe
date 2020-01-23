@@ -5,7 +5,7 @@
  * Created on February 27, 2014, 3:07 PM
  */
 #include <mutex>
-#include <activemq-cpp-3.9.5/cms/Message.h>
+#include <activemq-cpp-3.10.0/cms/Message.h>
 
 #include <libdaemon/dfork.h>
 #include <libdaemon/dsignal.h>

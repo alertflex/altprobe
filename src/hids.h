@@ -79,6 +79,7 @@ public:
     string location;
     string agent;
     string user;
+    string process;
     string hostname;
     
     /* Extracted from the decoders */
@@ -100,6 +101,7 @@ public:
         user.clear();
         location.clear();
         hostname.clear();
+        process.clear();
         /* Extracted from the decoders */
         srcip.clear();
         dstip.clear();

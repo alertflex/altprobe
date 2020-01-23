@@ -820,14 +820,17 @@ int Hids::ParsJson() {
     rec.file.gowner_before = pt.get<string>("syscheck.gowner_before","");
     
     rec.file.gowner_after = pt.get<string>("syscheck.gowner_after","");
+    
+    rec.process = pt.get<string>("syscheck.audit.process.name","indef");
+    
+    string user = pt.get<string>("syscheck.audit.user.name","indef");
         
+    if (user.compare("indef") == 0) {   
+        user = pt.get<string>("data.srcuser","indef");
+    }
         
-    string user = pt.get<string>("data.srcuser","");
-        
-    if (user.compare("") == 0) {
-            
-        user = pt.get<string>("data.dstuser","");
-        
+    if (user.compare("indef") == 0) {
+        user = pt.get<string>("data.dstuser","indef");
     }
         
     rec.user = user;
@@ -902,7 +905,9 @@ void Hids::CreateLog() {
     report += rec.srcip;
     report += "\",\"_dstip\":\"";
     report += rec.dstip;
-	report += "\",\"_user\":\"";
+    report += "\",\"_process\":\"";
+    report += rec.process;
+    report += "\",\"_user\":\"";
     report += rec.user;
     if (rec.file.filename.compare("") != 0) {
         report += "\",\"_filename\":\"";
@@ -962,6 +967,7 @@ int Hids::PushRecord(GrayList* gl) {
     ids_rec.dst_ip = rec.dstip;
     
     ids_rec.agent = rec.agent;
+    ids_rec.process = rec.process;
     ids_rec.user = rec.user;
     ids_rec.ids = sensor;
     ids_rec.action = "indef";
@@ -1035,7 +1041,7 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     sk.alert.event_time = rec.timestamp;
     
     sk.alert.container = "indef";
-    sk.alert.process = "indef";
+    sk.alert.process = rec.process;
         
     if (rec.file.filename.compare("") == 0) {
             

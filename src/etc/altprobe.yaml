@@ -54,9 +54,8 @@ controller:
   key_pwd: "_key_pwd"
     
 sources:
-  # for reading of events from altprobe clients (misc) and netflow from Elastic Stack Packetbeat only Redis intefrace can be used 
+  # for reading of events from altprobe clients (misc) only Redis intefrace can be used 
   misc_redis: "altprobe_misc"
-  packetbeat_redis: "altprobe_packets"
   
   # Altprobe can read events of falco, suricata, wazuh and modsec directly from log files
   # if xxx_log is "indef" redis interface will be used

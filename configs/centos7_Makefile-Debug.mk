@@ -48,7 +48,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/misc.o \
 	${OBJECTDIR}/nids.o \
-	${OBJECTDIR}/packetbeat.o \
 	${OBJECTDIR}/remlog.o \
 	${OBJECTDIR}/remstat.o \
 	${OBJECTDIR}/sinks.o \
@@ -147,11 +146,6 @@ ${OBJECTDIR}/nids.o: nids.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/nids.o nids.cpp
-
-${OBJECTDIR}/packetbeat.o: packetbeat.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/packetbeat.o packetbeat.cpp
 
 ${OBJECTDIR}/remlog.o: remlog.cpp
 	${MKDIR} -p ${OBJECTDIR}

@@ -99,7 +99,6 @@ void Collector::RoutineJob() {
     unsigned long cnids = nids->ResetEventsCounter();
     unsigned long cwaf = waf->ResetEventsCounter();
     unsigned long cmisc = misc->ResetEventsCounter();
-    unsigned long cpacketbeat = packetbeat->ResetEventsCounter();
     unsigned long cstatflows = stat_flows->ResetEventsCounter();
     unsigned long cremlog = rem_log->ResetEventsCounter();
     unsigned long vremlog = rem_log->ResetEventsVolume();
@@ -124,9 +123,6 @@ void Collector::RoutineJob() {
     ss << ", \"misc\": ";
     ss << to_string(cmisc);
     
-    ss << ", \"packetbeat\": ";
-    ss << to_string(cpacketbeat);
-        
     ss << ", \"flows\": ";
     ss << to_string(cstatflows);
         
