@@ -508,6 +508,9 @@ void Nids::CreateLogPayload(int r) {
 			
             report +=  ",\"_project_id\":\"";
             report +=  fs.filter.ref_id;
+            
+            report +=  "\",\"_sensor\":\"";
+            report +=  rec.ids;
 			
             report +=  "\",\"_event_time\":\"";
             report +=  rec.time_stamp;
@@ -536,9 +539,6 @@ void Nids::CreateLogPayload(int r) {
             report +=  "\",\"_dstip\":\"";
             report +=  rec.dst_ip;
             
-            report +=  "\",\"_ids\":\"";
-            report +=  rec.ids;
-			
             report += "\",\"_srcagent\":\"";
             report += rec.src_agent;
 			
@@ -578,6 +578,9 @@ void Nids::CreateLogPayload(int r) {
 		
             report +=  ",\"_project_id\":\"";
             report +=  fs.filter.ref_id;
+            
+            report +=  "\",\"_sensor\":\"";
+            report +=  rec.ids;
 			
             report +=  "\",\"_event_time\":\"";
             report +=  rec.time_stamp;
@@ -600,9 +603,6 @@ void Nids::CreateLogPayload(int r) {
             report +=  "\",\"_dstip\":\"";
             report +=  rec.dst_ip;
             
-            report +=  "\",\"_ids\":\"";
-            report +=  rec.ids;
-			
             report += "\",\"_srcagent\":\"";
             report += rec.src_agent;
 			
@@ -658,6 +658,9 @@ void Nids::CreateLogPayload(int r) {
 		
             report +=  ",\"_project_id\":\"";
             report +=  fs.filter.ref_id;
+            
+            report +=  "\",\"_sensor\":\"";
+            report +=  rec.ids;
 			
             report +=  "\",\"_event_time\":\"";
             report +=  rec.time_stamp;
@@ -665,9 +668,6 @@ void Nids::CreateLogPayload(int r) {
             report += "\",\"_collected_time\":\"";
             report += GetGraylogFormat();
 			
-            report +=  "\",\"_iface\":\"";
-            report +=  rec.iface;
-            
             report +=  "\",\"_flow_id\":";
             report +=  std::to_string(rec.flow_id);
 			
@@ -677,9 +677,6 @@ void Nids::CreateLogPayload(int r) {
             report +=  "\",\"_dstip\":\"";
             report +=  rec.dst_ip;
             
-            report +=  "\",\"_ids\":\"";
-            report +=  rec.ids;
-			
             report += "\",\"_srcagent\":\"";
             report += rec.src_agent;
 			
@@ -720,6 +717,9 @@ void Nids::CreateLogPayload(int r) {
 			
             report +=  ",\"_project_id\":\"";
             report +=  fs.filter.ref_id;
+            
+            report +=  "\",\"_sensor\":\"";
+            report +=  rec.ids;
 			
             report +=  "\",\"_event_time\":\"";
             report +=  rec.time_stamp;
@@ -730,52 +730,34 @@ void Nids::CreateLogPayload(int r) {
             report += "\",\"_protocol\":\"";
             report += rec.protocol;
 			
-            report += "\",\"_app_proto\":\"";
+            report += "\",\"_process\":\"";
             report += rec.netflow.app_proto;
 			
-            report +=  "\",\"_iface\":\"";
-            report +=  rec.iface;
-            
-            report +=  "\",\"_flow_id\":";
-            report +=  std::to_string(rec.flow_id);
-			
-            report += ",\"_srcip\":\"";
+            report += "\",\"_srcip\":\"";
             report += rec.src_ip;
-			
-            report += "\",\"_dstip\":\"";
-            report += rec.dst_ip;
             
-            report +=  "\",\"_ids\":\"";
-            report +=  rec.ids;
-			
             report += "\",\"_srcagent\":\"";
             report += rec.src_agent;
-			
-            report += "\",\"_dstagent\":\"";
-            report += rec.dst_agent;
-			
+            
             report += "\",\"_srcport\":";
             report += std::to_string(rec.src_port);
 			
-            report += ",\"_dstport\":";
+            report += ",\"_dstip\":\"";
+            report += rec.dst_ip;
+            
+            report += "\",\"_dstagent\":\"";
+            report += rec.dst_agent;
+			
+            report += "\",\"_dstport\":";
             report += std::to_string(rec.dst_port);
 			
             report += ",\"_bytes\":";
             report += std::to_string(rec.netflow.bytes);
 			
-            report += ",\"_pkts\":";
+            report += ",\"_packets\":";
             report += std::to_string(rec.netflow.pkts);
 			
-            report += ",\"_age\":";
-            report += std::to_string(rec.netflow.age);
-			
-            report += ",\"_start\":\"";
-            report += rec.netflow.start;
-			
-            report += "\",\"_end\":\"";
-            report += rec.netflow.end;
-			
-            report += "\"}";
+            report += "}";
             break;
             
         case 5: // file record
@@ -791,6 +773,9 @@ void Nids::CreateLogPayload(int r) {
 			
             report +=  ",\"_project_id\":\"";
             report +=  fs.filter.ref_id;
+            
+            report +=  "\",\"_sensor\":\"";
+            report +=  rec.ids;
 			
             report +=  "\",\"_event_time\":\"";
             report +=  rec.time_stamp;
@@ -801,34 +786,25 @@ void Nids::CreateLogPayload(int r) {
             report += "\",\"_protocol\":\"";
             report += rec.protocol;
 			
-            report += "\",\"_app_proto\":\"";
+            report += "\",\"_process\":\"";
             report += rec.file.app_proto;
 			
-            report +=  "\",\"_iface\":\"";
-            report +=  rec.iface;
-            
-            report +=  "\",\"_flow_id\":";
-            report +=  std::to_string(rec.flow_id);
-			
-            report += ",\"_srcip\":\"";
+            report += "\",\"_srcip\":\"";
             report += rec.src_ip;
-			
-            report += "\",\"_dstip\":\"";
-            report += rec.dst_ip;
             
-            report +=  "\",\"_ids\":\"";
-            report +=  rec.ids;
-			
             report += "\",\"_srcagent\":\"";
             report += rec.src_agent;
-			
-            report += "\",\"_dstagent\":\"";
-            report += rec.dst_agent;
-			
+            
             report += "\",\"_srcport\":";
             report += std::to_string(rec.src_port);
 			
-            report += ",\"_dstport\":";
+            report += ",\"_dstip\":\"";
+            report += rec.dst_ip;
+            
+            report += "\",\"_dstagent\":\"";
+            report += rec.dst_agent;
+			
+            report += "\",\"_dstport\":";
             report += std::to_string(rec.dst_port);
 			
             report += ",\"_filename\":\"";
