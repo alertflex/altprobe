@@ -80,6 +80,6 @@ sources:
   
   wazuh_log: "_wazuh_log"
   wazuh_redis: "altprobe_hids" 
-  wazuh_conf: "/var/ossec/etc/"
+  wazuh_conf: "/var/ossec/data/etc/"
   wazuh_rules: "/var/ossec/ruleset/"
-  wazuh_local: "/var/ossec/etc/"
+  wazuh_local: "/var/ossec/data/etc/"
