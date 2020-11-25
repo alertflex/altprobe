@@ -16,36 +16,33 @@ int Nids::Open() {
     
     if (!sk.Open()) return 0;
     
-    if (status == 1) {
+    if (surilog_status == 1) {
         
-        if (surilog_status == 2) {
-            
-            fp = fopen(suri_log, "r");
-            if(fp == NULL) {
-                SysLog("failed open suricata log file");
+        fp = fopen(suri_log, "r");
+        if(fp == NULL) {
+            SysLog("failed open suricata log file");
+            return 0;
+        }
+        
+        fseek(fp,0,SEEK_END);
+        stat(suri_log, &buf);    
+        file_size = (unsigned long) buf.st_size;
+        
+    } else {
+        
+        if (redis_status == 1) {
+            c = redisConnect(sk.redis_host, sk.redis_port);
+    
+            if (c != NULL && c->err) {
+                // handle error
+                sprintf(level, "failed open redis server interface: %s\n", c->errstr);
+                SysLog(level);
                 return 0;
             }
-            
-            fseek(fp,0,SEEK_END);
-            stat(suri_log, &buf);    
-            file_size = (unsigned long) buf.st_size;
-            
-        } else {
-            
-            if (surilog_status == 1) {
-                c = redisConnect(sk.redis_host, sk.redis_port);
-    
-                if (c != NULL && c->err) {
-                    // handle error
-                    sprintf(level, "failed open redis server interface: %s\n", c->errstr);
-                    SysLog(level);
-                    return 0;
-                }
-            }  else return 0;
-        }
+        }  else status = 0;
     }
     
-    return 1;
+    return status;
 }
 
 void Nids::Close() {
@@ -54,9 +51,13 @@ void Nids::Close() {
     
     if (status == 1) {
         
-        if (surilog_status == 2) {
+        if (surilog_status == 1) {
             if (fp != NULL) fclose(fp);
-        } else redisFree(c);
+        } else {
+            if (redis_status == 1) redisFree(c);
+        }
+        
+        status = 0;
     }
     
 }
@@ -131,7 +132,7 @@ int Nids::Go(void) {
     
     if (status) {
         
-        if (surilog_status == 2) {
+        if (surilog_status == 1) {
             
             res = ReadFile();
             
@@ -172,6 +173,8 @@ int Nids::Go(void) {
             }
         }
         
+        IncrementEventsCounter();
+        
         if (res != 0) {
             
             boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
@@ -200,14 +203,10 @@ int Nids::Go(void) {
                         alerts_counter++;
                     }
                 }
-            } else {
-                
-                if (res == 3) PushFlowsRecord();
-            
-            }
+            } 
         } 
             
-        if (surilog_status == 1) freeReplyObject(reply);
+        if (redis_status == 1) freeReplyObject(reply);
     } 
     else {
         usleep(GetGosleepTimer()*60);
@@ -251,8 +250,8 @@ int Nids::ParsJson () {
     
     // SysLog(payload);
     
-    if (surilog_status == 1) jsonPayload.assign(reply->str, GetBufferSize(reply->str));
-    else jsonPayload.assign(file_payload, GetBufferSize(file_payload));
+    if (surilog_status == 1) jsonPayload.assign(file_payload, GetBufferSize(file_payload));
+    else jsonPayload.assign(reply->str, GetBufferSize(reply->str));
     
     try {
         ss << jsonPayload;
@@ -267,8 +266,6 @@ int Nids::ParsJson () {
     string event_type = pt.get<string>("event_type","");
     
     if (event_type.compare("alert") == 0) {
-        
-        IncrementEventsCounter();
         
         rec.event_type = 1;
         
@@ -356,7 +353,7 @@ int Nids::ParsJson () {
         return rec.event_type;
     }
     
-    if (event_type.compare("ssh") == 0) {
+    if (event_type.compare("http") == 0) {
         
         rec.event_type = 3;
         
@@ -377,10 +374,10 @@ int Nids::ParsJson () {
         rec.ids = sensor;
         rec.protocol = pt.get<string>("proto","");
         
-        rec.ssh.client_proto = pt.get<string>("ssh.client.proto_version","indef");
-        rec.ssh.server_proto = pt.get<string>("ssh.server.proto_version","indef");
-        rec.ssh.client_sw = pt.get<string>("ssh.client.software_version","indef");
-        rec.ssh.server_sw = pt.get<string>("ssh.server.software_version","indef");
+        rec.http.hostname = pt.get<string>("http.hostname","indef");
+        rec.http.url = pt.get<string>("http.url","indef");
+        rec.http.http_user_agent = pt.get<string>("http.http_user_agent","indef");
+        rec.http.http_content_type = pt.get<string>("http.http_content_type","indef");
         
         ResetStream();
         return rec.event_type;
@@ -456,8 +453,6 @@ int Nids::ParsJson () {
         return rec.event_type;
     } 
     
-    rec.event_type = 0;
-    
     if (event_type.compare("stats") == 0) {
         
         net_stat.ids = sensor;
@@ -488,7 +483,7 @@ int Nids::ParsJson () {
     } 
     
     ResetStream();
-    return rec.event_type;
+    return 0;
 }
 
 void Nids::CreateLogPayload(int r) {
@@ -503,8 +498,8 @@ void Nids::CreateLogPayload(int r) {
             report += ",\"full_message\":\"Alert from Suricata NIDS\"";
             report += ",\"level\":";
             report += std::to_string(7);
-            report += ",\"_type\":\"NET\"";
-            report += ",\"_source\":\"Suricata\"";
+            report += ",\"_source_type\":\"NET\"";
+            report += ",\"_source_name\":\"Suricata\"";
 			
             report +=  ",\"_project_id\":\"";
             report +=  fs.filter.ref_id;
@@ -573,8 +568,8 @@ void Nids::CreateLogPayload(int r) {
             report += ",\"full_message\":\"DNS event from Suricata NIDS\"";
             report += ",\"level\":";
             report += std::to_string(7);
-            report += ",\"_type\":\"NET\"";
-            report += ",\"_source\":\"Suricata\"";
+            report += ",\"_source_type\":\"NET\"";
+            report += ",\"_source_name\":\"Suricata\"";
 		
             report +=  ",\"_project_id\":\"";
             report +=  fs.filter.ref_id;
@@ -645,16 +640,16 @@ void Nids::CreateLogPayload(int r) {
             
             break;
             
-        case 3: // ssh record
+        case 3: // http record
 			
             report = "{\"version\": \"1.1\",\"host\":\"";
             report += node_id;
-            report += "\",\"short_message\":\"ssh-nids\"";
-            report += ",\"full_message\":\"SSH event from Suricata NIDS\"";
+            report += "\",\"short_message\":\"http-nids\"";
+            report += ",\"full_message\":\"HTTP event from Suricata NIDS\"";
             report += ",\"level\":";
             report += std::to_string(7);
-            report += ",\"_type\":\"NET\"";
-            report += ",\"_source\":\"Suricata\"";
+            report += ",\"_source_type\":\"NET\"";
+            report += ",\"_source_name\":\"Suricata\"";
 		
             report +=  ",\"_project_id\":\"";
             report +=  fs.filter.ref_id;
@@ -689,17 +684,17 @@ void Nids::CreateLogPayload(int r) {
             report +=  ",\"_dstport\":";
             report +=  std::to_string(rec.dst_port);
 			
-            report +=  ",\"_client_proto_ver\":\"";
-            report +=  rec.ssh.client_proto;
+            report +=  ",\"_url_hostname\":\"";
+            report +=  rec.http.hostname;
 			
-            report +=  "\",\"_client_sw_ver\":\"";
-            report +=  rec.ssh.client_sw;
+            report +=  "\",\"_url_path\":\"";
+            report +=  rec.http.url;
 			
-            report +=  "\",\"_server_proto_ver\":\"";
-            report +=  rec.ssh.server_proto;
+            report +=  "\",\"_http_user_agent\":\"";
+            report +=  rec.http.http_user_agent;
 			
-            report +=  "\",\"_server_sw_ver\":\"";
-            report +=  rec.ssh.server_sw;
+            report +=  "\",\"_http_content_type\":\"";
+            report +=  rec.http.http_content_type;
             report +=  "\"}";
             
             break;
@@ -712,8 +707,8 @@ void Nids::CreateLogPayload(int r) {
             report += ",\"full_message\":\"Netflow event from Suricata NIDS\"";
             report += ",\"level\":";
             report += std::to_string(7);
-            report += ",\"_type\":\"NET\"";
-            report += ",\"_source\":\"Suricata\"";
+            report += ",\"_source_type\":\"NET\"";
+            report += ",\"_source_name\":\"Suricata\"";
 			
             report +=  ",\"_project_id\":\"";
             report +=  fs.filter.ref_id;
@@ -768,8 +763,8 @@ void Nids::CreateLogPayload(int r) {
             report += ",\"full_message\":\"File event from Suricata NIDS\"";
             report += ",\"level\":";
             report += std::to_string(7);
-            report += ",\"_type\":\"NET\"";
-            report += ",\"_source\":\"Suricata\"";
+            report += ",\"_source_type\":\"NET\"";
+            report += ",\"_source_name\":\"Suricata\"";
 			
             report +=  ",\"_project_id\":\"";
             report +=  fs.filter.ref_id;
@@ -829,30 +824,31 @@ void Nids::CreateLogPayload(int r) {
 
 void Nids::SendAlert(int s, GrayList* gl) {
     
-    sk.alert.ref_id = fs.filter.ref_id;
+    sk.alert.ref_id =  fs.filter.ref_id;
+    sk.alert.sensor_id = rec.ids;
     
-    sk.alert.type = "NET";
-    sk.alert.source = "Suricata";
-    
-    sk.alert.list_cats.push_back(rec.alert.category);
-        
-    sk.alert.severity = s; 
-    sk.alert.score = rec.alert.severity;
-    sk.alert.event = std::to_string(rec.alert.signature_id);
-    sk.alert.action = "indef";
+    sk.alert.alert_severity = s;
+    sk.alert.alert_source = "Suricata";
+    sk.alert.alert_type = "NET";
+    sk.alert.event_severity = rec.alert.severity;
+    sk.alert.event_id = std::to_string(rec.alert.signature_id);
     sk.alert.description = rec.alert.signature;
-        
+    sk.alert.action = "indef";     
+    sk.alert.location = std::to_string(rec.flow_id);
+    sk.alert.info = "{\"artifacts\": [{\"dataType\": \"ip\",\"data\":\"";
+    sk.alert.info += rec.src_ip;
+    sk.alert.info += "\",\"message\":\"src ip\" }, {\"dataType\": \"ip\",\"data\":\"";
+    sk.alert.info += rec.dst_ip;
+    sk.alert.info += "\",\"message\":\"dst ip\" }]}";
     sk.alert.status = "processed_new";
+    sk.alert.user_name = "indef";
+    sk.alert.agent_name = "indef";
+    sk.alert.filter = fs.filter.desc;
+        
+    sk.alert.list_cats.push_back(rec.alert.category);
     
-    sk.alert.srcip = rec.src_ip;
-    sk.alert.dstip = rec.dst_ip;
-    
-    sk.alert.srcport = rec.src_port;
-    sk.alert.dstport = rec.dst_port;
-    
-    sk.alert.srcagent = rec.src_agent;
-    sk.alert.dstagent = rec.dst_agent;
-    sk.alert.user = "indef";
+    sk.alert.event_time = rec.time_stamp;
+    sk.alert.event_json = jsonPayload;
             
     if (gl != NULL) {
             
@@ -862,22 +858,22 @@ void Nids::SendAlert(int s, GrayList* gl) {
         } 
         
         if (gl->rsp.new_type.compare("indef") != 0) {
-            sk.alert.type = gl->rsp.new_type;
+            sk.alert.alert_type = gl->rsp.new_type;
             sk.alert.status = "modified_new";
         }  
         
         if (gl->rsp.new_source.compare("indef") != 0) {
-            sk.alert.source = gl->rsp.new_source;
+            sk.alert.alert_source = gl->rsp.new_source;
             sk.alert.status = "modified_new";
         } 
         
         if (gl->rsp.new_event.compare("indef") != 0) {
-            sk.alert.event = gl->rsp.new_event;
+            sk.alert.event_id = gl->rsp.new_event;
             sk.alert.status = "modified_new";
         }    
             
         if (gl->rsp.new_severity != 0) {
-            sk.alert.severity = gl->rsp.new_severity;
+            sk.alert.alert_severity = gl->rsp.new_severity;
             sk.alert.status = "modified_new";
         }   
             
@@ -893,22 +889,32 @@ void Nids::SendAlert(int s, GrayList* gl) {
         
     }
         
-    sk.alert.sensor = rec.ids;
-    sk.alert.agent = "";
-    sk.alert.process = "";
-    sk.alert.container = "";
-    sk.alert.sensor = rec.ids;
-    sk.alert.location = std::to_string(rec.flow_id);
-    sk.alert.filter = fs.filter.desc;
-    sk.alert.event_time = rec.time_stamp;
-              
-    sk.alert.info = "{\"artifacts\": [{\"dataType\": \"ip\",\"data\":\"";
-    sk.alert.info += rec.src_ip;
-    sk.alert.info += "\",\"message\":\"src ip\" }, {\"dataType\": \"ip\",\"data\":\"";
-    sk.alert.info += rec.dst_ip;
-    sk.alert.info += "\",\"message\":\"dst ip\" }]}";
-        
-    sk.alert.event_json = jsonPayload;
+    sk.alert.src_ip = rec.src_ip;
+    sk.alert.dst_ip = rec.dst_ip;
+    
+    sk.alert.src_port = rec.src_port;
+    sk.alert.dst_port = rec.dst_port;
+    
+    sk.alert.src_hostname = rec.src_agent;
+    sk.alert.dst_hostname = rec.dst_agent;
+    
+    sk.alert.file_name = "indef";
+    sk.alert.file_path = "indef";
+	
+    sk.alert.hash_md5 = "indef";
+    sk.alert.hash_sha1 = "indef";
+    sk.alert.hash_sha256 = "indef";
+	
+    sk.alert.process_id = 0;
+    sk.alert.process_name = "indef";
+    sk.alert.process_cmdline = "indef";
+    sk.alert.process_path = "indef";
+    
+    sk.alert.url_hostname = "indef";
+    sk.alert.url_path = "indef";
+    
+    sk.alert.container_id = "indef";
+    sk.alert.container_name = "indef";
     
     sk.SendAlert();
     ResetStream();
@@ -952,6 +958,8 @@ int Nids::PushIdsRecord(GrayList* gl) {
                             
     if (gl != NULL) {
         
+        ids_rec.filter = true;
+        
         if (gl->agr.reproduced > 0) {
             
             ids_rec.host = gl->host;
@@ -974,51 +982,4 @@ int Nids::PushIdsRecord(GrayList* gl) {
     q_nids.push(ids_rec);
     
     return ids_rec.severity;
-}
-
-void Nids::PushFlowsRecord() {
-    
-    FlowsRecord flows_rec;
-    
-    switch (rec.event_type) {
-        
-        case 0:
-            break;
-        
-        case 1:
-            break;
-        
-        case 2: // dns record
-            break;
-            
-        case 3: // ssh record
-                        
-            flows_rec.ref_id = fs.filter.ref_id;
-            flows_rec.flows_type = 3;
-            
-            flows_rec.src_ip = rec.src_ip;
-            flows_rec.dst_ip = rec.dst_ip;
-            
-            flows_rec.src_agent = rec.src_agent;
-            flows_rec.dst_agent = rec.dst_agent;
-            
-            flows_rec.ids = rec.ids;
-                
-            flows_rec.info1 = rec.ssh.client_sw;
-            flows_rec.info2 = rec.ssh.server_sw;
-    
-            flows_rec.bytes = 0;
-    
-            q_flows.push(flows_rec);
-            break;
-            
-        case 4: // flows record
-            break;
-            
-        case 5: // file record
-            break;
-        
-        default:
-            break;
-    }
 }

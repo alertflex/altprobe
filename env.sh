@@ -6,7 +6,7 @@
 
 # collector
 # work directory and node id and probe id
-export INSTALL_PATH=/home/alertflex/altprobe
+export INSTALL_PATH=/home/xxxxx/altprobe
 export PROJECT_ID=xxxxx
 export NODE_ID=xxxxx
 export PROBE_ID=xxxxx
@@ -29,13 +29,18 @@ export SURI_LOG=indef
 export WAZUH_LOG='\/var\/ossec\/logs\/alerts\/alerts.json'
 
 # install add-on packages
-export INSTALL_REDIS=false
-export INSTALL_FALCO=false
-export INSTALL_SURICATA=false
-export INTERFACE=xxx
-export INSTALL_WAZUH=true
+export INSTALL_REDIS=no
+export REDIS_HOST=127.0.0.1
+export INSTALL_FALCO=no
+export INSTALL_SURICATA=no
+export SURICATA_INTERFACE=xxx
+export INSTALL_WAZUH=yes
+export WAZUH_HOST=127.0.0.1
 export WAZUH_USER=foo
 export WAZUH_PWD=bar
+
+# build rpm/deb packages
+export BUILD_PACKAGE=no
 
 
 

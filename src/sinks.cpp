@@ -88,19 +88,19 @@ void Sinks::SendAlert(void) {
         al << GetNodeTime();
         
         al << "\",\"agent\": \"";
-        al << alert.dstagent;
+        al << alert.agent_name;
         
         al << "\",\"source\": \"";
-        al << alert.source;
+        al << alert.alert_source;
         
         al << "\",\"type\": \"";
-        al << alert.type;
+        al << alert.alert_type;
         
         al << "\",\"event\": ";
-        al << alert.event;
+        al << alert.event_id;
         
         al << ",\"severity\": ";
-        al << alert.severity;
+        al << alert.alert_severity;
         
         al << ",\"description\": \"";
         al << alert.description;
@@ -118,11 +118,11 @@ void Sinks::SendAlert(void) {
         string strEventCat(cat_string);
         al << strEventCat;
         
-        al << "\",\"srcip\": \"";
-        al << alert.srcip;
+        al << "\",\"src_ip\": \"";
+        al << alert.src_ip;
         
-        al << "\",\"dstip\": \"";
-        al << alert.dstip;
+        al << "\",\"dst_ip\": \"";
+        al << alert.dst_ip;
         
         al << "\",\"location\": \"";
         al << alert.location;
@@ -140,7 +140,6 @@ void Sinks::SendAlert(void) {
         al << alert.event_json;
         
         al << "\"}}";
-        
         
         persist.WriteLog(al.str());    
         

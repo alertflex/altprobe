@@ -14,7 +14,7 @@
 #include <boost/regex.hpp>
 
 boost::lockfree::spsc_queue<string> q_logs_hids{LOG_QUEUE_SIZE};
-boost::lockfree::spsc_queue<string> q_compliance{LOG_QUEUE_SIZE};
+boost::lockfree::spsc_queue<string> q_reports{LOG_QUEUE_SIZE};
 
 int Hids::Open() {
     
@@ -22,37 +22,34 @@ int Hids::Open() {
     
     if (!sk.Open()) return 0;
     
-    if (status == 1) {
-        
-        if (wazuhlog_status == 2) {
+    if (wazuhlog_status == 1) {
             
-            fp = fopen(wazuh_log, "r");
-            if(fp == NULL) {
-                SysLog("failed open wazuh log file");
+        fp = fopen(wazuh_log, "r");
+        if(fp == NULL) {
+            SysLog("failed open wazuh log file");
+            return 0;
+        }
+            
+        fseek(fp,0,SEEK_END);
+        stat(wazuh_log, &buf);    
+        file_size = (unsigned long) buf.st_size;
+    
+    } else {
+    
+        if (redis_status == 1) {
+        
+            c = redisConnect(sk.redis_host, sk.redis_port);
+    
+            if (c != NULL && c->err) {
+                // handle error
+                sprintf(level, "failed open redis server interface: %s\n", c->errstr);
+                SysLog(level);
                 return 0;
             }
-            
-            fseek(fp,0,SEEK_END);
-            stat(wazuh_log, &buf);    
-            file_size = (unsigned long) buf.st_size;
-      
-        } else {
-        
-            if (wazuhlog_status == 1) {
-            
-                c = redisConnect(sk.redis_host, sk.redis_port);
-    
-                if (c != NULL && c->err) {
-                    // handle error
-                    sprintf(level, "failed open redis server interface: %s\n", c->errstr);
-                    SysLog(level);
-                    return 0;
-                }
-            } else return 0;
-        }
+        } else status = 0;
     }
     
-    return 1;
+    return status;
 }
 
 void Hids::Close() {
@@ -61,9 +58,13 @@ void Hids::Close() {
     
     if (status == 1) {
         
-        if (wazuhlog_status == 2) {
+        if (wazuhlog_status == 1) {
             if (fp != NULL) fclose(fp);
-        } else redisFree(c);
+        } else {
+            if (redis_status == 1) redisFree(c);
+        }
+        
+        status = 0;
     }
 }
 
@@ -134,7 +135,7 @@ int Hids::Go(void) {
         
     if (status) {
         
-        if (wazuhlog_status == 2) {
+        if (wazuhlog_status == 1) {
             
             res = ReadFile();
             
@@ -154,7 +155,7 @@ int Hids::Go(void) {
         
         } else {
         
-            // read data 
+            // read data from redis
             reply = (redisReply *) redisCommand( c, (const char *) redis_key.c_str());
         
             if (!reply) {
@@ -211,7 +212,7 @@ int Hids::Go(void) {
             }
         }
         
-        if (wazuhlog_status == 1) freeReplyObject(reply);
+        if (redis_status == 1) freeReplyObject(reply);
     } 
     else {
         usleep(GetGosleepTimer()*60);
@@ -258,6 +259,11 @@ int Hids::ParsJson() {
     
         if (wazuhlog_status == 1) {
             
+            jsonPayload.assign(file_payload, GetBufferSize(file_payload));
+            ss << jsonPayload;
+        
+        }  else {
+            
             jsonPayload.assign(reply->str, GetBufferSize(reply->str));
             ss1 << jsonPayload;
             
@@ -270,10 +276,6 @@ int Hids::ParsJson() {
                 return 0;
             }
             ss << message;
-        
-        }  else {
-            jsonPayload.assign(file_payload, GetBufferSize(file_payload));
-            ss << jsonPayload;
         }
         
         
@@ -287,13 +289,10 @@ int Hids::ParsJson() {
     
     
     string loc = pt.get<string>("location","");
-    string full_log = pt.get<string>("full_log","indef");
-    ReplaceAll(full_log, "\"", "");
-    ReplaceAll(full_log, "\\", "\\\\\\\\");
     
     if (loc.compare("wodle_open-scap") == 0 ) {
     
-        report = "{ \"type\": \"openscap\", \"data\": ";
+        report = "{ \"type\": \"open-scap\", \"data\": ";
         
         report += "{ \"ref_id\": \"";
         report += fs.filter.ref_id;
@@ -366,14 +365,13 @@ int Hids::ParsJson() {
         report += "\" } }";
         
        
-        q_compliance.push(report);
+        q_reports.push(report);
                         
         report.clear();
         ResetStreams();
         return 0;
     }
-    
-       
+        
     if (loc.compare("vulnerability-detector") == 0 ) {
     
         report = "{ \"type\": \"vulnerability\", \"data\": ";
@@ -443,303 +441,41 @@ int Hids::ParsJson() {
         report += "\" } }";
         
        
-        q_compliance.push(report);
+        q_reports.push(report);
         
         report.clear();
         ResetStreams();
         return 0;
     }
     
-    string data_title = pt.get<string>("data.title","indef");
-        
-    string data_file = pt.get<string>("data.file","indef");
+    string full_log = pt.get<string>("full_log","indef");
+    ReplaceAll(full_log, "\"", "");
+    ReplaceAll(full_log, "\\", "\\\\\\\\");
+    rec.rule.info = full_log;
     
-    if (loc.compare("rootcheck") == 0 && data_title.compare("indef") != 0 ) {
-        
-        report = "{ \"type\": \"rootcheck\", \"data\": ";
-        
-        report += "{ \"ref_id\": \"";
-        report += fs.filter.ref_id;
-            
-        report += "\", \"agent\": \"";
-        report += pt.get<string>("agent.name","");
-        
-        report += "\", \"event_id\": \"";
-        report += std::to_string(pt.get<int>("rule.id",0));
-        
-        report += "\", \"severity\": ";
-        
-        int level = pt.get<int>("rule.level",0);
-        string severity;
+    rec.agent = pt.get<string>("agent.name","indef");
     
-        if (level < fs.filter.hids.severity.level0) {
-            severity = "0";
-        } else {
-            if (level < fs.filter.hids.severity.level1) {
-                severity = "1";
-            } else {
-                if (level < fs.filter.hids.severity.level2) {
-                    severity = "2";
-                } else {
-                    severity = "3";
-                }
-            }
-        }  
-        
-        report += severity;
-        
-        report += ", \"description\": \"";
-        report += pt.get<string>("rule.description","indef");
-        
-        try {
+    rec.sensor = pt.get<string>("manager.name","indef");
     
-            groups_cats = pt.get_child("rule.groups");
-        
-            BOOST_FOREACH(bpt::ptree::value_type &v, groups_cats) {
-                assert(v.first.empty()); // array elements have no names
-                rec.rule.list_cats.push_back(v.second.data());
-            }
-        } catch (bpt::ptree_bad_path& e) {}
+    rec.timestamp = pt.get<string>("timestamp","indef");
     
-        try {
+    rec.dstip = pt.get<string>("data.dstip","indef");
     
-            pcidss_cats = pt.get_child("rule.pci_dss");
-            
-            BOOST_FOREACH(bpt::ptree::value_type &v, pcidss_cats) {
-                assert(v.first.empty()); // array elements have no names
-                string pcidss = "pci_dss_" + v.second.data();
-                rec.rule.list_cats.push_back(pcidss);
-            }  
+    rec.dstport = pt.get<int>("data.dstport",0);
     
-        } catch (bpt::ptree_bad_path& e) {}
-        
-        try {
+    rec.srcip = pt.get<string>("data.srcip","indef");
     
-            hipaa_cats = pt.get_child("rule.hipaa");
-            
-            BOOST_FOREACH(bpt::ptree::value_type &v, hipaa_cats) {
-                assert(v.first.empty()); // array elements have no names
-                string hipaa = "hipaa_" + v.second.data();
-                rec.rule.list_cats.push_back(hipaa);
-            }  
-    
-        } catch (bpt::ptree_bad_path& e) {}
-        
-        
-        try {
-    
-            gdpr_cats = pt.get_child("rule.gdpr");
-            
-            BOOST_FOREACH(bpt::ptree::value_type &v, gdpr_cats) {
-                assert(v.first.empty()); // array elements have no names
-                string gdpr = "gdpr_" + v.second.data();
-                rec.rule.list_cats.push_back(gdpr);
-            }  
-    
-        } catch (bpt::ptree_bad_path& e) {}
-        
-        try {
-    
-            nist_cats = pt.get_child("rule.nist_800_53");
-            
-            BOOST_FOREACH(bpt::ptree::value_type &v, nist_cats) {
-                assert(v.first.empty()); // array elements have no names
-                string nist = "nist_800_53_" + v.second.data();
-                rec.rule.list_cats.push_back(nist);
-            }  
-    
-        } catch (bpt::ptree_bad_path& e) {}
-        
-        report += "\",\"category\":\"";
-    
-        int j = 0;
-        for (string i : rec.rule.list_cats) {
-            if (j != 0 && j < rec.rule.list_cats.size()) report += ", ";
-            report += i;
-            
-            j++;    
-        }
-        
-        report += "\", \"full_log\": \"";
-        report += full_log;
-        
-        report += "\", \"title\": \"";
-        report += data_title;
-        
-        report += "\", \"file\": \"";
-        report += data_file;
-        
-        report += "\", \"time_of_survey\": \"";
-        report += GetNodeTime();
-        report += "\" } }";
-        
-       
-        q_compliance.push(report);
-        
-        report.clear();
-        ResetStreams();
-        return 0;
-    }
-    
-    string mon_con = pt.get<string>("data.audit.key","");
-    
-    if (mon_con.compare("linux-connects") == 0) {
-        
-        report = "{\"version\": \"1.1\",\"host\":\"";
-        report += node_id;
-        report += "\",\"short_message\":\"process-linux\"";
-        report += ",\"full_message\":\"Network activity of linux process from Auditd\"";
-	report += ",\"level\":";
-        report += std::to_string(7);
-        report += ",\"_type\":\"NET\"";
-        report += ",\"_source\":\"Wazuh\"";
-        
-	report += ",\"_agent\":\"";
-        report += pt.get<string>("agent.name","");
-        
-        report += ",\"_manager\":\"";
-        report += pt.get<string>("manager.name","");
-        
-        report +=  "\", \"_event_time\":\"";
-        report += pt.get<string>("timestamp","");
-        
-        report += "\",\"_collected_time\":\"";
-        report += GetGraylogFormat();
-		
-	report += "\",\"_description\":\"";
-        report += pt.get<string>("rule.description","indef");
-        
-	report += "\",\"_full_log\":\"";
-        report += full_log;
-        
-        report += "\",\"_pid\":\"";
-        report += pt.get<string>("data.audit.pid","indef");
-        
-        report += "\",\"_command\":\"";
-        report +=  pt.get<string>("data.audit.command","indef");
-        
-        report += "\",\"_exe\":\"";
-        report +=  pt.get<string>("data.audit.exe","indef");
-        
-        report += "\"}";
-        
-        q_logs_hids.push(report);
-        
-        report.clear();
-        ResetStreams();
-        return 0;
-    }
-    
-    string desc = pt.get<string>("rule.description","");
-    
-    if (loc.compare("WinEvtLog") == 0 && desc.compare("Sysmon - Event 3") == 0) {
-        
-        report = "{\"version\": \"1.1\",\"host\":\"";
-        report += node_id;
-        report += "\",\"short_message\":\"process-win\"";
-        report += ",\"full_message\":\"Network activity of windows process from Sysmon\"";
-        report += ",\"level\":";
-        report += std::to_string(7);
-		
-	report += ",\"_type\":\"HOST\"";
-        report += ",\"_source\":\"Wazuh\"";
-        
-	report += ",\"_agent\":\"";
-        report += pt.get<string>("agent.name","");
-        
-        report += ",\"_manager\":\"";
-        report += pt.get<string>("manager.name","");
-        
-        report += "\", \"_event_time\":\"";
-        report += pt.get<string>("timestamp","");
-        
-        report += "\",\"_collected_time\":\"";
-        report += GetGraylogFormat();
-		
-	report += "\",\"_description\":\"";
-        report += desc;
-        
-        report += "\",\"_id\":\"";
-        report += pt.get<string>("data.id","indef");
-        
-        report += "\",\"_protocol\":\"";
-        report += pt.get<string>("data.protocol","indef");
-        
-        report += "\",\"_srcip\":\"";
-        report += pt.get<string>("data.srcip","indef");
-        
-        report += "\",\"_srcport\":\"";
-        report += pt.get<string>("data.srcport","indef");
-        
-        report += "\",\"_srcuser\":\"";
-        string srcuser = pt.get<string>("data.srcuser","indef");
-        ReplaceAll(srcuser, "\\", "\\\\\\\\");
-        report += srcuser;
-        
-        report += "\",\"_dstip\":\"";
-        report += pt.get<string>("data.dstip","indef");
-        
-        report += "\",\"_dstport\":\"";
-        report += pt.get<string>("data.dstport","indef");
-        
-        report += "\",\"_processGuid\":\"";
-        report += pt.get<string>("data.sysmon.processGuid","indef");
-        
-        report += "\",\"_processId\":\"";
-        report += pt.get<string>("data.sysmon.processId","indef");
-        
-        report += "\",\"_image\":\"";
-        string image = pt.get<string>("data.sysmon.image","indef");
-        ReplaceAll(image, "\\", "\\\\\\\\");
-        report += image;
-        
-        report += "\",\"_initiated\":\"";
-        report += pt.get<string>("data.sysmon.initiated","indef");
-        
-        report += "\",\"_sourceIsIpv6\":\"";
-        report += pt.get<string>("data.sysmon.sourceIsIpv6","indef");
-        
-        report += "\",\"_sourceHostname\":\"";
-        report += pt.get<string>("data.sysmon.sourceHostname","indef");
-        
-        report += "\",\"_destinationIsIpv6\":\"";
-        report += pt.get<string>("data.sysmon.destinationIsIpv6","indef");
-        
-        report += "\",\"_destinationHostname\":\"";
-        report += pt.get<string>("data.sysmon.destinationHostname","indef");
-        
-        report += "\"}";
-    
-        q_logs_hids.push(report);
-        
-        report.clear();
-        ResetStreams();
-        return 0;
-    }
-    
-    rec.agent = pt.get<string>("agent.name","");
-    
-    rec.hostname = pt.get<string>("manager.name","");
-    
-    rec.timestamp = pt.get<string>("timestamp","");
-    
-    rec.dstip = pt.get<string>("data.dstip","");
-    
-    string dec_name = pt.get<string>("decoder.name","");
-        
-    rec.srcip = pt.get<string>("data.srcip","");
+    rec.srcport = pt.get<int>("data.srcport",0);
         
     rec.rule.id = pt.get<int>("rule.id",0);
     
     rec.rule.level = pt.get<int>("rule.level",0);
     
-    rec.rule.desc = desc;
+    rec.rule.desc = pt.get<string>("rule.description","");
     ReplaceAll(rec.rule.desc, "\"", "");
     ReplaceAll(rec.rule.desc, "\\", "\\\\\\\\");
     
-    rec.rule.info = pt.get<string>("rule.info","");
-    
-   try {
+    try {
     
         groups_cats = pt.get_child("rule.groups");
         
@@ -797,31 +533,36 @@ int Hids::ParsJson() {
     
     } catch (bpt::ptree_bad_path& e) {}
     
+    try {
+    
+        mitre_cats = pt.get_child("rule.mitre.id");
+            
+        BOOST_FOREACH(bpt::ptree::value_type &v, mitre_cats) {
+            assert(v.first.empty()); // array elements have no names
+            string mitre = "mitre_" + v.second.data();
+            rec.rule.list_cats.push_back(mitre);
+        }  
+    
+    } catch (bpt::ptree_bad_path& e) {}
+    
+    
     rec.location = loc;
     ReplaceAll(rec.location, "\"", "");
     ReplaceAll(rec.location, "\\", "\\\\\\\\");
         
-    rec.file.filename = pt.get<string>("syscheck.path","");
+    rec.file.filename = pt.get<string>("syscheck.path","indef");
     ReplaceAll(rec.file.filename, "\"", "");
     ReplaceAll(rec.file.filename, "\\", "\\\\\\\\");
     
-    rec.file.md5_before = pt.get<string>("syscheck.md5_before","");
+    rec.file.md5 = pt.get<string>("syscheck.md5_after","");
     
-    rec.file.md5_after = pt.get<string>("syscheck.md5_after","");
+    rec.file.sha1 = pt.get<string>("syscheck.sha1_after","");
     
-    rec.file.sha1_before = pt.get<string>("syscheck.sha1_before","");
+    rec.file.sha256 = pt.get<string>("syscheck.owner_before","");
     
-    rec.file.sha1_after = pt.get<string>("syscheck.sha1_after","");
-    
-    rec.file.owner_before = pt.get<string>("syscheck.owner_before","");
+    rec.process_id = pt.get<int>("syscheck.audit.process.id", 0);
         
-    rec.file.owner_after = pt.get<string>("syscheck.owner_after","");
-           
-    rec.file.gowner_before = pt.get<string>("syscheck.gowner_before","");
-    
-    rec.file.gowner_after = pt.get<string>("syscheck.gowner_after","");
-    
-    rec.process = pt.get<string>("syscheck.audit.process.name","indef");
+    rec.process_name = pt.get<string>("syscheck.audit.process.name","indef");
     
     string user = pt.get<string>("syscheck.audit.user.name","indef");
         
@@ -867,7 +608,7 @@ void Hids::CreateLog() {
     report += rec.agent;
     
     report += "\", \"_manager\":\"";
-    report += rec.hostname;
+    report += rec.sensor;
     
     report +=  "\",\"_project_id\":\"";
     report +=  fs.filter.ref_id;
@@ -906,28 +647,18 @@ void Hids::CreateLog() {
     report += "\",\"_dstip\":\"";
     report += rec.dstip;
     report += "\",\"_process\":\"";
-    report += rec.process;
+    report += rec.process_name;
     report += "\",\"_user\":\"";
     report += rec.user;
     if (rec.file.filename.compare("") != 0) {
         report += "\",\"_filename\":\"";
         report += rec.file.filename;
-        report += "\",\"_md5_before\":\"";
-        report += rec.file.md5_before;
-        report += "\",\"_md5_after\":\"";
-        report += rec.file.md5_after;
-        report += "\",\"_sha1_before\":\"";
-        report += rec.file.sha1_before;
-        report += "\",\"_sha1_after\":\"";
-        report += rec.file.sha1_after;
-        report += "\",\"_owner_before\":\"";
-        report += rec.file.owner_before;
-        report += "\",\"_owner_after\":\"";
-        report += rec.file.owner_after;
-        report += "\",\"_gowner_before\":\"";
-        report += rec.file.gowner_before;
-        report += "\",\"_gowner_after\":\"";
-        report += rec.file.gowner_after;
+        report += "\",\"_md5\":\"";
+        report += rec.file.md5;
+        report += "\",\"_sha1\":\"";
+        report += rec.file.sha1;
+        report += "\",\"_sha256\":\"";
+        report += rec.file.sha256;
     }
     report += "\"}";
     
@@ -967,9 +698,9 @@ int Hids::PushRecord(GrayList* gl) {
     ids_rec.dst_ip = rec.dstip;
     
     ids_rec.agent = rec.agent;
-    ids_rec.process = rec.process;
+    ids_rec.process = rec.process_name;
     ids_rec.user = rec.user;
-    ids_rec.ids = sensor;
+    ids_rec.ids = rec.sensor;
     ids_rec.action = "indef";
                 
     if (rec.file.filename.compare("") == 0) {
@@ -981,6 +712,8 @@ int Hids::PushRecord(GrayList* gl) {
     }
         
     if (gl != NULL) {
+        
+        ids_rec.filter = true;
         
         if (gl->agr.reproduced > 0) {
             
@@ -999,7 +732,7 @@ int Hids::PushRecord(GrayList* gl) {
             ids_rec.rsp.new_source = gl->rsp.new_source;
             
         }
-    }
+    } 
             
     q_hids.push(ids_rec);
     
@@ -1009,66 +742,67 @@ int Hids::PushRecord(GrayList* gl) {
 void Hids::SendAlert(int s, GrayList*  gl) {
     
     sk.alert.ref_id =  fs.filter.ref_id;
+    sk.alert.sensor_id = rec.sensor;
+    
+    sk.alert.alert_severity = s;
+    sk.alert.alert_source = "Wazuh";
+    sk.alert.alert_type = "HOST";
+    sk.alert.event_severity = rec.rule.level;
+    sk.alert.event_id = std::to_string(rec.rule.id);
+    sk.alert.description = rec.rule.desc;
+    sk.alert.action = "indef";     
+    sk.alert.location = rec.location;
+    sk.alert.info = rec.rule.info;
+    sk.alert.status = "processed_new";
+    sk.alert.user_name = rec.user;
+    sk.alert.agent_name = rec.agent;
+    sk.alert.filter = fs.filter.desc;
     
     if (!rec.rule.list_cats.empty())
         copy(rec.rule.list_cats.begin(),rec.rule.list_cats.end(),back_inserter(sk.alert.list_cats));
     else 
         sk.alert.list_cats.push_back("wazuh");
-        
-    sk.alert.severity = s;
-    sk.alert.score = rec.rule.level;
-    sk.alert.event = std::to_string(rec.rule.id);
-    sk.alert.action = "indef";
-    sk.alert.description = rec.rule.desc;
-        
-    sk.alert.status = "processed_new";
-            
-    sk.alert.srcip = rec.srcip;
-    sk.alert.dstip = rec.dstip;
     
-    sk.alert.srcagent = "indef";
-    sk.alert.dstagent = "indef";
-    sk.alert.agent = rec.agent;
+    sk.alert.event_json = jsonPayload;
     
-    sk.alert.srcport = 0;
-    sk.alert.dstport = 0;
-        
-    sk.alert.source = "Wazuh";
-    
-    sk.alert.user = rec.user;
-    sk.alert.sensor = sensor;
-    sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = rec.timestamp;
+    sk.alert.event_json = jsonPayload;
     
-    sk.alert.container = "indef";
-    sk.alert.process = rec.process;
+    sk.alert.src_ip = rec.srcip;
+    sk.alert.dst_ip = rec.dstip;
+    sk.alert.src_hostname = "indef";
+    sk.alert.dst_hostname = "indef";
+    sk.alert.src_port = rec.srcport;
+    sk.alert.dst_port = rec.dstport;
         
-    if (rec.file.filename.compare("") == 0) {
-            
-        sk.alert.type = "HOST";
-            
-        sk.alert.location = rec.location;
-        sk.alert.file = "indef";
+    sk.alert.file_name = "indef";
+    sk.alert.file_path = "indef";
+	
+    sk.alert.hash_md5 = "indef";
+    sk.alert.hash_sha1 = "indef";
+    sk.alert.hash_sha256 = "indef";
+	
+    sk.alert.process_id = rec.process_id;
+    sk.alert.process_name = rec.process_name;
+    sk.alert.process_cmdline = "indef";
+    sk.alert.process_path = "indef";
+    
+    sk.alert.url_hostname = "indef";
+    sk.alert.url_path = "indef";
+    
+    sk.alert.container_id = "indef";
+    sk.alert.container_name = "indef";
         
-        sk.alert.info = rec.rule.info;
-    }
-    else {
+    if (rec.file.filename.compare("indef") != 0) {
             
-        sk.alert.type = "FILE";
+        sk.alert.alert_type = "FILE";
             
-        sk.alert.file = rec.file.filename;
-        sk.alert.location = "indef";
+        sk.alert.file_name = rec.file.filename;
+        sk.alert.file_path = rec.file.filename;
         
-        sk.alert.info = "{\"artifacts\": [{ \"dataType\": \"md5\",\"data\":\"";
-        sk.alert.info += rec.file.md5_before;
-        sk.alert.info += "\",\"message\":\"message digest before\" }, { \"dataType\": \"md5\",\"data\":\"";
-        sk.alert.info += rec.file.md5_after;
-        sk.alert.info += "\",\"message\":\"Message digest after\" }, { \"dataType\": \"sha1\",\"data\":\"";
-        sk.alert.info += rec.file.sha1_before;
-        sk.alert.info += "\",\"message\":\"Secure hash before\" }, { \"dataType\": \"sha1\",\"data\":\"";
-        sk.alert.info += rec.file.sha1_after;
-        sk.alert.info += "\",\"message\":\"Secure hash after\" }]}";
-            
+        sk.alert.hash_md5 = rec.file.md5;
+        sk.alert.hash_sha1 = rec.file.sha1;
+        sk.alert.hash_sha256 = rec.file.sha256;
     }
     
     if (gl != NULL) {
@@ -1079,22 +813,22 @@ void Hids::SendAlert(int s, GrayList*  gl) {
         }
         
         if (gl->rsp.new_type.compare("indef") != 0) {
-            sk.alert.type = gl->rsp.new_type;
+            sk.alert.alert_type = gl->rsp.new_type;
             sk.alert.status = "modified_new";
         }  
         
         if (gl->rsp.new_source.compare("indef") != 0) {
-            sk.alert.source = gl->rsp.new_source;
+            sk.alert.alert_source = gl->rsp.new_source;
             sk.alert.status = "modified_new";
         } 
         
         if (gl->rsp.new_event.compare("indef") != 0) {
-            sk.alert.event = gl->rsp.new_event;
+            sk.alert.event_id = gl->rsp.new_event;
             sk.alert.status = "modified_new";
         }    
             
         if (gl->rsp.new_severity != 0) {
-            sk.alert.severity = gl->rsp.new_severity;
+            sk.alert.alert_severity = gl->rsp.new_severity;
             sk.alert.status = "modified_new";
         }   
             
@@ -1110,7 +844,6 @@ void Hids::SendAlert(int s, GrayList*  gl) {
         
     }
     
-    sk.alert.event_json = jsonPayload;
     
     sk.SendAlert();
     

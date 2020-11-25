@@ -44,6 +44,8 @@ sudo make install
 sudo sed -i "s/_project_id/$PROJECT_ID/g" /etc/altprobe/filters.json
 sudo sed -i "s/_node_id/$NODE_ID/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_probe_id/$PROBE_ID/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_redis_host/$REDIS_HOST/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_wazuh_host/$WAZUH_HOST/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_amq_url/$AMQ_URL/g" /etc/altprobe/altprobe.yaml
@@ -62,13 +64,13 @@ sudo chmod go-rwx /etc/altprobe/altprobe.yaml
 
 cd ..
 
-if [[ $INSTALL_REDIS == true ]]
+if [[ $INSTALL_REDIS == yes ]]
 then
 	echo "*** installation redis ***"
 	sudo apt-get -y install redis-server 
 fi
 
-if [[ $INSTALL_FALCO == true ]]
+if [[ $INSTALL_FALCO == yes ]]
 then
     echo "*** installation falco ***"
 	curl -s https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public | sudo apt-key add -
@@ -78,7 +80,7 @@ then
 	sudo apt-get -y install falco
 fi
 
-if [[ $INSTALL_SURICATA == true ]]
+if [[ $INSTALL_SURICATA == yes ]]
 then
 	sudo add-apt-repository --yes ppa:oisf/suricata-stable
 	sudo apt-get update
@@ -101,11 +103,11 @@ ExecStart=/usr/bin/suricata -c /etc/suricata/suricata.yaml -i _monitoring_interf
 WantedBy=multi-user.target
 EOF'
 
-	sudo sed -i "s/_monitoring_interface/$INTERFACE/g" /etc/systemd/system/suricata.service
+	sudo sed -i "s/_monitoring_interface/$SURICATA_INTERFACE/g" /etc/systemd/system/suricata.service
 	sudo systemctl enable suricata
 fi
 
-if [[ $INSTALL_WAZUH == true ]]
+if [[ $INSTALL_WAZUH == yes ]]
 then
 	
 	echo "*** installation OSSEC/WAZUH server ***"
@@ -117,11 +119,14 @@ then
 	sudo apt-get -y install wazuh-manager
 	
 	echo "*** installation  Wazuh API***"
-	curl -sL https://deb.nodesource.com/setup_6.x | sudo bash -
+	curl -sL https://deb.nodesource.com/setup_10.x | sudo bash -
+	sudo apt-get update
 	sudo apt-get -y install nodejs
 	sudo apt-get -y install wazuh-api
 	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
 	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
+	sudo sed -i "s/config.host = \"0.0.0.0\"/config.host = \"127.0.0.1\"/g" /var/ossec/api/configuration/config.js
+	sudo sed -i "s/config.https = \"yes\"/config.https = \"no\"/g" /var/ossec/api/configuration/config.js
 	
 	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
 [Unit]
@@ -160,6 +165,21 @@ fi
 
 sudo systemctl daemon-reload
 sudo systemctl enable altprobe.service
+
+if [[ $BUILD_PACKAGE == yes ]]
+then
+	cd $INSTALL_PATH/pkg
+	sudo chmod u+x dpkg/altprobe_1.0-1/etc/altprobe/scripts/*
+    sudo chmod u+x dpkg/altprobe_1.0-1/usr/local/bin/altprob*
+    sudo cp -rp dpkg ~
+    sudo cp /usr/local/bin/altprobe ~/dpkg/altprobe_1.0-1/usr/local/bin/
+    sudo cp /usr/local/lib/libhiredis.so.1.0.1-dev ~/dpkg/altprobe_1.0-1/usr/local/lib/
+    sudo cp /usr/local/lib/libactivemq-cpp.so.19.0.5 ~/dpkg/altprobe_1.0-1/usr/local/lib/
+	sudo chown -R root:root ~/dpkg
+    cd ~/dpkg
+    sudo dpkg-deb --build altprobe_1.0-1
+fi
+
 
 
 

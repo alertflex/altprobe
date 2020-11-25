@@ -17,8 +17,7 @@ int RemLog::GetConfig() {
     //Read sinks config
     if(!sk.GetConfig()) return 0;
     
-    status = 1; 
-    return status;
+    return 1;
 }
 
 int RemLog::Open() {

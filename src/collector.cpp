@@ -17,7 +17,7 @@ int Collector::GetConfig() {
     //Read sinks config
     if(!sk.GetConfig()) return 0;
     
-    if (sk.GetReportsPeriod()) status = 1;
+    if (!sk.GetReportsPeriod()) return 0;
     
     return 1;
     
@@ -56,13 +56,41 @@ int Collector::Go(void) {
     
     struct timeval start, end;
     long seconds = 0;
+    long reports = 0;
             
-    while(1) {  
+    while(1) { 
         
-        if(update_timer == 1 && urStatus) {
+        while (sk.GetReportsPeriod() > seconds) {
+            seconds++;
+            sleep(1);
+        }
+        
+        UpdateRulesConfigs();
+        
+        seconds = 0;
+        
+        if (update_timer == 0) RoutineJob();
+        
+        reports++;
+        
+        if (docker_timer == reports && docker_timer != 0) {
             
-            string cmd = "altprobe-update";
-            system(cmd.c_str());
+            DockerBenchJob();
+            TrivyJob();
+            
+            reports = 0;
+        }
+        
+    }
+    
+    return 1;
+}
+
+void Collector::UpdateRulesConfigs() {
+    
+    if (urStatus) {
+    
+        if(update_timer == 1) {
             
             UpdateFilters();
             UpdateFalcoConfig();
@@ -73,21 +101,17 @@ int Collector::Go(void) {
             UpdateOssecRules();
             UpdateModsecRules();
             UpdateFalcoRules();
-            update_timer = 0;
-        }
         
-        gettimeofday(&start, NULL);
-        while (sk.GetReportsPeriod() > seconds) {
-            gettimeofday(&end, NULL);
-            seconds  = end.tv_sec  - start.tv_sec;
-            
-            usleep(GetGosleepTimer()*60);
+            string update_notification = "configs and rules update have been done";
+            SysLog((char*) update_notification.c_str());
+        
+            update_timer--;
+        
+        } else {
+            if (update_timer > 1) update_timer--;
         }
-        RoutineJob();
-        seconds = 0;
-    }
     
-    return 1;
+    } else update_timer = 0;
 }
 
 void Collector::RoutineJob() {
@@ -99,7 +123,6 @@ void Collector::RoutineJob() {
     unsigned long cnids = nids->ResetEventsCounter();
     unsigned long cwaf = waf->ResetEventsCounter();
     unsigned long cmisc = misc->ResetEventsCounter();
-    unsigned long cstatflows = stat_flows->ResetEventsCounter();
     unsigned long cremlog = rem_log->ResetEventsCounter();
     unsigned long vremlog = rem_log->ResetEventsVolume();
     unsigned long cremstat = rem_stat->ResetEventsCounter();
@@ -123,9 +146,6 @@ void Collector::RoutineJob() {
     ss << ", \"misc\": ";
     ss << to_string(cmisc);
     
-    ss << ", \"flows\": ";
-    ss << to_string(cstatflows);
-        
     ss << ", \"log_counter\": ";
     ss << to_string(cremlog);
         
@@ -137,75 +157,6 @@ void Collector::RoutineJob() {
         
     ss << ", \"stat_volume\": ";
     ss << to_string(vremstat);
-        
-    ss << ", \"time_of_survey\": \"";
-    ss << GetNodeTime();
-    ss << "\" } }";
-        
-    q_stats_collr.push(ss.str());
-        
-    ss.str("");
-    ss.clear();
-        
-    unsigned long mahids = stat_ids->mem_mon.hids_alerts_list;
-    unsigned long manids = stat_ids->mem_mon.nids_alerts_list;
-    unsigned long mfimc = stat_ids->mem_mon.fim_cause;
-    unsigned long mfimf = stat_ids->mem_mon.fim_file;
-    unsigned long mhidss = stat_ids->mem_mon.hids_srcip;
-    unsigned long mhidsl = stat_ids->mem_mon.hids_location;
-    unsigned long midsc = stat_ids->mem_mon.ids_category;
-    unsigned long midse = stat_ids->mem_mon.ids_event;
-    unsigned long mnidsd = stat_ids->mem_mon.nids_dstip;
-    unsigned long mnidss = stat_ids->mem_mon.nids_srcip;
-    unsigned long mwafs = stat_ids->mem_mon.waf_source;
-    unsigned long mwaft = stat_ids->mem_mon.waf_target;
-    unsigned long musers = stat_ids->mem_mon.user_event;
-    unsigned long mcontr = stat_ids->mem_mon.container_stat;
-                        
-    ss << "{ \"type\": \"node_memory\", \"data\": { \"ref_id\": \"";
-    ss << ref_id;
-        
-    ss << "\", \"hids_alerts\": ";
-    ss << to_string(mahids);
-        
-    ss << ", \"nids_alerts\": ";
-    ss << to_string(manids);
-        
-    ss << ", \"fim_cause\": ";
-    ss << to_string(mfimc);
-        
-    ss << ", \"fim_file\": ";
-    ss << to_string(mfimf);
-        
-    ss << ", \"hids_srcip\": ";
-    ss << to_string(mhidss);
-        
-    ss << ", \"hids_location\": ";
-    ss << to_string(mhidsl);
-        
-    ss << ", \"ids_category\": ";
-    ss << to_string(midse);
-        
-    ss << ", \"ids_event\": ";
-    ss << to_string(midse);
-        
-    ss << ", \"nids_dstip\": ";
-    ss << to_string(mnidsd);
-        
-    ss << ", \"nids_srcip\": ";
-    ss << to_string(mnidss);
-    
-    ss << ", \"waf_source\": ";
-    ss << to_string(mwafs);
-        
-    ss << ", \"waf_target\": ";
-    ss << to_string(mwaft);
-    
-    ss << ", \"user_event\": ";
-    ss << to_string(musers);
-    
-    ss << ", \"container_stat\": ";
-    ss << to_string(mcontr);
         
     ss << ", \"time_of_survey\": \"";
     ss << GetNodeTime();
@@ -332,8 +283,9 @@ void Collector::RoutineJob() {
 }
 
 string Collector::WazuhGet(string queryStr) {
-    try
-    {
+    
+    try {
+        
         boost::asio::io_service io_service;
         
         string hostAddress;
@@ -500,7 +452,7 @@ void Collector::UpdateFilters() {
     
     try {
         
-        ifstream filters_config;
+        std::ifstream filters_config;
         filters_config.open(FILTERS_FILE,ios::binary);
         strStream << filters_config.rdbuf();
         
@@ -535,7 +487,7 @@ void Collector::UpdateFalcoConfig() {
     
     try {
         
-        ifstream falco_config;
+        std::ifstream falco_config;
         string dir_path(falco_conf);
         string file_name(FALCO_CONFIG);
         string file_path = dir_path + file_name;
@@ -576,7 +528,7 @@ void Collector::UpdateOssecConfig() {
     
     try {
         
-        ifstream ossec_config;
+        std::ifstream ossec_config;
         string dir_path(wazuh_conf);
         string file_name(OSSEC_CONFIG);
         string file_path = dir_path + file_name;
@@ -616,7 +568,7 @@ void Collector::UpdateSuriConfig() {
     
     try {
         
-        ifstream suri_config;
+        std::ifstream suri_config;
         string dir_path(suri_conf);
         string file_name(SURI_CONFIG);
         string file_path = dir_path + file_name;
@@ -655,7 +607,7 @@ void Collector::UpdateModsecConfig() {
     
     try {
         
-        ifstream modsec_config;
+        std::ifstream modsec_config;
         string dir_path(modsec_conf);
         string file_name(MODSEC_CONFIG);
         string file_path = dir_path + file_name;
@@ -705,7 +657,7 @@ void Collector::UpdateFalcoRules() {
                 
                 file_path = itr->path();
                 file_name = file_path.filename().string();
-                ifstream falco_rules;
+                std::ifstream falco_rules;
                 falco_rules.open(file_path.string(),ios::binary);
                 strStream << falco_rules.rdbuf();
         
@@ -758,7 +710,7 @@ void Collector::UpdateOssecRules() {
                 
                 file_path = itr->path();
                 file_name = file_path.filename().string();
-                ifstream ossec_rules;
+                std::ifstream ossec_rules;
                 ossec_rules.open(file_path.string(),ios::binary);
                 strStream << ossec_rules.rdbuf();
         
@@ -807,7 +759,7 @@ void Collector::UpdateSuriRules() {
                 
                 file_path = itr->path();
                 file_name = file_path.filename().string();
-                ifstream suri_rules;
+                std::ifstream suri_rules;
                 suri_rules.open(file_path.string(),ios::binary);
                 strStream << suri_rules.rdbuf();
         
@@ -858,7 +810,7 @@ void Collector::UpdateModsecRules() {
                 
                 file_path = itr->path();
                 file_name = file_path.filename().string();
-                ifstream modsec_rules;
+                std::ifstream modsec_rules;
                 modsec_rules.open(file_path.string(),ios::binary);
                 strStream << modsec_rules.rdbuf();
         
@@ -884,6 +836,93 @@ void Collector::UpdateModsecRules() {
     } 
     
     return;
+}
+
+
+void Collector::DockerBenchJob() {
+    
+    if (!strcmp (docker_bench, "indef")) return; 
+    
+    try {
+        
+        string cmd = "/etc/altprobe/scripts/docker-bench.sh";
+    
+        system(cmd.c_str());
+        
+        std::ifstream docker_report;
+        string file_path(docker_bench);
+        docker_report.open(file_path,ios::binary);
+        strStream << docker_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 12;
+        sk.SendMessage(&bd);
+                
+        docker_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+    } 
+    
+    return;
+    
+}
+
+void Collector::TrivyJob() {
+    
+    if (!strcmp (trivy, "indef")) return; 
+    
+    try {
+        
+        std::ifstream trivy_scripts ("/etc/altprobe/scripts/trivy.sh");
+        string script;
+        
+        while (getline(trivy_scripts, script)) {
+            
+            if (script.size() != 0) {
+        
+                if (script.at(0) != '#' && script.at(0) != '\n' ) {
+                    
+                    system(script.c_str());
+                    
+                    std::ifstream trivy_report;
+                    string file_path(trivy);
+                    trivy_report.open(file_path,ios::binary);
+                    strStream << trivy_report.rdbuf();
+        
+                    boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+                    in.push(boost::iostreams::gzip_compressor());
+                    in.push(strStream);
+                    boost::iostreams::copy(in, comp);
+        
+                    bd.data = comp.str();
+                    bd.ref_id = fs.filter.ref_id;
+                    bd.event_type = 14;
+                    sk.SendMessage(&bd);
+                
+                    trivy_report.close();
+                    boost::iostreams::close(in);
+                    ResetStreams();
+                }
+            }
+        }
+        
+        trivy_scripts.close();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+    } 
+    
+    return;
+    
 }
 
 

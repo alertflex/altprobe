@@ -4,6 +4,8 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>aggalerts.h</itemPath>
+      <itemPath>aggnet.h</itemPath>
       <itemPath>base64.h</itemPath>
       <itemPath>cobject.h</itemPath>
       <itemPath>collector.h</itemPath>
@@ -11,19 +13,17 @@
       <itemPath>controller.h</itemPath>
       <itemPath>crs.h</itemPath>
       <itemPath>filters.h</itemPath>
-      <itemPath>flows.h</itemPath>
       <itemPath>hids.h</itemPath>
       <itemPath>ids.h</itemPath>
       <itemPath>loclog.h</itemPath>
       <itemPath>main.h</itemPath>
       <itemPath>misc.h</itemPath>
+      <itemPath>netstat.h</itemPath>
       <itemPath>nids.h</itemPath>
       <itemPath>remlog.h</itemPath>
       <itemPath>remstat.h</itemPath>
       <itemPath>sinks.h</itemPath>
       <itemPath>source.h</itemPath>
-      <itemPath>statflows.h</itemPath>
-      <itemPath>statids.h</itemPath>
       <itemPath>updates.h</itemPath>
       <itemPath>waf.h</itemPath>
     </logicalFolder>
@@ -34,25 +34,25 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>aggalerts.cpp</itemPath>
+      <itemPath>aggnet.cpp</itemPath>
       <itemPath>cobject.cpp</itemPath>
       <itemPath>collector.cpp</itemPath>
       <itemPath>config.cpp</itemPath>
       <itemPath>controller.cpp</itemPath>
       <itemPath>crs.cpp</itemPath>
       <itemPath>filters.cpp</itemPath>
-      <itemPath>flows.cpp</itemPath>
       <itemPath>hids.cpp</itemPath>
       <itemPath>ids.cpp</itemPath>
       <itemPath>loclog.cpp</itemPath>
       <itemPath>main.cpp</itemPath>
       <itemPath>misc.cpp</itemPath>
+      <itemPath>netstat.cpp</itemPath>
       <itemPath>nids.cpp</itemPath>
       <itemPath>remlog.cpp</itemPath>
       <itemPath>remstat.cpp</itemPath>
       <itemPath>sinks.cpp</itemPath>
       <itemPath>source.cpp</itemPath>
-      <itemPath>statflows.cpp</itemPath>
-      <itemPath>statids.cpp</itemPath>
       <itemPath>updates.cpp</itemPath>
       <itemPath>waf.cpp</itemPath>
     </logicalFolder>
@@ -78,7 +78,7 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <commandLine>-I/usr/include/ -I/usr/include/boost -I/usr/local/include/hiredis -I/usr/local/include/activemq-cpp-3.9.5/ -I/usr/include/apr-1.0/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++0x</commandLine>
+          <commandLine>-I/usr/include/ -I/usr/include/boost -I/usr/local/include/hiredis -I/usr/local/include/activemq-cpp-3.9.5/ -I/usr/include/apr-1.0/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11 -Wno-deprecated</commandLine>
         </ccTool>
         <linkerTool>
           <linkerAddLib>
@@ -87,6 +87,14 @@
           <commandLine>-L/usr/lib -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -lz -lm -lrt -ldl -lpthread -lyaml -ldaemon -lactivemq-cpp -lboost_system -lboost_thread -lboost_iostreams -lhiredis -lboost_filesystem -lboost_regex</commandLine>
         </linkerTool>
       </compileType>
+      <item path="aggalerts.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="aggalerts.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="aggnet.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="aggnet.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="base64.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="cobject.cpp" ex="false" tool="1" flavor2="0">
@@ -113,10 +121,6 @@
       </item>
       <item path="filters.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="flows.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="flows.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="hids.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="hids.h" ex="false" tool="3" flavor2="0">
@@ -137,6 +141,10 @@
       </item>
       <item path="misc.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="netstat.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="netstat.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="nids.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="nids.h" ex="false" tool="3" flavor2="0">
@@ -156,14 +164,6 @@
       <item path="source.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="source.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="statflows.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="statflows.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="statids.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="statids.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="updates.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -194,6 +194,14 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
+      <item path="aggalerts.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="aggalerts.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="aggnet.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="aggnet.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="base64.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="cobject.cpp" ex="false" tool="1" flavor2="0">
@@ -220,10 +228,6 @@
       </item>
       <item path="filters.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="flows.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="flows.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="hids.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="hids.h" ex="false" tool="3" flavor2="0">
@@ -244,6 +248,10 @@
       </item>
       <item path="misc.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="netstat.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="netstat.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="nids.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="nids.h" ex="false" tool="3" flavor2="0">
@@ -263,14 +271,6 @@
       <item path="source.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="source.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="statflows.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="statflows.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="statids.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="statids.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="updates.cpp" ex="false" tool="1" flavor2="0">
       </item>

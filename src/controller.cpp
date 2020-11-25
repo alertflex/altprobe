@@ -266,84 +266,39 @@ int Controller::SendMessage(Event* e) {
             string strEventJson(((Alert*) e)->event_json);
             auto_ptr<TextMessage> message(session->createTextMessage(strEventJson));
             
-            string strProbeId(node_id);
-            message->setStringProperty("node_id", strProbeId);
-            
             message->setIntProperty("msg_type", 1);
-                
+            
+            string strRefId(((Alert*) e)->ref_id);
+            message->setStringProperty("ref_id", strRefId);
+            
+            string strNodeId(node_id);
+            message->setStringProperty("node_id", strNodeId);
+            
             string strAlertUuid(((Alert*) e)->alert_uuid);
             message->setStringProperty("alert_uuid", strAlertUuid);
                 
-            string strRefId(((Alert*) e)->ref_id);
-            message->setStringProperty("ref_id", strRefId);
+            string strSource(((Alert*) e)->alert_source);
+            message->setStringProperty("alert_source", strSource);
                 
-            string strSource(((Alert*) e)->source);
-            message->setStringProperty("source", strSource);
-                
-            string strType(((Alert*) e)->type);
-            message->setStringProperty("type", strType);
+            string strType(((Alert*) e)->alert_type);
+            message->setStringProperty("alert_type", strType);
             
-            string strEvent(((Alert*) e)->event);
-            message->setStringProperty("event", strEvent);
-                    
-            message->setIntProperty("severity", ((Alert*) e)->severity);
+            string strSensor(((Alert*) e)->sensor_id);
+            message->setStringProperty("sensor_id", strSensor);
             
-            message->setIntProperty("score", ((Alert*) e)->score);
-                    
-            char cat_string[OS_STRING_SIZE];
-        
-            int j = 0;
-            for (string i : ((Alert*) e)->list_cats) {
-                if ( j < ((Alert*) e)->list_cats.size() - 1) i = i + ", ";
-                if (j == 0) strncpy (cat_string, i.c_str(), i.size() + 1);
-                else strncat (cat_string, i.c_str(), i.size() + 1);
+            message->setIntProperty("alert_severity", ((Alert*) e)->alert_severity);
             
-                j++;    
-            }
-                
-            string strEventCat(cat_string);
-            message->setStringProperty("category", strEventCat);
-                    
             string strEventDetails(((Alert*) e)->description);
             message->setStringProperty("description", strEventDetails);
-                
-            string strSrcip(((Alert*) e)->srcip);
-            message->setStringProperty("srcip", strSrcip);
-                
-            string strDstip(((Alert*) e)->dstip);
-            message->setStringProperty("dstip", strDstip);
             
-            string strSrcagent(((Alert*) e)->srcagent);
-            message->setStringProperty("srcagent", strSrcagent);
-                
-            string strDstagent(((Alert*) e)->dstagent);
-            message->setStringProperty("dstagent", strDstagent);
+            string strEvent(((Alert*) e)->event_id);
+            message->setStringProperty("event_id", strEvent);
+                    
+            message->setIntProperty("event_severity", ((Alert*) e)->event_severity);
             
-            message->setIntProperty("srcport", ((Alert*) e)->srcport);
-            
-            message->setIntProperty("dstport", ((Alert*) e)->dstport);
-			
-            string strUser(((Alert*) e)->user);
-            message->setStringProperty("user", strUser);
-            
-            string strAgent(((Alert*) e)->agent);
-            message->setStringProperty("agent", strAgent);
-            
-            string strContainer(((Alert*) e)->container);
-            message->setStringProperty("container", strContainer);
-            
-            string strProcess(((Alert*) e)->process);
-            message->setStringProperty("process", strProcess);
-            
-            string strFile(((Alert*) e)->file);
-            message->setStringProperty("file", strFile);
-            
-            string strSensor(((Alert*) e)->sensor);
-            message->setStringProperty("sensor", strSensor);
-                
             string strLoc(((Alert*) e)->location);
             message->setStringProperty("location", strLoc);
-                
+            
             string strAct(((Alert*) e)->action);
             message->setStringProperty("action", strAct);
                 
@@ -361,12 +316,85 @@ int Controller::SendMessage(Event* e) {
             
             message->setStringProperty("collr_time", GetNodeTime());
             
+            string strUser(((Alert*) e)->user_name);
+            message->setStringProperty("user_name", strUser);
+            
+            string strAgent(((Alert*) e)->agent_name);
+            message->setStringProperty("agent_name", strAgent);
+            
+            char cat_string[OS_STRING_SIZE];
+        
+            int j = 0;
+            for (string i : ((Alert*) e)->list_cats) {
+                if ( j < ((Alert*) e)->list_cats.size() - 1) i = i + ", ";
+                if (j == 0) strncpy (cat_string, i.c_str(), i.size() + 1);
+                else strncat (cat_string, i.c_str(), i.size() + 1);
+            
+                j++;    
+            }
+                
+            string strEventCat(cat_string);
+            message->setStringProperty("categories", strEventCat);
+            
+            string strSrcip(((Alert*) e)->src_ip);
+            message->setStringProperty("src_ip", strSrcip);
+                
+            string strDstip(((Alert*) e)->dst_ip);
+            message->setStringProperty("dst_ip", strDstip);
+            
+            string strSrcagent(((Alert*) e)->src_hostname);
+            message->setStringProperty("src_hostname", strSrcagent);
+                
+            string strDstagent(((Alert*) e)->dst_hostname);
+            message->setStringProperty("dst_hostname", strDstagent);
+            
+            message->setIntProperty("src_port", ((Alert*) e)->src_port);
+            
+            message->setIntProperty("dst_port", ((Alert*) e)->dst_port);
+			
+            string strFileName(((Alert*) e)->file_name);
+            message->setStringProperty("file_name", strFileName);
+            
+            string strFilePath(((Alert*) e)->file_path);
+            message->setStringProperty("file_path", strFilePath);
+            
+            string strMD5(((Alert*) e)->hash_md5);
+            message->setStringProperty("hash_md5", strMD5);
+            
+            string strSHA1(((Alert*) e)->hash_sha1);
+            message->setStringProperty("hash_sha1", strSHA1);
+            
+            string strSHA256(((Alert*) e)->hash_sha256);
+            message->setStringProperty("hash_sha256", strSHA256);
+            
+            message->setIntProperty("process_id", ((Alert*) e)->process_id);
+            
+            string strProcessName(((Alert*) e)->process_name);
+            message->setStringProperty("process_name", strProcessName);
+            
+            string strProcessCmdline(((Alert*) e)->process_cmdline);
+            message->setStringProperty("process_cmdline", strProcessCmdline);
+            
+            string strProcessPath(((Alert*) e)->process_path);
+            message->setStringProperty("process_path", strProcessPath);
+            
+            string strUrlHostname(((Alert*) e)->url_hostname);
+            message->setStringProperty("url_hostname", strUrlHostname);
+            
+            string strUrlPath(((Alert*) e)->url_path);
+            message->setStringProperty("url_path", strUrlPath);
+            
+            string strContainerId(((Alert*) e)->container_id);
+            message->setStringProperty("container_id", strContainerId);
+            
+            string strContainerName(((Alert*) e)->container_name);
+            message->setStringProperty("container_name", strContainerName);
+            
             producerAlerts->send(message.get());
             
                     
         }  else {
             
-            // Create a stats or logs
             BytesMessage* byte_message = session->createBytesMessage();
                 
             string strNodeId(node_id);
@@ -402,6 +430,12 @@ int Controller::SendMessage(Event* e) {
                 case 11 :
                     byte_message->setStringProperty("sensor", sensor_id + "-waf");
                     byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
+                    break;
+                case 12 :
+                    byte_message->setStringProperty("sensor", sensor_id);
+                    break;
+                case 14 :
+                    byte_message->setStringProperty("sensor", sensor_id);
                     break;
                 default:
                     break;

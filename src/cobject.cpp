@@ -35,6 +35,15 @@ long CollectorObject::gosleep_timer;
 long CollectorObject::startup_timer;
 long CollectorObject::update_timer;
 
+long CollectorObject::docker_timer;
+
+char CollectorObject::suri_socket[OS_BUFFER_SIZE];
+
+bool CollectorObject::suriSocketStatus;
+
+char CollectorObject::docker_bench[OS_BUFFER_SIZE]; 
+char CollectorObject::trivy[OS_BUFFER_SIZE]; 
+
 char CollectorObject::wazuh_host[OS_HEADER_SIZE];
 int CollectorObject::wazuh_port;
 char CollectorObject::wazuh_user[OS_HEADER_SIZE];
@@ -43,13 +52,13 @@ char CollectorObject::wazuh_pwd[OS_HEADER_SIZE];
 bool CollectorObject::wazuhServerStatus;
 
 char CollectorObject::falco_log[OS_BUFFER_SIZE]; 
-int CollectorObject::falcolog_status = 2;
+int CollectorObject::falcolog_status = 1;
 char CollectorObject::suri_log[OS_BUFFER_SIZE]; 
-int CollectorObject::surilog_status = 2;
+int CollectorObject::surilog_status = 1;
 char CollectorObject::wazuh_log[OS_BUFFER_SIZE];
-int CollectorObject::wazuhlog_status = 2;
+int CollectorObject::wazuhlog_status = 1;
 char CollectorObject::modsec_log[OS_BUFFER_SIZE];
-int CollectorObject::modseclog_status = 2;
+int CollectorObject::modseclog_status = 1;
 
 char CollectorObject::falco_conf[OS_BUFFER_SIZE];
 char CollectorObject::falco_local[OS_BUFFER_SIZE];
@@ -87,6 +96,9 @@ int CollectorObject::GetConfig() {
     cy->addKey("startup_timer");
     cy->addKey("sleep_timer");
     cy->addKey("update_timer");
+    cy->addKey("docker_timer");
+    
+    cy->addKey("suri_socket");
         
     cy->addKey("wazuh_host");
     cy->addKey("wazuh_port");
@@ -144,6 +156,19 @@ int CollectorObject::GetConfig() {
         SysLog("config file: update rules is disabled");
     }
     
+    docker_timer = stoi(cy->getParameter("docker_timer"));
+    
+    if (!docker_timer) {
+        SysLog("config file error: parameter docker_timer");
+        return 0;
+    }
+    
+    strncpy(suri_socket, (char*) cy->getParameter("suri_socket").c_str(), sizeof(suri_socket));
+    if (!strcmp (suri_socket, "indef")) { 
+        suriSocketStatus =false;
+        SysLog("config file notification: interface to Suricata socket is disabled");
+    }
+    
     strncpy(wazuh_host, (char*) cy->getParameter("wazuh_host").c_str(), sizeof(wazuh_host));
     if (!strcmp (wazuh_host, "indef")) { 
         wazuhServerStatus =false;
@@ -197,6 +222,10 @@ int CollectorObject::GetConfig() {
     
     cy = new ConfigYaml( "sources");
     
+    cy->addKey("docker_bench");
+    
+    cy->addKey("trivy");
+    
     cy->addKey("falco_log");
     
     cy->addKey("suri_log");
@@ -231,33 +260,29 @@ int CollectorObject::GetConfig() {
     
     cy->ParsConfig();
     
+    strncpy(docker_bench, (char*) cy->getParameter("docker_bench").c_str(), sizeof(docker_bench));
+    
+    strncpy(trivy, (char*) cy->getParameter("trivy").c_str(), sizeof(trivy));
+        
     strncpy(falco_log, (char*) cy->getParameter("falco_log").c_str(), sizeof(falco_log));
     if (!strcmp (falco_log, "indef")) { 
         falcolog_status = 0;
-    } else {
-        if (!strcmp (falco_log, "redis")) falcolog_status = 1;
-    }
+    } 
     
     strncpy(suri_log, (char*) cy->getParameter("suri_log").c_str(), sizeof(suri_log));
     if (!strcmp (suri_log, "indef")) { 
         surilog_status = 0;
-    } else {
-        if (!strcmp (suri_log, "redis")) surilog_status = 1;
-    }
+    } 
     
     strncpy(wazuh_log, (char*) cy->getParameter("wazuh_log").c_str(), sizeof(wazuh_log));
     if (!strcmp (wazuh_log, "indef")) { 
         wazuhlog_status = 0;
-    } else {
-        if (!strcmp (wazuh_log, "redis")) wazuhlog_status = 1;
-    }
+    } 
     
     strncpy(modsec_log, (char*) cy->getParameter("modsec_log").c_str(), sizeof(modsec_log));
     if (!strcmp (modsec_log, "indef")) { 
         modseclog_status = 0;
-    } else {
-        if (!strcmp (modsec_log, "redis")) modseclog_status = 1;
-    }
+    } 
     
     if (urStatus) {
         

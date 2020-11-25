@@ -16,54 +16,26 @@ int Source::GetConfig() {
     //Read filter config
     if(!fs.GetFiltersConfig()) return 0;
     
-    ConfigYaml* cy = new ConfigYaml( "sources");
+    if (!redis_key.compare("indef")) {
     
-    cy->addKey(config_key);
-            
-    cy->ParsConfig();
-    
-    redis_key = cy->getParameter(config_key);
+        redis_status = 0;
+       
+    } else {
         
-    if (!redis_key.compare("indef")) { 
-            status = 0;
-            string notification = "config file notification: redis interface is disabled for " + config_key;
-            SysLog((char*) notification.c_str());
-    }
-    else {
-        redis_key = "lpop " + redis_key;
-        status = 1;
-    }
+        ConfigYaml* cy = new ConfigYaml( "sources");
     
-    return 1;
-}
-
-
-int Source::Open() {
+        cy->addKey(config_key);
+            
+        cy->ParsConfig();
     
-    char level[OS_HEADER_SIZE];
-    
-    if (!sk.Open()) return 0;
-    
-    if (status == 1) {
-        c = redisConnect(sk.redis_host, sk.redis_port);
-    
-        if (c != NULL && c->err) {
-            // handle error
-            sprintf(level, "failed open redis server interface: %s\n", c->errstr);
-            SysLog(level);
-            return 0;
-        }
+        redis_key = cy->getParameter(config_key);
+        
+        if (!redis_key.compare("indef")) redis_status = 0;
+        else redis_key = "lpop " + redis_key;
+        
     }
     
     return 1;
-}
-
-void Source::Close() {
-    
-    sk.Close();
-    
-    if (status == 1) redisFree(c);
-    
 }
 
 long Source::ResetEventsCounter() {
@@ -87,62 +59,73 @@ void Source::IncrementEventsCounter() {
 void Source::SendAlertMultiple(int type) {
     
     sk.alert.ref_id  = fs.filter.ref_id;
-    
-    sk.alert.dstip = "";
-    sk.alert.srcip = "";
-    sk.alert.dstport = 0;
-    sk.alert.srcport = 0;
-    sk.alert.dstagent = "indef";
-    sk.alert.srcagent = "indef";
-    sk.alert.user = "indef";
-    
-    string strNodeId(node_id);
-    sk.alert.sensor = sensor_id;
-    sk.alert.filter = fs.filter.desc;
-    sk.alert.event_time = GetNodeTime();
-        
+    sk.alert.sensor_id = sensor_id;
+                
+    sk.alert.alert_severity = 3;
     switch (type) {
         case 0:
-            sk.alert.type = "HOST";
-            sk.alert.source = "Falco";
+            sk.alert.alert_type = "HOST";
+            sk.alert.alert_source = "Falco";
             break;
         case 1:
-            sk.alert.type = "HOST";
-            sk.alert.source = "Wazuh";
+            sk.alert.alert_type = "HOST";
+            sk.alert.alert_source = "Wazuh";
             break;
         case 2:
-            sk.alert.type = "NET";
-            sk.alert.source = "Suricata";
+            sk.alert.alert_type = "NET";
+            sk.alert.alert_source = "Suricata";
             break;
         case 3:
-            sk.alert.type = "NET";
-            sk.alert.source = "Modsecurity";
+            sk.alert.alert_type = "NET";
+            sk.alert.alert_source = "Modsecurity";
             break;
         default:
-            sk.alert.type = "MISC";
-            sk.alert.source = "Alertflex";
+            sk.alert.alert_type = "MISC";
+            sk.alert.alert_source = "Alertflex";
             break;
     }
-        
-    sk.alert.event = 1;
     
-    sk.alert.severity = 3;
-    sk.alert.score = 0;
+    sk.alert.event_severity = 0;
+    sk.alert.event_id = 2;
+    sk.alert.description = "Multiple alert";
+    sk.alert.action = "indef";
+    sk.alert.location = "indef";
+    sk.alert.info = "indef";
+    sk.alert.status = "processed_new";
+    sk.alert.user_name = "indef";
+    sk.alert.agent_name = "indef";
+    sk.alert.filter = fs.filter.desc;
     
     sk.alert.list_cats.push_back("Multiple alert");
-        
-    sk.alert.action = "indef";
-        
-    sk.alert.description = "Multiple alert";
     
-    sk.alert.location = "";
-        
-    sk.alert.info = "";
-        
+    sk.alert.event_time = GetNodeTime();
     sk.alert.event_json = "";
+    
+    sk.alert.src_ip = "indef";
+    sk.alert.dst_ip = "indef";
+    sk.alert.src_hostname = "indef";
+    sk.alert.dst_hostname = "indef";
+    sk.alert.src_port = 0;
+    sk.alert.dst_port = 0;
         
-    sk.alert.status = "processed_new";
-        
+    sk.alert.file_name = "indef";
+    sk.alert.file_path = "indef";
+	
+    sk.alert.hash_md5 = "indef";
+    sk.alert.hash_sha1 = "indef";
+    sk.alert.hash_sha256 = "indef";
+	
+    sk.alert.process_id = 0;
+    sk.alert.process_name = "indef";
+    sk.alert.process_cmdline = "indef";
+    sk.alert.process_path = "indef";
+    
+    sk.alert.url_hostname = "indef";
+    sk.alert.url_path = "indef";
+    
+    sk.alert.container_id = "indef";
+    sk.alert.container_name = "indef";
+    
     sk.SendAlert();
         
 }

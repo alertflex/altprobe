@@ -10,8 +10,8 @@
 
 #include "sinks.h"
 #include "source.h"
-#include "statflows.h"
-#include "statids.h"
+#include "aggalerts.h"
+#include "aggnet.h"
 #include "hids.h"
 
 using namespace std;

@@ -11,8 +11,8 @@
 #include <libdaemon/dpid.h>
 #include <libdaemon/dexec.h>
 
-#include "statflows.h"
-#include "statids.h"
+#include "aggalerts.h"
+#include "aggnet.h"
 #include "hids.h"
 #include "crs.h"
 #include "waf.h"
@@ -23,33 +23,33 @@
 #include "remstat.h"
 #include "updates.h"
 
-StatIds statids;
-pthread_t pthread_statids;
+AggAlerts aggalerts;
+pthread_t pthread_aggalerts;
 
-void* exit_thread_statids_arg;
-void exit_thread_statids(void* arg) { statids.Close(); }
+void* exit_thread_aggalerts_arg;
+void exit_thread_aggalerts(void* arg) { aggalerts.Close(); }
 
-void * thread_statids(void *arg) {
+void * thread_aggalerts(void *arg) {
     
-    pthread_cleanup_push(exit_thread_statids, exit_thread_statids_arg);
+    pthread_cleanup_push(exit_thread_aggalerts, exit_thread_aggalerts_arg);
     
-    while (statids.Go()) { }
+    while (aggalerts.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
 }
 
-StatFlows statflows;
-pthread_t pthread_statflows;
+AggNet aggnet;
+pthread_t pthread_aggnet;
 
-void* exit_thread_statflows_arg;
-void exit_thread_statflows(void* arg) { statflows.Close(); }
+void* exit_thread_aggnet_arg;
+void exit_thread_aggnet(void* arg) { aggnet.Close(); }
 
-void * thread_statflows(void *arg) {
+void * thread_aggnet(void *arg) {
     
-    pthread_cleanup_push(exit_thread_statflows, exit_thread_statflows_arg);
+    pthread_cleanup_push(exit_thread_aggnet, exit_thread_aggnet_arg);
     
-    while (statflows.Go()) { }
+    while (aggnet.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
@@ -192,7 +192,7 @@ void * thread_updates(void *arg) {
 }
 
 
-Collector collr(&crs, &hids, &nids, &waf, &misc, &remlog, &remstat, &statflows, &statids);
+Collector collr(&crs, &hids, &nids, &waf, &misc, &remlog, &remstat);
 pthread_t pthread_collr;
 
 void* exit_thread_collr_arg;
@@ -210,11 +210,11 @@ void * thread_collr(void *arg) {
 
 int LoadConfig(void)
 {
-    //statids
-    if (!statids.GetConfig()) return 0;
+    //aggalerts
+    if (!aggalerts.GetConfig()) return 0;
     
-    //statflow
-    if (!statflows.GetConfig()) return 0;
+    //aggnet
+    if (!aggnet.GetConfig()) return 0;
     
     //misc
     if (!misc.GetConfig()) return 0;
@@ -251,43 +251,46 @@ int InitThreads(int mode, pid_t pid)
 {
     int arg = 1;
     
-    //statids
-    if (statids.GetStatus()) {
-        if (!statids.Open()) {
-            daemon_log(LOG_ERR,"cannot open ids stat service");
+    // aggalerts
+    if (aggalerts.GetStatus()) {
+        
+        if (!aggalerts.Open()) {
+            daemon_log(LOG_ERR,"cannot open Aggregation alerts module");
             return 0;
         }
             
-        if (pthread_create(&pthread_statids, NULL, thread_statids, &arg)) {
+        if (pthread_create(&pthread_aggalerts, NULL, thread_aggalerts, &arg)) {
             daemon_log(LOG_ERR,"error creating thread for ids stat");
             return 0;
         }
     }
     
-    //traffic
-    if (statflows.GetStatus()) {
-        if (!statflows.Open()) {
-            daemon_log(LOG_ERR,"cannot open statflow service");
+    //aggnet
+    if (aggnet.GetStatus()) {
+        
+        if (!aggnet.Open()) {
+            daemon_log(LOG_ERR,"cannot open Aggregation net module");
             return 0;
         }
             
-        if (pthread_create(&pthread_statflows, NULL, thread_statflows, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for statflow");
+        if (pthread_create(&pthread_aggnet, NULL, thread_aggnet, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for aggnet");
             return 0;
         }
     }
     
-    //misc
+     //misc
     if (misc.GetStatus()) {
-        if (!misc.Open()) {
-            daemon_log(LOG_ERR,"cannot open Misc server");
-            return 0;
-        }
+        
+        if (misc.Open()) {
             
-        if (pthread_create(&pthread_misc, NULL, thread_misc, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for misc");
-            return 0;
-        }
+            if (pthread_create(&pthread_misc, NULL, thread_misc, &arg)) {
+                daemon_log(LOG_ERR,"error creating thread for MISC module");
+                return 0;
+            }
+            
+        } else daemon_log(LOG_ERR,"MISC source is disabled");
+            
     }
     
     //hids
@@ -296,9 +299,10 @@ int InitThreads(int mode, pid_t pid)
         if (hids.Open()) {
             
             if (pthread_create(&pthread_hids, NULL, thread_hids, &arg)) {
-                daemon_log(LOG_ERR,"error creating thread for HIDS");
+                daemon_log(LOG_ERR,"error creating thread for HIDS module");
                 return 0;
             }
+            
         } else daemon_log(LOG_ERR,"HIDS source is disabled");
     }
     
@@ -309,9 +313,10 @@ int InitThreads(int mode, pid_t pid)
         if (nids.Open()) {
             
             if (pthread_create(&pthread_nids, NULL, thread_nids, &arg)) {
-                daemon_log(LOG_ERR,"error creating thread for NIDS.");
+                daemon_log(LOG_ERR,"error creating thread for NIDS module");
                 return 0;
             }
+            
         } else daemon_log(LOG_ERR,"NIDS source is disabled");
     }
     
@@ -321,7 +326,7 @@ int InitThreads(int mode, pid_t pid)
         if (waf.Open()) {
             
             if (pthread_create(&pthread_waf, NULL, thread_waf, &arg)) {
-                daemon_log(LOG_ERR,"error creating thread for WAF");
+                daemon_log(LOG_ERR,"error creating thread for WAF module");
                 return 0;
             }
         } else daemon_log(LOG_ERR,"WAF source is disabled");
@@ -333,7 +338,7 @@ int InitThreads(int mode, pid_t pid)
         if (crs.Open()) {
             
             if (pthread_create(&pthread_crs, NULL, thread_crs, &arg)) {
-                daemon_log(LOG_ERR,"error creating thread for CRS");
+                daemon_log(LOG_ERR,"error creating thread for CRS module");
                 return 0;
             }
         } else daemon_log(LOG_ERR,"CRS source is disabled");
@@ -343,12 +348,12 @@ int InitThreads(int mode, pid_t pid)
     //remlog
     if (remlog.GetStatus()) {
         if (!remlog.Open()) {
-            daemon_log(LOG_ERR,"cannot open RemLog service");
+            daemon_log(LOG_ERR,"cannot open RemLog module");
             return 0;
         }
     
         if (pthread_create(&pthread_remlog, NULL, thread_remlog, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for RemLog service");
+            daemon_log(LOG_ERR,"error creating thread for RemLog module");
             return 0;
         } 
     }
@@ -356,12 +361,12 @@ int InitThreads(int mode, pid_t pid)
     //remstat
     if (remstat.GetStatus()) {
         if (!remstat.Open()) {
-            daemon_log(LOG_ERR,"cannot open RemStat service");
+            daemon_log(LOG_ERR,"cannot open RemStat module");
             return 0;
         }
     
         if (pthread_create(&pthread_remstat, NULL, thread_remstat, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for RemStat service");
+            daemon_log(LOG_ERR,"error creating thread for RemStat module");
             return 0;
         } 
     }
@@ -370,11 +375,11 @@ int InitThreads(int mode, pid_t pid)
     if (updates.GetStatus()) {
         
         if (!updates.Open(mode,pid)) {
-            daemon_log(LOG_ERR,"cannot open update service");
+            daemon_log(LOG_ERR,"cannot open Update module");
             return 0;
         }
         if (pthread_create(&pthread_updates, NULL, thread_updates, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for update service");
+            daemon_log(LOG_ERR,"error creating thread for Update module");
             return 0;
         } 
     }
@@ -382,12 +387,12 @@ int InitThreads(int mode, pid_t pid)
     //collector
     if (collr.GetStatus()) {
         if (!collr.Open()) {
-            daemon_log(LOG_ERR,"cannot open monitor of collector service");
+            daemon_log(LOG_ERR,"cannot open Collector module");
             return 0;
         }
     
         if (pthread_create(&pthread_collr, NULL, thread_collr, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for monitoring collector service");
+            daemon_log(LOG_ERR,"error creating thread for Collector module");
             return 0;
         } 
     }
@@ -397,16 +402,16 @@ int InitThreads(int mode, pid_t pid)
 
 void KillsThreads(void)
 {
-    //statids
-    if (statids.GetStatus()) {
-        pthread_cancel(pthread_statids);
-        pthread_join(pthread_statids, NULL);
+    //aggalerts
+    if (aggalerts.GetStatus()) {
+        pthread_cancel(pthread_aggalerts);
+        pthread_join(pthread_aggalerts, NULL);
     }
     
-    //traffic
-    if (statflows.GetStatus()) {
-        pthread_cancel(pthread_statflows);
-        pthread_join(pthread_statflows, NULL);
+    //aggnet
+    if (aggnet.GetStatus()) {
+        pthread_cancel(pthread_aggnet);
+        pthread_join(pthread_aggnet, NULL);
     }
     
     //misc
@@ -479,7 +484,7 @@ int start(pid_t pid) {
     
     if (!LoadConfig()) return 1;
     
-    int startup_timer = statids.GetStartupTimer();
+    int startup_timer = aggalerts.GetStartupTimer();
         
     /* Prepare for return value passing from the initialization procedure of the daemon process */
     if (daemon_retval_init() < 0) {

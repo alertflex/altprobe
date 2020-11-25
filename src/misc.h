@@ -33,6 +33,8 @@ public:
         pt.clear();
     }
     
+    int Open();
+    void Close();
     int Go();
     
     int ParsJson (char* redis_payload);

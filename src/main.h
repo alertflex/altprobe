@@ -13,6 +13,9 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/file.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -71,9 +74,9 @@
 #define BLACKLIST_SIZE       100
 
 #define LOG_QUEUE_SIZE 200000
+#define AGG_QUEUE_SIZE 200000
 #define STAT_QUEUE_SIZE 200000
-#define FLOWS_QUEUE_SIZE 200000
-#define NETSTAT_QUEUE_SIZE 1000
+#define NET_QUEUE_SIZE 200000
 #define IDS_QUEUE_SIZE 200000
 
 #define CONFIG_FILE "/etc/altprobe/altprobe.yaml"

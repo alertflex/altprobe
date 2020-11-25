@@ -20,8 +20,7 @@ int RemStat::GetConfig() {
     //Read sinks config
     if(!sk.GetConfig()) return 0;
     
-    status = 1; 
-    return status;
+    return 1;
 }
 
 int RemStat::Open() {
@@ -37,25 +36,25 @@ void  RemStat::Close() {
 
 int RemStat::Go(void) {
     
-    while (!q_compliance.empty() || !q_stats_flow.empty() || !q_stats_ids.empty() || !q_stats_collr.empty()) {
+    while (!q_reports.empty() || !q_agg_alerts.empty() || !q_agg_net.empty() || !q_stats_collr.empty()) {
         
-        if (!q_compliance.empty()) {
-            q_compliance.pop(rec);
+        if (!q_reports.empty()) {
+            q_reports.pop(rec);
             stats_list.push_back(rec);
             counter++;
         }
         
-        if (!q_stats_flow.empty()) {
-            q_stats_flow.pop(rec);
-            stats_list.push_back(rec);
-            counter++;
-        }   
-        
-        if (!q_stats_ids.empty()) {
-            q_stats_ids.pop(rec);
+        if (!q_agg_alerts.empty()) {
+            q_agg_alerts.pop(rec);
             stats_list.push_back(rec);
             counter++;
         }  
+        
+        if (!q_agg_net.empty()) {
+            q_agg_net.pop(rec);
+            stats_list.push_back(rec);
+            counter++;
+        }          
         
         if (!q_stats_collr.empty()) {
             q_stats_collr.pop(rec);
@@ -68,8 +67,7 @@ int RemStat::Go(void) {
     if (counter < 100 && timeout < 10) {
         usleep(GetGosleepTimer()*60);
         timeout++;
-    }
-    else {
+    } else {
         //SysLog("stat sent");
         ProcessLogs();
         counter = 0;

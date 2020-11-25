@@ -357,11 +357,11 @@ void Updates::onMessage(const Message* message) {
         
                 string text = textMessage->getText();
                 
-                if (!sensor_id.compare("master")) {
-        
+                if (!content_type.compare("wazuh_ar") && arStatus) {
+                
                     try {
-        
-                        if (!content_type.compare("active_response") && arStatus) {
+                        
+                        if (!sensor_id.compare("master")) {
                             
                             stringstream ss(text);
                             
@@ -389,6 +389,30 @@ void Updates::onMessage(const Message* message) {
                             }
                         }
                 
+                    } catch (const std::exception & ex) {
+                        SysLog((char*) ex.what());
+                    }
+                } 
+                    
+                if (!content_type.compare("suricata_ar") && arStatus) {
+                        
+                    try {
+                        
+                        if (!sensor_id.compare("sensor")) {
+                            
+                            stringstream ss(text);
+                            
+                            bpt::ptree pt;
+                            bpt::read_json(ss, pt);
+                    
+                            string json = pt.get<string>("json");
+                                                        
+                                                
+                            if (!json.compare("")) SendArToSuricata(json);
+                    
+                            // string log = "ar_json: " + json;
+                            // SysLog((char*) log.c_str());
+                        }
                     } catch (const std::exception & ex) {
                         SysLog((char*) ex.what());
                     }
@@ -677,6 +701,95 @@ string Updates::CreateAgentWazuh(string json) {
     }
 
     return "";
+}
+
+int Updates::SendArToSuricata(string json) {
+    
+    int sck;
+    struct sockaddr_un addr;
+    char buffer[2048];
+    int ret;
+    
+    if (suriSocketStatus) {
+    
+        try
+        {
+            /* create socket */
+            sck = socket(AF_UNIX, SOCK_STREAM, 0);
+            if (sck == -1) {
+		SysLog("Suricata AR: Can not create socket.");
+                close (sck);
+		return 0;
+            }
+
+            /* set address */
+            addr.sun_family = AF_UNIX;
+        
+        
+        
+            strncpy(addr.sun_path, suri_socket, sizeof(addr.sun_path));
+            addr.sun_path[sizeof(addr.sun_path) - 1] = 0;
+
+            /* Connect to unix socket */
+            ret = connect(sck, (struct sockaddr *) &addr, sizeof(addr));
+            if (ret == -1) {
+		SysLog("Suricata AR: Can not connect to scoket");
+                close (sck);
+		return 0;
+            }
+        
+            char test[] = "{\"version\": \"0.1\"}";
+            int siz = strlen(test);
+
+            ret = send(sck, test, siz, 0);
+            if (ret == -1) {
+		SysLog("Suricata AR: Can not send version.");
+                close (sck);
+		return 0;
+            } else if (ret < siz) {
+		SysLog("Suricata AR: Unable to send all string.");
+                close (sck);
+		return 0;
+            }
+        
+            memset(buffer, 0, sizeof(buffer));
+            ret = read(sck, buffer, sizeof(buffer));
+            if (ret == -1) {
+		SysLog("Suricata AR: Can not read answer (version).");
+                close (sck);
+		return 0;
+            } 
+
+            // char test1[] = "{\"command\": \"add-hostbit\", \"arguments\": {\"ipaddress\": \"192.168.1.2\", 
+            // \"hostbit\": \"alertflex_ar\", \"expire\": 360}}";
+            siz = strlen(json.c_str());
+
+            ret = send(sck, json.c_str(), siz, 0);
+            if (ret == -1) {
+		SysLog("Suricata AR: Can not send parameters.");
+                close (sck);
+		return 0;
+            } 
+        
+            memset(buffer, 0, sizeof(buffer));
+            ret = read(sck, buffer, sizeof(buffer));
+            if (ret == -1) {
+		SysLog("Suricata AR: Can not read answer (active response).");
+                close (sck);
+		return 0;
+            }
+            
+            close (sck);
+            return 1;
+        }
+        catch (std::exception& e) {
+            SysLog("Suricata AR: exception.");
+            close (sck);
+            return 0;
+        }
+    }
+
+    return 0;
 }
 
 

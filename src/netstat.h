@@ -1,57 +1,24 @@
-/* 
- * File:   flows.h
- * Author: Oleg Zharkov
- *
- * Created on June 15, 2015, 8:57 PM
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
  */
 
-#ifndef FLOWS_H
-#define	FLOWS_H
+/* 
+ * File:   netstat.h
+ * Author: Oleg Zharkov
+ *
+ * Created on May 15, 2020, 10:47 PM
+ */
+
+#ifndef NETSTAT_H
+#define NETSTAT_H
 
 #include "main.h"
 
 using namespace std;
 
-class FlowsRecord {
-public:
-    string ref_id;
-    // 1 - netflow, 2 - dns, 3 - ssh
-    int flows_type; 
-    string src_ip; 
-    string src_agent;
-    string dst_ip;  
-    string dst_agent;
-    string ids;
-    unsigned int dst_port; 
-    unsigned int bytes; 
-    string info1;
-    string info2; 
-    
-    void Reset() {
-        ref_id.clear();
-        flows_type = 0;
-        src_ip.clear();
-        src_agent.clear();
-        dst_ip.clear();
-        dst_agent.clear();
-        ids.clear();
-        dst_port = 0;
-        bytes = 0;
-        info1.clear();
-        info2.clear();
-    }
-    
-            
-    FlowsRecord () {
-        Reset();
-    }
-    
-    ~FlowsRecord () {
-        Reset();
-    }
-};
-
-class Traffic {
+class Netstat {
 public:
     string ref_id;
     string ids;
@@ -104,7 +71,7 @@ public:
         mpls = 0;
     }
     
-    void Aggregate (Traffic* ns) {
+    void Aggregate (Netstat* ns) {
         ref_id = ns->ref_id;
         invalid = invalid + ns->invalid;
         pkts = pkts + ns->pkts;
@@ -128,18 +95,16 @@ public:
         mpls = mpls + ns->mpls;
     }
     
-    Traffic () {
+    Netstat () {
         Reset();
     }
     
-    ~Traffic () {
+    ~Netstat () {
         Reset();
     }
 };
 
+extern boost::lockfree::spsc_queue<Netstat> q_netstat;
 
-extern boost::lockfree::spsc_queue<FlowsRecord> q_flows;
-extern boost::lockfree::spsc_queue<Traffic> q_netstat;
-
-#endif	/* FLOWS_H */
+#endif /* NETSTAT_H */
 

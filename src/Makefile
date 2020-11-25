@@ -145,6 +145,7 @@ install:
 	chmod u+x ./scripts/iprepup-wazuh.sh
 	chmod u+x ./scripts/iprepup-suri.sh
 	chmod u+x ./scripts/iprepup-modsec.sh
+	chmod u+x ./scripts/rulesup-falco.sh
 	chmod u+x ./scripts/rulesup-wazuh.sh
 	chmod u+x ./scripts/rulesup-suri.sh
 	chmod u+x ./scripts/rulesup-modsec.sh
@@ -152,6 +153,8 @@ install:
 	chmod u+x ./scripts/restart-wazuh.sh
 	chmod u+x ./scripts/restart-suri.sh
 	chmod u+x ./scripts/restart-modsec.sh
+	chmod u+x ./scripts/docker-bench.sh
+	chmod u+x ./scripts/trivy.sh
 	cp ./scripts/iprepup-wazuh.sh /etc/altprobe/scripts/
 	cp ./scripts/iprepup-suri.sh /etc/altprobe/scripts/
 	cp ./scripts/iprepup-modsec.sh /etc/altprobe/scripts/
@@ -163,6 +166,8 @@ install:
 	cp ./scripts/restart-wazuh.sh /etc/altprobe/scripts/
 	cp ./scripts/restart-suri.sh /etc/altprobe/scripts/
 	cp ./scripts/restart-modsec.sh /etc/altprobe/scripts/
+	cp ./scripts/docker-bench.sh /etc/altprobe/scripts/
+	cp ./scripts/trivy.sh /etc/altprobe/scripts/
 	
 update:
 	cp ./dist/Debug/GNU-Linux/collector /usr/local/bin/altprobe

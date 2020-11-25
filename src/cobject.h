@@ -32,6 +32,17 @@ public:
     static long startup_timer;
     static long gosleep_timer;
     static long update_timer;
+    
+    static long docker_timer;
+    
+    static bool suriSocketStatus;
+    
+    static char docker_bench[OS_BUFFER_SIZE]; 
+    
+    static char trivy[OS_BUFFER_SIZE];
+    
+    // Suricata config parameters
+    static char suri_socket[OS_BUFFER_SIZE];
         
     // Wazuh config parameters
     static char wazuh_host[OS_HEADER_SIZE];
@@ -74,6 +85,7 @@ public:
     CollectorObject () {
         node_id.clear();
         sensor_id.clear();
+        suriSocketStatus = true;
         wazuhServerStatus = true;
         arStatus = false;
         urStatus = true;
@@ -151,63 +163,101 @@ class Alert : public Event {
 public:    
     // Record
     string alert_uuid;
-    string source;
-    string type;
-    string event;
-    int severity;
-    int score;
+    string alert_source;
+    string alert_type;
+    string sensor_id;
+    int alert_severity;
     string description;
-    string srcip;
-    string dstip;
-    string srcagent;
-    string dstagent;
-    unsigned int srcport;
-    unsigned int dstport;
-    string user;
-    string process;
-    string file;
-    string agent;
-    string container;
-    string sensor;
+    string event_id;
+    int event_severity;
+    
     string location;
     string action; 
     string filter;
     string status;
     string info;
+    string user_name;
+    string agent_name;
     string event_json;
     string event_time;
-        
+    
     std::vector<string> list_cats;
     
+    string src_ip;
+    string dst_ip;
+    string src_hostname;
+    string dst_hostname;
+    unsigned int src_port;
+    unsigned int dst_port;
+	
+    string file_name;
+    string file_path;
+	
+    string hash_md5;
+    string hash_sha1;
+    string hash_sha256;
+	
+    unsigned int process_id;
+    string process_name;
+    string process_cmdline;
+    string process_path;
+    
+    string url_hostname;
+    string url_path;
+    
+    string container_id;
+    string container_name;
+    
     void Reset() {
+        
         Event::Reset();
         event_type = 0;
+		
         alert_uuid.clear();
-        source.clear();
-        type.clear();
-        event.clear(); 
-        severity = 0; 
-        description.clear();
-        srcip.clear();
-        dstip.clear();
-        action.clear();
-        location.clear();
-        user.clear();
-        process.clear();
-        file.clear();
-        agent.clear();
-        container.clear();
-        status.clear();
-        info.clear();
-        event_json.clear();
-        score = 0;
-        srcagent.clear();
-        dstagent.clear();
-        srcport = 0;
-        dstport = 0;
-        sensor.clear();
-        filter.clear();
-        event_time.clear();
+        alert_source.clear();
+	alert_type.clear();
+	sensor_id.clear();
+	alert_severity = 0;
+	description.clear();
+	
+	event_id.clear();
+	event_severity = 0;
+    
+	src_ip.clear();
+	dst_ip.clear();
+	src_hostname.clear();
+	dst_hostname.clear();
+	src_port = 0;
+	dst_port = 0;
+	
+	file_name.clear();
+	file_path.clear();
+	
+	hash_md5.clear();
+	hash_sha1.clear();
+        hash_sha256.clear();
+	
+	process_id = 0;
+	process_name.clear();
+	process_cmdline.clear();
+        process_path.clear();
+		
+	url_hostname.clear();
+	url_path.clear();
+        
+        container_id.clear();
+        container_name.clear();
+        
+        user_name.clear();
+	agent_name.clear();
+		
+	location.clear();
+	action.clear(); 
+	filter.clear();
+	status.clear();
+	info.clear();
+	event_json.clear();
+	event_time.clear();
         
         list_cats.clear();
     }

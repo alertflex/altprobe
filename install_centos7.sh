@@ -11,7 +11,12 @@ then
 fi
 
 echo "*** Installation alertflex collector started***"
-sudo yum -y install pcre pcre2 autoconf automake gcc make libtool libnet-devel libyaml libyaml-devel zlib zlib-devel libcap-ng file-libs libdaemon-devel boost-devel boost-thread libmicrohttpd logrotate autoconf-archive m4 git ntp openssl-libs openssl-devel curl ldconfig hiredis hiredis-devel
+
+sudo bash -c 'echo "Defaults timestamp_timeout=50" >> /etc/sudoers.d/99_sudo_include_file'
+
+sudo yum -y install epel-release
+sudo yum -y update
+sudo yum -y install pcre pcre2 autoconf automake gcc make gcc-c++ libtool libnet-devel libyaml libyaml-devel zlib zlib-devel libcap-ng file-libs libdaemon-devel boost-devel boost-thread libmicrohttpd logrotate autoconf-archive m4 git ntp openssl-libs openssl-devel curl ldconfig hiredis hiredis-devel
 
 echo "*** installation activemq ***"
 sudo yum -y install httpd-devel libapreq2-devel apr-util apr-util-devel java-1.8.0-openjdk activemq-cpp.x86_64 activemq-cpp-devel.x86_64
@@ -30,6 +35,8 @@ sudo mkdir -pv /etc/altprobe/
 sudo sed -i "s/_project_id/$PROJECT_ID/g" /etc/altprobe/filters.json
 sudo sed -i "s/_node_id/$NODE_ID/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_probe_id/$PROBE_ID/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_redis_host/$REDIS_HOST/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_wazuh_host/$WAZUH_HOST/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_amq_url/$AMQ_URL/g" /etc/altprobe/altprobe.yaml
@@ -45,17 +52,24 @@ sudo sed -i "s/_suri_log/$SURI_LOG/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_log/$WAZUH_LOG/g" /etc/altprobe/altprobe.yaml
 
 sudo chmod go-rwx /etc/altprobe/altprobe.yaml
-sudo mv /usr/local/bin/* /usr/sbin/
+
+sudo ln -s /usr/local/bin/altprobe /usr/sbin/altprobe
+sudo ln -s /usr/local/bin/altprobe-restart /usr/sbin/altprobe-restart
+sudo ln -s /usr/local/bin/altprobe-start /usr/sbin/altprobe-start
+sudo ln -s /usr/local/bin/altprobe-status /usr/sbin/altprobe-status
+sudo ln -s /usr/local/bin/altprobe-stop /usr/sbin/altprobe-stop
+sudo ln -s /usr/local/bin/altprobe-update /usr/sbin/altprobe-update
+
 cd ..
 
-if [[ $INSTALL_REDIS == true ]]
+if [[ $INSTALL_REDIS == yes ]]
 then
 	echo "*** installation redis ***"
 	sudo yum -y install redis 
 	sudo systemctl enable redis
 fi
 
-if [[ $INSTALL_FALCO == true ]]
+if [[ $INSTALL_FALCO == yes ]]
 then
     echo "*** installation falco ***"
     sudo rpm --import https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public
@@ -64,7 +78,7 @@ then
 	sudo yum -y install falco
 fi
 
-if [[ $INSTALL_SURICATA == true ]]
+if [[ $INSTALL_SURICATA == yes ]]
 then
     echo "*** installation suricata ***"
     sudo yum -y install suricata
@@ -87,11 +101,11 @@ ExecStart=/usr/sbin/suricata -c /etc/suricata/suricata.yaml -i _monitoring_inter
 [Install]
 WantedBy=multi-user.target
 EOF'
-	sudo sed -i "s/_monitoring_interface/$INTERFACE/g" /etc/systemd/system/suricata.service
+	sudo sed -i "s/_monitoring_interface/$SURICATA_INTERFACE/g" /etc/systemd/system/suricata.service
 	sudo systemctl enable suricata
 fi
 
-if [[ $INSTALL_WAZUH == true ]]
+if [[ $INSTALL_WAZUH == yes ]]
 then
 
 	echo "*** installation OSSEC/WAZUH server ***"
@@ -108,12 +122,14 @@ EOF'
 	sudo systemctl enable wazuh-manager
 
 	echo "*** installation  Wazuh API***"
-	curl --silent --location https://rpm.nodesource.com/setup_8.x | bash -
+	curl --silent --location https://rpm.nodesource.com/setup_10.x | sudo bash -
 	sudo yum -y install nodejs
 	sudo yum -y install wazuh-api
 	sudo systemctl enable wazuh-api
 	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
 	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
+	sudo sed -i "s/config.host = \"0.0.0.0\"/config.host = \"127.0.0.1\"/g" /var/ossec/api/configuration/config.js
+	sudo sed -i "s/config.https = \"yes\"/config.https = \"no\"/g" /var/ossec/api/configuration/config.js
 	
 	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
 [Unit]
@@ -152,4 +168,17 @@ fi
 
 sudo systemctl daemon-reload
 sudo systemctl enable altprobe.service
+
+sudo rm /etc/sudoers.d/99_sudo_include_file
+
+if [[ $BUILD_PACKAGE == yes ]]
+then
+	cd $INSTALL_PATH/pkg
+	sudo yum -y install rpm-build rpmdevtools
+    sudo cp -rp rpmbuild /root/
+    sudo cp /usr/local/bin/altprobe /root/rpmbuild/SOURCES/
+    sudo chown -R root:root /root/rpmbuild
+    sudo rpmbuild -ba /root/rpmbuild/SPECS/altprobe-1.0.spec
+fi
+
 

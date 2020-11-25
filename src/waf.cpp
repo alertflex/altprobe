@@ -190,36 +190,33 @@ int Waf::Open() {
     
     if (!sk.Open()) return 0;
     
-    if (status == 1) {
+    if (modseclog_status == 1) {
         
-        if (modseclog_status == 2) {
-            
-            fp = fopen(modsec_log, "r");
-            if(fp == NULL) {
-                SysLog("failed open nginx error log file");
+        fp = fopen(modsec_log, "r");
+        if(fp == NULL) {
+            SysLog("failed open nginx error log file");
+            return 0;
+        }
+        
+        fseek(fp,0,SEEK_END);
+        stat(modsec_log, &buf);    
+        file_size = (unsigned long) buf.st_size;
+    
+    } else {
+    
+        if (redis_status == 1) {
+            c = redisConnect(sk.redis_host, sk.redis_port);
+    
+            if (c != NULL && c->err) {
+                // handle error
+                sprintf(level, "failed open redis server interface: %s\n", c->errstr);
+                SysLog(level);
                 return 0;
             }
-            
-            fseek(fp,0,SEEK_END);
-            stat(modsec_log, &buf);    
-            file_size = (unsigned long) buf.st_size;
-    
-        } else {
-        
-            if (modseclog_status == 1) {
-                c = redisConnect(sk.redis_host, sk.redis_port);
-    
-                if (c != NULL && c->err) {
-                    // handle error
-                    sprintf(level, "failed open redis server interface: %s\n", c->errstr);
-                    SysLog(level);
-                    return 0;
-                }
-            } else return 0;
-        }
+        } else status = 0;
     }
     
-    return 1;
+    return status;
 }
 
 void Waf::Close() {
@@ -228,9 +225,13 @@ void Waf::Close() {
     
     if (status == 1) {
         
-        if (modseclog_status == 2) {
+        if (modseclog_status == 1) {
             if (fp != NULL) fclose(fp);
-        } else redisFree(c);
+        } else {
+            if (redis_status == 1) redisFree(c);
+        }
+        
+        status = 0;
     }
 }
 
@@ -301,7 +302,7 @@ int Waf::Go(void) {
         
     if (status) {
         
-        if (modseclog_status == 2) {
+        if (modseclog_status == 1) {
             
             res = ReadFile();
             
@@ -376,7 +377,8 @@ int Waf::Go(void) {
                 }
             } 
         } 
-        if (modseclog_status == 1) freeReplyObject(reply);
+        
+        if (redis_status == 1) freeReplyObject(reply);
     } 
     else {
         usleep(GetGosleepTimer()*60);
@@ -421,8 +423,8 @@ int Waf::ParsJson() {
     
     try {
         
-        if (modseclog_status == 1) jsonPayload.assign(reply->str, GetBufferSize(reply->str));
-        else jsonPayload.assign(file_payload, GetBufferSize(file_payload));
+        if (modseclog_status == 1) jsonPayload.assign(file_payload, GetBufferSize(file_payload));
+        else jsonPayload.assign(reply->str, GetBufferSize(reply->str));
         
 	if ((jsonPayload.compare("") == 0)) {
             ResetStreams();
@@ -430,12 +432,12 @@ int Waf::ParsJson() {
         }
     
 	if (modseclog_status == 1) {
+            event_time = GetGraylogFormat();
+        } else {
             ss << jsonPayload;
             bpt::read_json(ss, pt);
             jsonPayload = pt.get<string>("message","");
             event_time = pt.get<string>("@timestamp","");
-        } else {
-            event_time = GetGraylogFormat();
         }       
         
         if (rec.IsModsec(jsonPayload)) {
@@ -552,6 +554,8 @@ int Waf::PushRecord(GrayList* gl) {
         
     if (gl != NULL) {
         
+        ids_rec.filter = true;
+        
         if (gl->agr.reproduced > 0) {
             
             ids_rec.host = gl->host;
@@ -579,40 +583,28 @@ int Waf::PushRecord(GrayList* gl) {
 void Waf::SendAlert(int s, GrayList*  gl) {
     
     sk.alert.ref_id =  fs.filter.ref_id;
-    
+    sk.alert.sensor_id = sensor;
+    sk.alert.alert_severity = s;
+    sk.alert.alert_source = "Modsecurity";
+    sk.alert.alert_type = "NET";
+    sk.alert.event_severity = rec.ma.severity;
+    sk.alert.event_id = rec.ma.id;
+    sk.alert.description = rec.ma.msg;
+    sk.alert.action = "indef";     
+    sk.alert.location = "indef";
+    sk.alert.info = "indef";
+    sk.alert.status = "processed_new";
+    sk.alert.user_name = "indef";
+    sk.alert.agent_name = "indef";
+    sk.alert.filter = fs.filter.desc;
+   
     if (!rec.ma.list_tags.empty())
         copy(rec.ma.list_tags.begin(),rec.ma.list_tags.end(),back_inserter(sk.alert.list_cats));
     else 
         sk.alert.list_cats.push_back("waf");
     
-    sk.alert.severity = s;
-    sk.alert.score = rec.ma.severity;
-    sk.alert.event = rec.ma.id;
-    sk.alert.action = "indef";
-    sk.alert.description = rec.ma.msg;
-        
-    sk.alert.status = "processed_new";
-    
-    sk.alert.srcip = rec.ma.client;
-    sk.alert.dstip = rec.ma.hostname;
-        
-    sk.alert.source = "Modsecurity";
-    sk.alert.type = "NET";
-    
-    sk.alert.srcagent = "indef";
-    sk.alert.dstagent = "indef";
-    
-    sk.alert.srcport = 0;
-    sk.alert.dstport = 0;
-        
-    sk.alert.user = " ";
-    sk.alert.sensor = sensor;
-    sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = event_time;
-        
-    sk.alert.location = rec.ma.uri;
-        
-    sk.alert.info = rec.ma.file;
+    sk.alert.event_json = jsonPayload;
     
     if (gl != NULL) {
             
@@ -622,22 +614,22 @@ void Waf::SendAlert(int s, GrayList*  gl) {
         } 
         
         if (gl->rsp.new_type.compare("indef") != 0) {
-            sk.alert.type = gl->rsp.new_type;
+            sk.alert.alert_type = gl->rsp.new_type;
             sk.alert.status = "modified_new";
         }  
         
         if (gl->rsp.new_source.compare("indef") != 0) {
-            sk.alert.source = gl->rsp.new_source;
+            sk.alert.alert_source = gl->rsp.new_source;
             sk.alert.status = "modified_new";
         } 
         
         if (gl->rsp.new_event.compare("") != 0) {
-            sk.alert.event = gl->rsp.new_event;
+            sk.alert.event_id = gl->rsp.new_event;
             sk.alert.status = "modified_new";
         }    
             
         if (gl->rsp.new_severity != 0) {
-            sk.alert.severity = gl->rsp.new_severity;
+            sk.alert.alert_severity = gl->rsp.new_severity;
             sk.alert.status = "modified_new";
         }   
             
@@ -653,8 +645,31 @@ void Waf::SendAlert(int s, GrayList*  gl) {
         
     }
     
-    sk.alert.event_json = jsonPayload;
+    sk.alert.dst_ip = rec.ma.hostname;
+    sk.alert.src_ip = rec.ma.client;
+    sk.alert.dst_port = 0;
+    sk.alert.src_port = 0;
+    sk.alert.dst_hostname = rec.ma.hostname;
+    sk.alert.src_hostname = rec.ma.client;
         
+    sk.alert.file_name = rec.ma.file;
+    sk.alert.file_path = rec.ma.file;
+	
+    sk.alert.hash_md5 = "indef";
+    sk.alert.hash_sha1 = "indef";
+    sk.alert.hash_sha256 = "indef";
+	
+    sk.alert.process_id = rec.ma.id;
+    sk.alert.process_name = "indef";
+    sk.alert.process_cmdline = "indef";
+    sk.alert.process_path = "indef";
+    
+    sk.alert.url_hostname = rec.ma.hostname;
+    sk.alert.url_path = rec.ma.uri;
+    
+    sk.alert.container_id = "indef";
+    sk.alert.container_name = "indef";
+    
     sk.SendAlert();
         
 }

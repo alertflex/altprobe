@@ -21,36 +21,34 @@ int Crs::Open() {
     
     if (!sk.Open()) return 0;
     
-    if (status == 1) {
-        
-        if (falcolog_status == 2) {
+    if (falcolog_status == 1) {
             
-            fp = fopen(falco_log, "r");
-            if(fp == NULL) {
-                SysLog("failed open falco log file");
+        fp = fopen(falco_log, "r");
+        if(fp == NULL) {
+            SysLog("failed open falco log file");
+            return 0;
+        }
+        
+        fseek(fp,0,SEEK_END);
+        stat(falco_log, &buf);    
+        file_size = (unsigned long) buf.st_size;
+    
+    } else {
+    
+        if (redis_status == 1) {
+            
+            c = redisConnect(sk.redis_host, sk.redis_port);
+    
+            if (c != NULL && c->err) {
+                // handle error
+                sprintf(level, "failed open redis server interface: %s\n", c->errstr);
+                SysLog(level);
                 return 0;
             }
-            
-            fseek(fp,0,SEEK_END);
-            stat(falco_log, &buf);    
-            file_size = (unsigned long) buf.st_size;
-      
-        } else {
-        
-            if (falcolog_status == 1) {
-                c = redisConnect(sk.redis_host, sk.redis_port);
-    
-                if (c != NULL && c->err) {
-                    // handle error
-                    sprintf(level, "failed open redis server interface: %s\n", c->errstr);
-                    SysLog(level);
-                    return 0;
-                }
-            } else return 0;
-        }
+        } else status = 0;
     }
     
-    return 1;
+    return status;
 }
 
 void Crs::Close() {
@@ -59,9 +57,13 @@ void Crs::Close() {
     
     if (status == 1) {
         
-        if (falcolog_status == 2) {
+        if (falcolog_status == 1) {
             if (fp != NULL) fclose(fp);
-        } else redisFree(c);
+        } else {
+            if (redis_status == 1) redisFree(c);
+        }
+        
+        status = 0;
     }
 }
 
@@ -132,7 +134,7 @@ int Crs::Go(void) {
         
     if (status) {
         
-        if (falcolog_status == 2) {
+        if (falcolog_status == 1) {
             
             res = ReadFile();
             
@@ -152,7 +154,7 @@ int Crs::Go(void) {
         
         } else {
         
-            // read data 
+            // read data from redis
             reply = (redisReply *) redisCommand( c, (const char *) redis_key.c_str());
         
             if (!reply) {
@@ -209,7 +211,7 @@ int Crs::Go(void) {
             }
         }
         
-        if (falcolog_status == 1) freeReplyObject(reply);
+        if (redis_status == 1) freeReplyObject(reply);
     } 
     else {
         usleep(GetGosleepTimer()*60);
@@ -256,6 +258,11 @@ int Crs::ParsJson() {
     
         if (falcolog_status == 1) {
             
+            jsonPayload.assign(file_payload, GetBufferSize(file_payload));
+            ss << jsonPayload;
+        
+        }  else {
+            
             jsonPayload.assign(reply->str, GetBufferSize(reply->str));
             ss1 << jsonPayload;
             
@@ -269,10 +276,6 @@ int Crs::ParsJson() {
                 return 0;
             }
             ss << message;
-        
-        }  else {
-            jsonPayload.assign(file_payload, GetBufferSize(file_payload));
-            ss << jsonPayload;
         }
         
         
@@ -302,18 +305,26 @@ int Crs::ParsJson() {
     
     rec.rule = pt.get<string>("rule","");
     
-    rec.fields.fd_name = pt.get<string>("output_fields.fd.name","indef");
+    rec.fields.fd_cip = pt.get<string>("output_fields.fd.cip","indef");
+    rec.fields.fd_sip = pt.get<string>("output_fields.fd.sip","indef");
+    rec.fields.fd_cport = pt.get<int>("output_fields.fd.cport",0);
+    rec.fields.fd_sport = pt.get<int>("output_fields.fd.sport",0);
+    rec.fields.fd_cip_name = pt.get<string>("output_fields.fd.cip.name","indef");
+    rec.fields.fd_sip_name = pt.get<string>("output_fields.fd.sip.name","indef");
         
+    rec.fields.fd_name = pt.get<string>("output_fields.fd.name","indef");
+    rec.fields.fd_directory = pt.get<string>("output_fields.fd.directory","indef");
+        
+    rec.fields.proc_pid = pt.get<int>("output_fields.proc.pid",0);
     rec.fields.proc_cmdline = pt.get<string>("output_fields.proc.cmdline","indef");
-    
     rec.fields.proc_name = pt.get<string>("output_fields.proc.name","indef");
-    
-    rec.fields.user_name = pt.get<string>("output_fields.user.name","indef");
+    rec.fields.proc_cwd = pt.get<string>("output_fields.proc.cwd","indef");  
     
     rec.fields.container_id = pt.get<string>("output_fields.container.id","indef");
-    
     rec.fields.container_name = pt.get<string>("output_fields.container.name","indef");
     
+    rec.fields.user_name = pt.get<string>("output_fields.user.name","indef");
+        
     ResetStreams();
     
     return 1;
@@ -348,23 +359,53 @@ void Crs::CreateLog() {
     report += "\",\"_description\":\"";
     report += rec.output;
     
-    report += "\",\"_file\":\"";
-    report += rec.fields.fd_name;
-    
-    report += "\",\"_user\":\"";
+    report += "\",\"_user_name\":\"";
     report += rec.fields.user_name;
     
-    report += "\",\"_process\":\"";
+    report += "\",\"_client_ip\":\"";
+    report += rec.fields.fd_cip;
+    
+    report += "\",\"_server_ip\":\"";
+    report += rec.fields.fd_sip;
+    
+    report += "\",\"_client_port\":";
+    report += rec.fields.fd_cport;
+    
+    report += ",\"_server_port\":";
+    report += rec.fields.fd_sport;
+    
+    report += ",\"_client_hostname\":\"";
+    report += rec.fields.fd_cip_name;
+    
+    report += "\",\"_server_hostname\":\"";
+    report += rec.fields.fd_sip_name;
+    
+    report += "\",\"_file_name\":\"";
+    report += rec.fields.fd_name;
+    
+    report += "\",\"_file_directory\":\"";
+    report += rec.fields.fd_directory;
+    
+    report += "\",\"_process_pid\":";
+    report += rec.fields.proc_pid;
+    
+    report += ",\"_process_cmdline\":\"";
+    report += rec.fields.proc_cmdline;
+    
+    report += "\",\"_process_name\":\"";
     report += rec.fields.proc_name;
     
-    report += "\",\"_cmd\":\"";
-    report += rec.fields.proc_cmdline;
+    report += "\",\"_process_dir\":\"";
+    report += rec.fields.proc_cwd;
     
     report += "\",\"_container_id\":\"";
     report += rec.fields.container_id;
     
     report += "\",\"_container_name\":\"";
     report += rec.fields.container_name;
+    
+    report += "\",\"_container_id\":\"";
+    report += rec.fields.container_id;
     
     report += "\"}";
     
@@ -400,12 +441,14 @@ int Crs::PushRecord(GrayList* gl) {
     ids_rec.user = rec.fields.user_name;
     ids_rec.process = rec.fields.proc_name;
     ids_rec.container = rec.fields.container_id;
-    if (falcolog_status == 1) ids_rec.ids = rec.sensor;
-    else ids_rec.ids = sensor;
+    if (falcolog_status == 1) ids_rec.ids = sensor;
+    else ids_rec.ids = rec.sensor;
     ids_rec.action = "indef";
     ids_rec.ids_type = 5;
                 
     if (gl != NULL) {
+        
+        ids_rec.filter = true;
         
         if (gl->agr.reproduced > 0) {
             
@@ -434,45 +477,27 @@ int Crs::PushRecord(GrayList* gl) {
 void Crs::SendAlert(int s, GrayList*  gl) {
     
     sk.alert.ref_id =  fs.filter.ref_id;
+    if (falcolog_status == 1) sk.alert.sensor_id = sensor;
+    else sk.alert.sensor_id = rec.sensor;
+    
+    sk.alert.alert_severity = s;
+    sk.alert.alert_source = "Falco";
+    sk.alert.alert_type = "HOST";
+    sk.alert.event_severity = rec.level;
+    sk.alert.event_id = rec.rule;
+    sk.alert.description = rec.output;
+    sk.alert.action = "indef";     
+    sk.alert.location = "indef";
+    sk.alert.info = "indef";
+    sk.alert.status = "processed_new";
+    sk.alert.user_name = rec.fields.user_name;
+    sk.alert.agent_name = sensor;
+    sk.alert.filter = fs.filter.desc;
     
     sk.alert.list_cats.push_back("falco");
-        
-    sk.alert.severity = s;
-    sk.alert.score = rec.level;
-    sk.alert.event = rec.rule;
-    sk.alert.action = "indef";
-    sk.alert.description = rec.output;
-        
-    sk.alert.status = "processed_new";
-            
-    sk.alert.srcip = "";
-    sk.alert.dstip = "";
     
-    sk.alert.srcagent = "indef";
-    sk.alert.dstagent = "indef";
-    
-    sk.alert.srcport = 0;
-    sk.alert.dstport = 0;
-        
-    sk.alert.source = "Falco";
-    
-    sk.alert.user = rec.fields.user_name;
-    
-    if (falcolog_status == 1) sk.alert.sensor = rec.sensor;
-    else sk.alert.sensor = sensor;
-    
-    sk.alert.filter = fs.filter.desc;
     sk.alert.event_time = rec.timestamp;
-        
-    sk.alert.type = "HOST";
-            
-    sk.alert.location = rec.fields.proc_cmdline;
-    sk.alert.file = rec.fields.fd_name;
-    sk.alert.container = rec.fields.container_id;
-    sk.alert.user = rec.fields.user_name;
-    sk.alert.process = rec.fields.proc_name;
-    
-    sk.alert.info = rec.rule;
+    sk.alert.event_json = jsonPayload;
         
     if (gl != NULL) {
             
@@ -482,27 +507,27 @@ void Crs::SendAlert(int s, GrayList*  gl) {
         } 
         
         if (gl->rsp.new_type.compare("indef") != 0) {
-            sk.alert.type = gl->rsp.new_type;
+            sk.alert.alert_type = gl->rsp.new_type;
             sk.alert.status = "modified_new";
         }  
         
         if (gl->rsp.new_source.compare("indef") != 0) {
-            sk.alert.source = gl->rsp.new_source;
+            sk.alert.alert_source = gl->rsp.new_source;
             sk.alert.status = "modified_new";
         } 
         
         if (gl->rsp.new_event.compare("indef") != 0) {
-            sk.alert.event = gl->rsp.new_event;
+            sk.alert.event_id = gl->rsp.new_event;
             sk.alert.status = "modified_new";
         }  
         
         if (gl->rsp.new_event.compare("indef") != 0) {
-            sk.alert.event = gl->rsp.new_event;
+            sk.alert.event_id = gl->rsp.new_event;
             sk.alert.status = "modified_new";
         }    
             
         if (gl->rsp.new_severity != 0) {
-            sk.alert.severity = gl->rsp.new_severity;
+            sk.alert.alert_severity = gl->rsp.new_severity;
             sk.alert.status = "modified_new";
         }   
             
@@ -518,7 +543,30 @@ void Crs::SendAlert(int s, GrayList*  gl) {
         
     }
     
-    sk.alert.event_json = jsonPayload;
+    sk.alert.src_ip = rec.fields.fd_cip;
+    sk.alert.dst_ip = rec.fields.fd_sip;
+    sk.alert.src_hostname = rec.fields.fd_cip_name;
+    sk.alert.dst_hostname = rec.fields.fd_sip_name;
+    sk.alert.src_port = rec.fields.fd_cport;
+    sk.alert.dst_port = rec.fields.fd_sport;
+    
+    sk.alert.file_name = rec.fields.fd_name;
+    sk.alert.file_path = rec.fields.fd_directory;
+	
+    sk.alert.hash_md5 = "indef";
+    sk.alert.hash_sha1 = "indef";
+    sk.alert.hash_sha256 = "indef";
+	
+    sk.alert.process_id = rec.fields.proc_pid;
+    sk.alert.process_name = rec.fields.proc_name;
+    sk.alert.process_cmdline = rec.fields.proc_cmdline;
+    sk.alert.process_path = rec.fields.proc_cwd;
+    
+    sk.alert.url_hostname = "indef";
+    sk.alert.url_path = "indef";
+    
+    sk.alert.container_id = rec.fields.container_id;
+    sk.alert.container_name = rec.fields.container_name;
     
     sk.SendAlert();
     

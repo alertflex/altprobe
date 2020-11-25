@@ -17,14 +17,11 @@
 #include <boost/asio.hpp>
 #include "base64.h"
 #include "ids.h"
-#include "flows.h"
 #include "hids.h"
 #include "nids.h"
 #include "waf.h"
 #include "misc.h"
 #include "crs.h"
-#include "statflows.h"
-#include "statids.h"
 #include "remlog.h"
 #include "remstat.h"
 #include "filters.h"
@@ -46,16 +43,14 @@ public:
     Crs* crs;
     RemLog* rem_log;
     RemStat* rem_stat;
-    StatFlows* stat_flows;
-    StatIds* stat_ids;
-    
+        
     BinData bd;
     Rule rd;
     std::stringstream strStream, comp;
     
     string ref_id;
     
-    Collector(Crs* c, Hids* h, Nids* n, Waf* w, Misc* m, RemLog* rl, RemStat* rs, StatFlows* f, StatIds* i) {
+    Collector(Crs* c, Hids* h, Nids* n, Waf* w, Misc* m, RemLog* rl, RemStat* rs) {
     
         crs = c;
         hids = h;
@@ -64,20 +59,19 @@ public:
         misc = m;
         rem_log = rl;
         rem_stat = rs;
-        stat_flows = f;
-        stat_ids = i;
-        
+                
         wazuhServerStatus = false;
         agents_list.clear();
     }
         
     virtual int GetConfig();
     
-    virtual int Open();
-    virtual void Close();
-    
+    int Open();
+    void Close();
     int Go();
+    
     void RoutineJob();
+    void UpdateRulesConfigs();
     void UpdateFilters();
     void UpdateFalcoConfig();
     void UpdateSuriConfig();
@@ -87,6 +81,9 @@ public:
     void UpdateSuriRules();
     void UpdateOssecRules();
     void UpdateModsecRules();
+    
+    void DockerBenchJob();
+    void TrivyJob();
         
     void ParsAgents(string json);
     void ControllerPush(string json, string type, string agent);

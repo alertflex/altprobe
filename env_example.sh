@@ -29,19 +29,16 @@ export SURI_LOG='\/var\/log\/suricata\/eve.json'
 export WAZUH_LOG='\/var\/ossec\/logs\/alerts\/alerts.json'
 
 # install add-on packages
-export INSTALL_REDIS=true
-export INSTALL_FALCO=false
-export INSTALL_SURICATA=true
-export INTERFACE=enp0s3
-export INSTALL_WAZUH=true
+export INSTALL_REDIS=yes
+export REDIS_HOST=127.0.0.1
+export INSTALL_FALCO=no
+export INSTALL_SURICATA=yes
+export SURICATA_INTERFACE=enp0s3
+export INSTALL_WAZUH=yes
+export WAZUH_HOST=127.0.0.1
 export WAZUH_USER=foo
 export WAZUH_PWD=bar
 
-
-
-
-
-
-
-
+# build rpm/deb packages
+export BUILD_PACKAGE=no
 

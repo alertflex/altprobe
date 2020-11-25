@@ -129,8 +129,8 @@ public:
         pt.clear();
     }
     
-    virtual int Open();
-    virtual void Close();
+    int Open();
+    void Close();
     int ReadFile();
     void IsFileModified();
     int Go();

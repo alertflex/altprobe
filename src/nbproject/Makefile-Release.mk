@@ -35,25 +35,25 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/aggalerts.o \
+	${OBJECTDIR}/aggnet.o \
 	${OBJECTDIR}/cobject.o \
 	${OBJECTDIR}/collector.o \
 	${OBJECTDIR}/config.o \
 	${OBJECTDIR}/controller.o \
 	${OBJECTDIR}/crs.o \
 	${OBJECTDIR}/filters.o \
-	${OBJECTDIR}/flows.o \
 	${OBJECTDIR}/hids.o \
 	${OBJECTDIR}/ids.o \
 	${OBJECTDIR}/loclog.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/misc.o \
+	${OBJECTDIR}/netstat.o \
 	${OBJECTDIR}/nids.o \
 	${OBJECTDIR}/remlog.o \
 	${OBJECTDIR}/remstat.o \
 	${OBJECTDIR}/sinks.o \
 	${OBJECTDIR}/source.o \
-	${OBJECTDIR}/statflows.o \
-	${OBJECTDIR}/statids.o \
 	${OBJECTDIR}/updates.o \
 	${OBJECTDIR}/waf.o
 
@@ -81,6 +81,16 @@ LDLIBSOPTIONS=
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/collector: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/collector ${OBJECTFILES} ${LDLIBSOPTIONS}
+
+${OBJECTDIR}/aggalerts.o: aggalerts.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/aggalerts.o aggalerts.cpp
+
+${OBJECTDIR}/aggnet.o: aggnet.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/aggnet.o aggnet.cpp
 
 ${OBJECTDIR}/cobject.o: cobject.cpp
 	${MKDIR} -p ${OBJECTDIR}
@@ -112,11 +122,6 @@ ${OBJECTDIR}/filters.o: filters.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/filters.o filters.cpp
 
-${OBJECTDIR}/flows.o: flows.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/flows.o flows.cpp
-
 ${OBJECTDIR}/hids.o: hids.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -142,6 +147,11 @@ ${OBJECTDIR}/misc.o: misc.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/misc.o misc.cpp
 
+${OBJECTDIR}/netstat.o: netstat.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/netstat.o netstat.cpp
+
 ${OBJECTDIR}/nids.o: nids.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -166,16 +176,6 @@ ${OBJECTDIR}/source.o: source.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/source.o source.cpp
-
-${OBJECTDIR}/statflows.o: statflows.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/statflows.o statflows.cpp
-
-${OBJECTDIR}/statids.o: statids.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/statids.o statids.cpp
 
 ${OBJECTDIR}/updates.o: updates.cpp
 	${MKDIR} -p ${OBJECTDIR}

@@ -43,25 +43,15 @@ class OssecFile
 {
 public:
     string filename;
-    string md5_before;
-    string md5_after;
-    string sha1_before;
-    string sha1_after;
-    string owner_before;
-    string owner_after;
-    string gowner_before;
-    string gowner_after;
+    string md5;
+    string sha1;
+    string sha256;
     
     void Reset() {
         filename.clear();
-        md5_before.clear();
-        md5_after.clear();
-        sha1_before.clear();
-        sha1_after.clear();
-        owner_before.clear();
-        owner_after.clear();
-        gowner_before.clear();
-        gowner_after.clear();
+        md5.clear();
+        sha1.clear();
+        sha256.clear();
     }
     
 };
@@ -78,13 +68,17 @@ public:
     /* Extracted from the event */
     string location;
     string agent;
+    string sensor;
     string user;
-    string process;
-    string hostname;
+    unsigned int process_id;
+    string process_name;
+    
     
     /* Extracted from the decoders */
     string srcip;
     string dstip;
+    unsigned int  srcport;
+    unsigned int  dstport;
             
     string timestamp;    
     
@@ -100,8 +94,9 @@ public:
         agent.clear();
         user.clear();
         location.clear();
-        hostname.clear();
-        process.clear();
+        sensor.clear();
+        process_id = 0;
+        process_name.clear();
         /* Extracted from the decoders */
         srcip.clear();
         dstip.clear();
@@ -125,7 +120,7 @@ public:
     //OSSEC record
     OssecRecord rec;
     
-    bpt::ptree pt, pt1, groups_cats, pcidss_cats, gdpr_cats, hipaa_cats, nist_cats;
+    bpt::ptree pt, pt1, groups_cats, pcidss_cats, gdpr_cats, hipaa_cats, nist_cats, mitre_cats;
     stringstream ss, ss1;
     
     Hids (string skey) : Source(skey) {
@@ -148,8 +143,8 @@ public:
         pcidss_cats.clear();
     }
     
-    virtual int Open();
-    virtual void Close();
+    int Open();
+    void Close();
     int ReadFile();
     void IsFileModified();
     int Go();
@@ -170,7 +165,7 @@ public:
 };
 
 extern boost::lockfree::spsc_queue<string> q_logs_hids;
-extern boost::lockfree::spsc_queue<string> q_compliance;
+extern boost::lockfree::spsc_queue<string> q_reports;
 
 #endif	/* HIDS_H */
 

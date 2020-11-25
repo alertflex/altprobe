@@ -42,8 +42,9 @@ public:
     int Go();
     void onMessage(const Message* message);
     void onException(const CMSException& ex AMQCPP_UNUSED);
-    int IsHomeNetwork(string ip);   
+    int IsHomeNetwork(string ip); 
     int SendArToWazuh(string agent, string json);
+    int SendArToSuricata(string json);
     string CreateAgentWazuh(string json);
 };
 

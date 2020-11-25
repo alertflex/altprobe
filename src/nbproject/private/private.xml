@@ -15,13 +15,6 @@
         </file>
     </editor-bookmarks>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group>
-            <file>file:/root/NetBeansProjects/collector/main.cpp</file>
-            <file>file:/root/NetBeansProjects/collector/cobject.cpp</file>
-            <file>file:/root/NetBeansProjects/collector/waf.cpp</file>
-            <file>file:/root/NetBeansProjects/collector/hids.cpp</file>
-            <file>file:/root/NetBeansProjects/collector/nids.cpp</file>
-            <file>file:/root/NetBeansProjects/collector/etc/altprobe.yaml</file>
-        </group>
+        <group/>
     </open-files>
 </project-private>

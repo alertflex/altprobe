@@ -29,7 +29,7 @@ public:
     int index;
     int counter;
     path open_file_path;
-    ofstream ostream;
+    std::ofstream ostream;
     
     LocLog () {
         index = 0;

@@ -38,6 +38,8 @@ public:
     std::vector<string> list_cats;
     
     // for checking of reproduce the alert
+    bool filter = false;
+    
     string match;
     string host;
     
@@ -68,6 +70,8 @@ public:
         
         list_cats.clear();
         
+        filter = false;
+        
         match.clear();
         host.clear();
         
@@ -85,41 +89,32 @@ public:
     }
 };
 
-class IdsBuffers {
+class IdsStat {
 public:
     
-    unsigned long crs_alerts_list;
+    unsigned long filter_counter;
+    unsigned long agg_counter;
+    unsigned long s0_counter;
+    unsigned long s1_counter;
+    unsigned long s2_counter;
+    unsigned long s3_counter;
     
-    unsigned long hids_alerts_list;
+    void Reset() {
+        filter_counter = 0;
+        agg_counter = 0;
+        s0_counter = 0;
+        s1_counter = 0;
+        s2_counter = 0;
+        s3_counter = 0;
+    }
     
-    unsigned long nids_alerts_list;
+    IdsStat () {
+        Reset();
+    }
     
-    unsigned long waf_alerts_list;
-    
-    unsigned long nids_srcip;
-    
-    unsigned long nids_dstip;
-    
-    unsigned long hids_srcip;
-    
-    unsigned long hids_location;
-    
-    unsigned long fim_file;
-    
-    unsigned long fim_cause;
-    
-    unsigned long ids_category;
-    
-    unsigned long ids_event;
-    
-    unsigned long waf_source;
-    
-    unsigned long waf_target;
-    
-    unsigned long user_event;
-    
-    unsigned long container_stat;
-    
+    ~IdsStat () {
+        Reset();
+    }
 };
 
 extern boost::lockfree::spsc_queue<IdsRecord> q_hids;

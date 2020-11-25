@@ -22,6 +22,7 @@ public:
     string sensor;
     
     int status;
+    int redis_status;
     string config_key;
     string redis_key;
     static int config_flag;
@@ -42,23 +43,22 @@ public:
     FiltersSingleton fs;
     
     Source () {
-        config_key = "";
-        status = 0;
+        config_key = "indef";
+        status = 1;
+        redis_status = 1;
         events_counter = 0;
         alerts_counter = 0;
     }
     
     Source (string ckey) {
         config_key = ckey;
-        status = 0;
+        status = 1;
+        redis_status = 1;
         events_counter = 0;
         alerts_counter = 0;
     }
     
     virtual int GetConfig();
-    
-    virtual int Open();
-    virtual void Close();
     
     virtual int GetStatus() {
         return status;

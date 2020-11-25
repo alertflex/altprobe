@@ -11,7 +11,7 @@
 
 #include "sinks.h"
 #include "ids.h"
-#include "flows.h"
+#include "netstat.h"
 #include "filters.h"
 #include "config.h"
 #include "source.h"
@@ -63,19 +63,19 @@ public:
     }
 };
 
-class SuricataSsh
+class SuricataHttp
 {
 public:
-    string client_sw;
-    string server_sw;
-    string client_proto;
-    string server_proto;
+    string hostname;
+    string url;
+    string http_user_agent;
+    string http_content_type;
     
     void Reset() {
-        client_sw.clear();
-        client_proto.clear();
-        server_sw.clear();
-        server_proto.clear();
+        hostname.clear();
+        url.clear();
+        http_user_agent.clear();
+        http_content_type.clear();
     }
 };
 
@@ -144,12 +144,12 @@ public:
     SuricataAlert alert;
     //  Record  DNS 
     SuricataDns dns;
-    //  Record  SSH 
-    SuricataSsh ssh;
     //  Record  Flow
     SuricataNetflow netflow;
     //  Record  File
     SuricataFile file;
+    //  Record  HTTP
+    SuricataHttp http;
     
     
     void Reset() {
@@ -170,9 +170,9 @@ public:
         
         alert.Reset();
         dns.Reset();
-        ssh.Reset();
         netflow.Reset();
         file.Reset();
+        http.Reset();
     }
 };
 
@@ -191,8 +191,8 @@ public:
     SuricataRecord rec;
     int counter_repetition;
     
-    // create new ids record
-    Traffic net_stat;
+    // create netstat record
+    Netstat net_stat;
     
     bpt::ptree pt;
     stringstream ss;
@@ -212,8 +212,8 @@ public:
         pt.clear();
     }
     
-    virtual int Open();
-    virtual void Close();
+    int Open();
+    void Close();
     int ReadFile();
     void IsFileModified();
     int Go();
@@ -224,8 +224,7 @@ public:
     void CreateLogPayload(int r);
     void SendAlert (int s, GrayList* gl);
     int PushIdsRecord(GrayList* gl);
-    void PushFlowsRecord();
-                
+                        
     void ClearRecords() {
         rec.Reset();
         net_stat.Reset();
