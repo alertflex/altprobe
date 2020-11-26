@@ -1,33 +1,14 @@
-# Alertflex Collector (Altprobe)
+The repository includes Alertflex collector and installation scripts for security sensors (Suricata NIDS, Wazuh HIDS, Falco CRS). 
 
-Alertflex project is an open-source continuous security monitoring solution designed for use in Hybrid Clouds (on-premises and cloud-based IT infrastructure). By monitoring security events and reports from well-known cybersecurity applications, Alertflex gives companies end-to-end security visibility. The project adapts of third-party software products into a unified solution based on the CTI EDR SOAR technology stack and DevSecOps best practices.
+Alertflex collector (Altprobe) is an open-source element of the Alertflex project. Alertflex works as a security event manager and implements the SOAR technology stack based on integration with third-party cybersecurity products (more than 20 are integrated at the moment).
 
-Alertflex requires fewer system resources compared with similar products and mostly integrates of free open-source third-party software. It can significantly reduce costs for your cybersecurity monitoring.
+Below a screenshot of the Alertflex management console demonstrates a dashboard for events that were collected by Altprobe from security sensors 
+![](https://github.com/alertflex/altprobe/blob/master/0.png)
 
-Alertflex implements two main functionality:
-
-**Security event management** for a distributed hub of security sensors (Suricata NIDS, Wazuh HIDS, Falco CRS, Modsecurity WAF) based on the next levels: 
-* Collection (Alertflex collector)
-* Streaming (ActiveMQ)
-* Analysis  (Alertflex controller)
-* Storage (MySQL)
-* Access  (Alertflex controller and console)
-
-**Security automation and orchestration**
-* IDS centralized management for rules, configs, filtering policies, IP address blocking lists
-* CTI functions which are based on integration with MISP. Performs a reputation checks for IP addresses, DNS records, MD5, SHA1 SHA256 hashes of files. Creates an alert, in case of suspicious data has been found.
-* Can redirect alerts, Netflow, logs  to open-source Log Management and monitoring systems ( Graylog, ElasticStack, Prometheus/Grafana)
-* Can periodically run scanning of remote files in Malware Analysis Sandbox (Cuckoo, Hybrid Analysis, VMRay)
-* Integrates SAST and DAST tools (Nmap, SonarQube, OWASP ZAP)
-* Provides REST API and interface compatible with Open Cybersecurity Alliance ecosystem for IDS alerts
-
-**Altprobe** includes Alertflex collector and installation scripts for security sensors (Suricata NIDS, Wazuh HIDS, Falco CRS). 
+This screenshot demonstrates an automation playbook that can be tied to security events.
+![](https://github.com/alertflex/altprobe/blob/master/1.png)
 
 For more information, please see the [Alertflex project documentation](https://alertflex.org/doc/index.html)
 	
-## Support
-
 Please [open an issue on GitHub](https://github.com/alertflex/altprobe/issues), if you'd like to report a bug or request a feature. 
 Have a question or need tech support, please send an email to address: info@alertflex.org
-	
-
