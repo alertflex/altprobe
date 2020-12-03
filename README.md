@@ -5,7 +5,7 @@ Alertflex collector (Altprobe) is an open-source element of the Alertflex projec
 Below a screenshot of the Alertflex management console demonstrates a dashboard for events that were collected by Altprobe from security sensors 
 ![](https://github.com/alertflex/altprobe/blob/master/img/0.png)
 
-This screenshot demonstrates an automation playbook that can be tied to security events.
+This screenshot demonstrates an automation playbook viewer/editor.
 ![](https://github.com/alertflex/altprobe/blob/master/img/1.png)
 
 For more information, please see the [Alertflex project documentation](https://alertflex.org/doc/index.html)
