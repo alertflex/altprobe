@@ -1,7 +1,16 @@
-/* 
- * File:   collector.cpp
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
  *
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
 
 #include <sstream>
@@ -10,7 +19,6 @@
 #include <boost/iostreams/filter/gzip.hpp>
 
 #include "collector.h"
-
 
 int Collector::GetConfig() {
     
@@ -31,7 +39,7 @@ int  Collector::Open() {
     ref_id = hids->fs.filter.ref_id;
     
     if (wazuhServerStatus) {
-        string payload = WazuhGet("/agents");
+        string payload = GetAgents("/agents");
         if (!payload.empty()){
             SysLog("connection between Wazuh server and Altprobe is established");
             ParsAgents(payload);
@@ -51,34 +59,52 @@ void  Collector::Close() {
     
 }
 
-
 int Collector::Go(void) {
     
-    struct timeval start, end;
-    long seconds = 0;
-    long reports = 0;
+    long counter_seconds = 0;
+    long counter_reports = 0;
             
     while(1) { 
         
-        while (sk.GetReportsPeriod() > seconds) {
-            seconds++;
+        while (sk.GetReportsPeriod() > counter_seconds && sk.GetReportsPeriod() != 0) {
+            counter_seconds++;
             sleep(1);
         }
         
-        UpdateRulesConfigs();
+        counter_seconds = 0;
+        counter_reports++;
         
-        seconds = 0;
+        StatJob();
         
-        if (update_timer == 0) RoutineJob();
-        
-        reports++;
-        
-        if (docker_timer == reports && docker_timer != 0) {
+        if (sk.GetLongtaskPeriod() >= counter_reports && sk.GetLongtaskPeriod() != 0) {
             
-            DockerBenchJob();
-            TrivyJob();
+            if (ruStatus) {
+                
+                UpdateFalcoConfig();
             
-            reports = 0;
+                UpdateSuriConfig();
+            
+                UpdateOssecConfig();
+            
+                UpdateFalcoRules();
+            
+                UpdateSuriRules();
+            
+                UpdateOssecRules();
+                
+                UpdateAgents();
+            
+                UpdateContainers();
+            
+                DockerBenchJob();
+            
+                TrivyJob();
+            
+                string update_notification = "update collector data have been done";
+                SysLog((char*) update_notification.c_str());
+            }
+        
+            counter_reports = 0;
         }
         
     }
@@ -86,42 +112,13 @@ int Collector::Go(void) {
     return 1;
 }
 
-void Collector::UpdateRulesConfigs() {
-    
-    if (urStatus) {
-    
-        if(update_timer == 1) {
-            
-            UpdateFilters();
-            UpdateFalcoConfig();
-            UpdateSuriConfig();
-            UpdateOssecConfig();
-            UpdateModsecConfig();
-            UpdateSuriRules();
-            UpdateOssecRules();
-            UpdateModsecRules();
-            UpdateFalcoRules();
-        
-            string update_notification = "configs and rules update have been done";
-            SysLog((char*) update_notification.c_str());
-        
-            update_timer--;
-        
-        } else {
-            if (update_timer > 1) update_timer--;
-        }
-    
-    } else update_timer = 0;
-}
-
-void Collector::RoutineJob() {
+void Collector::StatJob() {
     
     stringstream ss;
     
     unsigned long ccrs = crs->ResetEventsCounter();
     unsigned long chids = hids->ResetEventsCounter();
     unsigned long cnids = nids->ResetEventsCounter();
-    unsigned long cwaf = waf->ResetEventsCounter();
     unsigned long cmisc = misc->ResetEventsCounter();
     unsigned long cremlog = rem_log->ResetEventsCounter();
     unsigned long vremlog = rem_log->ResetEventsVolume();
@@ -140,9 +137,6 @@ void Collector::RoutineJob() {
     ss << ", \"nids\": ";
     ss << to_string(cnids);
     
-    ss << ", \"waf\": ";
-    ss << to_string(cwaf);
-        
     ss << ", \"misc\": ";
     ss << to_string(cmisc);
     
@@ -172,8 +166,7 @@ void Collector::RoutineJob() {
     unsigned long mcrsf = fs.filter.crs.gl.size();
     unsigned long mhidsf = fs.filter.hids.gl.size();
     unsigned long mnidsf = fs.filter.nids.gl.size();
-    unsigned long mwaff = fs.filter.waf.gl.size();
-           
+               
     ss << "{ \"type\": \"node_filters\", \"data\": { \"ref_id\": \"";
     ss << ref_id;
         
@@ -192,9 +185,6 @@ void Collector::RoutineJob() {
     ss << ", \"nids_filters\": ";
     ss << to_string(mnidsf);
     
-    ss << ", \"waf_filters\": ";
-    ss << to_string(mwaff);
-        
     ss << ", \"time_of_survey\": \"";
     ss << GetNodeTime();
     ss << "\" } }";
@@ -203,86 +193,9 @@ void Collector::RoutineJob() {
         
     ss.str("");
     ss.clear();
-        
-    if (wazuhServerStatus) {
-        string payload = WazuhGet("/agents");
-        if (!payload.empty()) {
-            
-            ParsAgents(payload);
-        
-            if (fs.agents_list.size() != 0) {
-        
-                std::vector<Agent>::iterator i, end;
-                int j = 0;
-                
-                string report = "{ \"type\": \"agents_list\", \"data\" : [ ";
-                
-                for (i = fs.agents_list.begin(), end = fs.agents_list.end(); i != end; ++i) {
-                    
-                    report += "{ \"id\": \"";
-                    report += i->id;
-            
-                    report += "\", \"ip\": \"";
-                    report += i->ip;
-                    
-                    report += "\", \"name\": \"";
-                    report += i->name;
-                    
-                    report += "\", \"status\": \"";
-                    report += i->status;
-                    
-                    report += "\", \"date_add\": \"";
-                    report += i->dateAdd;
-                    
-                    report += "\", \"version\": \"";
-                    report += i->version;
-                    
-                    report += "\", \"manager_host\": \"";
-                    report += i->manager_host;
-                    
-                    report += "\", \"os_platform\": \"";
-                    report += i->os_platform;
-                    
-                    report += "\", \"os_version\": \"";
-                    report += i->os_version;
-                    
-                    report += "\", \"os_name\": \"";
-                    report += i->os_name;
-                    
-                    report += "\", \"time_of_survey\": \"";
-                    report +=  GetNodeTime();
-                    
-                    report += "\" }";
-            
-                    if ( j < fs.agents_list.size() - 1) {
-                        report += ", "; 
-                        j++;
-                    }
-                }
-                
-                report += " ] }";
-                q_stats_collr.push(report);
-                
-                for (i = fs.agents_list.begin(), end = fs.agents_list.end(); i != end; ++i) {
-                    
-                    payload = WazuhGet("/sca/" + i->id);
-                    
-                    ControllerPush(payload,"sca",i->id);
-                    
-                    payload = WazuhGet("/syscollector/" + i->id + "/processes");
-                    
-                    ControllerPush(payload,"processes",i->id);
-                    
-                    payload = WazuhGet("/syscollector/" + i->id + "/packages");
-                    
-                    ControllerPush(payload,"packages",i->id);
-                }
-            }
-        }
-    }
 }
 
-string Collector::WazuhGet(string queryStr) {
+string Collector::GetAgents(string queryStr) {
     
     try {
         
@@ -365,9 +278,9 @@ string Collector::WazuhGet(string queryStr) {
         }
         
         return payload.str();
-    }
-    catch (std::exception& e) {
-        return "";
+    
+    } catch (std::exception& ex) { 
+        SysLog((char*) ex.what());
     }
 
     return "";
@@ -413,11 +326,91 @@ void Collector::ParsAgents (string json) {
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
     } 
-    
-    return;
 }
 
-void Collector::ControllerPush(string json, string type, string agent) {
+void Collector::UpdateAgents(void) {
+        
+    if (wazuhServerStatus) {
+        
+        string payload = GetAgents("/agents");
+        
+        if (!payload.empty()) {
+            
+            ParsAgents(payload);
+        
+            if (fs.agents_list.size() != 0) {
+        
+                std::vector<Agent>::iterator i, end;
+                int j = 0;
+                
+                string report = "{ \"type\": \"agents_list\", \"data\" : [ ";
+                
+                for (i = fs.agents_list.begin(), end = fs.agents_list.end(); i != end; ++i) {
+                    
+                    report += "{ \"id\": \"";
+                    report += i->id;
+            
+                    report += "\", \"ip\": \"";
+                    report += i->ip;
+                    
+                    report += "\", \"name\": \"";
+                    report += i->name;
+                    
+                    report += "\", \"status\": \"";
+                    report += i->status;
+                    
+                    report += "\", \"date_add\": \"";
+                    report += i->dateAdd;
+                    
+                    report += "\", \"version\": \"";
+                    report += i->version;
+                    
+                    report += "\", \"manager_host\": \"";
+                    report += i->manager_host;
+                    
+                    report += "\", \"os_platform\": \"";
+                    report += i->os_platform;
+                    
+                    report += "\", \"os_version\": \"";
+                    report += i->os_version;
+                    
+                    report += "\", \"os_name\": \"";
+                    report += i->os_name;
+                    
+                    report += "\", \"time_of_survey\": \"";
+                    report +=  GetNodeTime();
+                    
+                    report += "\" }";
+            
+                    if ( j < fs.agents_list.size() - 1) {
+                        report += ", "; 
+                        j++;
+                    }
+                }
+                
+                report += " ] }";
+                q_stats_collr.push(report);
+                
+                for (i = fs.agents_list.begin(), end = fs.agents_list.end(); i != end; ++i) {
+                    
+                    payload = GetAgents("/sca/" + i->id);
+                    
+                    PushAgents(payload,"sca",i->id);
+                    
+                    payload = GetAgents("/syscollector/" + i->id + "/processes");
+                    
+                    PushAgents(payload,"processes",i->id);
+                    
+                    payload = GetAgents("/syscollector/" + i->id + "/packages");
+                    
+                    PushAgents(payload,"packages",i->id);
+                }
+            }
+        }
+    }
+}
+
+void Collector::PushAgents(string json, string type, string agent) {
     
     stringstream ss(json);
     stringstream ss1;
@@ -448,37 +441,129 @@ void Collector::ControllerPush(string json, string type, string agent) {
     } 
 }
 
-void Collector::UpdateFilters() {
+string Collector::GetContainers(void) {
     
     try {
         
-        std::ifstream filters_config;
-        filters_config.open(FILTERS_FILE,ios::binary);
-        strStream << filters_config.rdbuf();
+        int sck;
+	struct sockaddr_un addr;
+	int ret;
         
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
+        stringstream response_ss;
+        bpt::ptree pt;
+                
+        /* create socket */
+	sck = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (sck == -1) {
+            SysLog("can not create docker socket");
+            return "";
+	}
+
+	/* set address */
+	addr.sun_family = AF_UNIX;
+	strncpy(addr.sun_path, docker_socket, sizeof(addr.sun_path));
+	addr.sun_path[sizeof(addr.sun_path) - 1] = 0;
+
+	/* Connect to unix socket */
+	ret = connect(sck, (struct sockaddr *) &addr, sizeof(addr));
+	if (ret == -1) {
+            SysLog("can not connect to docket socket");
+            return "";
+	}
         
-        //string s = std::to_string(rep_size);
-        //string output = "logs compressed = " + s;
-        // SysLog((char*) strStream.str().c_str());
+        std::string req = "GET /v1.40/containers/json HTTP/1.1\r\n";
+        req += "Host: localhost\r\n";
+        req += "Accept: */*\r\n\r\n";
         
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 3;
-        sk.SendMessage(&bd);
+        int siz = req.size();
+
+	ret = send(sck, req.c_str(), siz, 0);
+	if (ret == -1) {
+            SysLog("Can not send request to docker socket");
+            return "";
+	} else if (ret < siz) {
+            SysLog("Unable to send all size message to docker socket");
+            return "";
+	}
         
-        filters_config.close();
-        boost::iostreams::close(in);
-        ResetStreams();
+        char buffer[64000];
+        memset(buffer, 0, 64000);
         
+	ret = read(sck, buffer, 64000);
+	if (ret == -1) {
+            SysLog("Can not read answer from docker socket");
+            return "";
+	} 
+        
+        int i = 0;
+        int j = 0;
+        
+        for (; i < 64000 && j <= 7; i++) {
+            char test = (char) buffer[i];
+            if ( test == '\n') j++;
+        }
+        
+        string payload(buffer + i);
+        
+        if (j > 7) return payload;
+    
+    } catch (std::exception& ex) {
+        SysLog((char*) ex.what());
+    }
+
+    return "";
+}
+
+void Collector::ParsContainers(string json) {
+    
+    stringstream ss(json);
+    
+    try {
+        
+        bpt::ptree pt;
+        bpt::read_json(ss, pt);
+        containers_list.clear();
+            
+        BOOST_FOREACH(bpt::ptree::value_type &container, pt) {
+                
+            string id = container.second.get<string>("Id","indef");
+            string image = container.second.get<string>("Image","indef");
+            string image_id = container.second.get<string>("ImageID","indef");
+            
+            containers_list.push_back(Container(id, image, image_id));
+        }
+        
+        pt.clear();
+    
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
     } 
+}
+
+void Collector::UpdateContainers(void) {
     
-    return;
+    if (dockerSocketStatus) {
+    
+        try {
+    
+            string payload = GetContainers();
+            ParsContainers(payload);
+        
+            if (!payload.empty()) {
+        
+                string report = "{ \"type\": \"containers_list\",\"sensor\": \"";
+                report += probe_id;
+                report += ".crs\", \"data\" : ";
+                report += payload;
+                report += " }";
+        
+                q_stats_collr.push(report);
+            }
+    
+        } catch (const std::exception & ex) {
+            SysLog((char*) ex.what());
+        } 
+    }
 }
 
 void Collector::UpdateFalcoConfig() {
@@ -506,7 +591,8 @@ void Collector::UpdateFalcoConfig() {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 4;
+        bd.sensor_type = 0;
+        bd.event_type = 3;
         sk.SendMessage(&bd);
         
         falco_config.close();
@@ -548,7 +634,8 @@ void Collector::UpdateOssecConfig() {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 5;
+        bd.sensor_type = 1;
+        bd.event_type = 3;
         sk.SendMessage(&bd);
         
         ossec_config.close();
@@ -587,45 +674,11 @@ void Collector::UpdateSuriConfig() {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 6;
+        bd.sensor_type = 2;
+        bd.event_type = 3;
         sk.SendMessage(&bd);
         
         suri_config.close();
-        boost::iostreams::close(in);
-        ResetStreams();
-        
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-    } 
-    
-    return;
-}
-
-void Collector::UpdateModsecConfig() {
-    
-    if (!strcmp (modsec_conf, "indef")) return; 
-    
-    try {
-        
-        std::ifstream modsec_config;
-        string dir_path(modsec_conf);
-        string file_name(MODSEC_CONFIG);
-        string file_path = dir_path + file_name;
-        //SysLog((char*) file_path.c_str());
-        modsec_config.open(file_path,ios::binary);
-        strStream << modsec_config.rdbuf();
-        
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
-        
-         bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 7;
-        sk.SendMessage(&bd);
-        
-        modsec_config.close();
         boost::iostreams::close(in);
         ResetStreams();
         
@@ -669,7 +722,8 @@ void Collector::UpdateFalcoRules() {
                 rd.data = comp.str();
                 rd.name_rule = file_name;
                 rd.ref_id = fs.filter.ref_id;
-                rd.event_type = 8;
+                rd.sensor_type = 0;
+                rd.event_type = 4;
                 sk.SendMessage(&rd);
         
                 falco_rules.close();
@@ -722,7 +776,8 @@ void Collector::UpdateOssecRules() {
                 rd.data = comp.str();
                 rd.name_rule = file_name;
                 rd.ref_id = fs.filter.ref_id;
-                rd.event_type = 9;
+                rd.sensor_type = 1;
+                rd.event_type = 4;
                 sk.SendMessage(&rd);
         
                 ossec_rules.close();
@@ -771,7 +826,8 @@ void Collector::UpdateSuriRules() {
                 rd.data = comp.str();
                 rd.name_rule = file_name;
                 rd.ref_id = fs.filter.ref_id;
-                rd.event_type = 10;
+                rd.sensor_type = 2;
+                rd.event_type = 4;
                 sk.SendMessage(&rd);
         
                 suri_rules.close();
@@ -787,70 +843,23 @@ void Collector::UpdateSuriRules() {
     return;
 }
 
-void Collector::UpdateModsecRules() {
-    
-    if (!strcmp (modsec_rules, "indef")) return; 
-    
-    try {
-        
-        string root(modsec_rules);
-                
-        path p (root + "rules");
-
-        directory_iterator end_itr;
-        
-        // cycle through the directory
-        int i = 0;
-        path file_path;
-        string file_name;
-        
-        for (directory_iterator itr(p); itr != end_itr; ++itr, i++) {
-            
-            if (is_regular_file(itr->path())) {
-                
-                file_path = itr->path();
-                file_name = file_path.filename().string();
-                std::ifstream modsec_rules;
-                modsec_rules.open(file_path.string(),ios::binary);
-                strStream << modsec_rules.rdbuf();
-        
-                boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-                in.push(boost::iostreams::gzip_compressor());
-                in.push(strStream);
-                boost::iostreams::copy(in, comp);
-                
-                rd.data = comp.str();
-                rd.name_rule = file_name;
-                rd.ref_id = fs.filter.ref_id;
-                rd.event_type = 11;
-                sk.SendMessage(&rd);
-        
-                modsec_rules.close();
-                boost::iostreams::close(in);
-                ResetStreams();
-            }
-        }
-        
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-    } 
-    
-    return;
-}
-
-
 void Collector::DockerBenchJob() {
     
     if (!strcmp (docker_bench, "indef")) return; 
     
     try {
         
-        string cmd = "/etc/altprobe/scripts/docker-bench.sh";
+        string cmd = "cd ";
+        cmd += docker_bench;
+        cmd += " && sh docker-bench-security.sh -l report";
     
         system(cmd.c_str());
         
+        string db_report = docker_bench;
+        db_report += "report.json";
+        
         std::ifstream docker_report;
-        string file_path(docker_bench);
+        string file_path(db_report);
         docker_report.open(file_path,ios::binary);
         strStream << docker_report.rdbuf();
         
@@ -861,7 +870,7 @@ void Collector::DockerBenchJob() {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 12;
+        bd.event_type = 5;
         sk.SendMessage(&bd);
                 
         docker_report.close();
@@ -882,47 +891,42 @@ void Collector::TrivyJob() {
     
     try {
         
-        std::ifstream trivy_scripts ("/etc/altprobe/scripts/trivy.sh");
-        string script;
+        std::vector<Container>::iterator i, end;
         
-        while (getline(trivy_scripts, script)) {
+        for (i = containers_list.begin(), end = containers_list.end(); i != end; ++i) {
+        
+            string cmd = "trivy -f json -o ";
+            cmd += trivy;
+            cmd += " ";
+            cmd += i->image;
+        
+            system(cmd.c_str());
+                    
+            std::ifstream trivy_report;
+            string file_path(trivy);
+            trivy_report.open(file_path,ios::binary);
+            strStream << trivy_report.rdbuf();
+        
+            boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+            in.push(boost::iostreams::gzip_compressor());
+            in.push(strStream);
+            boost::iostreams::copy(in, comp);
+        
+            bd.data = comp.str();
+            bd.ref_id = fs.filter.ref_id;
+            bd.event_type = 6;
+            sk.SendMessage(&bd);
             
-            if (script.size() != 0) {
-        
-                if (script.at(0) != '#' && script.at(0) != '\n' ) {
-                    
-                    system(script.c_str());
-                    
-                    std::ifstream trivy_report;
-                    string file_path(trivy);
-                    trivy_report.open(file_path,ios::binary);
-                    strStream << trivy_report.rdbuf();
-        
-                    boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-                    in.push(boost::iostreams::gzip_compressor());
-                    in.push(strStream);
-                    boost::iostreams::copy(in, comp);
-        
-                    bd.data = comp.str();
-                    bd.ref_id = fs.filter.ref_id;
-                    bd.event_type = 14;
-                    sk.SendMessage(&bd);
-                
-                    trivy_report.close();
-                    boost::iostreams::close(in);
-                    ResetStreams();
-                }
-            }
+            trivy_report.close();
+            boost::iostreams::close(in);
+            ResetStreams();
         }
-        
-        trivy_scripts.close();
-        
+                
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
     } 
     
     return;
-    
 }
 
 

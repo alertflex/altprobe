@@ -1,8 +1,16 @@
-/* 
- * File:   nids.cpp
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
  *
- * Created on May 26, 2014, 10:43 AM
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
 
 #include "nids.h"
@@ -250,8 +258,12 @@ int Nids::ParsJson () {
     
     // SysLog(payload);
     
-    if (surilog_status == 1) jsonPayload.assign(file_payload, GetBufferSize(file_payload));
-    else jsonPayload.assign(reply->str, GetBufferSize(reply->str));
+    if (surilog_status == 1) {
+        jsonPayload.assign(file_payload, GetBufferSize(file_payload));
+        
+    } else {
+        jsonPayload.assign(reply->str, GetBufferSize(reply->str));
+    }
     
     try {
         ss << jsonPayload;
@@ -264,6 +276,14 @@ int Nids::ParsJson () {
     } 
     
     string event_type = pt.get<string>("event_type","");
+    
+    if (surilog_status == 1) {
+    
+        rec.sensor = probe_id + ".nids";
+        
+    } else {
+        rec.sensor = pt.get<string>("sensor-name","");
+    }
     
     if (event_type.compare("alert") == 0) {
         
@@ -283,7 +303,6 @@ int Nids::ParsJson () {
         rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
-        rec.ids = sensor;
         rec.protocol = pt.get<string>("proto","");
                 
         // alert record
@@ -324,8 +343,6 @@ int Nids::ParsJson () {
         rec.dst_ip = pt.get<string>("dest_ip","");
         rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
-        
-        rec.ids = sensor;
         
         rec.protocol = pt.get<string>("proto","");
         
@@ -371,7 +388,6 @@ int Nids::ParsJson () {
         rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
-        rec.ids = sensor;
         rec.protocol = pt.get<string>("proto","");
         
         rec.http.hostname = pt.get<string>("http.hostname","indef");
@@ -402,7 +418,6 @@ int Nids::ParsJson () {
         rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
-        rec.ids = sensor;
         rec.protocol = pt.get<string>("proto","");
         
         rec.netflow.app_proto = pt.get<string>("app_proto","indef");
@@ -437,7 +452,6 @@ int Nids::ParsJson () {
         rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
-        rec.ids = sensor;
         rec.protocol = pt.get<string>("proto","");
         
         rec.file.app_proto = pt.get<string>("app_proto","indef");
@@ -455,7 +469,7 @@ int Nids::ParsJson () {
     
     if (event_type.compare("stats") == 0) {
         
-        net_stat.ids = sensor;
+        net_stat.ids = rec.sensor;
         
         net_stat.ref_id = fs.filter.ref_id;
         net_stat.invalid = pt.get<long>("stats.decoder.invalid",0);
@@ -492,67 +506,67 @@ void Nids::CreateLogPayload(int r) {
             
         case 1: // alert record
             
-            report = "{\"version\": \"1.1\",\"host\":\"";
+            report = "{\"version\": \"1.1\",\"node\":\"";
             report += node_id;
             report += "\",\"short_message\":\"alert-nids\"";
             report += ",\"full_message\":\"Alert from Suricata NIDS\"";
             report += ",\"level\":";
             report += std::to_string(7);
-            report += ",\"_source_type\":\"NET\"";
-            report += ",\"_source_name\":\"Suricata\"";
+            report += ",\"source_type\":\"NET\"";
+            report += ",\"source_name\":\"Suricata\"";
 			
-            report +=  ",\"_project_id\":\"";
+            report +=  ",\"project_id\":\"";
             report +=  fs.filter.ref_id;
             
-            report +=  "\",\"_sensor\":\"";
-            report +=  rec.ids;
+            report +=  "\",\"sensor\":\"";
+            report +=  rec.sensor;
 			
-            report +=  "\",\"_event_time\":\"";
+            report +=  "\",\"event_time\":\"";
             report +=  rec.time_stamp;
             
-            report += "\",\"_collected_time\":\"";
+            report += "\",\"collected_time\":\"";
             report += GetGraylogFormat();
 			
-            report += "\",\"_severity\":";
+            report += "\",\"severity\":";
             report += std::to_string(rec.alert.severity);
 			
-            report +=  ",\"_category\":\"";
+            report +=  ",\"category\":\"";
             report +=  rec.alert.category;
 			
-            report +=  "\",\"_signature\":\"";
+            report +=  "\",\"signature\":\"";
             report +=  rec.alert.signature;
 			
-            report +=  "\",\"_iface\":\"";
+            report +=  "\",\"iface\":\"";
             report +=  rec.iface;
             
-            report +=  "\",\"_flow_id\":";
+            report +=  "\",\"flow_id\":";
             report +=  std::to_string(rec.flow_id);
             
-            report +=  ",\"_srcip\":\"";
+            report +=  ",\"srcip\":\"";
             report +=  rec.src_ip;
 			
-            report +=  "\",\"_dstip\":\"";
+            report +=  "\",\"dstip\":\"";
             report +=  rec.dst_ip;
             
-            report += "\",\"_srcagent\":\"";
+            report += "\",\"srcagent\":\"";
             report += rec.src_agent;
 			
-            report += "\",\"_dstagent\":\"";
+            report += "\",\"dstagent\":\"";
             report += rec.dst_agent;
 			
-            report +=  "\",\"_srcport\":";
+            report +=  "\",\"srcport\":";
             report +=  std::to_string(rec.src_port);
 			
-            report +=  ",\"_dstport\":";
+            report +=  ",\"dstport\":";
             report +=  std::to_string(rec.dst_port);
 			
-            report +=  ",\"_gid\":";
+            report +=  ",\"gid\":";
             report +=  std::to_string(rec.alert.gid);
 			
-            report +=  ",\"_signature_id\":";
+            report +=  ",\"signature_id\":";
             report +=  std::to_string(rec.alert.signature_id);
 			
-            report +=  ",\"_action\":\"";
+            report +=  ",\"action\":\"";
             report +=  rec.alert.action;
             report +=  "\"}";
             
@@ -562,76 +576,76 @@ void Nids::CreateLogPayload(int r) {
             
         case 2: // dns record  
 			
-            report = "{\"version\": \"1.1\",\"host\":\"";
+            report = "{\"version\": \"1.1\",\"node\":\"";
             report += node_id;
             report += "\",\"short_message\":\"dns-nids\"";
             report += ",\"full_message\":\"DNS event from Suricata NIDS\"";
             report += ",\"level\":";
             report += std::to_string(7);
-            report += ",\"_source_type\":\"NET\"";
-            report += ",\"_source_name\":\"Suricata\"";
+            report += ",\"source_type\":\"NET\"";
+            report += ",\"source_name\":\"Suricata\"";
 		
-            report +=  ",\"_project_id\":\"";
+            report +=  ",\"project_id\":\"";
             report +=  fs.filter.ref_id;
             
-            report +=  "\",\"_sensor\":\"";
-            report +=  rec.ids;
+            report +=  "\",\"sensor\":\"";
+            report +=  rec.sensor;
 			
-            report +=  "\",\"_event_time\":\"";
+            report +=  "\",\"event_time\":\"";
             report +=  rec.time_stamp;
             
-            report += "\",\"_collected_time\":\"";
+            report += "\",\"collected_time\":\"";
             report += GetGraylogFormat();
 			
-            report +=  "\",\"_dns_type\":\"";
+            report +=  "\",\"dns_type\":\"";
             report +=  rec.dns.type;
 			
-            report +=  "\",\"_iface\":\"";
+            report +=  "\",\"iface\":\"";
             report +=  rec.iface;
             
-            report +=  "\",\"_flow_id\":";
+            report +=  "\",\"flow_id\":";
             report +=  std::to_string(rec.flow_id);
 			
-            report +=  ",\"_srcip\":\"";
+            report +=  ",\"srcip\":\"";
             report +=  rec.src_ip;
 			
-            report +=  "\",\"_dstip\":\"";
+            report +=  "\",\"dstip\":\"";
             report +=  rec.dst_ip;
             
-            report += "\",\"_srcagent\":\"";
+            report += "\",\"srcagent\":\"";
             report += rec.src_agent;
 			
-            report += "\",\"_dstagent\":\"";
+            report += "\",\"dstagent\":\"";
             report += rec.dst_agent;
 			
-            report +=  "\",\"_srcport\":";
+            report +=  "\",\"srcport\":";
             report +=  std::to_string(rec.src_port);
 			
-            report +=  ",\"_dstport\":";
+            report +=  ",\"dstport\":";
             report +=  std::to_string(rec.dst_port);
 			
-            report +=  ",\"_id\":";
+            report +=  ",\"id\":";
             report +=  std::to_string(rec.dns.id);
 			
-            report +=  ",\"_rrname\":\"";
+            report +=  ",\"rrname\":\"";
             report +=  rec.dns.rrname;
 			
-            report +=  "\",\"_rrtype\":\"";
+            report +=  "\",\"rrtype\":\"";
             report +=  rec.dns.rrtype;
 			
             if (!rec.dns.type.compare("answer")) {
 			
-                report +=  "\",\"_rcode\":\"";
+                report +=  "\",\"rcode\":\"";
                 report +=  rec.dns.rcode;
 				
-                report +=  "\",\"_rdata\":\"";
+                report +=  "\",\"rdata\":\"";
                 report +=  rec.dns.rdata;
 				
-                report +=  "\",\"_ttl\":";
+                report +=  "\",\"ttl\":";
                 report +=  std::to_string(rec.dns.ttl);
             }
             else {
-                report +=  "\",\"_tx_id\":";
+                report +=  "\",\"tx_id\":";
                 report +=  std::to_string(rec.dns.tx_id);
             }
             report +=  "}";
@@ -642,58 +656,58 @@ void Nids::CreateLogPayload(int r) {
             
         case 3: // http record
 			
-            report = "{\"version\": \"1.1\",\"host\":\"";
+            report = "{\"version\": \"1.1\",\"node\":\"";
             report += node_id;
             report += "\",\"short_message\":\"http-nids\"";
             report += ",\"full_message\":\"HTTP event from Suricata NIDS\"";
             report += ",\"level\":";
             report += std::to_string(7);
-            report += ",\"_source_type\":\"NET\"";
-            report += ",\"_source_name\":\"Suricata\"";
+            report += ",\"source_type\":\"NET\"";
+            report += ",\"source_name\":\"Suricata\"";
 		
-            report +=  ",\"_project_id\":\"";
+            report +=  ",\"project_id\":\"";
             report +=  fs.filter.ref_id;
             
-            report +=  "\",\"_sensor\":\"";
-            report +=  rec.ids;
+            report +=  "\",\"sensor\":\"";
+            report +=  rec.sensor;
 			
-            report +=  "\",\"_event_time\":\"";
+            report +=  "\",\"event_time\":\"";
             report +=  rec.time_stamp;
             
-            report += "\",\"_collected_time\":\"";
+            report += "\",\"collected_time\":\"";
             report += GetGraylogFormat();
 			
-            report +=  "\",\"_flow_id\":";
+            report +=  "\",\"flow_id\":";
             report +=  std::to_string(rec.flow_id);
 			
-            report +=  ",\"_srcip\":\"";
+            report +=  ",\"srcip\":\"";
             report +=  rec.src_ip;
 			
-            report +=  "\",\"_dstip\":\"";
+            report +=  "\",\"dstip\":\"";
             report +=  rec.dst_ip;
             
-            report += "\",\"_srcagent\":\"";
+            report += "\",\"srcagent\":\"";
             report += rec.src_agent;
 			
-            report += "\",\"_dstagent\":\"";
+            report += "\",\"dstagent\":\"";
             report += rec.dst_agent;
 			
-            report +=  "\",\"_srcport\":";
+            report +=  "\",\"srcport\":";
             report +=  std::to_string(rec.src_port);
 			
-            report +=  ",\"_dstport\":";
+            report +=  ",\"dstport\":";
             report +=  std::to_string(rec.dst_port);
 			
-            report +=  ",\"_url_hostname\":\"";
+            report +=  ",\"url_hostname\":\"";
             report +=  rec.http.hostname;
 			
-            report +=  "\",\"_url_path\":\"";
+            report +=  "\",\"url_path\":\"";
             report +=  rec.http.url;
 			
-            report +=  "\",\"_http_user_agent\":\"";
+            report +=  "\",\"http_user_agent\":\"";
             report +=  rec.http.http_user_agent;
 			
-            report +=  "\",\"_http_content_type\":\"";
+            report +=  "\",\"http_content_type\":\"";
             report +=  rec.http.http_content_type;
             report +=  "\"}";
             
@@ -701,55 +715,55 @@ void Nids::CreateLogPayload(int r) {
             
         case 4: // flow record
 		
-            report = "{\"version\": \"1.1\",\"host\":\"";
+            report = "{\"version\": \"1.1\",\"node\":\"";
             report += node_id;
             report += "\",\"short_message\":\"netflow-nids\"";
             report += ",\"full_message\":\"Netflow event from Suricata NIDS\"";
             report += ",\"level\":";
             report += std::to_string(7);
-            report += ",\"_source_type\":\"NET\"";
-            report += ",\"_source_name\":\"Suricata\"";
+            report += ",\"source_type\":\"NET\"";
+            report += ",\"source_name\":\"Suricata\"";
 			
-            report +=  ",\"_project_id\":\"";
+            report +=  ",\"project_id\":\"";
             report +=  fs.filter.ref_id;
             
-            report +=  "\",\"_sensor\":\"";
-            report +=  rec.ids;
+            report +=  "\",\"sensor\":\"";
+            report +=  rec.sensor;
 			
-            report +=  "\",\"_event_time\":\"";
+            report +=  "\",\"event_time\":\"";
             report +=  rec.time_stamp;
             
-            report += "\",\"_collected_time\":\"";
+            report += "\",\"collected_time\":\"";
             report += GetGraylogFormat();
 			
-            report += "\",\"_protocol\":\"";
+            report += "\",\"protocol\":\"";
             report += rec.protocol;
 			
-            report += "\",\"_process\":\"";
+            report += "\",\"process\":\"";
             report += rec.netflow.app_proto;
 			
-            report += "\",\"_srcip\":\"";
+            report += "\",\"srcip\":\"";
             report += rec.src_ip;
             
-            report += "\",\"_srcagent\":\"";
+            report += "\",\"srcagent\":\"";
             report += rec.src_agent;
             
-            report += "\",\"_srcport\":";
+            report += "\",\"srcport\":";
             report += std::to_string(rec.src_port);
 			
-            report += ",\"_dstip\":\"";
+            report += ",\"dstip\":\"";
             report += rec.dst_ip;
             
-            report += "\",\"_dstagent\":\"";
+            report += "\",\"dstagent\":\"";
             report += rec.dst_agent;
 			
-            report += "\",\"_dstport\":";
+            report += "\",\"dstport\":";
             report += std::to_string(rec.dst_port);
 			
-            report += ",\"_bytes\":";
+            report += ",\"bytes\":";
             report += std::to_string(rec.netflow.bytes);
 			
-            report += ",\"_packets\":";
+            report += ",\"packets\":";
             report += std::to_string(rec.netflow.pkts);
 			
             report += "}";
@@ -757,61 +771,61 @@ void Nids::CreateLogPayload(int r) {
             
         case 5: // file record
 		
-            report = "{\"version\": \"1.1\",\"host\":\"";
+            report = "{\"version\": \"1.1\",\"node\":\"";
             report += node_id;
             report += "\",\"short_message\":\"file-nids\"";
             report += ",\"full_message\":\"File event from Suricata NIDS\"";
             report += ",\"level\":";
             report += std::to_string(7);
-            report += ",\"_source_type\":\"NET\"";
-            report += ",\"_source_name\":\"Suricata\"";
+            report += ",\"source_type\":\"NET\"";
+            report += ",\"source_name\":\"Suricata\"";
 			
-            report +=  ",\"_project_id\":\"";
+            report +=  ",\"project_id\":\"";
             report +=  fs.filter.ref_id;
             
-            report +=  "\",\"_sensor\":\"";
-            report +=  rec.ids;
+            report +=  "\",\"sensor\":\"";
+            report +=  rec.sensor;
 			
-            report +=  "\",\"_event_time\":\"";
+            report +=  "\",\"event_time\":\"";
             report +=  rec.time_stamp;
             
-            report += "\",\"_collected_time\":\"";
+            report += "\",\"collected_time\":\"";
             report += GetGraylogFormat();
 			
-            report += "\",\"_protocol\":\"";
+            report += "\",\"protocol\":\"";
             report += rec.protocol;
 			
-            report += "\",\"_process\":\"";
+            report += "\",\"process\":\"";
             report += rec.file.app_proto;
 			
-            report += "\",\"_srcip\":\"";
+            report += "\",\"srcip\":\"";
             report += rec.src_ip;
             
-            report += "\",\"_srcagent\":\"";
+            report += "\",\"srcagent\":\"";
             report += rec.src_agent;
             
-            report += "\",\"_srcport\":";
+            report += "\",\"srcport\":";
             report += std::to_string(rec.src_port);
 			
-            report += ",\"_dstip\":\"";
+            report += ",\"dstip\":\"";
             report += rec.dst_ip;
             
-            report += "\",\"_dstagent\":\"";
+            report += "\",\"dstagent\":\"";
             report += rec.dst_agent;
 			
-            report += "\",\"_dstport\":";
+            report += "\",\"dstport\":";
             report += std::to_string(rec.dst_port);
 			
-            report += ",\"_filename\":\"";
+            report += ",\"filename\":\"";
             report += rec.file.name;
 			
-            report += "\",\"_size\":";
+            report += "\",\"size\":";
             report += std::to_string(rec.file.size);
 			
-            report += ",\"_state\":\"";
+            report += ",\"state\":\"";
             report += rec.file.state;
 			
-            report += "\",\"_md5\":\"";
+            report += "\",\"md5\":\"";
             report += rec.file.md5;
 			
             report += "\"}";
@@ -825,7 +839,7 @@ void Nids::CreateLogPayload(int r) {
 void Nids::SendAlert(int s, GrayList* gl) {
     
     sk.alert.ref_id =  fs.filter.ref_id;
-    sk.alert.sensor_id = rec.ids;
+    sk.alert.sensor_id = rec.sensor;
     
     sk.alert.alert_severity = s;
     sk.alert.alert_source = "Suricata";
@@ -842,7 +856,7 @@ void Nids::SendAlert(int s, GrayList* gl) {
     sk.alert.info += "\",\"message\":\"dst ip\" }]}";
     sk.alert.status = "processed_new";
     sk.alert.user_name = "indef";
-    sk.alert.agent_name = "indef";
+    sk.alert.agent_name = probe_id;
     sk.alert.filter = fs.filter.desc;
         
     sk.alert.list_cats.push_back(rec.alert.category);
@@ -952,8 +966,8 @@ int Nids::PushIdsRecord(GrayList* gl) {
     ids_rec.src_ip = rec.src_ip;
     ids_rec.dst_ip = rec.dst_ip;
     
-    ids_rec.agent = rec.src_agent;
-    ids_rec.ids = rec.ids;
+    ids_rec.agent = probe_id;
+    ids_rec.ids = rec.sensor;
     ids_rec.location = rec.dst_agent;
                             
     if (gl != NULL) {

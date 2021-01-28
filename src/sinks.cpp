@@ -1,7 +1,16 @@
-/* 
- * File:   sinks.h
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
  *
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
 
 #include "sinks.h"
@@ -17,6 +26,8 @@ int Sinks::ctrl_error_counter = 0;
 int Sinks::alerts_threshold = 0;
 
 int Sinks::reports_period = 0;
+
+int Sinks::longtask_period = 0;
 
 LocLog Sinks::persist;
 
@@ -34,14 +45,24 @@ int Sinks::GetConfig() {
     
         ConfigYaml* cy = new ConfigYaml( "collector");
     
-        cy->addKey("report_timer");
+        cy->addKey("timer_report");
+        cy->addKey("timer_longtask");
         cy->addKey("alerts_threshold");
         cy->addKey("redis_host");
         cy->addKey("redis_port");
                 
         cy->ParsConfig();
         
-        reports_period = stoi(cy->getParameter("report_timer"));
+        reports_period = stoi(cy->getParameter("timer_report"));
+        if (!reports_period) {
+            SysLog("config file: sending reports to controller disabled");
+        }
+        
+        longtask_period = stoi(cy->getParameter("timer_longtask"));
+        if (!longtask_period) {
+            SysLog("config file: longtasks are disabled");
+        }
+        
         alerts_threshold = stoi(cy->getParameter("alerts_threshold"));
         strncpy(redis_host, (char*) cy->getParameter("redis_host").c_str(), sizeof(redis_host));
         redis_port = stoi(cy->getParameter("redis_port"));

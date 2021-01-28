@@ -1,8 +1,16 @@
-/* 
- * File:   remlog.cpp
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
  *
- * Created on February 27, 2014, 3:07 PM
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
 
 #include <sstream>
@@ -34,7 +42,7 @@ void  RemLog::Close() {
 int RemLog::Go(void) {
     
         
-    while (!q_logs_nids.empty() || !q_logs_hids.empty() || !q_logs_waf.empty() || !q_logs_crs.empty()) {
+    while (!q_logs_nids.empty() || !q_logs_hids.empty() || !q_logs_crs.empty()) {
         
         if (!q_logs_crs.empty()) {
             q_logs_crs.pop(rec);
@@ -50,12 +58,6 @@ int RemLog::Go(void) {
         
         if (!q_logs_hids.empty()) {
             q_logs_hids.pop(rec);
-            logs_list.push_back(rec);
-            counter++;
-        }
-        
-        if (!q_logs_waf.empty()) {
-            q_logs_waf.pop(rec);
             logs_list.push_back(rec);
             counter++;
         }

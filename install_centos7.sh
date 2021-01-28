@@ -47,7 +47,6 @@ sudo sed -i "s/_cert_verify/$CERT_VERIFY/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_amq_key/$AMQ_KEY/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_key_pwd/$KEY_PWD/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_falco_log/$FALCO_LOG/g" /etc/altprobe/altprobe.yaml
-sudo sed -i "s/_modsec_log/$MODSEC_LOG/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_suri_log/$SURI_LOG/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_log/$WAZUH_LOG/g" /etc/altprobe/altprobe.yaml
 
@@ -58,7 +57,6 @@ sudo ln -s /usr/local/bin/altprobe-restart /usr/sbin/altprobe-restart
 sudo ln -s /usr/local/bin/altprobe-start /usr/sbin/altprobe-start
 sudo ln -s /usr/local/bin/altprobe-status /usr/sbin/altprobe-status
 sudo ln -s /usr/local/bin/altprobe-stop /usr/sbin/altprobe-stop
-sudo ln -s /usr/local/bin/altprobe-update /usr/sbin/altprobe-update
 
 cd ..
 

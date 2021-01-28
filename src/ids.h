@@ -1,8 +1,16 @@
-/* 
- * File:   ids.h
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
  *
- * Created on June 15, 2015, 8:57 PM
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
 
 #ifndef IDS_H
@@ -18,7 +26,7 @@ class IdsRecord
 public:
     
     string ref_id;
-    int ids_type; // 1 - fim, 2 - hids, 3 - nids, 4 - waf, 5 - crs
+    int ids_type; // 1 - fim, 2 - hids, 3 - nids, 4 - crs
     string src_ip;             
     string dst_ip; 
     string ids;
@@ -119,7 +127,6 @@ public:
 
 extern boost::lockfree::spsc_queue<IdsRecord> q_hids;
 extern boost::lockfree::spsc_queue<IdsRecord> q_nids;
-extern boost::lockfree::spsc_queue<IdsRecord> q_waf;
 extern boost::lockfree::spsc_queue<IdsRecord> q_crs;
 
 #endif	/* IDS_H */

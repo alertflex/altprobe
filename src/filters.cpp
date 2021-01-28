@@ -1,7 +1,18 @@
-/* 
- * File:   filters.h
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
+ 
 #include <sys/socket.h>
 #include "filters.h"
 
@@ -68,28 +79,18 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             filter.home_nets.push_back(net);
         }
         
-        bpt::ptree name_alias = pt.get_child("alias");
-        BOOST_FOREACH(bpt::ptree::value_type &n_alias, name_alias) {
+        if (!wazuhServerStatus) {
             
-            Alias* al = new Alias;
+            bpt::ptree agents = pt.get_child("agents");
+            BOOST_FOREACH(bpt::ptree::value_type &a_list, agents) {
             
-            al->agent_name = n_alias.second.get<string>("agent");
-            al->host_name = n_alias.second.get<string>("host");
-            al->container_name = n_alias.second.get<string>("container");
-            al->ip = n_alias.second.get<string>("ip");
-                        
-            if (al->ip.compare("indef") == 0) {
+                string id = a_list.second.get<string>("id");
+                string ip = a_list.second.get<string>("ip");
+                string name = a_list.second.get<string>("name");
                 
-                struct hostent *hostaddr = gethostbyname(al->host_name.c_str());
-        
-                if (hostaddr != NULL) {
-                    
-                    al->ip = inet_ntoa(*(struct in_addr *)hostaddr->h_addr_list[0]);
-                    filter.alias.push_back(al);
-                    
-                }
+                UpdateAgentsList(id, ip, name, "indef", "indef", "indef", "indef", "indef", "indef", "indef");
+                
             }
-            else filter.alias.push_back(al);
         }
         
         bpt::ptree filters = pt.get_child("sources");
@@ -184,36 +185,6 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             filter.nids.gl.push_back(gl);
         }
         
-        // WAF
-        filter.waf.log = filters.get<bool>("waf.log");
-        filter.waf.severity.threshold = filters.get<int>("waf.severity.threshold");
-        filter.waf.severity.level0 = filters.get<int>("waf.severity.level0");
-        filter.waf.severity.level1 = filters.get<int>("waf.severity.level1");
-        filter.waf.severity.level2 = filters.get<int>("waf.severity.level2");
-               
-        bpt::ptree waf_gray_list = filters.get_child("waf.gray_list");
-        BOOST_FOREACH(bpt::ptree::value_type &waf_list, waf_gray_list) {
-            
-            GrayList* gl = new GrayList();
-            
-            gl->event = waf_list.second.get<string>("event");
-            gl->host = waf_list.second.get<string>("host");
-            gl->match = waf_list.second.get<string>("match");
-            
-            gl->agr.reproduced = waf_list.second.get<int>("aggregate.reproduced");  
-            gl->agr.in_period = waf_list.second.get<int>("aggregate.in_period");  
-            
-            gl->rsp.profile = waf_list.second.get<string>("response.profile");
-            gl->rsp.new_type = waf_list.second.get<string>("response.new_type");  
-            gl->rsp.new_source = waf_list.second.get<string>("response.new_source");    
-            gl->rsp.new_event = waf_list.second.get<string>("response.new_event");           
-            gl->rsp.new_severity = waf_list.second.get<int>("response.new_severity");
-            gl->rsp.new_category = waf_list.second.get<string>("response.new_category");
-            gl->rsp.new_description = waf_list.second.get<string>("response.new_description");
-            
-            filter.waf.gl.push_back(gl);
-        }
-        
         pt.clear();
         
     } catch (const std::exception & ex) {
@@ -234,28 +205,9 @@ void FiltersSingleton::UpdateAgentsList(string id, string ip, string name, strin
     
     std::vector<Agent>::iterator i, end;   
     
-    string real_ip = "indef";
+    string real_ip = "";
     
-    if (IsValidIp(ip) == -1 || ip.compare("127.0.0.1") == 0) {
-        
-        Alias* al = GetAliasByAgentName(name);
-            
-        if (al != NULL) {
-            
-            if (al->ip.compare("indef") != 0) real_ip = al->ip;
-            else {    
-                if (al->host_name.compare("indef") != 0) {
-                
-                    string host_name = al->host_name;
-            
-                    struct hostent *hostaddr = gethostbyname(host_name.c_str());
-        
-                    if (hostaddr != NULL) real_ip = inet_ntoa(*(struct in_addr *)hostaddr->h_addr_list[0]);
-                }
-            }
-            
-        }
-    }
+    if (IsValidIp(ip) == -1 || ip.compare("127.0.0.1") == 0) real_ip = "indef";
     else real_ip = ip;
     
     
@@ -282,14 +234,6 @@ string FiltersSingleton::GetAgentNameByIP(string ip) {
     
     boost::shared_lock<boost::shared_mutex> lock(agents_update);
     
-    std::vector<Alias*>::iterator i_al, end_al;
-    
-    for(i_al = filter.alias.begin(), end_al = filter.alias.end(); i_al != end_al; ++i_al) {
-        if ((*i_al)->ip.compare(ip) == 0) {
-            return (*i_al)->agent_name; 
-        }
-    }
-    
     std::vector<Agent>::iterator i_ag, end_ag;
     
     for(i_ag = agents_list.begin(), end_ag = agents_list.end(); i_ag != end_ag; ++i_ag) {
@@ -311,21 +255,8 @@ string FiltersSingleton::GetAgentIdByName(string name) {
         }
     }
     
-    
     return "";
 }
 
-Alias* FiltersSingleton::GetAliasByAgentName(string name) {
-    
-    std::vector<Alias*>::iterator i, end;
-    
-    for(i = filter.alias.begin(), end = filter.alias.end(); i != end; ++i) {
-        if ((*i)->agent_name.compare(name) == 0) {
-             return (*i); 
-        } 
-    }
-    
-    return NULL;
-}
 
 

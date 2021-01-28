@@ -1,7 +1,16 @@
-/* 
- * File:   cobject.h
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
  *
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
 
 #ifndef COBJECT_H
@@ -17,13 +26,13 @@ public:
     
     //
     static string node_id;
-    static string sensor_id;
+    static string probe_id;
     
-    static char active_response[OS_HEADER_SIZE];
-    static char update_remote[OS_HEADER_SIZE];
+    static char remote_control[OS_HEADER_SIZE];
+    static char remote_update[OS_HEADER_SIZE];
     
-    static bool arStatus;
-    static bool urStatus;
+    static bool rcStatus;
+    static bool ruStatus;
     
     static int timezone;
     static int log_size;
@@ -31,18 +40,19 @@ public:
     
     static long startup_timer;
     static long gosleep_timer;
-    static long update_timer;
-    
-    static long docker_timer;
-    
+        
     static bool suriSocketStatus;
+    static bool dockerSocketStatus;
     
     static char docker_bench[OS_BUFFER_SIZE]; 
     
     static char trivy[OS_BUFFER_SIZE];
     
-    // Suricata config parameters
+    // Suricata socket parameters
     static char suri_socket[OS_BUFFER_SIZE];
+    
+    // Docker socket parameters
+    static char docker_socket[OS_BUFFER_SIZE];
         
     // Wazuh config parameters
     static char wazuh_host[OS_HEADER_SIZE];
@@ -58,8 +68,6 @@ public:
     static int surilog_status;
     static char wazuh_log[OS_BUFFER_SIZE];
     static int wazuhlog_status;
-    static char modsec_log[OS_BUFFER_SIZE];
-    static int modseclog_status;
     
     static char falco_conf[OS_BUFFER_SIZE]; 
     static char falco_local[OS_BUFFER_SIZE];
@@ -73,10 +81,6 @@ public:
     static char wazuh_local[OS_BUFFER_SIZE];
     static char wazuh_rules[OS_BUFFER_SIZE];
         
-    static char modsec_conf[OS_BUFFER_SIZE];
-    static char modsec_local[OS_BUFFER_SIZE];
-    static char modsec_rules[OS_BUFFER_SIZE];
-    
     char collector_time[OS_DATETIME_SIZE]; 
     
     //Syslog info string
@@ -84,16 +88,15 @@ public:
     
     CollectorObject () {
         node_id.clear();
-        sensor_id.clear();
+        probe_id.clear();
         suriSocketStatus = true;
         wazuhServerStatus = true;
-        arStatus = false;
-        urStatus = true;
+        rcStatus = false;
+        ruStatus = true;
         timezone = 0;
         log_size = 0;
         startup_timer = 0;
         gosleep_timer = 0;
-        update_timer = 0;
         wazuh_port = 0;
     }
     
@@ -106,8 +109,7 @@ public:
     
     long GetStartupTimer() { return startup_timer; }
     long GetGosleepTimer() { return gosleep_timer; }
-    long GetUpdateTimer() { return update_timer; }
-    
+        
     static void SysLog(char* info);
     static int ValidDigit(char* ip_str);
     static int IsValidIp(string ip);
@@ -131,15 +133,18 @@ public:
 class BinData : public Event {
 public:   
     string data;
+    int sensor_type;
     
     void Reset() {
         Event::Reset();
+        sensor_type = 0;
         data.clear();
     }
     
     BinData () {
         data.clear();
         event_type = 2;
+        sensor_type = 0;
     }
 };
 
@@ -155,7 +160,7 @@ public:
     Rule () {
         data.clear();
         name_rule.clear();
-        event_type = 6;
+        event_type = 5;
     }
 };
 

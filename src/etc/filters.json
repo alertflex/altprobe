@@ -1,75 +1,21 @@
 {
-    "filter_desc": "test_v01",
+    "filter_desc": "filter_v01",
     "ref_id": "_project_id",
     
-    "home_net": [{
-        "network": "192.168.1.0",
-        "netmask": "255.255.255.0",
-        "node": "test01",
-        "alert_suppress": false
-    }, {
-        "network": "192.168.101.10",
-        "netmask": "255.255.255.255",
-        "node": "test01",
-        "alert_suppress": true
-    }],
-
-    "alias": [{
-        "agent": "centos7-host",
-        "host": "centos7-host",
-        "container": "centos7-host",
-        "ip": "indef"
-    }, {
-        "agent": "win10",
-        "host": "indef",
-        "container": "indef",
-        "ip": "192.168.1.2"
-    }],
+    "home_net": [
+    ],
 
     "sources": { 
         "crs": {
             "log": true,
             "severity": {
-                "threshold": 1,
+                "threshold": 0,
                 "level0": 2,
                 "level1": 4,
                 "level2": 5
             },
-            "gray_list": [{ 
-                "event": "rule 1",
-                "container": "flghost",
-                "match": "indef",
-                "aggregate": {
-                    "reproduced": 0,
-                    "in_period": 0
-                },
-                "response": {
-                    "profile": "indef",
-                    "new_type": "indef",
-                    "new_source": "indef",
-                    "new_event": "55715",
-                    "new_severity": 1,
-                    "new_category": "new cat",
-                    "new_description": "new desc"
-                }
-            }, { 
-                "event": "rule 2",
-                "container": "indef",
-                "match": "indef",
-                "aggregate": {
-                    "reproduced": 30,
-                    "in_period": 10
-                },
-                "response": {
-                    "profile": "indef",
-                    "new_type": "indef",
-                    "new_source": "indef",
-                    "new_event": "indef",
-                    "new_severity": 0,
-                    "new_category": "new cat",
-                    "new_description": "new desc"
-                }
-            }]
+            "gray_list": [ 
+            ]
         },
         "hids": {
             "log": true,
@@ -79,41 +25,8 @@
                 "level1": 4,
                 "level2": 10
             },
-            "gray_list": [{ 
-                "event": "5715",
-                "agent": "flghost",
-                "match": "indef",
-                "aggregate": {
-                    "reproduced": 0,
-                    "in_period": 0
-                },
-                "response": {
-                    "profile": "indef",
-                    "new_type": "indef",
-                    "new_source": "indef",
-                    "new_event": "55715",
-                    "new_severity": 1,
-                    "new_category": "new cat",
-                    "new_description": "new desc"
-                }
-            }, { 
-                "event": "4572",
-                "agent": "indef",
-                "match": "indef",
-                "aggregate": {
-                    "reproduced": 30,
-                    "in_period": 10
-                },
-                "response": {
-                    "profile": "indef",
-                    "new_type": "indef",
-                    "new_source": "indef",
-                    "new_event": "indef",
-                    "new_severity": 0,
-                    "new_category": "new cat",
-                    "new_description": "new desc"
-                }
-            }]
+            "gray_list": [ 
+            ]
         },
         "nids": {
             "log": true,
@@ -123,85 +36,8 @@
                 "level1": 1,
                 "level2": 2
             },
-            "gray_list": [{ 
-                "event": "2200071",
-                "host": "indef",
-                "match": "indef",
-                "aggregate": {
-                    "reproduced": 30,
-                    "in_period": 10
-                },
-                "response": {
-                    "profile": "indef",
-                    "new_type": "indef",
-                    "new_source": "indef",
-                    "new_event": "indef",
-                    "new_severity": 0,
-                    "new_category": "new cat",
-                    "new_description": "new desc"
-                }
-            }, { 
-                "event": "2200072",
-                "host": "192.168.1.1",
-                "match": "indef",
-                "aggregate": {
-                    "reproduced": 30,
-                    "in_period": 10
-                },
-                "response": {
-                    "profile": "indef",
-                    "new_type": "indef",
-                    "new_source": "indef",
-                    "new_event": "indef",
-                    "new_severity": 0,
-                    "new_category": "new cat",
-                    "new_description": "new desc"
-                }
-            }]
-        },
-        "waf": {
-            "log": true,
-            "severity": {
-                "threshold": 1,
-                "level0": 5,
-                "level1": 4,
-                "level2": 3
-            },
-            "gray_list": [{ 
-                "event": "100001",
-                "host": "indef",
-                "match": "indef",
-                "aggregate": {
-                    "reproduced": 30,
-                    "in_period": 10
-                },
-                "response": {
-                    "profile": "indef",
-                    "new_type": "indef",
-                    "new_source": "indef",
-                    "new_event": "indef",
-                    "new_severity": 0,
-                    "new_category": "new cat",
-                    "new_description": "indef"
-                }
-            }, { 
-                "event": "100002",
-                "host": "192.168.1.1",
-                "match": "indef",
-                "aggregate": {
-                    "reproduced": 30,
-                    "in_period": 10
-                },
-                "response": {
-                    "profile": "indef",
-                    "new_type": "indef",
-                    "new_source": "indef",
-                    "new_event": "indef",
-                    "new_severity": 0,
-                    "new_category": "indef",
-                    "new_description": "new desc"
-                }
-            }]
+            "gray_list": [ 
+            ]
         }
     }
 }

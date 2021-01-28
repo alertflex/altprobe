@@ -1,8 +1,16 @@
-/* 
- * File:   aggalerts.h
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
  *
- * Created on June 16, 2015, 10:54 AM
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
 
 #ifndef AGG_ALERTS_H
@@ -27,14 +35,12 @@ public:
     std::list<IdsRecord> crs_alerts_list;
     std::list<IdsRecord> hids_alerts_list;
     std::list<IdsRecord> nids_alerts_list;
-    std::list<IdsRecord> waf_alerts_list;
-    
+       
     //Alerts stat
     IdsStat crs_stat;
     IdsStat hids_stat;
     IdsStat nids_stat;
-    IdsStat waf_stat;
-    
+        
     virtual int Open();
     virtual void Close();
     
@@ -56,10 +62,6 @@ public:
     void UpdateNidsAlerts();
     void SendNidsAlert(std::list<IdsRecord>::iterator r, int c);
     void ResetNidsAlert();
-    
-    void UpdateWafAlerts();
-    void SendWafAlert(std::list<IdsRecord>::iterator r, int c);
-    void ResetWafAlert();
     
 };
 

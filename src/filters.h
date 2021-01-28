@@ -1,6 +1,16 @@
-/* 
- * File:   filters.h
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
 
 #ifndef FILTERS_H
@@ -17,7 +27,7 @@ using namespace std;
 // new alert with new event_id
 // else alert - msg was repeated several times
 
-// 2. At begin first alert will be sended whithout change if reproduce != 0
+// 2. At begin first alert will be sent whithout change if reproduce != 0
 
 // 3. If reproduce = 0 then msg will be replaced to new fields parameters
 
@@ -66,25 +76,6 @@ public:
     }
     
     Network () {
-        Reset();
-    }
-};
-
-class Alias {
-public:
-    string agent_name;
-    string host_name;
-    string container_name;
-    string ip;
-        
-    void Reset() {
-        agent_name.clear();
-        host_name.clear();
-        container_name.clear();
-        ip.clear();
-    }
-    
-    Alias () {
         Reset();
     }
 };
@@ -187,25 +178,20 @@ public:
     string desc;
     	
     std::vector<Network*> home_nets;
-    std::vector<Alias*> alias;
-    
+        
     IdsPolicy crs;
            
     IdsPolicy nids;
     
     IdsPolicy hids;
     
-    IdsPolicy waf;
-    
     void Reset() {
         ref_id.clear();
         desc.clear();
         home_nets.clear();
-        alias.clear();
         crs.Reset();
         nids.Reset();
         hids.Reset();
-        waf.Reset();
     }
 };
 
@@ -228,8 +214,7 @@ public:
         string date, string version, string manager, string os_platf, string os_ver, string os_name);
     static string GetAgentNameByIP(string ip);
     static string GetAgentIdByName(string name);
-    static Alias* GetAliasByAgentName(string name);
-        
+            
     int GetStatus() { return status; }
 };
 

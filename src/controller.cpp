@@ -1,9 +1,18 @@
-/* 
- * File:  controller.cpp
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
  *
- * Created on February 27, 2014, 3:07 PM
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
+ 
 #include <mutex>
 #include <activemq-cpp-3.9.5/cms/Message.h>
 
@@ -37,6 +46,8 @@ Destination* Controller::destAlerts;
 MessageProducer* Controller::producerAlerts;
 Destination* Controller::destInfo;
 MessageProducer* Controller::producerInfo;
+Destination* Controller::destResponse;
+MessageProducer* Controller::producerResponse;
 bool Controller::sessionTransacted = false;
 
 int Controller::connection_error = 0;
@@ -230,6 +241,19 @@ int Controller::Open() {
        
                 producerInfo->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
             }
+            
+            if (producerResponse == NULL) {
+            
+                // Create the destination for statistics(Queue)
+                string strResponse("jms/altprobe/" + node_id + "/" + probe_id + "/response");
+            
+                destResponse = session->createTopic(strResponse);
+                        
+                // Create a MessageProducer from the Session to Queue
+                producerResponse = session->createProducer(destResponse);
+       
+                producerResponse->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
+            }
         
             mq_counter++;
         
@@ -386,7 +410,7 @@ int Controller::SendMessage(Event* e) {
             
             string strContainerId(((Alert*) e)->container_id);
             message->setStringProperty("container_id", strContainerId);
-            
+                        
             string strContainerName(((Alert*) e)->container_name);
             message->setStringProperty("container_name", strContainerName);
             
@@ -396,46 +420,19 @@ int Controller::SendMessage(Event* e) {
         }  else {
             
             BytesMessage* byte_message = session->createBytesMessage();
-                
-            string strNodeId(node_id);
-            byte_message->setStringProperty("node_id", strNodeId);
-            byte_message->setStringProperty("ref_id", e->ref_id);
+            
             byte_message->setIntProperty("msg_type", msg_type);
+            byte_message->setStringProperty("ref_id", e->ref_id);
+            byte_message->setStringProperty("node_id", node_id);
+            byte_message->setStringProperty("probe_id", probe_id);
             
             switch (msg_type) {
+                case 3 :
+                    byte_message->setIntProperty("sensor", ((BinData*) e)->sensor_type);
+                    break;
                 case 4 :
-                    byte_message->setStringProperty("sensor", sensor_id + "-crs");
-                    break;
-                case 5 :
-                    byte_message->setStringProperty("sensor", sensor_id + "-hids");
-                    break;
-                case 6 :
-                    byte_message->setStringProperty("sensor", sensor_id + "-nids");
-                    break;
-                case 7 :
-                    byte_message->setStringProperty("sensor", sensor_id + "-waf");
-                    break;
-                case 8 :
-                    byte_message->setStringProperty("sensor", sensor_id + "-crs");
+                    byte_message->setIntProperty("sensor", ((BinData*) e)->sensor_type);
                     byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
-                    break;
-                case 9 :
-                    byte_message->setStringProperty("sensor", sensor_id + "-hids");
-                    byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
-                    break;
-                case 10 :
-                    byte_message->setStringProperty("sensor", sensor_id + "-nids");
-                    byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
-                    break;
-                case 11 :
-                    byte_message->setStringProperty("sensor", sensor_id + "-waf");
-                    byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
-                    break;
-                case 12 :
-                    byte_message->setStringProperty("sensor", sensor_id);
-                    break;
-                case 14 :
-                    byte_message->setStringProperty("sensor", sensor_id);
                     break;
                 default:
                     break;
@@ -481,6 +478,18 @@ int Controller::SendAgentInfo(string ref, string node, string agent, string json
     return 1;
 }
 
+int Controller::SendResponse( ) {
+    
+    try {
+        
+    } catch (CMSException& e) {
+        
+        return 0;
+    }
+        
+    return 1;
+}
+
 void Controller::Close() {
  
     if (connection != NULL) {
@@ -508,6 +517,14 @@ void Controller::Close() {
         if (producerInfo) {
             delete producerInfo;
             producerInfo = NULL;
+        }
+        
+        delete destResponse;
+        destResponse = NULL;
+        
+        if (producerResponse) {
+            delete producerResponse;
+            producerResponse = NULL;
         }
         
         delete session;

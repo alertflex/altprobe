@@ -24,7 +24,6 @@ export KEY_PWD=indef
 # sources
 # if *_LOG is "indef", redis connection will use
 export FALCO_LOG=indef
-export MODSEC_LOG=indef
 export SURI_LOG=indef
 export WAZUH_LOG='\/var\/ossec\/logs\/alerts\/alerts.json'
 

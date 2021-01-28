@@ -25,7 +25,6 @@
       <itemPath>sinks.h</itemPath>
       <itemPath>source.h</itemPath>
       <itemPath>updates.h</itemPath>
-      <itemPath>waf.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -54,7 +53,6 @@
       <itemPath>sinks.cpp</itemPath>
       <itemPath>source.cpp</itemPath>
       <itemPath>updates.cpp</itemPath>
-      <itemPath>waf.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -169,10 +167,6 @@
       </item>
       <item path="updates.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="waf.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="waf.h" ex="false" tool="3" flavor2="0">
-      </item>
     </conf>
     <conf name="Release" type="1">
       <toolsSet>
@@ -275,10 +269,6 @@
       <item path="updates.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="updates.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="waf.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="waf.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>

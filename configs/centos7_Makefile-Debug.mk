@@ -54,8 +54,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/remstat.o \
 	${OBJECTDIR}/sinks.o \
 	${OBJECTDIR}/source.o \
-	${OBJECTDIR}/updates.o \
-	${OBJECTDIR}/waf.o
+	${OBJECTDIR}/updates.o 
 
 
 # C Compiler Flags
@@ -181,11 +180,6 @@ ${OBJECTDIR}/updates.o: updates.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/updates.o updates.cpp
-
-${OBJECTDIR}/waf.o: waf.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/waf.o waf.cpp
 
 # Subprojects
 .build-subprojects:

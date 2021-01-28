@@ -7,45 +7,46 @@ collector:
   node: "_node_id"
   probe: "_probe_id"
   
-  # Allow remote management of collector from controller
-  active_response: "false"
-  update_remote: "true"
-  
   # Time difference between collector and controller's, timezones in hours
   time_zone: 0
   
-  # Alerts threshold, if the threshold is exceeded, collector omits all others alerts until Redis list is not empty
+  # Alerts threshold in case of alerts overloading in Redis, if the threshold is exceeded, 
+  # the collector omits next alerts until Redis list is not empty
   # also special alert about multiple alerts will appear (redirection of alerts to logs will not interrupted)
   alerts_threshold: 100
-  # Save events/logs to local path - /var/log/altprobe, if controller isn't available
+  # Save events/logs to local path - /var/log/altprobe, if connection to controller isn't available
   log_path: "/var/log/altprobe/"
   # max size (MB) of the log file, if size more than this value, collector switches to the next log file
   log_size: 100
   
-  # TIMERS
-  # delay on collector startup in sec (default 30)
-  startup_timer: 30  
+  # delay on collector start in sec (default 30)
+  timer_start: 30  
   # sleep delay in milisecond (default 1000)
-  sleep_timer:   1000  
-  # period generation of reports of collector statistic in sec, 
-  # if 0 then this functionality is off (default 360 - 6 min)
-  report_timer: 360  
-  # run update of rules and configs if timer is expired 
-  update_timer: 1
-  # timer to run scans (docker-bench and trivy ) for docker,
-  # measure in docker_timer*report_timer (default 60 min)
-  docker_timer: 10
+  timer_sleep:   1000  
+  # period reports generation of collector statistic in sec, 
+  # if 0 then the functionality is off (default 300 - 5 min)
+  timer_report: 300  
+  # timer to run scans (docker-bench and trivy ) for docker, send IDS backup of configs and rules to controller
+  # measure in timer_longtask*timer_stat (default 12 - 60 min)
+  timer_longtask: 12
   
+  # Allow remote management of collector from controller
+  remote_control: "false"
+  # Allow update of configs, filters, rules between collector and controller
+  remote_update: "true"
+  
+  # Docker unix socket filename for active response, if value is indef interface to socket disabled
+  socket_docker: "/run/var/docker.sock"
   # Suricata unix socket filename for active response, if value is indef interface to socket disabled
-  suri_socket: "/run/suricata/suricata-command.socket"
-    
+  socket_suricata: "/run/suricata/suricata-command.socket"
+  
   # Altprobe reads via Wazuh API an agents status (use report_timer as a period of reading)
-  wazuh_host: "127.0.0.1"
-  wazuh_port: 55000  
-  wazuh_user: "_wazuh_user"
-  wazuh_pwd: "_wazuh_pwd"
+  wazuhapi_host: "127.0.0.1"
+  wazuhapi_port: 55000  
+  wazuhapi_user: "_wazuh_user"
+  wazuhapi_pwd: "_wazuh_pwd"
     
-  # Altprobe reads sources events from Redis list by pop API call
+  # Altprobe can read of sources events from Redis list by pop API call
   redis_host: "127.0.0.1"
   redis_port: 6379 
   
@@ -60,29 +61,13 @@ controller:
   key_pwd: "_key_pwd"
     
 sources:
-  # Docker-bench results file for example /root/docker-bench-security/report.json
-  docker-bench: "indef" 
-  
-  # Trivy results file for example /root/results.json
-  trivy: "indef"
-    
-  # For reading of events from altprobe clients (misc), only Redis intefrace can be used.
-  # in case value "indef", module is not in use
-  misc_redis: "altprobe_misc"
-  
-  # Altprobe can read events of falco, suricata, wazuh and modsec directly from log files.
+  # Altprobe can read events of falco, suricata, wazuh directly from log files.
   # If xxx_log is "indef" redis interface will be used. In case xxx_redis is "indef", module is not in use
   falco_log: "_falco_log"
   falco_redis: "altprobe_crs" 
   falco_conf: "/etc/falco/"
   falco_rules: "/etc/falco/rules.d/"
   falco_local: "/etc/falco/rules.available/"
-  
-  modsec_log: "_modsec_log"
-  modsec_redis: "altprobe_waf" 
-  modsec_conf: "/etc/nginx/modsec/"
-  modsec_rules: "/usr/local/owasp-modsecurity-crs-3.0.2/"
-  modsec_local: "/etc/nginx/modsec/rules/"
   
   suri_log: "_suri_log"
   suri_redis: "altprobe_nids" 
@@ -95,4 +80,14 @@ sources:
   wazuh_conf: "/var/ossec/etc/"
   wazuh_rules: "/var/ossec/ruleset/"
   wazuh_local: "/var/ossec/etc/"
+  
+  # For reading of events from altprobe clients (misc), only Redis intefrace can be used.
+  # in case value "indef", module is not in use
+  misc_redis: "altprobe_misc"
+  
+  # Installation path for Docker-bench script and result file, for example /root/docker-bench-security/
+  dockerbench_log: "indef" 
+  
+  # Path to Trivy results file (report.json), for example /etc/altprobe/
+  trivy_log: "indef"
   

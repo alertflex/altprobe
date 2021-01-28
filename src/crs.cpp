@@ -1,9 +1,18 @@
-/* 
- * File:   hids.cpp
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
  *
- * Created on May 26, 2014, 10:43 AM
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include "crs.h"
@@ -200,7 +209,7 @@ int Crs::Go(void) {
                     }
                 } 
                 
-                    if (sk.alerts_threshold != 0) {
+                if (sk.alerts_threshold != 0) {
             
                     if (alerts_counter < sk.alerts_threshold) alerts_counter++;
                     else {
@@ -260,6 +269,8 @@ int Crs::ParsJson() {
             
             jsonPayload.assign(file_payload, GetBufferSize(file_payload));
             ss << jsonPayload;
+            
+            rec.sensor = probe_id + ".crs";
         
         }  else {
             
@@ -305,25 +316,33 @@ int Crs::ParsJson() {
     
     rec.rule = pt.get<string>("rule","");
     
-    rec.fields.fd_cip = pt.get<string>("output_fields.fd.cip","indef");
-    rec.fields.fd_sip = pt.get<string>("output_fields.fd.sip","indef");
-    rec.fields.fd_cport = pt.get<int>("output_fields.fd.cport",0);
-    rec.fields.fd_sport = pt.get<int>("output_fields.fd.sport",0);
-    rec.fields.fd_cip_name = pt.get<string>("output_fields.fd.cip.name","indef");
-    rec.fields.fd_sip_name = pt.get<string>("output_fields.fd.sip.name","indef");
-        
-    rec.fields.fd_name = pt.get<string>("output_fields.fd.name","indef");
-    rec.fields.fd_directory = pt.get<string>("output_fields.fd.directory","indef");
-        
-    rec.fields.proc_pid = pt.get<int>("output_fields.proc.pid",0);
-    rec.fields.proc_cmdline = pt.get<string>("output_fields.proc.cmdline","indef");
-    rec.fields.proc_name = pt.get<string>("output_fields.proc.name","indef");
-    rec.fields.proc_cwd = pt.get<string>("output_fields.proc.cwd","indef");  
+    boost::optional< bpt::ptree& > child = pt.get_child_optional( "output_fields" );
     
-    rec.fields.container_id = pt.get<string>("output_fields.container.id","indef");
-    rec.fields.container_name = pt.get<string>("output_fields.container.name","indef");
+    if( child ) {
+        
+        bpt::ptree output_fields = pt.get_child("output_fields");
     
-    rec.fields.user_name = pt.get<string>("output_fields.user.name","indef");
+        rec.fields.fd_cip = output_fields.get<string>(bpt::ptree::path_type("fd.cip", '/'),"indef");
+        rec.fields.fd_sip = output_fields.get<string>(bpt::ptree::path_type("fd.sip", '/'),"indef");
+        rec.fields.fd_cport = output_fields.get<int>(bpt::ptree::path_type("fd.cport", '/'),0);
+        rec.fields.fd_sport = output_fields.get<int>(bpt::ptree::path_type("fd.sport", '/'),0);
+        rec.fields.fd_cip_name = output_fields.get<string>(bpt::ptree::path_type("fd.cip.name", '/'),"indef");
+        rec.fields.fd_sip_name = output_fields.get<string>(bpt::ptree::path_type("fd.sip.name", '/'),"indef");
+        
+        rec.fields.fd_name = output_fields.get<string>(bpt::ptree::path_type("fd.name", '/'),"indef");
+        rec.fields.fd_directory = output_fields.get<string>(bpt::ptree::path_type("fd.directory", '/'),"indef");
+        
+        rec.fields.proc_pid = output_fields.get<int>(bpt::ptree::path_type("proc.pid", '/'),0);
+        rec.fields.proc_cmdline = output_fields.get<string>(bpt::ptree::path_type("proc.cmdline", '/'),"indef");
+        rec.fields.proc_name = output_fields.get<string>(bpt::ptree::path_type("proc.name", '/'),"indef");
+        rec.fields.proc_cwd = output_fields.get<string>(bpt::ptree::path_type("proc.cwd", '/'),"indef");  
+    
+        rec.fields.container_id = output_fields.get<string>(bpt::ptree::path_type("container.id", '/'),"indef");
+        
+        rec.fields.container_name = output_fields.get<string>(bpt::ptree::path_type("container.name", '/'),"indef");
+    
+        rec.fields.user_name = output_fields.get<string>(bpt::ptree::path_type("user.name", '/'),"indef");
+    }
         
     ResetStreams();
     
@@ -332,79 +351,82 @@ int Crs::ParsJson() {
 
 void Crs::CreateLog() {
     
-    report = "{\"version\": \"1.1\",\"host\":\"";
+    report = "{\"version\": \"1.1\",\"node\":\"";
     report += node_id;
     report += "\",\"short_message\":\"alert-crs\"";
     report += ",\"full_message\":\"Alert from Falco\"";
     report += ",\"level\":";
     report += std::to_string(7);
-    report += ",\"_type\":\"HOST\"";
-    report += ",\"_source\":\"Falco\"";
+    report += ",\"source_type\":\"HOST\"";
+    report += ",\"source_name\":\"Falco\"";
         
-    report +=  ",\"_project_id\":\"";
+    report +=  ",\"project_id\":\"";
     report +=  fs.filter.ref_id;
 			
-    report +=  "\",\"_event_time\":\"";
+    report +=  "\",\"event_time\":\"";
     report +=  rec.timestamp;
     
-    report += "\",\"_collected_time\":\"";
+    report += "\",\"collected_time\":\"";
     report += GetGraylogFormat();
     
-    report += "\",\"_priority\":\"";
+    report += "\",\"priority\":\"";
     report += rec.priority;
     
-    report += "\",\"_rule\":\"";
+    report += "\",\"rule\":\"";
     report += rec.rule;
 		
-    report += "\",\"_description\":\"";
+    report += "\",\"description\":\"";
     report += rec.output;
     
-    report += "\",\"_user_name\":\"";
+    report += "\", \"sensor\":\"";
+    report += rec.sensor;
+    
+    report += "\",\"user_name\":\"";
     report += rec.fields.user_name;
     
-    report += "\",\"_client_ip\":\"";
+    report += "\",\"client_ip\":\"";
     report += rec.fields.fd_cip;
     
-    report += "\",\"_server_ip\":\"";
+    report += "\",\"server_ip\":\"";
     report += rec.fields.fd_sip;
     
-    report += "\",\"_client_port\":";
+    report += "\",\"client_port\":";
     report += rec.fields.fd_cport;
     
-    report += ",\"_server_port\":";
+    report += ",\"server_port\":";
     report += rec.fields.fd_sport;
     
-    report += ",\"_client_hostname\":\"";
+    report += ",\"client_hostname\":\"";
     report += rec.fields.fd_cip_name;
     
-    report += "\",\"_server_hostname\":\"";
+    report += "\",\"server_hostname\":\"";
     report += rec.fields.fd_sip_name;
     
-    report += "\",\"_file_name\":\"";
+    report += "\",\"file_name\":\"";
     report += rec.fields.fd_name;
     
-    report += "\",\"_file_directory\":\"";
+    report += "\",\"file_directory\":\"";
     report += rec.fields.fd_directory;
     
-    report += "\",\"_process_pid\":";
+    report += "\",\"process_pid\":";
     report += rec.fields.proc_pid;
     
-    report += ",\"_process_cmdline\":\"";
+    report += ",\"process_cmdline\":\"";
     report += rec.fields.proc_cmdline;
     
-    report += "\",\"_process_name\":\"";
+    report += "\",\"process_name\":\"";
     report += rec.fields.proc_name;
     
-    report += "\",\"_process_dir\":\"";
+    report += "\",\"process_dir\":\"";
     report += rec.fields.proc_cwd;
     
-    report += "\",\"_container_id\":\"";
+    report += "\",\"container_id\":\"";
     report += rec.fields.container_id;
     
-    report += "\",\"_container_name\":\"";
+    report += "\",\"container_name\":\"";
     report += rec.fields.container_name;
     
-    report += "\",\"_container_id\":\"";
+    report += "\",\"container_id\":\"";
     report += rec.fields.container_id;
     
     report += "\"}";
@@ -441,10 +463,9 @@ int Crs::PushRecord(GrayList* gl) {
     ids_rec.user = rec.fields.user_name;
     ids_rec.process = rec.fields.proc_name;
     ids_rec.container = rec.fields.container_id;
-    if (falcolog_status == 1) ids_rec.ids = sensor;
-    else ids_rec.ids = rec.sensor;
+    ids_rec.ids = rec.sensor;
     ids_rec.action = "indef";
-    ids_rec.ids_type = 5;
+    ids_rec.ids_type = 4;
                 
     if (gl != NULL) {
         
@@ -477,8 +498,7 @@ int Crs::PushRecord(GrayList* gl) {
 void Crs::SendAlert(int s, GrayList*  gl) {
     
     sk.alert.ref_id =  fs.filter.ref_id;
-    if (falcolog_status == 1) sk.alert.sensor_id = sensor;
-    else sk.alert.sensor_id = rec.sensor;
+    sk.alert.sensor_id = rec.sensor;
     
     sk.alert.alert_severity = s;
     sk.alert.alert_source = "Falco";
@@ -491,7 +511,7 @@ void Crs::SendAlert(int s, GrayList*  gl) {
     sk.alert.info = "indef";
     sk.alert.status = "processed_new";
     sk.alert.user_name = rec.fields.user_name;
-    sk.alert.agent_name = sensor;
+    sk.alert.agent_name = probe_id;
     sk.alert.filter = fs.filter.desc;
     
     sk.alert.list_cats.push_back("falco");

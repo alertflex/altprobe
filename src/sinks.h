@@ -1,7 +1,16 @@
-/* 
- * File:   sinks.h
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
  *
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
 
 #ifndef SINKS_H
@@ -16,6 +25,7 @@ public:
     static int config_flag;
     
     static int reports_period;
+    static int longtask_period;
     
     static int alerts_threshold;
     
@@ -44,6 +54,10 @@ public:
     
     int GetReportsPeriod() { 
         return reports_period; 
+    };
+    
+    int GetLongtaskPeriod() { 
+        return longtask_period; 
     };
     
     int SendMessage(Event* e);

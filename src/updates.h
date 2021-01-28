@@ -1,8 +1,16 @@
-/* 
- * File:   updates.h
- * Author: olegzhr
+/*
+ *   Copyright 2021 Oleg Zharkov
  *
- * Created on November 23, 2017, 3:47 AM
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
 
 #ifndef UPDATES_H
@@ -21,7 +29,7 @@ class Updates : public Controller,
         public MessageListener {
 public: 
     
-    Destination* consumerTopic;
+    Destination* consumerCommand;
     MessageConsumer* consumer;
     int update_status;
     
@@ -42,10 +50,13 @@ public:
     int Go();
     void onMessage(const Message* message);
     void onException(const CMSException& ex AMQCPP_UNUSED);
-    int IsHomeNetwork(string ip); 
-    int SendArToWazuh(string agent, string json);
-    int SendArToSuricata(string json);
+    string onBytesMessage(const Message* message);
+    string onTextMessage(const Message* message);
+    string SendArToWazuh(string agent, string json);
+    string SendArToSuricata(string json);
     string CreateAgentWazuh(string json);
+    string StopDockerContainer(string json);
+    int IsHomeNetwork(string ip);
 };
 
 #endif	/* UPDATES_H */

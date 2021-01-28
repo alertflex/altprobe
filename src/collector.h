@@ -1,8 +1,17 @@
-/* 
- * File:   collector.h
- * Author: Oleg Zharkov
- */
- 
+/*
+ *   Copyright 2021 Oleg Zharkov
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
+ */ 
 
 #ifndef COLLECTOR_H
 #define	COLLECTOR_H
@@ -19,7 +28,6 @@
 #include "ids.h"
 #include "hids.h"
 #include "nids.h"
-#include "waf.h"
 #include "misc.h"
 #include "crs.h"
 #include "remlog.h"
@@ -30,15 +38,37 @@ using boost::asio::ip::tcp;
 using namespace std;
 namespace bpt = boost::property_tree;
 
+class Container {
+public:
+    string id;
+    string image;
+    string image_id;
+        
+    void Reset() {
+        id.clear();
+        image.clear();
+        image_id.clear();
+    }
+    
+    Container () {
+        Reset();
+    }
+    
+    Container(string i, string img, string img_id) {
+        id = i;
+        image = img;
+        image_id = img_id;
+    }
+};
+
 
 class Collector : public Source {
 public: 
     
-    std::vector<Agent> agents_list;
+    std::vector<Container> containers_list;
         
     Hids* hids;
     Nids* nids; 
-    Waf* waf; 
     Misc* misc; 
     Crs* crs;
     RemLog* rem_log;
@@ -50,18 +80,16 @@ public:
     
     string ref_id;
     
-    Collector(Crs* c, Hids* h, Nids* n, Waf* w, Misc* m, RemLog* rl, RemStat* rs) {
+    Collector(Crs* c, Hids* h, Nids* n, Misc* m, RemLog* rl, RemStat* rs) {
     
         crs = c;
         hids = h;
         nids = n;
-        waf = w;
         misc = m;
         rem_log = rl;
         rem_stat = rs;
                 
         wazuhServerStatus = false;
-        agents_list.clear();
     }
         
     virtual int GetConfig();
@@ -70,9 +98,9 @@ public:
     void Close();
     int Go();
     
-    void RoutineJob();
+    void StatJob();
+    
     void UpdateRulesConfigs();
-    void UpdateFilters();
     void UpdateFalcoConfig();
     void UpdateSuriConfig();
     void UpdateModsecConfig();
@@ -80,14 +108,18 @@ public:
     void UpdateFalcoRules();
     void UpdateSuriRules();
     void UpdateOssecRules();
-    void UpdateModsecRules();
     
+    string GetAgents(string query);
+    void ParsAgents(string json);
+    void UpdateAgents(void);
+    void PushAgents(string json, string type, string agent);
+    
+    string GetContainers(void);  
+    void ParsContainers(string json);
+    void UpdateContainers(void);
+        
     void DockerBenchJob();
     void TrivyJob();
-        
-    void ParsAgents(string json);
-    void ControllerPush(string json, string type, string agent);
-    string WazuhGet(string query);
     
     void ResetStreams() {
         comp.str("");

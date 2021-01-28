@@ -1,9 +1,17 @@
-/* 
- * File:   main.cpp
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
  *
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
-
 
 #include <libdaemon/dfork.h>
 #include <libdaemon/dsignal.h>
@@ -15,7 +23,6 @@
 #include "aggnet.h"
 #include "hids.h"
 #include "crs.h"
-#include "waf.h"
 #include "misc.h"
 #include "nids.h"
 #include "collector.h"
@@ -81,27 +88,7 @@ void * thread_crs(void *arg) {
     
     pthread_cleanup_push(exit_thread_crs, exit_thread_crs_arg);
     
-    crs.sensor = crs.sensor_id + "-crs";
-    
     while (crs.Go()) { }
-    
-    pthread_cleanup_pop(1);
-    pthread_exit(0);
-}
-
-Waf waf("modsec_redis");
-pthread_t pthread_waf;
-
-void* exit_thread_waf_arg;
-void exit_thread_waf(void* arg) { waf.Close(); }
-
-void * thread_waf(void *arg) {
-    
-    pthread_cleanup_push(exit_thread_waf, exit_thread_waf_arg);
-    
-    waf.sensor = waf.sensor_id + "-waf";
-    
-    while (waf.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
@@ -116,8 +103,6 @@ void exit_thread_nids(void* arg) { nids.Close(); }
 void * thread_nids(void *arg) {
     
     pthread_cleanup_push(exit_thread_nids, exit_thread_nids_arg);
-    
-    nids.sensor = nids.sensor_id + "-nids";
     
     while (nids.Go()) { }
     
@@ -134,8 +119,6 @@ void exit_thread_hids(void* arg) { hids.Close(); }
 void * thread_hids(void *arg) {
     
     pthread_cleanup_push(exit_thread_hids, exit_thread_hids_arg);
-    
-    hids.sensor = hids.sensor_id + "-hids";
     
     while (hids.Go()) { }
     
@@ -192,7 +175,7 @@ void * thread_updates(void *arg) {
 }
 
 
-Collector collr(&crs, &hids, &nids, &waf, &misc, &remlog, &remstat);
+Collector collr(&crs, &hids, &nids, &misc, &remlog, &remstat);
 pthread_t pthread_collr;
 
 void* exit_thread_collr_arg;
@@ -224,9 +207,6 @@ int LoadConfig(void)
     
     //nids
     if (!nids.GetConfig()) return 0;
-    
-    //waf
-    if (!waf.GetConfig()) return 0;
     
     //crs
     if (!crs.GetConfig()) return 0;
@@ -319,18 +299,6 @@ int InitThreads(int mode, pid_t pid)
             
         } else daemon_log(LOG_ERR,"NIDS source is disabled");
     }
-    
-    //waf
-    if (waf.GetStatus()) {
-        
-        if (waf.Open()) {
-            
-            if (pthread_create(&pthread_waf, NULL, thread_waf, &arg)) {
-                daemon_log(LOG_ERR,"error creating thread for WAF module");
-                return 0;
-            }
-        } else daemon_log(LOG_ERR,"WAF source is disabled");
-    } 
     
     //crs
     if (crs.GetStatus()) {
@@ -430,12 +398,6 @@ void KillsThreads(void)
     if (nids.GetStatus()) {
         pthread_cancel(pthread_nids);
         pthread_join(pthread_nids, NULL);
-    }
-    
-    //waf
-    if (waf.GetStatus()) {
-        pthread_cancel(pthread_waf);
-        pthread_join(pthread_waf, NULL);
     }
     
     //crs

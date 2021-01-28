@@ -1,6 +1,16 @@
-/* 
- * File:  controller.h
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
 
 #ifndef CONTROLLER_H
@@ -57,6 +67,8 @@ public:
     static MessageProducer* producerAlerts;
     static Destination* destInfo;
     static MessageProducer* producerInfo;
+    static Destination* destResponse;
+    static MessageProducer* producerResponse;
     static bool sessionTransacted;
     
     static int connection_error;
@@ -77,12 +89,15 @@ public:
         producerAlerts = NULL;
         destInfo = NULL;
         producerInfo = NULL;
+        destResponse = NULL;
+        producerResponse = NULL;
     }
      
     virtual int Open();
     virtual int GetConfig();
     void CheckStatus();
     int SendMessage(Event* e);
+    int SendResponse();
     int SendAgentInfo(string ref, string node, string agent, string json);
     virtual void Close();
     

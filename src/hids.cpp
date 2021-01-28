@@ -1,9 +1,18 @@
-/* 
- * File:   hids.cpp
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
  *
- * Created on May 26, 2014, 10:43 AM
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
+ 
 #include <stdio.h>
 #include <stdlib.h>
 #include "hids.h"
@@ -287,6 +296,8 @@ int Hids::ParsJson() {
         return 0;
     } 
     
+    rec.sensor = probe_id + ".hids";
+    
     
     string loc = pt.get<string>("location","");
     
@@ -455,8 +466,6 @@ int Hids::ParsJson() {
     
     rec.agent = pt.get<string>("agent.name","indef");
     
-    rec.sensor = pt.get<string>("manager.name","indef");
-    
     rec.timestamp = pt.get<string>("timestamp","indef");
     
     rec.dstip = pt.get<string>("data.dstip","indef");
@@ -586,7 +595,7 @@ int Hids::ParsJson() {
 
 void Hids::CreateLog() {
     
-    report = "{\"version\": \"1.1\",\"host\":\"";
+    report = "{\"version\": \"1.1\",\"node\":\"";
     report += node_id;
     
     if (rec.file.filename.compare("") != 0) {
@@ -594,41 +603,41 @@ void Hids::CreateLog() {
         report += ",\"full_message\":\"Alert from OSSEC/Wazuh FIM\"";
         report += ",\"level\":";
         report += std::to_string(7);
-        report += ",\"_type\":\"FILE\"";
+        report += ",\"source_type\":\"FILE\"";
     } else {
         report += "\",\"short_message\":\"alert-hids\"";
         report += ",\"full_message\":\"Alert from OSSEC/Wazuh HIDS\"";
         report += ",\"level\":";
         report += std::to_string(7);
-        report += ",\"_type\":\"HOST\"";
+        report += ",\"source_type\":\"HOST\"";
     }
-    report += ",\"_source\":\"Wazuh\"";
+    report += ",\"source_name\":\"Wazuh\"";
         
-    report += ",\"_agent\":\"";
+    report += ",\"agent\":\"";
     report += rec.agent;
     
-    report += "\", \"_manager\":\"";
+    report += "\", \"sensor\":\"";
     report += rec.sensor;
     
-    report +=  "\",\"_project_id\":\"";
+    report +=  "\",\"project_id\":\"";
     report +=  fs.filter.ref_id;
 			
-    report +=  "\",\"_event_time\":\"";
+    report +=  "\",\"event_time\":\"";
     report +=  rec.timestamp;
     
-    report += "\",\"_collected_time\":\"";
+    report += "\",\"collected_time\":\"";
     report += GetGraylogFormat();
 		
-    report += "\",\"_description\":\"";
+    report += "\",\"description\":\"";
     report += rec.rule.desc;
     
-    report += "\",\"_ossec-level\":";
+    report += "\",\"ossec-level\":";
     report += std::to_string(rec.rule.level);
     
-    report += ",\"_sidid\":";
+    report += ",\"sidid\":";
     report += std::to_string(rec.rule.id);
 	
-    report += ",\"_group_name\":\"";
+    report += ",\"group_name\":\"";
     
     int j = 0;
     for (string i : rec.rule.list_cats) {
@@ -638,26 +647,26 @@ void Hids::CreateLog() {
         j++;    
     }
     
-    report += "\",\"_info\":\"";
+    report += "\",\"info\":\"";
     report += rec.rule.info;
-    report += "\",\"_location\":\"";
+    report += "\",\"location\":\"";
     report += rec.location;
-    report += "\",\"_srcip\":\"";
+    report += "\",\"srcip\":\"";
     report += rec.srcip;
-    report += "\",\"_dstip\":\"";
+    report += "\",\"dstip\":\"";
     report += rec.dstip;
-    report += "\",\"_process\":\"";
+    report += "\",\"process\":\"";
     report += rec.process_name;
-    report += "\",\"_user\":\"";
+    report += "\",\"user\":\"";
     report += rec.user;
     if (rec.file.filename.compare("") != 0) {
-        report += "\",\"_filename\":\"";
+        report += "\",\"filename\":\"";
         report += rec.file.filename;
-        report += "\",\"_md5\":\"";
+        report += "\",\"md5\":\"";
         report += rec.file.md5;
-        report += "\",\"_sha1\":\"";
+        report += "\",\"sha1\":\"";
         report += rec.file.sha1;
-        report += "\",\"_sha256\":\"";
+        report += "\",\"sha256\":\"";
         report += rec.file.sha256;
     }
     report += "\"}";

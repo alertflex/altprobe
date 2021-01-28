@@ -24,7 +24,6 @@ export KEY_PWD=Password1234
 # sources:
 # if *_LOG is "indef", redis connection will use
 export FALCO_LOG='\/var\/log\/falco.json'
-export MODSEC_LOG='\/var\/log\/nginx\/error.log'
 export SURI_LOG='\/var\/log\/suricata\/eve.json'
 export WAZUH_LOG='\/var\/ossec\/logs\/alerts\/alerts.json'
 

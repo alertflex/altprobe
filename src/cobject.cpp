@@ -1,7 +1,16 @@
-/* 
- * File:   cobject.cpp
- * Author: Oleg Zharkov
+/*
+ *   Copyright 2021 Oleg Zharkov
  *
+ *   Licensed under the Apache License, Version 2.0 (the "License").
+ *   You may not use this file except in compliance with the License.
+ *   A copy of the License is located at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   or in the "license" file accompanying this file. This file is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ *   express or implied. See the License for the specific language governing
+ *   permissions and limitations under the License.
  */
 
 #include <libdaemon/dfork.h>
@@ -18,14 +27,14 @@
 #include "cobject.h"
 
 string CollectorObject::node_id;
-string CollectorObject::sensor_id;
+string CollectorObject::probe_id;
 
-char CollectorObject::active_response[OS_HEADER_SIZE];
-char CollectorObject::update_remote[OS_HEADER_SIZE];
+char CollectorObject::remote_control[OS_HEADER_SIZE];
+char CollectorObject::remote_update[OS_HEADER_SIZE];
 
 
-bool CollectorObject::arStatus;
-bool CollectorObject::urStatus;
+bool CollectorObject::rcStatus;
+bool CollectorObject::ruStatus;
 
 int CollectorObject::timezone;
 char CollectorObject::log_path[OS_BUFFER_SIZE]; 
@@ -33,13 +42,14 @@ int CollectorObject::log_size;
 
 long CollectorObject::gosleep_timer;
 long CollectorObject::startup_timer;
-long CollectorObject::update_timer;
-
-long CollectorObject::docker_timer;
 
 char CollectorObject::suri_socket[OS_BUFFER_SIZE];
 
 bool CollectorObject::suriSocketStatus;
+
+char CollectorObject::docker_socket[OS_BUFFER_SIZE];
+
+bool CollectorObject::dockerSocketStatus;
 
 char CollectorObject::docker_bench[OS_BUFFER_SIZE]; 
 char CollectorObject::trivy[OS_BUFFER_SIZE]; 
@@ -57,8 +67,6 @@ char CollectorObject::suri_log[OS_BUFFER_SIZE];
 int CollectorObject::surilog_status = 1;
 char CollectorObject::wazuh_log[OS_BUFFER_SIZE];
 int CollectorObject::wazuhlog_status = 1;
-char CollectorObject::modsec_log[OS_BUFFER_SIZE];
-int CollectorObject::modseclog_status = 1;
 
 char CollectorObject::falco_conf[OS_BUFFER_SIZE];
 char CollectorObject::falco_local[OS_BUFFER_SIZE];
@@ -72,10 +80,6 @@ char CollectorObject::wazuh_conf[OS_BUFFER_SIZE];
 char CollectorObject::wazuh_local[OS_BUFFER_SIZE];
 char CollectorObject::wazuh_rules[OS_BUFFER_SIZE];
 
-char CollectorObject::modsec_conf[OS_BUFFER_SIZE];
-char CollectorObject::modsec_local[OS_BUFFER_SIZE];
-char CollectorObject::modsec_rules[OS_BUFFER_SIZE];
-
 char CollectorObject::SysLogInfo[OS_LONG_HEADER_SIZE];
 
 int CollectorObject::GetConfig() {
@@ -85,25 +89,24 @@ int CollectorObject::GetConfig() {
     cy->addKey("node");
     cy->addKey("probe");
     
-    cy->addKey("active_response");
-    cy->addKey("update_remote");
+    cy->addKey("remote_control");
+    cy->addKey("remote_update");
                
     cy->addKey("time_zone");
     
     cy->addKey("log_path");
     cy->addKey("log_size");
     
-    cy->addKey("startup_timer");
-    cy->addKey("sleep_timer");
-    cy->addKey("update_timer");
-    cy->addKey("docker_timer");
-    
-    cy->addKey("suri_socket");
+    cy->addKey("timer_start");
+    cy->addKey("timer_sleep");
         
-    cy->addKey("wazuh_host");
-    cy->addKey("wazuh_port");
-    cy->addKey("wazuh_user");
-    cy->addKey("wazuh_pwd");
+    cy->addKey("socket_suricata");
+    cy->addKey("socket_docker");
+        
+    cy->addKey("wazuhapi_host");
+    cy->addKey("wazuhapi_port");
+    cy->addKey("wazuhapi_user");
+    cy->addKey("wazuhapi_pwd");
                 
     cy->ParsConfig();
     
@@ -114,9 +117,9 @@ int CollectorObject::GetConfig() {
         return 0;
     }
     
-    sensor_id = cy->getParameter("probe");
+    probe_id = cy->getParameter("probe");
     
-    if (!sensor_id.compare("")) {
+    if (!probe_id.compare("")) {
         SysLog("config file error: parameter probe id");
         return 0;
     }
@@ -136,40 +139,33 @@ int CollectorObject::GetConfig() {
         strncpy(log_path, "var/log/altprobe", sizeof(log_path));
     }
     
-    gosleep_timer = stoi(cy->getParameter("sleep_timer"));
+    gosleep_timer = stoi(cy->getParameter("timer_sleep"));
     
     if (!gosleep_timer) {
-        SysLog("config file error: parameter sleep_timer");
+        SysLog("config file error: parameter timer_sleep");
         return 0;
     }
     
-    startup_timer = stoi(cy->getParameter("startup_timer"));
+    startup_timer = stoi(cy->getParameter("timer_start"));
     
     if (!startup_timer) {
-        SysLog("config file error: parameter startup_timer");
+        SysLog("config file error: parameter timer_start");
         return 0;
     }
     
-    update_timer = stoi(cy->getParameter("update_timer"));
-    
-    if (!update_timer) {
-        SysLog("config file: update rules is disabled");
-    }
-    
-    docker_timer = stoi(cy->getParameter("docker_timer"));
-    
-    if (!docker_timer) {
-        SysLog("config file error: parameter docker_timer");
-        return 0;
-    }
-    
-    strncpy(suri_socket, (char*) cy->getParameter("suri_socket").c_str(), sizeof(suri_socket));
+    strncpy(suri_socket, (char*) cy->getParameter("socket_suricata").c_str(), sizeof(suri_socket));
     if (!strcmp (suri_socket, "indef")) { 
         suriSocketStatus =false;
         SysLog("config file notification: interface to Suricata socket is disabled");
     }
     
-    strncpy(wazuh_host, (char*) cy->getParameter("wazuh_host").c_str(), sizeof(wazuh_host));
+    strncpy(docker_socket, (char*) cy->getParameter("socket_docker").c_str(), sizeof(docker_socket));
+    if (!strcmp (docker_socket, "indef")) { 
+        dockerSocketStatus =false;
+        SysLog("config file notification: interface to Docker socket is disabled");
+    }
+    
+    strncpy(wazuh_host, (char*) cy->getParameter("wazuhapi_host").c_str(), sizeof(wazuh_host));
     if (!strcmp (wazuh_host, "indef")) { 
         wazuhServerStatus =false;
         SysLog("config file notification: interface to Wazuh server is disabled");
@@ -180,13 +176,13 @@ int CollectorObject::GetConfig() {
         SysLog("config file notification: interface to Wazuh server is disabled");
     }
     
-    wazuh_port = stoi(cy->getParameter("wazuh_port"));
+    wazuh_port = stoi(cy->getParameter("wazuhapi_port"));
     if (wazuh_port == 0) { 
         wazuhServerStatus =false;
         SysLog("config file notification: interface to Wazuh server is disabled");
     }
     
-    strncpy(wazuh_user, (char*) cy->getParameter("wazuh_user").c_str(), sizeof(wazuh_user));
+    strncpy(wazuh_user, (char*) cy->getParameter("wazuhapi_user").c_str(), sizeof(wazuh_user));
     if (!strcmp (wazuh_user, "indef")) { 
         wazuhServerStatus =false;
         SysLog("config file notification: interface to Wazuh server is disabled");
@@ -197,7 +193,7 @@ int CollectorObject::GetConfig() {
         SysLog("config file notification: interface to Wazuh server is disabled");
     }
     
-    strncpy(wazuh_pwd, (char*) cy->getParameter("wazuh_pwd").c_str(), sizeof(wazuh_pwd));
+    strncpy(wazuh_pwd, (char*) cy->getParameter("wazuhapi_pwd").c_str(), sizeof(wazuh_pwd));
     if (!strcmp (wazuh_pwd, "indef")) { 
         wazuhServerStatus =false;
         SysLog("config file notification: interface to Wazuh server is disabled");
@@ -208,31 +204,29 @@ int CollectorObject::GetConfig() {
         SysLog("config file notification: interface to Wazuh server is disabled");
     }
     
-    strncpy(active_response, (char*) cy->getParameter("active_response").c_str(), sizeof(active_response));
-    if (!strcmp (active_response, "true")) { 
-        arStatus = true;
-        SysLog("config file notification: active response is enabled");
+    strncpy(remote_control, (char*) cy->getParameter("remote_control").c_str(), sizeof(remote_control));
+    if (!strcmp (remote_control, "true")) { 
+        rcStatus = true;
+        SysLog("config file notification: remote_control is enabled");
     }
     
-    strncpy(update_remote, (char*) cy->getParameter("update_remote").c_str(), sizeof(update_remote));
-    if (!strcmp (update_remote, "false")) { 
-        urStatus = false;
-        SysLog("config file notification: update_remote for filters, rules and configs disabled");
+    strncpy(remote_update, (char*) cy->getParameter("remote_update").c_str(), sizeof(remote_update));
+    if (!strcmp (remote_update, "false")) { 
+        ruStatus = false;
+        SysLog("config file notification: remote_update disabled");
     }
     
     cy = new ConfigYaml( "sources");
     
-    cy->addKey("docker_bench");
+    cy->addKey("dockerbench_log");
     
-    cy->addKey("trivy");
+    cy->addKey("trivy_log");
     
     cy->addKey("falco_log");
     
     cy->addKey("suri_log");
     
     cy->addKey("wazuh_log");
-    
-    cy->addKey("modsec_log");
     
     cy->addKey("falco_conf");
     
@@ -252,17 +246,11 @@ int CollectorObject::GetConfig() {
     
     cy->addKey("wazuh_rules");
     
-    cy->addKey("modsec_conf");
-    
-    cy->addKey("modsec_local");
-    
-    cy->addKey("modsec_rules");
-    
     cy->ParsConfig();
     
-    strncpy(docker_bench, (char*) cy->getParameter("docker_bench").c_str(), sizeof(docker_bench));
+    strncpy(docker_bench, (char*) cy->getParameter("dockerbench_log").c_str(), sizeof(docker_bench));
     
-    strncpy(trivy, (char*) cy->getParameter("trivy").c_str(), sizeof(trivy));
+    strncpy(trivy, (char*) cy->getParameter("trivy_log").c_str(), sizeof(trivy));
         
     strncpy(falco_log, (char*) cy->getParameter("falco_log").c_str(), sizeof(falco_log));
     if (!strcmp (falco_log, "indef")) { 
@@ -279,12 +267,7 @@ int CollectorObject::GetConfig() {
         wazuhlog_status = 0;
     } 
     
-    strncpy(modsec_log, (char*) cy->getParameter("modsec_log").c_str(), sizeof(modsec_log));
-    if (!strcmp (modsec_log, "indef")) { 
-        modseclog_status = 0;
-    } 
-    
-    if (urStatus) {
+    if (ruStatus) {
         
         strncpy(falco_conf, (char*) cy->getParameter("falco_conf").c_str(), sizeof(falco_conf));
         if (!strcmp (falco_conf, "indef")) { 
@@ -329,21 +312,6 @@ int CollectorObject::GetConfig() {
         strncpy(wazuh_rules, (char*) cy->getParameter("wazuh_rules").c_str(), sizeof(wazuh_rules));
         if (!strcmp (wazuh_rules, "indef")) { 
             SysLog("config file notification: wazuh_rules update disabled");
-        }
-    
-        strncpy(modsec_conf, (char*) cy->getParameter("modsec_conf").c_str(), sizeof(modsec_conf));
-        if (!strcmp (modsec_conf, "indef")) { 
-            SysLog("config file notification: modsec_conf update disabled");
-        }
-    
-        strncpy(modsec_local, (char*) cy->getParameter("modsec_local").c_str(), sizeof(modsec_local));
-        if (!strcmp (modsec_local, "indef")) { 
-            SysLog("config file notification:  modsec_local update disabled");
-        }
-        
-        strncpy(modsec_rules, (char*) cy->getParameter("modsec_rules").c_str(), sizeof(modsec_rules));
-        if (!strcmp (modsec_rules, "indef")) { 
-            SysLog("config file notification: modsec_rules disabled");
         }
     }
     
