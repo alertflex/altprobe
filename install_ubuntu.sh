@@ -26,7 +26,7 @@ cd ..
 
 echo "*** installation activemq ***"
 sudo apt-get -y install apache2-dev libapr1-dev libaprutil1-dev
-curl -L -O http://mirror.linux-ia64.org/apache/activemq/activemq-cpp/3.9.5/activemq-cpp-library-3.9.5-src.tar.gz
+curl -L -O https://downloads.apache.org/activemq/activemq-cpp/3.9.5/activemq-cpp-library-3.9.5-src.tar.gz
 tar xvfz activemq-cpp-library-3.9.5-src.tar.gz
 cd activemq-cpp-library-3.9.5
 ./autogen.sh
