@@ -69,8 +69,6 @@ int AggAlerts::Go(void) {
     return 1;
 }
 
-
-
 void AggAlerts::ProcessAlerts() {
     
     counter = 0;
@@ -224,20 +222,26 @@ void AggAlerts::UpdateCrsAlerts() {
             if (i->event.compare(ids_rec.event) == 0) {
                 if (i->container.compare("indef") == 0 || i->container.compare(ids_rec.container) == 0) {
                     if (i->match.compare(ids_rec.match) == 0) {
+                        
                         //get current time
                         current_time = time(NULL);
-                        i->count++;  
-                        if ((i->alert_time + i->agr.in_period) < current_time) {
+                        
+                        if ((i->alert_time + i->agr.in_period) >= current_time) {
+                            
+                            i->count++;  
+                            
                             if (i->count >= i->agr.reproduced) {
                                 SendCrsAlert(i, i->count);
                                 crs_alerts_list.erase(i);
                             }
-                            else {
-                                crs_alerts_list.erase(i);
-                                goto new_crs_alert;
-                            }
-                            return;
+                        
+                        } else {
+                                
+                            crs_alerts_list.erase(i);
+                            goto new_crs_alert;
                         }
+                        
+                        return;
                     }
                 }
             }  
@@ -337,31 +341,39 @@ void AggAlerts::UpdateHidsAlerts() {
     
     
     for(i = hids_alerts_list.begin(), end = hids_alerts_list.end(); i != end; ++i) {
+        
         if (i->ref_id.compare(ids_rec.ref_id) == 0)  {
+            
             if (i->event.compare(ids_rec.event) == 0) {
+               
                 if (i->agent.compare("indef") == 0 || i->agent.compare(ids_rec.agent) == 0) {
+                    
                     if (i->match.compare(ids_rec.match) == 0) {
                 
-                        //get current time
                         current_time = time(NULL);
-                        i->count++;    
-                        if ((i->alert_time + i->agr.in_period) < current_time) {
+                           
+                        if ((i->alert_time + i->agr.in_period) >= current_time) {
+                            
+                            i->count++; 
+                            
                             if (i->count >= i->agr.reproduced) {
                                 SendHidsAlert(i, i->count);
                                 hids_alerts_list.erase(i);
-                                return;
                             }
-                            else {
-                                hids_alerts_list.erase(i);
-                                goto new_hids_alert;
-                            }
-                            return;
+                            
+                        } else {
+                            
+                            hids_alerts_list.erase(i);
+                            goto new_hids_alert;
                         }
+                        
+                        return;
                     }
                 }
             }  
         }
     }
+
 new_hids_alert:
     hids_stat.agg_counter++;
     ids_rec.count = 1;
@@ -448,6 +460,7 @@ void AggAlerts::ResetHidsAlert() {
     current_time = time(NULL);
     
     for(i = hids_alerts_list.begin(), end = hids_alerts_list.end(); i != end; ++i) {
+        
         if ((i->alert_time + i->agr.in_period) < current_time)
             hids_alerts_list.erase(i++);
     }
@@ -462,20 +475,26 @@ void AggAlerts::UpdateNidsAlerts() {
             if (i->event.compare(ids_rec.event) == 0) {
                 if (i->host.compare("indef") == 0 || i->host.compare(ids_rec.src_ip) == 0 || i->host.compare(ids_rec.dst_ip) == 0) {    
                     if (i->match.compare(ids_rec.match) == 0) {
+                        
                         //get current time
                         current_time = time(NULL);
-                        i->count++;  
-                        if ((i->alert_time + i->agr.in_period) < current_time) {
+                        
+                        if ((i->alert_time + i->agr.in_period) >= current_time) {
+                            
+                            i->count++; 
+                            
                             if (i->count >= i->agr.reproduced) {
                                 SendNidsAlert(i, i->count);
                                 nids_alerts_list.erase(i);
                             }
-                            else {
-                                nids_alerts_list.erase(i);
-                                goto new_nids_alert;
-                            }
-                            return;
+                        
+                        } else {
+                            
+                            nids_alerts_list.erase(i);
+                            goto new_nids_alert;
                         }
+                        
+                        return;
                     }
                 }
             }  
