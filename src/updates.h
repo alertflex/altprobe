@@ -55,7 +55,7 @@ public:
     string SendArToWazuh(string agent, string json);
     string SendArToSuricata(string json);
     string CreateAgentWazuh(string json);
-    string StopDockerContainer(string json);
+    string DockerContainer(string id, string cmd);
     int IsHomeNetwork(string ip);
 };
 

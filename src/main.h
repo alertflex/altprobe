@@ -97,9 +97,6 @@
 #define SURI_CONFIG "suricata.yaml"
 #define FALCO_CONFIG "falco.yaml"
 
-#define WAZUH_IPREP "hids-black.list"
-#define SURI_IPREP "nids-black.list"
-
 #define WAZUH_RULES "rules/"
 #define WAZUH_DECODERS "decoders/"
 

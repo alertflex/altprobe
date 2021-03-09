@@ -113,24 +113,32 @@ then
 	sudo apt-get update
 	sudo apt-get -y install curl apt-transport-https lsb-release
 	curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | sudo apt-key add -
-	echo "deb https://packages.wazuh.com/3.x/apt/ stable main" | sudo tee -a /etc/apt/sources.list.d/wazuh.list
+	echo "deb https://packages.wazuh.com/4.x/apt/ stable main" | sudo tee -a /etc/apt/sources.list.d/wazuh.list
 	sudo apt-get update
 	sudo apt-get -y install wazuh-manager
+	sudo systemctl daemon-reload
+    sudo systemctl enable wazuh-manager
 	
-	echo "*** installation  Wazuh API***"
-	curl -sL https://deb.nodesource.com/setup_10.x | sudo bash -
-	sudo apt-get update
-	sudo apt-get -y install nodejs
-	sudo apt-get -y install wazuh-api
 	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
 	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
-	sudo sed -i "s/config.host = \"0.0.0.0\"/config.host = \"127.0.0.1\"/g" /var/ossec/api/configuration/config.js
-	sudo sed -i "s/config.https = \"yes\"/config.https = \"no\"/g" /var/ossec/api/configuration/config.js
 	
-	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
+	sudo bash -c 'cat << EOF > /var/ossec/api/configuration/api.yaml
+host: 127.0.0.1
+
+https:
+  enabled: no
+  
+# Enable remote commands
+remote_commands:
+  localfile:
+    enabled: yes
+    exceptions: []
+EOF'
+
+sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
 [Unit]
 Description=Altprobe
-After=wazuh-manager.service wazuh-api.service
+After=wazuh-manager.service
 [Service]
 Type=forking
 User=root
@@ -147,7 +155,7 @@ else
 	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
 [Unit]
 Description=Altprobe
-After=syslog.target network-online.target
+After=network-online.target
 [Service]
 Type=forking
 User=root
@@ -178,7 +186,4 @@ then
     cd ~/dpkg
     sudo dpkg-deb --build altprobe_1.0-1
 fi
-
-
-
 

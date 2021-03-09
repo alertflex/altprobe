@@ -58,7 +58,7 @@ char CollectorObject::wazuh_host[OS_HEADER_SIZE];
 int CollectorObject::wazuh_port;
 char CollectorObject::wazuh_user[OS_HEADER_SIZE];
 char CollectorObject::wazuh_pwd[OS_HEADER_SIZE];
-
+string CollectorObject::wazuh_token;
 bool CollectorObject::wazuhServerStatus;
 
 char CollectorObject::falco_log[OS_BUFFER_SIZE]; 

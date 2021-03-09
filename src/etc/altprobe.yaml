@@ -36,7 +36,7 @@ collector:
   remote_update: "true"
   
   # Docker unix socket filename for active response, if value is indef interface to socket disabled
-  socket_docker: "/run/var/docker.sock"
+  socket_docker: "/var/run/docker.sock"
   # Suricata unix socket filename for active response, if value is indef interface to socket disabled
   socket_suricata: "/run/suricata/suricata-command.socket"
   
@@ -88,6 +88,6 @@ sources:
   # Installation path for Docker-bench script and result file, for example /root/docker-bench-security/
   dockerbench_log: "indef" 
   
-  # Path to Trivy results file (report.json), for example /etc/altprobe/
+  # Path to Trivy results file (report.json), for example /etc/altprobe/report.json
   trivy_log: "indef"
   

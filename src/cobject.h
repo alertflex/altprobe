@@ -59,7 +59,7 @@ public:
     static int wazuh_port;
     static char wazuh_user[OS_HEADER_SIZE];
     static char wazuh_pwd[OS_HEADER_SIZE];
-    
+    static string wazuh_token;
     static bool wazuhServerStatus;
     
     static char falco_log[OS_BUFFER_SIZE]; 
@@ -90,6 +90,7 @@ public:
         node_id.clear();
         probe_id.clear();
         suriSocketStatus = true;
+        dockerSocketStatus = true;
         wazuhServerStatus = true;
         rcStatus = false;
         ruStatus = true;

@@ -366,49 +366,6 @@ string Updates::onBytesMessage(const Message* message) {
     }
     
     
-    if (!content_type.compare("iprep") && ruStatus) {
-        
-        try { 
-        
-            int sensor_type = message->getIntProperty("sensor_type");
-            bool iprep_reload = message->getBooleanProperty("iprep_reload");
-        
-            switch (sensor_type) {
-                
-                case 0 : {
-                    string iprep_path(wazuh_local);
-                    string file_name(WAZUH_IPREP);
-                    string file_path = iprep_path + file_name;
-                    ostream.open(file_path, ios_base::trunc);
-                    cmd = "/etc/altprobe/scripts/iprepup-wazuh.sh"; 
-                    }
-                    break;
-                case 1 : {
-                    string iprep_path(suri_local);
-                    string file_name(SURI_IPREP);
-                    string file_path = iprep_path + file_name;
-                    ostream.open(file_path, ios_base::trunc);
-                    cmd = "/etc/altprobe/scripts/iprepup-suri.sh";
-                    }
-                    break;
-                
-                default:
-                    return "\"status\": 400 }"; 
-            }
-            
-            ostream << decomp.str();
-            ostream.close();
-            
-            if (rcStatus && iprep_reload) system(cmd.c_str());
-            
-        } catch (std::ostream::failure e) {
-            SysLog("Exception for local filters file.");
-            return "\"status\": 400 }";     
-        }
-        
-        return "\"status\": 200 }"; 
-    }
-    
     return "\"status\": 400 }";
 }
 
@@ -465,51 +422,64 @@ string Updates::onTextMessage(const Message* message) {
         
     } 
     
-    if(!actuator_profile.compare("wazuh_agent") && !action.compare("create")) {
+    if(!actuator_profile.compare("wazuh_agent")) {
+        
+        if(!wazuh_token.compare("create")) {
+            return "\"status\": 400, \"status_text\": \"problem with Wazuh api\" }"; 
+        }
+        
+        if(!action.compare("create")) {
+        
+            try {
             
-        string ip = pt.get<string>("target.device.ipv4_net","indef");
-        string agent = pt.get<string>("args.x-alertflex:wazuh_agent.agent_name","indef");
+                string ip = pt.get<string>("target.device.ipv4_net","indef");
+                string agent = pt.get<string>("args.x-alertflex:wazuh_agent.name","indef");
                 
-        if(!ip.compare("indef") || !agent.compare("indef")) {
+                if(!ip.compare("indef") || !agent.compare("indef")) {
     
-            return "\"status\": 400, \"status_text\": \"wrong ip or agent name for create\" }"; 
+                    return "\"status\": 400, \"status_text\": \"wrong ip or agent name for create\" }"; 
+                } 
+                
+                string jsonCreateAgent = "{ \"name\": \"" + agent + "\", \"ip\": \"" + ip + "\" }";
+        
+                string res =  CreateAgentWazuh(jsonCreateAgent);
+        
+                return res;
+            
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong args\" }"; 
+            }
+                
         } 
-                
-        string jsonCreateAgent = "{ \"name\": \"" + agent + "\", \"ip\": \"" + ip + "\" }";
-                
-        string res =  CreateAgentWazuh(jsonCreateAgent);
-                
-        return res;
-                
-    } 
     
-    if (!actuator_profile.compare("wazuh_command") && !action.compare("start")) {
+        if (!action.compare("start")) {
                     
-        string agent = pt.get<string>("target.device.device_id","indef");
+            string agent = pt.get<string>("target.device.device_id","indef");
                     
-        try {
+            try {
                         
-            bpt::ptree pt_args = pt.get_child("args.x-alertflex:wazuh_command");
-            std::ostringstream oss;
-            write_json(oss, pt_args);
+                bpt::ptree pt_args = pt.get_child("args.x-alertflex:wazuh_command");
+                std::ostringstream oss;
+                write_json(oss, pt_args);
                     
-            string args = oss.str();
+                string args = oss.str();
                                             
-            if(!agent.compare("indef") || args.empty()) {
+                if(!agent.compare("indef") || args.empty()) {
     
-                return "\"status\": 400, \"status_text\": \"wrong agent or args\" }"; 
-            } 
+                    return "\"status\": 400, \"status_text\": \"wrong agent or args\" }"; 
+                } 
+            
+                string res =  SendArToWazuh(agent, args);
                     
-            string res =  SendArToWazuh(agent, args);
-                    
-            return res;
+                return res;
                         
-        } catch (const std::exception & ex) {
-            return "\"status\": 400, \"status_text\": \"wrong args\" }"; 
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong args\" }"; 
+            }
         }
     }
     
-    if(!actuator_profile.compare("docker_command") && !action.compare("stop")) {
+    if(!actuator_profile.compare("docker_command") && !action.empty()) {
             
         string id = pt.get<string>("target.device.device_id","indef");
                         
@@ -518,8 +488,8 @@ string Updates::onTextMessage(const Message* message) {
             return "\"status\": 400, \"status_text\": \"wrong id for stop\" }"; 
         } 
                 
-        string res =  StopDockerContainer(id);
-                
+        string res = DockerContainer(id, action);
+        
         if (res.compare("ok")) {
             return "\"status\": 400, \"status_text\": \"" + res + "\" }";
         }
@@ -533,8 +503,8 @@ string Updates::onTextMessage(const Message* message) {
 
 
 string Updates::SendArToWazuh(string agent, string json) {
-    try
-    {
+    
+    try {
         boost::asio::io_service io_service;
         
         string hostAddress;
@@ -550,18 +520,6 @@ string Updates::SendArToWazuh(string agent, string json) {
             hostAddress = ip;
         }
         
-        string user(wazuh_user);
-        string pwd(wazuh_pwd);
-        string token = user + ":" + pwd;
-        
-        string encoded;
-        
-        if (!Base64::Encode(token, &encoded)) {
-            return "\"status\": 400, \"status_text\": \"wrong wazuh api account\" }";
-        }
-        
-        string queryStr = "/active-response/" + agent;
-        
         // Get a list of endpoints corresponding to the server name.
         tcp::resolver resolver(io_service);
         tcp::resolver::query query(ip, port);
@@ -570,11 +528,13 @@ string Updates::SendArToWazuh(string agent, string json) {
         tcp::socket socket(io_service);
         boost::asio::connect(socket, endpoint_iterator);
         
+        string queryStr = "/active-response/?agents_list=" + agent;
+        
         boost::asio::streambuf request;
         ostream request_stream(&request);
         request_stream << "PUT " << queryStr << " HTTP/1.1\r\n";  // note that you can change it if you wish to HTTP/1.0
         request_stream << "Host: " << hostAddress << "\r\n";
-        request_stream << "Authorization: Basic "<< encoded << "\r\n";
+        request_stream << "Authorization: Bearer "<< wazuh_token << "\r\n";
         request_stream << "Accept: */*\r\n";
         request_stream << "Content-Type:application/json\r\n";
         request_stream << "Content-Length: " << json.length() << "\r\n";    
@@ -637,8 +597,9 @@ string Updates::SendArToWazuh(string agent, string json) {
 }
 
 string Updates::CreateAgentWazuh(string json) {
-    try
-    {
+    
+    try {
+        
         boost::asio::io_service io_service;
         
         string hostAddress;
@@ -654,18 +615,6 @@ string Updates::CreateAgentWazuh(string json) {
             hostAddress = ip;
         }
         
-        string user(wazuh_user);
-        string pwd(wazuh_pwd);
-        string token = user + ":" + pwd;
-        
-        string encoded;
-        
-        if (!Base64::Encode(token, &encoded)) {
-            return "\"status\": 400, \"status_text\": \"wrong wazuh api account\" }";
-        }
-        
-        string queryStr = "/agents";
-
         // Get a list of endpoints corresponding to the server name.
         tcp::resolver resolver(io_service);
         tcp::resolver::query query(ip, port);
@@ -676,9 +625,9 @@ string Updates::CreateAgentWazuh(string json) {
         
         boost::asio::streambuf request;
         ostream request_stream(&request);
-        request_stream << "POST " << queryStr << " HTTP/1.1\r\n";  // note that you can change it if you wish to HTTP/1.0
+        request_stream << "POST /agents HTTP/1.1\r\n";  
         request_stream << "Host: " << hostAddress << "\r\n";
-        request_stream << "Authorization: Basic "<< encoded << "\r\n";
+        request_stream << "Authorization: Bearer "<< wazuh_token << "\r\n";
         request_stream << "Accept: */*\r\n";
         request_stream << "Content-Type:application/json\r\n";
         request_stream << "Content-Length: " << json.length() << "\r\n\r\n";
@@ -832,7 +781,7 @@ string Updates::SendArToSuricata(string json) {
     return "suricata_unixsocket: error";
 }
 
-string Updates::StopDockerContainer(string id) {
+string Updates::DockerContainer(string id, string cmd) {
     
     int sck;
     struct sockaddr_un addr;
@@ -845,9 +794,10 @@ string Updates::StopDockerContainer(string id) {
             /* create socket */
             sck = socket(AF_UNIX, SOCK_STREAM, 0);
             if (sck == -1) {
+                close (sck);
                 return "can not create socket";
             }
-
+            
             /* set address */
             addr.sun_family = AF_UNIX;
             strncpy(addr.sun_path, docker_socket, sizeof(addr.sun_path));
@@ -856,12 +806,15 @@ string Updates::StopDockerContainer(string id) {
             /* Connect to unix socket */
             ret = connect(sck, (struct sockaddr *) &addr, sizeof(addr));
             if (ret == -1) {
+                close (sck);
                 return "can not connect to socket";
             }
         
             std::string req = "POST /v1.40/containers/";
             req += id;
-            req += "/stop HTTP/1.1\r\n";
+            req += "/";
+            req += cmd;
+            req += " HTTP/1.1\r\n";
             req += "Host: localhost\r\n";
             req += "Accept: */*\r\n\r\n";
         
@@ -869,8 +822,10 @@ string Updates::StopDockerContainer(string id) {
 
             ret = send(sck, req.c_str(), siz, 0);
             if (ret == -1) {
+                close (sck);
                 return "can not send request";
             } else if (ret < siz) {
+                close (sck);
                 return "unable send all size of message";
             }
         
@@ -879,9 +834,11 @@ string Updates::StopDockerContainer(string id) {
         
             ret = read(sck, buffer, SOCKET_BUFFER_SIZE);
             if (ret == -1) {
+                close (sck);
                 return "can not read answer";
             } 
         
+            close (sck);
             return "ok";
         
         } catch (std::exception& e) {

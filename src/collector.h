@@ -109,7 +109,8 @@ public:
     void UpdateSuriRules();
     void UpdateOssecRules();
     
-    string GetAgents(string query);
+    bool GetToken();
+    string GetAgents(string url_request);
     void ParsAgents(string json);
     void UpdateAgents(void);
     void PushAgents(string json, string type, string agent);

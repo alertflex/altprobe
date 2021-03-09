@@ -292,97 +292,14 @@ int Hids::ParsJson() {
     
     } catch (const std::exception & ex) {
         ResetStreams();
-        SysLog((char*) ex.what());
+        // SysLog((char*) ex.what());
         return 0;
     } 
     
     rec.sensor = probe_id + ".hids";
     
-    
     string loc = pt.get<string>("location","");
     
-    if (loc.compare("wodle_open-scap") == 0 ) {
-    
-        report = "{ \"type\": \"open-scap\", \"data\": ";
-        
-        report += "{ \"ref_id\": \"";
-        report += fs.filter.ref_id;
-            
-        report += "\", \"agent\": \"";
-        report += pt.get<string>("agent.name","");
-        
-        report += "\", \"event_id\": \"";
-        report += std::to_string(pt.get<int>("rule.id",0));
-        
-        report += "\", \"severity\": ";
-        
-        int level = pt.get<int>("rule.level",0);
-        string severity;
-    
-        if (level < fs.filter.hids.severity.level0) {
-            severity = "0";
-        } else {
-            if (level < fs.filter.hids.severity.level1) {
-                severity = "1";
-            } else {
-                if (level < fs.filter.hids.severity.level2) {
-                    severity = "2";
-                } else {
-                    severity = "3";
-                }
-            }
-        }  
-        
-        report += severity;
-        
-        report += ", \"description\": \"";
-        report += pt.get<string>("rule.description","indef");
-        
-        report += "\", \"benchmark\": \"";
-        report += pt.get<string>("data.oscap.scan.benchmark.id","indef");
-        
-        report += "\", \"profile_id\": \"";
-        report += pt.get<string>("data.oscap.scan.profile.id","indef");
-        
-        report += "\", \"profile_title\": \"";
-        report += pt.get<string>("data.oscap.scan.profile.title","indef");
-        
-        report += "\", \"check_id\": \"";
-        report += pt.get<string>("data.oscap.check.id","indef");
-        
-        report += "\", \"check_title\": \"";
-        report += pt.get<string>("data.oscap.check.title","indef");
-        
-        report += "\", \"check_result\": \"";
-        report += pt.get<string>("data.oscap.check.result","indef");
-        
-        report += "\", \"check_severity\": \"";
-        report += pt.get<string>("data.oscap.check.severity","indef");
-        
-        report += "\", \"check_description\": \"";
-        report += pt.get<string>("data.oscap.check.description","indef");
-        
-        report += "\", \"check_rationale\": \"";
-        report += pt.get<string>("data.oscap.check.rationale","indef");
-        
-        report += "\", \"check_references\": \"";
-        report += pt.get<string>("data.oscap.check.references","indef");
-        
-        report += "\", \"check_identifiers\": \"";
-        report += pt.get<string>("data.oscap.check.identifiers","indef");
-        
-        report += "\", \"time_of_survey\": \"";
-        report += GetNodeTime();
-        report += "\" } }";
-        
-       
-        q_reports.push(report);
-                        
-        report.clear();
-        ResetStreams();
-        return 0;
-    }
-        
     if (loc.compare("vulnerability-detector") == 0 ) {
     
         report = "{ \"type\": \"vulnerability\", \"data\": ";
@@ -391,67 +308,50 @@ int Hids::ParsJson() {
         report += fs.filter.ref_id;
             
         report += "\", \"agent\": \"";
-        report += pt.get<string>("agent.name","");
-        
-        report += "\", \"event_id\": \"";
-        report += std::to_string(pt.get<int>("rule.id",0));
-        
-        report += "\", \"severity\": ";
-        
-        int level = pt.get<int>("rule.level",0);
-        string severity;
-    
-        if (level < fs.filter.hids.severity.level0) {
-            severity = "0";
-        } else {
-            if (level < fs.filter.hids.severity.level1) {
-                severity = "1";
-            } else {
-                if (level < fs.filter.hids.severity.level2) {
-                    severity = "2";
-                } else {
-                    severity = "3";
-                }
-            }
-        }  
-        
-        report += severity;
-        
-        report += ", \"description\": \"";
-        report += pt.get<string>("rule.description","indef");
+        report += pt.get<string>("agent.id","");
         
         report += "\", \"cve\": \"";
         report += pt.get<string>("data.vulnerability.cve","indef");
         
-        report += "\", \"cve_state\": \"";
-        report += pt.get<string>("data.vulnerability.state","indef");
-        
-        report += "\", \"cve_severity\": \"";
+        report += "\", \"severity\": \"";
         report += pt.get<string>("data.vulnerability.severity","indef");
         
         report += "\", \"reference\": \"";
-        report += pt.get<string>("data.vulnerability.reference","indef");
         
-        report += "\", \"cve_published\": \"";
-        report += pt.get<string>("data.vulnerability.published","indef");
+        try {
+            
+            vul_ref = pt.get_child("data.vulnerability.references");
         
-        report += "\", \"cve_updated\": \"";
-        report += pt.get<string>("data.vulnerability.updated","indef");
+            BOOST_FOREACH(bpt::ptree::value_type &v, vul_ref) {
+                assert(v.first.empty()); // array elements have no names
+                report += " ";
+                report += v.second.data();
+            }
+        } catch (bpt::ptree_bad_path& e) {
+            
+        }
         
-        report += "\", \"package_name\": \"";
+        report += "\", \"pkg_name\": \"";
         report += pt.get<string>("data.vulnerability.package.name","indef");
         
-        report += "\", \"package_version\": \"";
+        report += "\", \"pkg_version\": \"";
         report += pt.get<string>("data.vulnerability.package.version","indef");
         
-        report += "\", \"package_condition\": \"";
-        report += pt.get<string>("data.vulnerability.package.condition","indef");
+        report += "\", \"title\": \"";
+        report += pt.get<string>("data.vulnerability.title","indef");
+        
+        report += "\", \"description\": \"";
+        
+        string rationale = pt.get<string>("data.vulnerability.rationale","indef");
+        ReplaceAll(rationale, "\"", "");
+        ReplaceAll(rationale, "\\", "\\\\\\\\");
+        
+        report += rationale;
         
         report += "\", \"time_of_survey\": \"";
         report += GetNodeTime();
         report += "\" } }";
         
-       
         q_reports.push(report);
         
         report.clear();
@@ -852,7 +752,6 @@ void Hids::SendAlert(int s, GrayList*  gl) {
         }   
         
     }
-    
     
     sk.SendAlert();
     

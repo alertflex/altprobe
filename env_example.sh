@@ -35,8 +35,8 @@ export INSTALL_SURICATA=yes
 export SURICATA_INTERFACE=enp0s3
 export INSTALL_WAZUH=yes
 export WAZUH_HOST=127.0.0.1
-export WAZUH_USER=foo
-export WAZUH_PWD=bar
+export WAZUH_USER=wazuh
+export WAZUH_PWD=wazuh
 
 # build rpm/deb packages
 export BUILD_PACKAGE=no

@@ -113,26 +113,32 @@ gpgcheck=1
 gpgkey=https://packages.wazuh.com/key/GPG-KEY-WAZUH
 enabled=1
 name=Wazuh repository
-baseurl=https://packages.wazuh.com/3.x/yum/
+baseurl=https://packages.wazuh.com/4.x/yum/
 protect=1
 EOF'
     sudo yum -y install wazuh-manager
 	sudo systemctl enable wazuh-manager
 
-	echo "*** installation  Wazuh API***"
-	curl --silent --location https://rpm.nodesource.com/setup_10.x | sudo bash -
-	sudo yum -y install nodejs
-	sudo yum -y install wazuh-api
-	sudo systemctl enable wazuh-api
 	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
 	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
-	sudo sed -i "s/config.host = \"0.0.0.0\"/config.host = \"127.0.0.1\"/g" /var/ossec/api/configuration/config.js
-	sudo sed -i "s/config.https = \"yes\"/config.https = \"no\"/g" /var/ossec/api/configuration/config.js
 	
-	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
+	sudo bash -c 'cat << EOF > /var/ossec/api/configuration/api.yaml
+host: 127.0.0.1
+
+https:
+  enabled: no
+  
+# Enable remote commands
+remote_commands:
+  localfile:
+    enabled: yes
+    exceptions: []
+EOF'
+
+sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
 [Unit]
 Description=Altprobe
-After=wazuh-manager.service wazuh-api.service
+After=wazuh-manager.service
 [Service]
 Type=forking
 User=root
@@ -149,7 +155,7 @@ else
 	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
 [Unit]
 Description=Altprobe
-After=syslog.target network-online.target
+After=network-online.target
 [Service]
 Type=forking
 User=root
@@ -178,5 +184,6 @@ then
     sudo chown -R root:root /root/rpmbuild
     sudo rpmbuild -ba /root/rpmbuild/SPECS/altprobe-1.0.spec
 fi
+
 
 

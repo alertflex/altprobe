@@ -140,16 +140,12 @@ install:
 		mkdir /etc/altprobe/scripts;\
 	fi;
 	
-	chmod u+x ./scripts/iprepup-wazuh.sh
-	chmod u+x ./scripts/iprepup-suri.sh
 	chmod u+x ./scripts/rulesup-falco.sh
 	chmod u+x ./scripts/rulesup-wazuh.sh
 	chmod u+x ./scripts/rulesup-suri.sh
 	chmod u+x ./scripts/restart-falco.sh
 	chmod u+x ./scripts/restart-wazuh.sh
 	chmod u+x ./scripts/restart-suri.sh
-	cp ./scripts/iprepup-wazuh.sh /etc/altprobe/scripts/
-	cp ./scripts/iprepup-suri.sh /etc/altprobe/scripts/
 	cp ./scripts/rulesup-falco.sh /etc/altprobe/scripts/
 	cp ./scripts/rulesup-wazuh.sh /etc/altprobe/scripts/
 	cp ./scripts/rulesup-suri.sh /etc/altprobe/scripts/

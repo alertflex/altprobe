@@ -128,7 +128,7 @@ public:
     //OSSEC record
     OssecRecord rec;
     
-    bpt::ptree pt, pt1, groups_cats, pcidss_cats, gdpr_cats, hipaa_cats, nist_cats, mitre_cats;
+    bpt::ptree pt, pt1, groups_cats, pcidss_cats, gdpr_cats, hipaa_cats, nist_cats, mitre_cats, vul_ref;
     stringstream ss, ss1;
     
     Hids (string skey) : Source(skey) {
@@ -149,6 +149,11 @@ public:
         pt1.clear();
         groups_cats.clear();
         pcidss_cats.clear();
+        gdpr_cats.clear();
+        hipaa_cats.clear();
+        nist_cats.clear();
+        mitre_cats.clear();
+        vul_ref.clear();
     }
     
     int Open();

@@ -31,8 +31,6 @@ install -d -m 0755 $RPM_BUILD_ROOT/etc/altprobe
 install -m 0755 $RPM_SOURCE_DIR/altprobe.yaml $RPM_BUILD_ROOT/etc/altprobe/altprobe.yaml
 install -m 0755 $RPM_SOURCE_DIR/filters.json $RPM_BUILD_ROOT/etc/altprobe/filters.json
 install -d -m 0755 $RPM_BUILD_ROOT/etc/altprobe/scripts
-install -m 0755 $RPM_SOURCE_DIR/scripts/iprepup-suri.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/iprepup-suri.sh
-install -m 0755 $RPM_SOURCE_DIR/scripts/iprepup-wazuh.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/iprepup-wazuh.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/restart-falco.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/restart-falco.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/restart-suri.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/restart-suri.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/restart-wazuh.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/restart-wazuh.sh
@@ -53,8 +51,6 @@ install -m 0755 $RPM_SOURCE_DIR/scripts/altprobe-stop $RPM_BUILD_ROOT/usr/sbin/a
 
 /etc/altprobe/altprobe.yaml
 /etc/altprobe/filters.json
-/etc/altprobe/scripts/iprepup-suri.sh
-/etc/altprobe/scripts/iprepup-wazuh.sh
 /etc/altprobe/scripts/restart-falco.sh
 /etc/altprobe/scripts/restart-suri.sh
 /etc/altprobe/scripts/restart-wazuh.sh

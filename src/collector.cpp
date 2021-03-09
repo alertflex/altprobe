@@ -39,18 +39,112 @@ int  Collector::Open() {
     ref_id = hids->fs.filter.ref_id;
     
     if (wazuhServerStatus) {
-        string payload = GetAgents("/agents");
-        if (!payload.empty()){
+        if (GetToken()){
             SysLog("connection between Wazuh server and Altprobe is established");
-            ParsAgents(payload);
-        }
-        else {
-            wazuhServerStatus = false;
-            SysLog("error of connection between Wazuh server and Altprobe");
-        }
+        } 
     }
     
     return 1;
+}
+
+bool Collector::GetToken() {
+    
+    try {
+        
+        boost::asio::io_service io_service;
+        
+        string hostAddress;
+        string user(wazuh_user);
+        string password(wazuh_pwd);
+        string ip(wazuh_host);
+        stringstream ss;
+        ss << wazuh_port;
+        string port = ss.str();
+        
+        if (wazuh_port != 80) {
+            hostAddress = ip + ":" + port;
+        } else { 
+            hostAddress = ip;
+        }
+        
+        string token = user + ":" + password;
+        string encoded;
+        
+        if (!Base64::Encode(token, &encoded)) {
+            wazuh_token = "indef";
+            return false;
+        }
+        
+        tcp::resolver resolver(io_service);
+        tcp::resolver::query query(ip, port);
+        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+
+        tcp::socket socket(io_service);
+        boost::asio::connect(socket, endpoint_iterator);
+        
+        string queryStr = "/security/user/authenticate?raw=true";
+
+        boost::asio::streambuf request;
+        ostream request_stream(&request);
+        request_stream << "GET " << queryStr << " HTTP/1.1\r\n";  
+        request_stream << "Host: " << hostAddress << "\r\n";
+        request_stream << "Authorization: Basic "<< encoded << "\r\n";
+        request_stream << "Accept: */*\r\n";
+        request_stream << "Connection: close\r\n\r\n";
+
+        boost::asio::write(socket, request);
+
+        boost::asio::streambuf response;
+        boost::asio::read_until(socket, response, "\r\n");
+
+        istream response_stream(&response);
+        string http_version;
+        response_stream >> http_version;
+        unsigned int status_code;
+        response_stream >> status_code;
+        string status_message;
+        getline(response_stream, status_message);
+        
+        if (!response_stream || http_version.substr(0, 5) != "HTTP/") {
+            wazuh_token = "indef";
+            return false;
+        }
+        
+        if (status_code != 200) {
+            wazuh_token = "indef";
+            return false;
+        }
+        
+        boost::asio::read_until(socket, response, "\r\n\r\n");
+
+        string header;
+        while (getline(response_stream, header) && header != "\r") { }
+        
+        stringstream  payload;
+        if (response.size() > 0) {
+            payload << &response;
+        }
+
+        boost::system::error_code error;
+        while (boost::asio::read(socket, response,boost::asio::transfer_at_least(1), error)) {
+            payload << &response;
+        }
+
+        if (error != boost::asio::error::eof) {
+            throw boost::system::system_error(error);
+        }
+        
+        wazuh_token = payload.str();
+        
+        return true;
+    
+    } catch (std::exception& ex) { 
+        
+    }
+
+    wazuh_token = "indef";
+    return false;
+   
 }
 
 void  Collector::Close() {
@@ -80,6 +174,13 @@ int Collector::Go(void) {
             
             if (ruStatus) {
                 
+                if (wazuhServerStatus) {
+                    if (GetToken()) {
+                        SysLog("connection between Wazuh server and Altprobe is established");
+                        UpdateAgents();
+                    }
+                }
+                
                 UpdateFalcoConfig();
             
                 UpdateSuriConfig();
@@ -92,21 +193,18 @@ int Collector::Go(void) {
             
                 UpdateOssecRules();
                 
-                UpdateAgents();
-            
                 UpdateContainers();
             
                 DockerBenchJob();
             
                 TrivyJob();
             
-                string update_notification = "update collector data have been done";
+                string update_notification = "update for altprobe has been done";
                 SysLog((char*) update_notification.c_str());
             }
         
             counter_reports = 0;
         }
-        
     }
     
     return 1;
@@ -160,42 +258,9 @@ void Collector::StatJob() {
         
     ss.str("");
     ss.clear();
-        
-    unsigned long magent = fs.agents_list.size();
-    unsigned long mhnetf = fs.filter.home_nets.size();
-    unsigned long mcrsf = fs.filter.crs.gl.size();
-    unsigned long mhidsf = fs.filter.hids.gl.size();
-    unsigned long mnidsf = fs.filter.nids.gl.size();
-               
-    ss << "{ \"type\": \"node_filters\", \"data\": { \"ref_id\": \"";
-    ss << ref_id;
-        
-    ss << "\", \"agent_list\": ";
-    ss << to_string(magent);
-        
-    ss << ", \"hnet_list\": ";
-    ss << to_string(mhnetf);
-    
-    ss << ", \"crs_filters\": ";
-    ss << to_string(mcrsf);
-        
-    ss << ", \"hids_filters\": ";
-    ss << to_string(mhidsf);
-        
-    ss << ", \"nids_filters\": ";
-    ss << to_string(mnidsf);
-    
-    ss << ", \"time_of_survey\": \"";
-    ss << GetNodeTime();
-    ss << "\" } }";
-        
-    q_stats_collr.push(ss.str());
-        
-    ss.str("");
-    ss.clear();
 }
 
-string Collector::GetAgents(string queryStr) {
+string Collector::GetAgents(string url_request) {
     
     try {
         
@@ -214,18 +279,6 @@ string Collector::GetAgents(string queryStr) {
             hostAddress = ip;
         }
         
-        string user(wazuh_user);
-        string pwd(wazuh_pwd);
-        string token = user + ":" + pwd;
-        
-        string encoded;
-        
-        if (!Base64::Encode(token, &encoded)) {
-            return "";
-        }
-        
-        // string queryStr = "/agents?pretty";
-
         tcp::resolver resolver(io_service);
         tcp::resolver::query query(ip, port);
         tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
@@ -235,9 +288,9 @@ string Collector::GetAgents(string queryStr) {
 
         boost::asio::streambuf request;
         ostream request_stream(&request);
-        request_stream << "GET " << queryStr << " HTTP/1.1\r\n";  
+        request_stream << "GET " << url_request << " HTTP/1.1\r\n";  
         request_stream << "Host: " << hostAddress << "\r\n";
-        request_stream << "Authorization: Basic "<< encoded << "\r\n";
+        request_stream << "Authorization: Bearer "<< wazuh_token << "\r\n";
         request_stream << "Accept: */*\r\n";
         request_stream << "Connection: close\r\n\r\n";
 
@@ -280,7 +333,7 @@ string Collector::GetAgents(string queryStr) {
         return payload.str();
     
     } catch (std::exception& ex) { 
-        SysLog((char*) ex.what());
+        
     }
 
     return "";
@@ -300,9 +353,9 @@ void Collector::ParsAgents (string json) {
         
         if(err == 0) {
     
-            int totalItems =  pt.get<int>("data.totalItems");
+            int totalItems =  pt.get<int>("data.total_affected_items");
     
-            bpt::ptree agents_ptree = pt.get_child("data.items");
+            bpt::ptree agents_ptree = pt.get_child("data.affected_items");
     
             BOOST_FOREACH(bpt::ptree::value_type &agents, agents_ptree) {
             
@@ -330,81 +383,114 @@ void Collector::ParsAgents (string json) {
 
 void Collector::UpdateAgents(void) {
         
-    if (wazuhServerStatus) {
+    string payload = GetAgents("/agents");
+    
+    if (!payload.empty()) {
         
-        string payload = GetAgents("/agents");
-        
-        if (!payload.empty()) {
+        ParsAgents(payload);
+    
+        if (fs.agents_list.size() != 0) {
+    
+            std::vector<Agent>::iterator i, end;
+            int j = 0;
             
-            ParsAgents(payload);
-        
-            if (fs.agents_list.size() != 0) {
-        
-                std::vector<Agent>::iterator i, end;
-                int j = 0;
+            string report = "{ \"type\": \"agents_list\", \"data\" : [ ";
+            
+            for (i = fs.agents_list.begin(), end = fs.agents_list.end(); i != end; ++i) {
                 
-                string report = "{ \"type\": \"agents_list\", \"data\" : [ ";
+                report += "{ \"id\": \"";
+                report += i->id;
+        
+                report += "\", \"ip\": \"";
+                report += i->ip;
                 
-                for (i = fs.agents_list.begin(), end = fs.agents_list.end(); i != end; ++i) {
-                    
-                    report += "{ \"id\": \"";
-                    report += i->id;
+                report += "\", \"name\": \"";
+                report += i->name;
+                
+                report += "\", \"status\": \"";
+                report += i->status;
+                
+                report += "\", \"date_add\": \"";
+                report += i->dateAdd;
+                
+                report += "\", \"version\": \"";
+                report += i->version;
+                
+                report += "\", \"manager_host\": \"";
+                report += i->manager_host;
+                
+                report += "\", \"os_platform\": \"";
+                report += i->os_platform;
+                
+                report += "\", \"os_version\": \"";
+                report += i->os_version;
+                
+                report += "\", \"os_name\": \"";
+                report += i->os_name;
+                
+                report += "\", \"time_of_survey\": \"";
+                report +=  GetNodeTime();
+                
+                report += "\" }";
+        
+                if ( j < fs.agents_list.size() - 1) {
+                    report += ", "; 
+                    j++;
+                }
+            }
             
-                    report += "\", \"ip\": \"";
-                    report += i->ip;
-                    
-                    report += "\", \"name\": \"";
-                    report += i->name;
-                    
-                    report += "\", \"status\": \"";
-                    report += i->status;
-                    
-                    report += "\", \"date_add\": \"";
-                    report += i->dateAdd;
-                    
-                    report += "\", \"version\": \"";
-                    report += i->version;
-                    
-                    report += "\", \"manager_host\": \"";
-                    report += i->manager_host;
-                    
-                    report += "\", \"os_platform\": \"";
-                    report += i->os_platform;
-                    
-                    report += "\", \"os_version\": \"";
-                    report += i->os_version;
-                    
-                    report += "\", \"os_name\": \"";
-                    report += i->os_name;
-                    
-                    report += "\", \"time_of_survey\": \"";
-                    report +=  GetNodeTime();
-                    
-                    report += "\" }";
+            report += " ] }";
+            q_stats_collr.push(report);
             
-                    if ( j < fs.agents_list.size() - 1) {
-                        report += ", "; 
-                        j++;
+            for (i = fs.agents_list.begin(), end = fs.agents_list.end(); i != end; ++i) {
+                
+                payload = GetAgents("/syscollector/" + i->id + "/processes");
+                
+                PushAgents(payload,"processes",i->id);
+                
+                payload = GetAgents("/syscollector/" + i->id + "/packages");
+                
+                PushAgents(payload,"packages",i->id);
+                
+                payload = GetAgents("/sca/" + i->id);
+                
+                stringstream ss(payload);
+                
+                bpt::ptree pt;
+    
+                try {
+    
+                    bpt::read_json(ss, pt);
+    
+                    int err =  pt.get<int>("error");
+    
+                    if(err == 0) {
+    
+                        int totalItems =  pt.get<int>("data.total_affected_items");
+    
+                        bpt::ptree policy_ptree = pt.get_child("data.affected_items");
+    
+                        BOOST_FOREACH(bpt::ptree::value_type &policies, policy_ptree) {
+        
+                            string policy_id = policies.second.get<string>("policy_id");
+            
+                            string url = "/sca/";
+                            url += i->id;
+                            url += "/checks/";
+                            url += policy_id;
+                            url += "?result=failed";
+            
+                            payload = GetAgents(url);
+            
+                            PushAgents(payload,"sca",i->id);
+                        }
                     }
-                }
+    
+                } catch (const std::exception & ex) {
+                    SysLog((char*) ex.what());
+                } 
                 
-                report += " ] }";
-                q_stats_collr.push(report);
-                
-                for (i = fs.agents_list.begin(), end = fs.agents_list.end(); i != end; ++i) {
-                    
-                    payload = GetAgents("/sca/" + i->id);
-                    
-                    PushAgents(payload,"sca",i->id);
-                    
-                    payload = GetAgents("/syscollector/" + i->id + "/processes");
-                    
-                    PushAgents(payload,"processes",i->id);
-                    
-                    payload = GetAgents("/syscollector/" + i->id + "/packages");
-                    
-                    PushAgents(payload,"packages",i->id);
-                }
+                pt.clear();
             }
         }
     }
@@ -432,13 +518,13 @@ void Collector::PushAgents(string json, string type, string agent) {
             
             q_stats_collr.push(ss1.str());
             
-            pt.clear();
-            
         }
             
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
     } 
+    
+    pt.clear();
 }
 
 string Collector::GetContainers(void) {
@@ -551,9 +637,9 @@ void Collector::UpdateContainers(void) {
         
             if (!payload.empty()) {
         
-                string report = "{ \"type\": \"containers_list\",\"sensor\": \"";
+                string report = "{ \"type\": \"containers_list\",\"probe\": \"";
                 report += probe_id;
-                report += ".crs\", \"data\" : ";
+                report += "\", \"data\" : ";
                 report += payload;
                 report += " }";
         
@@ -899,7 +985,7 @@ void Collector::TrivyJob() {
             cmd += trivy;
             cmd += " ";
             cmd += i->image;
-        
+            
             system(cmd.c_str());
                     
             std::ifstream trivy_report;
