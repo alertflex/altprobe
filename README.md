@@ -4,7 +4,8 @@ Alertflex collector (Altprobe) is an open-source element of the Alertflex projec
 
 ![](https://github.com/alertflex/altprobe/blob/master/img/dashboard.png)
 
-The Alertflex is based on five levels of security event management technology: Collection, Streaming, Analysis, Storage, Access. 
+The Alertflex implements five levels of security event management technology: Collection, Streaming, Analysis, Storage, Access. 
+Additionally, Alertflex works as a security orchestrator for several third-party applications and automates security operations via Playbook. 
 For working inside a distributed environment of Hybrid IT, the solution consists of separate software components Collector, Controller, Management Console. 
 Collector (Altprobe) is placed in the network domain where security sensors are installed (Container Runtime Security, Host IDS, File Integrity Monitor, 
 Network IDS). Together with security sensors, Collector logically forms the Remote node. 
