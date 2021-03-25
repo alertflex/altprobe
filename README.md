@@ -1,6 +1,6 @@
 The repository includes Alertflex collector and installation scripts for security sensors (Suricata NIDS, Wazuh HIDS, Falco CRS). 
 
-Alertflex works as a Security Event Manager and implements CTI DevSecOps SOAR technology stack based on integration with third-party cybersecurity products (more than 20 are integrated at the moment).
+Alertflex works as a Security Event Manager and implements DevSecOps SOAR technology stack based on integration with third-party cybersecurity products (more than 20 are integrated at the moment).
 
 ![](https://github.com/alertflex/altprobe/blob/master/img/dashboard.png)
 
