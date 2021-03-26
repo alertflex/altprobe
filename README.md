@@ -1,6 +1,6 @@
 The repository includes Alertflex collector and installation scripts for security sensors (Suricata NIDS, Wazuh HIDS, Falco CRS). 
 
-Alertflex works as a Security Event Manager and implements DevSecOps SOAR technology stack based on integration with third-party cybersecurity products (more than 20 are integrated at the moment).
+Alertflex project is a cybersecurity solution for automation, continuous monitoring, orchestration, threat detection. Alertflex works as a Security Alerts Manager with SOAR capabilities and designed for use in Hybrid IT infrastructure (on-premises and cloud-based).
 
 ![](https://github.com/alertflex/altprobe/blob/master/img/dashboard.png)
 
