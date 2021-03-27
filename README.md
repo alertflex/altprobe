@@ -2,8 +2,6 @@ The repository includes Alertflex collector and installation scripts for securit
 
 Alertflex project is a cybersecurity solution for automation, continuous monitoring, orchestration, threat detection and response. Alertflex works as a Security Event Manager with SOAR capabilities and designed for use in Hybrid IT infrastructure (on-premises and cloud-based).
 
-The project provides a single pane of view for more than 20 security products (mostly free open-source software), requires fewer system resources compared with similar products, supports different types of platforms: Windows, Linux, Docker, Kubernetes, Amazon AWS.
-
 ![](https://github.com/alertflex/altprobe/blob/master/img/dashboard.png)
 
 For working inside a distributed environment of Hybrid IT, the solution consists of separate software components Collector, Controller, Management Console. 
