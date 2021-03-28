@@ -1,12 +1,12 @@
 The repository includes Alertflex collector and installation scripts for security sensors (Suricata NIDS, Wazuh HIDS, Falco CRS). 
 
-Alertflex project is a cybersecurity solution for automation, continuous monitoring, orchestration, threat detection and response. Alertflex works as a Security Event Manager with SOAR capabilities and designed for use in Hybrid IT infrastructure (on-premises and cloud-based).
+Alertflex project is an automation, continuous monitoring, threat detection and response solution. The Alertflex works as a Security Event Manager with SOAR functionality for a distributed grid of security sensors and scanners.
+
+Solution is designed for use in Hybrid IT infrastructure (on-premises and cloud-based), provides a single pane of glass for more than 20 security products (mostly free open-source software), monitors different types of platforms: Windows, Linux, Docker, Kubernetes, Amazon AWS.
 
 ![](https://github.com/alertflex/altprobe/blob/master/img/dashboard.png)
 
-For working inside a distributed environment of Hybrid IT, the solution consists of separate software components Collector, Controller, Management Console. 
-Alertfle Collector (Altprobe) is placed in the network domain where security sensors are installed (Container Runtime Security, Host IDS, File Integrity Monitor, 
-Network IDS). Together with security sensors, Collector logically forms the Remote node. 
+For working inside of Hybrid IT environment, the solution consists of distributed software components Collector, Controller, Management Console. Alertflex Collector (Altprobe) is placed in the network segment where security sensors are installed (Container Runtime Security, Host IDS, File Integrity Monitor, The Docker Bench for Security, Network IDS). Together with security sensors and scanners, Collector logically forms the Remote node.
 
 ![](https://github.com/alertflex/altprobe/blob/master/img/lld-arch.png)
 
