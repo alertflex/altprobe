@@ -10,7 +10,7 @@ For working inside of Hybrid IT environment, the solution consists of distribute
 
 ![](https://github.com/alertflex/altprobe/blob/master/img/lld-arch.png)
 
-For more information, please see the [solution description](https://www.alertflex.org/solution.html) and [project documentation](https://alertflex.org/doc/index.html)
+For more information, please see the [solution description](https://alertflex.github.io/solution.html) and [project documentation](https://alertflex.github.io/doc/index.html)
 
 Please [open an issue on GitHub](https://github.com/alertflex/altprobe/issues), if you'd like to report a bug or request a feature. 
 Have a question or need tech support, please send an email to address: info@alertflex.org
