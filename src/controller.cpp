@@ -434,6 +434,19 @@ int Controller::SendMessage(Event* e) {
                     byte_message->setIntProperty("sensor", ((BinData*) e)->sensor_type);
                     byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
                     break;
+                case 7 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    break;
+                case 8 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    break;
+                case 9 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    break;
+                case 10 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    break;
+                
                 default:
                     break;
             }

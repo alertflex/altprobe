@@ -146,12 +146,24 @@ install:
 	chmod u+x ./scripts/restart-falco.sh
 	chmod u+x ./scripts/restart-wazuh.sh
 	chmod u+x ./scripts/restart-suri.sh
+	chmod u+x ./scripts/docker-bench.sh
+	chmod u+x ./scripts/kube-bench.sh
+	chmod u+x ./scripts/kube-hunter.sh
+	chmod u+x ./scripts/nmap.sh
+	chmod u+x ./scripts/trivy.sh
+	chmod u+x ./scripts/zap.sh
 	cp ./scripts/rulesup-falco.sh /etc/altprobe/scripts/
 	cp ./scripts/rulesup-wazuh.sh /etc/altprobe/scripts/
 	cp ./scripts/rulesup-suri.sh /etc/altprobe/scripts/
 	cp ./scripts/restart-falco.sh /etc/altprobe/scripts/
 	cp ./scripts/restart-wazuh.sh /etc/altprobe/scripts/
 	cp ./scripts/restart-suri.sh /etc/altprobe/scripts/
+	cp ./scripts/docker-bench.sh /etc/altprobe/scripts/
+	cp ./scripts/kube-bench.sh /etc/altprobe/scripts/
+	cp ./scripts/kube-hunter.sh /etc/altprobe/scripts/
+	cp ./scripts/nmap.sh /etc/altprobe/scripts/
+	cp ./scripts/trivy.sh /etc/altprobe/scripts/
+	cp ./scripts/zap.sh /etc/altprobe/scripts/
 		
 update:
 	cp ./dist/Debug/GNU-Linux/collector /usr/local/bin/altprobe

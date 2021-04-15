@@ -20,6 +20,8 @@
 
 #include "collector.h"
 
+#define SOCKET_BUFFER_SIZE 64000
+
 int Collector::GetConfig() {
     
     //Read sinks config
@@ -170,7 +172,7 @@ int Collector::Go(void) {
         
         StatJob();
         
-        if (sk.GetLongtaskPeriod() >= counter_reports && sk.GetLongtaskPeriod() != 0) {
+        if (sk.GetUpdatePeriod() >= counter_reports && sk.GetUpdatePeriod() != 0) {
             
             if (ruStatus) {
                 
@@ -194,10 +196,6 @@ int Collector::Go(void) {
                 UpdateOssecRules();
                 
                 UpdateContainers();
-            
-                DockerBenchJob();
-            
-                TrivyJob();
             
                 string update_notification = "update for altprobe has been done";
                 SysLog((char*) update_notification.c_str());
@@ -340,7 +338,7 @@ string Collector::GetAgents(string url_request) {
    
 }
 
-void Collector::ParsAgents (string json) {
+void Collector::ParsAgents (const string& json) {
     
     stringstream ss(json);
     
@@ -572,10 +570,10 @@ string Collector::GetContainers(void) {
             return "";
 	}
         
-        char buffer[64000];
-        memset(buffer, 0, 64000);
+        char buffer[SOCKET_BUFFER_SIZE];
+        memset(buffer, 0, SOCKET_BUFFER_SIZE);
         
-	ret = read(sck, buffer, 64000);
+	ret = read(sck, buffer, SOCKET_BUFFER_SIZE);
 	if (ret == -1) {
             SysLog("Can not read answer from docker socket");
             return "";
@@ -583,15 +581,67 @@ string Collector::GetContainers(void) {
         
         int i = 0;
         int j = 0;
+        int k = 0;
         
-        for (; i < 64000 && j <= 7; i++) {
+        bool chunked = false;
+        std::string str_buffer = "";
+        
+        for (; i < SOCKET_BUFFER_SIZE && k <= 7; i++) {
             char test = (char) buffer[i];
-            if ( test == '\n') j++;
+            if ( test == '\n') k++;
+            if (k == 7) j++;
         }
         
-        string payload(buffer + i);
+        int begin_str = i - j;
         
-        if (j > 7) return payload;
+        if (k == 8) {
+            
+            std::string str_chunked(buffer + begin_str, buffer + i);
+            
+            if (str_chunked.find("chunked") != std::string::npos) {
+                chunked = true;
+            } else {
+                str_buffer.append(buffer + i);
+            }
+        }
+        
+        for (int m = 0; chunked && m < 10; m++) {
+            
+            int l = 0;
+            
+            for (k = 0, j = 0; i < SOCKET_BUFFER_SIZE && k <= 2; i++) {
+                char test = (char) buffer[i];
+                if ( test == '\n') k++;
+            
+                if (k == 1) l++;
+            
+                if (k == 2) {
+                
+                    if (j == 0) {
+                        //check string 1 if it eq 0
+                        int x;
+                        begin_str = i - l;
+                        std::string str_lenth(buffer + begin_str, l);
+                        std::stringstream ss;
+                        ss << std::hex << str_lenth;
+                        ss >> x;
+                    
+                        if (x == 0) chunked = false;
+                    }
+                
+                    j++;
+                }
+            } 
+        
+            if (chunked) {
+                begin_str = i - j;
+                str_buffer.append(buffer + begin_str, j);
+            }
+        }
+        
+        close(sck);
+        
+        return str_buffer;
     
     } catch (std::exception& ex) {
         SysLog((char*) ex.what());
@@ -600,7 +650,7 @@ string Collector::GetContainers(void) {
     return "";
 }
 
-void Collector::ParsContainers(string json) {
+void Collector::ParsContainers(const string& json) {
     
     stringstream ss(json);
     
@@ -922,92 +972,6 @@ void Collector::UpdateSuriRules() {
             }
         }
         
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-    } 
-    
-    return;
-}
-
-void Collector::DockerBenchJob() {
-    
-    if (!strcmp (docker_bench, "indef")) return; 
-    
-    try {
-        
-        string cmd = "cd ";
-        cmd += docker_bench;
-        cmd += " && sh docker-bench-security.sh -l report";
-    
-        system(cmd.c_str());
-        
-        string db_report = docker_bench;
-        db_report += "report.json";
-        
-        std::ifstream docker_report;
-        string file_path(db_report);
-        docker_report.open(file_path,ios::binary);
-        strStream << docker_report.rdbuf();
-        
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
-        
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 5;
-        sk.SendMessage(&bd);
-                
-        docker_report.close();
-        boost::iostreams::close(in);
-        ResetStreams();
-        
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-    } 
-    
-    return;
-    
-}
-
-void Collector::TrivyJob() {
-    
-    if (!strcmp (trivy, "indef")) return; 
-    
-    try {
-        
-        std::vector<Container>::iterator i, end;
-        
-        for (i = containers_list.begin(), end = containers_list.end(); i != end; ++i) {
-        
-            string cmd = "trivy -f json -o ";
-            cmd += trivy;
-            cmd += " ";
-            cmd += i->image;
-            
-            system(cmd.c_str());
-                    
-            std::ifstream trivy_report;
-            string file_path(trivy);
-            trivy_report.open(file_path,ios::binary);
-            strStream << trivy_report.rdbuf();
-        
-            boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-            in.push(boost::iostreams::gzip_compressor());
-            in.push(strStream);
-            boost::iostreams::copy(in, comp);
-        
-            bd.data = comp.str();
-            bd.ref_id = fs.filter.ref_id;
-            bd.event_type = 6;
-            sk.SendMessage(&bd);
-            
-            trivy_report.close();
-            boost::iostreams::close(in);
-            ResetStreams();
-        }
-                
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
     } 

@@ -399,7 +399,7 @@ string Updates::onTextMessage(const Message* message) {
     if(!actuator_profile.compare("suricata_command") && !action.compare("deny")) {
         
         // char test1[] = "{\"command\": \"add-hostbit\", \"arguments\": {\"ipaddress\": \"192.168.1.2\", 
-            // \"hostbit\": \"alertflex_ar\", \"expire\": 360}}";
+        // \"hostbit\": \"alertflex_ar\", \"expire\": 360}}";
         
         string ip = pt.get<string>("target.ipv4_net","indef");
         string rule = pt.get<string>("args.x-alertflex:suricata_command.rule_name","indef");
@@ -497,6 +497,137 @@ string Updates::onTextMessage(const Message* message) {
         return "\"status\": 200 }";
                 
     } 
+    
+    
+    if(!actuator_profile.compare("docker_bench")) {
+        
+        if(!action.compare("scan")) {
+                    
+            try {
+            
+                string res =  ScanDockerBench();
+                        
+                return res;
+            
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+            }
+                
+        } 
+    }
+    
+    if(!actuator_profile.compare("kube_bench")) {
+        
+        if(!action.compare("scan")) {
+                    
+            try {
+            
+                string res =  ScanKubeBench();
+                        
+                return res;
+            
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+            }
+                
+        } 
+    }
+    
+    if(!actuator_profile.compare("kube_hunter")) {
+        
+        if(!action.compare("scan")) {
+                    
+            try {
+                
+                string target = pt.get<string>("target.device.device_id","indef");
+                        
+                if(!target.compare("indef")) {
+    
+                    return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+                } 
+            
+                string res =  ScanKubeHunter(target);
+                        
+                return res;
+            
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+            }
+                
+        } 
+    }
+    
+    if(!actuator_profile.compare("nmap")) {
+        
+        if(!action.compare("scan")) {
+                    
+            try {
+                
+                string target = pt.get<string>("target.device.device_id","indef");
+                        
+                if(!target.compare("indef")) {
+    
+                    return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+                } 
+            
+                string res =  ScanNmap(target);
+                        
+                return res;
+            
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+            }
+                
+        } 
+    }
+    
+    if(!actuator_profile.compare("trivy")) {
+        
+        if(!action.compare("scan")) {
+                    
+            try {
+                
+                string target = pt.get<string>("target.device.device_id","indef");
+                        
+                if(!target.compare("indef")) {
+    
+                    return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+                } 
+            
+                string res =  ScanTrivy(target);
+                        
+                return res;
+            
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+            }
+                
+        } 
+    }
+    
+    if(!actuator_profile.compare("zap")) {
+        
+        if(!action.compare("scan")) {
+                    
+            try {
+                
+                string target = pt.get<string>("target.device.device_id","indef");
+                        
+                if(!target.compare("indef")) {
+    
+                    return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+                } 
+            
+                string res =  ScanZap(target);
+                        
+                return res;
+            
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+            }
+                
+        } 
+    }
     
     return "\"status\": 400, \"status_text\": \"wrong actuator or action\" }";
 }
@@ -848,6 +979,230 @@ string Updates::DockerContainer(string id, string cmd) {
     }
 
     return "docker_unixsocket: error";
+}
+
+string Updates::ScanDockerBench(void) {
+    
+    try {
+        
+        // command example - cd /root/docker-bench-security && sh docker-bench-security.sh -l report
+        
+        string cmd = "/etc/altprobe/scripts/docker-bench.sh";
+        
+        system(cmd.c_str());
+        
+        std::ifstream docker_report;
+        
+        // dockerbench_result is a path to result.json for example - /root/docker-bench-security/report.json
+        docker_report.open(dockerbench_result,ios::binary);
+        strStream << docker_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 5;
+        SendMessage(&bd);
+                
+        docker_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "docker_bench: error";
+    } 
+    
+    return "ok";
+    
+}
+
+string Updates::ScanKubeBench(void) {
+    
+    try {
+        
+        string cmd = "/etc/altprobe/scripts/kube-bench.sh";
+        
+        system(cmd.c_str());
+        
+        std::ifstream kubebench_report;
+        
+        kubebench_report.open(kubebench_result,ios::binary);
+        strStream << kubebench_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 6;
+        SendMessage(&bd);
+                
+        kubebench_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "kube_bench: error";
+    } 
+    
+    return "ok";
+    
+}
+
+string Updates::ScanKubeHunter(string target) {
+    
+    try {
+        
+        string cmd = "/etc/altprobe/scripts/kube-hunter.sh " + target;
+        
+        system(cmd.c_str());
+        
+        std::ifstream kubehunter_report;
+        
+        kubehunter_report.open(kubehunter_result,ios::binary);
+        strStream << kubehunter_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 7;
+        bd.target = target;
+        SendMessage(&bd);
+                
+        kubehunter_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "kube_hunter: error";
+    } 
+    
+    return "ok";
+    
+}
+
+
+string Updates::ScanNmap(string target) {
+    
+    try {
+        
+        string cmd = "/etc/altprobe/scripts/nmap.sh " + target;
+        
+        system(cmd.c_str());
+        
+        std::ifstream nmap_report;
+        
+        nmap_report.open(nmap_result,ios::binary);
+        strStream << nmap_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 8;
+        bd.target = target;
+        SendMessage(&bd);
+                
+        nmap_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "nmap: error";
+    } 
+    
+    return "ok";
+    
+}
+
+string Updates::ScanTrivy(string target) {
+    
+    try {
+        
+        string cmd = "/etc/altprobe/scripts/trivy.sh " + target;
+        
+        system(cmd.c_str());
+        
+        std::ifstream trivy_report;
+        
+        trivy_report.open(trivy_result,ios::binary);
+        strStream << trivy_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 9;
+        bd.target = target;
+        SendMessage(&bd);
+                
+        trivy_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "trivy: error";
+    } 
+    
+    return "ok";
+    
+}
+
+string Updates::ScanZap(string target) {
+    
+    try {
+        
+        string cmd = "/etc/altprobe/scripts/zap.sh " + target;
+        
+        system(cmd.c_str());
+        
+        std::ifstream zap_report;
+        
+        zap_report.open(zap_result,ios::binary);
+        strStream << zap_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 10;
+        bd.target = target;
+        SendMessage(&bd);
+                
+        zap_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "zap: error";
+    } 
+    
+    return "ok";
+    
 }
 
 int Updates::IsHomeNetwork(string ip) {

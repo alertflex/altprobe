@@ -299,7 +299,10 @@ int Crs::ParsJson() {
     } 
     
     
-    rec.output = pt.get<string>("output","");
+    string output = pt.get<string>("output","");
+    ReplaceAll(output, "\"", "");
+    ReplaceAll(output, "\\", "\\\\\\\\");
+    rec.output = output;
     
     rec.priority = pt.get<string>("priority","");
     
@@ -391,10 +394,10 @@ void Crs::CreateLog() {
     report += rec.fields.fd_sip;
     
     report += "\",\"client_port\":";
-    report += rec.fields.fd_cport;
+    report += std::to_string(rec.fields.fd_cport);
     
     report += ",\"server_port\":";
-    report += rec.fields.fd_sport;
+    report += std::to_string(rec.fields.fd_sport);
     
     report += ",\"client_hostname\":\"";
     report += rec.fields.fd_cip_name;
@@ -409,7 +412,7 @@ void Crs::CreateLog() {
     report += rec.fields.fd_directory;
     
     report += "\",\"process_pid\":";
-    report += rec.fields.proc_pid;
+    report += std::to_string(rec.fields.proc_pid);
     
     report += ",\"process_cmdline\":\"";
     report += rec.fields.proc_cmdline;
@@ -419,9 +422,6 @@ void Crs::CreateLog() {
     
     report += "\",\"process_dir\":\"";
     report += rec.fields.proc_cwd;
-    
-    report += "\",\"container_id\":\"";
-    report += rec.fields.container_id;
     
     report += "\",\"container_name\":\"";
     report += rec.fields.container_name;

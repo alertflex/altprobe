@@ -33,6 +33,9 @@ public:
     MessageConsumer* consumer;
     int update_status;
     
+    BinData bd;
+    std::stringstream strStream, comp;
+    
     FiltersSingleton fs;
         
     Updates() {
@@ -56,6 +59,22 @@ public:
     string SendArToSuricata(string json);
     string CreateAgentWazuh(string json);
     string DockerContainer(string id, string cmd);
+    
+    string ScanDockerBench(void);
+    string ScanKubeBench(void);
+    string ScanKubeHunter(string target);
+    string ScanNmap(string target);
+    string ScanTrivy(string target);
+    string ScanZap(string target);
+    
+    void ResetStreams() {
+        comp.str("");
+        comp.clear();
+        strStream.str("");
+        strStream.clear();
+    }
+    
+    
     int IsHomeNetwork(string ip);
 };
 

@@ -40,20 +40,24 @@ public:
     
     static long startup_timer;
     static long gosleep_timer;
+    
+    // Suricata socket parameters
+    static char suri_socket[OS_BUFFER_SIZE];
+    // Docker socket parameters
+    static char docker_socket[OS_BUFFER_SIZE];
         
     static bool suriSocketStatus;
     static bool dockerSocketStatus;
     
-    static char docker_bench[OS_BUFFER_SIZE]; 
+    // scanners
+    static char dockerbench_result[OS_BUFFER_SIZE]; 
+    static char kubebench_result[OS_BUFFER_SIZE]; 
+    static char kubehunter_result[OS_BUFFER_SIZE]; 
+    static char nmap_result[OS_BUFFER_SIZE]; 
+    static char trivy_result[OS_BUFFER_SIZE];
+    static char zap_result[OS_BUFFER_SIZE]; 
     
-    static char trivy[OS_BUFFER_SIZE];
-    
-    // Suricata socket parameters
-    static char suri_socket[OS_BUFFER_SIZE];
-    
-    // Docker socket parameters
-    static char docker_socket[OS_BUFFER_SIZE];
-        
+    // sensors
     // Wazuh config parameters
     static char wazuh_host[OS_HEADER_SIZE];
     static int wazuh_port;
@@ -134,16 +138,19 @@ public:
 class BinData : public Event {
 public:   
     string data;
+    string target;
     int sensor_type;
-    
+        
     void Reset() {
         Event::Reset();
         sensor_type = 0;
         data.clear();
+        target.clear();
     }
     
     BinData () {
         data.clear();
+        target.clear();
         event_type = 2;
         sensor_type = 0;
     }

@@ -44,16 +44,19 @@ long CollectorObject::gosleep_timer;
 long CollectorObject::startup_timer;
 
 char CollectorObject::suri_socket[OS_BUFFER_SIZE];
-
 bool CollectorObject::suriSocketStatus;
-
 char CollectorObject::docker_socket[OS_BUFFER_SIZE];
-
 bool CollectorObject::dockerSocketStatus;
 
-char CollectorObject::docker_bench[OS_BUFFER_SIZE]; 
-char CollectorObject::trivy[OS_BUFFER_SIZE]; 
+// scanners
+char CollectorObject::dockerbench_result[OS_BUFFER_SIZE]; 
+char CollectorObject::kubebench_result[OS_BUFFER_SIZE]; 
+char CollectorObject::kubehunter_result[OS_BUFFER_SIZE]; 
+char CollectorObject::nmap_result[OS_BUFFER_SIZE]; 
+char CollectorObject::trivy_result[OS_BUFFER_SIZE]; 
+char CollectorObject::zap_result[OS_BUFFER_SIZE]; 
 
+// sensors
 char CollectorObject::wazuh_host[OS_HEADER_SIZE];
 int CollectorObject::wazuh_port;
 char CollectorObject::wazuh_user[OS_HEADER_SIZE];
@@ -216,11 +219,7 @@ int CollectorObject::GetConfig() {
         SysLog("config file notification: remote_update disabled");
     }
     
-    cy = new ConfigYaml( "sources");
-    
-    cy->addKey("dockerbench_log");
-    
-    cy->addKey("trivy_log");
+    cy = new ConfigYaml("sensors");
     
     cy->addKey("falco_log");
     
@@ -248,10 +247,6 @@ int CollectorObject::GetConfig() {
     
     cy->ParsConfig();
     
-    strncpy(docker_bench, (char*) cy->getParameter("dockerbench_log").c_str(), sizeof(docker_bench));
-    
-    strncpy(trivy, (char*) cy->getParameter("trivy_log").c_str(), sizeof(trivy));
-        
     strncpy(falco_log, (char*) cy->getParameter("falco_log").c_str(), sizeof(falco_log));
     if (!strcmp (falco_log, "indef")) { 
         falcolog_status = 0;
@@ -314,6 +309,34 @@ int CollectorObject::GetConfig() {
             SysLog("config file notification: wazuh_rules update disabled");
         }
     }
+    
+    cy = new ConfigYaml( "scanners");
+    
+    cy->addKey("dockerbench_result");
+    
+    cy->addKey("kubebench_result");
+    
+    cy->addKey("kubehunter_result");
+    
+    cy->addKey("nmap_result");
+    
+    cy->addKey("trivy_result");
+    
+    cy->addKey("zap_result");
+    
+    cy->ParsConfig();
+    
+    strncpy(dockerbench_result, (char*) cy->getParameter("dockerbench_result").c_str(), sizeof(dockerbench_result));
+    
+    strncpy(kubebench_result, (char*) cy->getParameter("kubebench_result").c_str(), sizeof(kubebench_result));
+    
+    strncpy(kubehunter_result, (char*) cy->getParameter("kubehunter_result").c_str(), sizeof(kubehunter_result));
+    
+    strncpy(nmap_result, (char*) cy->getParameter("nmap_result").c_str(), sizeof(nmap_result));
+    
+    strncpy(trivy_result, (char*) cy->getParameter("trivy_result").c_str(), sizeof(trivy_result));
+    
+    strncpy(zap_result, (char*) cy->getParameter("zap_result").c_str(), sizeof(zap_result));
     
     return 1;
 }

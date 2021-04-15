@@ -37,6 +37,12 @@ install -m 0755 $RPM_SOURCE_DIR/scripts/restart-wazuh.sh $RPM_BUILD_ROOT/etc/alt
 install -m 0755 $RPM_SOURCE_DIR/scripts/rulesup-falco.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/rulesup-falco.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/rulesup-suri.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/rulesup-suri.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/rulesup-wazuh.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/rulesup-wazuh.sh
+install -m 0755 $RPM_SOURCE_DIR/scripts/docker-bench.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/docker-bench.sh
+install -m 0755 $RPM_SOURCE_DIR/scripts/kube-bench.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/kube-bench.sh
+install -m 0755 $RPM_SOURCE_DIR/scripts/kube-hunter.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/kube-hunter.sh
+install -m 0755 $RPM_SOURCE_DIR/scripts/nmap.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/nmap.sh
+install -m 0755 $RPM_SOURCE_DIR/scripts/trivy.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/trivy.sh
+install -m 0755 $RPM_SOURCE_DIR/scripts/zap.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/zap.sh
 install -d -m 0755 $RPM_BUILD_ROOT/usr/sbin
 install -m 0755 $RPM_SOURCE_DIR/altprobe $RPM_BUILD_ROOT/usr/sbin/altprobe
 install -m 0755 $RPM_SOURCE_DIR/scripts/altprobe-restart $RPM_BUILD_ROOT/usr/sbin/altprobe-restart
@@ -57,6 +63,12 @@ install -m 0755 $RPM_SOURCE_DIR/scripts/altprobe-stop $RPM_BUILD_ROOT/usr/sbin/a
 /etc/altprobe/scripts/rulesup-falco.sh
 /etc/altprobe/scripts/rulesup-suri.sh
 /etc/altprobe/scripts/rulesup-wazuh.sh
+/etc/altprobe/scripts/docker-bench.sh
+/etc/altprobe/scripts/kube-bench.sh
+/etc/altprobe/scripts/kube-hunter.sh
+/etc/altprobe/scripts/nmap.sh
+/etc/altprobe/scripts/trivy.sh
+/etc/altprobe/scripts/zap.sh
 /usr/sbin/altprobe
 /usr/sbin/altprobe-restart
 /usr/sbin/altprobe-start

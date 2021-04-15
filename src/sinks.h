@@ -25,7 +25,7 @@ public:
     static int config_flag;
     
     static int reports_period;
-    static int longtask_period;
+    static int update_period;
     
     static int alerts_threshold;
     
@@ -56,8 +56,8 @@ public:
         return reports_period; 
     };
     
-    int GetLongtaskPeriod() { 
-        return longtask_period; 
+    int GetUpdatePeriod() { 
+        return update_period; 
     };
     
     int SendMessage(Event* e);

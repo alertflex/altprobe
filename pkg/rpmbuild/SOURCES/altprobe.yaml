@@ -25,18 +25,18 @@ collector:
   timer_sleep:   1000  
   # period reports generation of collector statistic in sec, 
   # if 0 then the functionality is off (default 300 - 5 min)
-  timer_report: 300  
+  timer_report: 60  
   # timer to run scans (docker-bench and trivy ) for docker, send IDS backup of configs and rules to controller
-  # measure in timer_longtask*timer_stat (default 12 - 60 min)
-  timer_longtask: 12
+  # measure in timer_scan*timer_report (default 12 - 60 min)
+  timer_update: 1
   
   # Allow remote management of collector from controller
-  remote_control: "false"
+  remote_control: "true"
   # Allow update of configs, filters, rules between collector and controller
   remote_update: "true"
   
   # Docker unix socket filename for active response, if value is indef interface to socket disabled
-  socket_docker: "/run/var/docker.sock"
+  socket_docker: "/var/run/docker.sock"
   # Suricata unix socket filename for active response, if value is indef interface to socket disabled
   socket_suricata: "/run/suricata/suricata-command.socket"
   
@@ -60,7 +60,7 @@ controller:
   key: "_amq_key"
   key_pwd: "_key_pwd"
     
-sources:
+sensors:
   # Altprobe can read events of falco, suricata, wazuh directly from log files.
   # If xxx_log is "indef" redis interface will be used. In case xxx_redis is "indef", module is not in use
   falco_log: "_falco_log"
@@ -82,12 +82,20 @@ sources:
   wazuh_local: "/var/ossec/etc/"
   
   # For reading of events from altprobe clients (misc), only Redis intefrace can be used.
-  # in case value "indef", module is not in use
+  # in case value "indef", module is not in use 
   misc_redis: "altprobe_misc"
-  
-  # Installation path for Docker-bench script and result file, for example /root/docker-bench-security/
-  dockerbench_log: "indef" 
-  
-  # Path to Trivy results file (report.json), for example /etc/altprobe/
-  trivy_log: "indef"
+
+scanners:
+  # Path to Docker-bench scan result file, for example /root/docker-bench-security/result.json
+  dockerbench_result: "/root/docker-bench-security/report.json" 
+  # Path to Kube-bench result file, for example /etc/altprobe/kubebench-report.json
+  kubebench_result: "indef"
+  # Path to Kube-hunter result file
+  kubehunter_result: "indef"
+  # Path to Nmap result file
+  nmap_result: "indef"
+  # Path to Trivy result file
+  trivy_result: "indef"
+  # Path to OWASP ZAP result file
+  zap_result: "indef"
   

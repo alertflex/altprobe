@@ -103,7 +103,6 @@ public:
     void UpdateRulesConfigs();
     void UpdateFalcoConfig();
     void UpdateSuriConfig();
-    void UpdateModsecConfig();
     void UpdateOssecConfig();
     void UpdateFalcoRules();
     void UpdateSuriRules();
@@ -111,17 +110,14 @@ public:
     
     bool GetToken();
     string GetAgents(string url_request);
-    void ParsAgents(string json);
+    void ParsAgents(const string&  json);
     void UpdateAgents(void);
     void PushAgents(string json, string type, string agent);
     
     string GetContainers(void);  
-    void ParsContainers(string json);
+    void ParsContainers(const string& json);
     void UpdateContainers(void);
         
-    void DockerBenchJob();
-    void TrivyJob();
-    
     void ResetStreams() {
         comp.str("");
         comp.clear();

@@ -31,7 +31,7 @@ int Source::GetConfig() {
        
     } else {
         
-        ConfigYaml* cy = new ConfigYaml( "sources");
+        ConfigYaml* cy = new ConfigYaml( "sensors");
     
         cy->addKey(config_key);
             
