@@ -581,6 +581,30 @@ string Updates::onTextMessage(const Message* message) {
         } 
     }
     
+    if(!actuator_profile.compare("snyk")) {
+        
+        if(!action.compare("scan")) {
+                    
+            try {
+                
+                string target = pt.get<string>("target.device.device_id","indef");
+                        
+                if(!target.compare("indef")) {
+    
+                    return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+                } 
+            
+                string res =  ScanSnyk(target);
+                        
+                return res;
+            
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+            }
+                
+        } 
+    }
+    
     if(!actuator_profile.compare("trivy")) {
         
         if(!action.compare("scan")) {
@@ -1131,6 +1155,43 @@ string Updates::ScanNmap(string target) {
     
 }
 
+string Updates::ScanSnyk(string target) {
+    
+    try {
+        
+        string cmd = "/etc/altprobe/scripts/snyk.sh " + target;
+        
+        system(cmd.c_str());
+        
+        std::ifstream snyk_report;
+        
+        snyk_report.open(snyk_result,ios::binary);
+        strStream << snyk_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 9;
+        bd.target = target;
+        SendMessage(&bd);
+                
+        snyk_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "snyk: error";
+    } 
+    
+    return "ok";
+    
+}
+
 string Updates::ScanTrivy(string target) {
     
     try {
@@ -1151,7 +1212,7 @@ string Updates::ScanTrivy(string target) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 9;
+        bd.event_type = 10;
         bd.target = target;
         SendMessage(&bd);
                 
@@ -1188,7 +1249,7 @@ string Updates::ScanZap(string target) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 10;
+        bd.event_type = 11;
         bd.target = target;
         SendMessage(&bd);
                 

@@ -53,6 +53,7 @@ char CollectorObject::dockerbench_result[OS_BUFFER_SIZE];
 char CollectorObject::kubebench_result[OS_BUFFER_SIZE]; 
 char CollectorObject::kubehunter_result[OS_BUFFER_SIZE]; 
 char CollectorObject::nmap_result[OS_BUFFER_SIZE]; 
+char CollectorObject::snyk_result[OS_BUFFER_SIZE]; 
 char CollectorObject::trivy_result[OS_BUFFER_SIZE]; 
 char CollectorObject::zap_result[OS_BUFFER_SIZE]; 
 
@@ -320,6 +321,8 @@ int CollectorObject::GetConfig() {
     
     cy->addKey("nmap_result");
     
+    cy->addKey("snyk_result");
+    
     cy->addKey("trivy_result");
     
     cy->addKey("zap_result");
@@ -333,6 +336,8 @@ int CollectorObject::GetConfig() {
     strncpy(kubehunter_result, (char*) cy->getParameter("kubehunter_result").c_str(), sizeof(kubehunter_result));
     
     strncpy(nmap_result, (char*) cy->getParameter("nmap_result").c_str(), sizeof(nmap_result));
+    
+    strncpy(snyk_result, (char*) cy->getParameter("snyk_result").c_str(), sizeof(snyk_result));
     
     strncpy(trivy_result, (char*) cy->getParameter("trivy_result").c_str(), sizeof(trivy_result));
     

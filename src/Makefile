@@ -150,6 +150,7 @@ install:
 	chmod u+x ./scripts/kube-bench.sh
 	chmod u+x ./scripts/kube-hunter.sh
 	chmod u+x ./scripts/nmap.sh
+	chmod u+x ./scripts/snyk.sh
 	chmod u+x ./scripts/trivy.sh
 	chmod u+x ./scripts/zap.sh
 	cp ./scripts/rulesup-falco.sh /etc/altprobe/scripts/
@@ -162,6 +163,7 @@ install:
 	cp ./scripts/kube-bench.sh /etc/altprobe/scripts/
 	cp ./scripts/kube-hunter.sh /etc/altprobe/scripts/
 	cp ./scripts/nmap.sh /etc/altprobe/scripts/
+	cp ./scripts/snyk.sh /etc/altprobe/scripts/
 	cp ./scripts/trivy.sh /etc/altprobe/scripts/
 	cp ./scripts/zap.sh /etc/altprobe/scripts/
 		

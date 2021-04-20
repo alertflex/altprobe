@@ -64,6 +64,7 @@ public:
     string ScanKubeBench(void);
     string ScanKubeHunter(string target);
     string ScanNmap(string target);
+    string ScanSnyk(string target);
     string ScanTrivy(string target);
     string ScanZap(string target);
     

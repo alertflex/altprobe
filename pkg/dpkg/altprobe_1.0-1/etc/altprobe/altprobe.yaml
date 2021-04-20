@@ -87,13 +87,15 @@ sensors:
 
 scanners:
   # Path to Docker-bench scan result file, for example /root/docker-bench-security/result.json
-  dockerbench_result: "/root/docker-bench-security/report.json" 
+  dockerbench_result: "indef" 
   # Path to Kube-bench result file, for example /etc/altprobe/kubebench-report.json
   kubebench_result: "indef"
   # Path to Kube-hunter result file
   kubehunter_result: "indef"
   # Path to Nmap result file
   nmap_result: "indef"
+  # Path to Snyk result file
+  snyk_result: "indef"
   # Path to Trivy result file
   trivy_result: "indef"
   # Path to OWASP ZAP result file
