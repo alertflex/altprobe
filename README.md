@@ -4,7 +4,7 @@ Alertflex project is an automation, continuous monitoring, threat detection and 
 
 Solution is designed for use in Hybrid IT infrastructure (on-premises and cloud-based), provides an orchestrator and a single pane of glass for more than 30 products (mostly free open-source software), monitors different types of platforms: Windows, Linux, Docker, Kubernetes, Amazon AWS.
 
-One of the advantages of Alertflex is cyber threat intelligence and response close to real-time. Additionally, Alertflex integrates with the OpenDistro Anomaly Detection feature (Random Cut Forest AI algorithm), you can configure automatic response in case of anomaly detection for certain security events rate.
+One of the advantages of Alertflex is cyber threat intelligence and threat response for discrete security events in mode close to real-time. Additionally, Alertflex integrates with the OpenDistro Anomaly Detection feature (Random Cut Forest AI algorithm), you can configure automated response for anomaly in security events rate.
 
 ![](https://github.com/alertflex/altprobe/blob/master/img/dashboard.png)
 
