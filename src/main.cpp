@@ -29,6 +29,7 @@
 #include "remlog.h"
 #include "remstat.h"
 #include "updates.h"
+#include "scanners.h"
 
 AggAlerts aggalerts;
 pthread_t pthread_aggalerts;
@@ -174,6 +175,22 @@ void * thread_updates(void *arg) {
     pthread_exit(0);
 }
 
+Scanners scanners;
+pthread_t pthread_scanners;
+
+void* exit_thread_scanners_arg;
+void exit_thread_scanners(void* arg) { scanners.Close(); }
+
+void * thread_scanners(void *arg) {
+    
+    pthread_cleanup_push(exit_thread_scanners, exit_thread_scanners_arg);
+    
+    while (scanners.Go()) { }
+    
+    pthread_cleanup_pop(1);
+    pthread_exit(0);
+}
+
 
 Collector collr(&crs, &hids, &nids, &misc, &remlog, &remstat);
 pthread_t pthread_collr;
@@ -219,6 +236,9 @@ int LoadConfig(void)
     
     // updates
     if (!updates.GetConfig()) return 0;
+    
+    // scanners
+    if (!scanners.GetConfig()) return 0;
     
     //collector
     if (!collr.GetConfig()) return 0;
@@ -352,6 +372,19 @@ int InitThreads(int mode, pid_t pid)
         } 
     }
     
+    // scanners
+    if (scanners.GetStatus()) {
+        
+        if (!scanners.Open(mode,pid)) {
+            daemon_log(LOG_ERR,"cannot open Scanners module");
+            return 0;
+        }
+        if (pthread_create(&pthread_scanners, NULL, thread_scanners, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for Scanners module");
+            return 0;
+        } 
+    }
+    
     //collector
     if (collr.GetStatus()) {
         if (!collr.Open()) {
@@ -422,6 +455,12 @@ void KillsThreads(void)
     if (updates.GetStatus()) {
         pthread_cancel(pthread_updates);
         pthread_join(pthread_updates, NULL); 
+    }
+    
+    // scanners
+    if (scanners.GetStatus()) {
+        pthread_cancel(pthread_scanners);
+        pthread_join(pthread_scanners, NULL); 
     }
     
     //collector

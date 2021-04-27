@@ -509,7 +509,7 @@ void Crs::SendAlert(int s, GrayList*  gl) {
     sk.alert.action = "indef";     
     sk.alert.location = "indef";
     sk.alert.info = "indef";
-    sk.alert.status = "processed_new";
+    sk.alert.status = "processed";
     sk.alert.user_name = rec.fields.user_name;
     sk.alert.agent_name = probe_id;
     sk.alert.filter = fs.filter.desc;
@@ -523,42 +523,42 @@ void Crs::SendAlert(int s, GrayList*  gl) {
             
         if (gl->rsp.profile.compare("indef") != 0) {
             sk.alert.action = gl->rsp.profile;
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         } 
         
         if (gl->rsp.new_type.compare("indef") != 0) {
             sk.alert.alert_type = gl->rsp.new_type;
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         }  
         
         if (gl->rsp.new_source.compare("indef") != 0) {
             sk.alert.alert_source = gl->rsp.new_source;
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         } 
         
         if (gl->rsp.new_event.compare("indef") != 0) {
             sk.alert.event_id = gl->rsp.new_event;
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         }  
         
         if (gl->rsp.new_event.compare("indef") != 0) {
             sk.alert.event_id = gl->rsp.new_event;
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         }    
             
         if (gl->rsp.new_severity != 0) {
             sk.alert.alert_severity = gl->rsp.new_severity;
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         }   
             
         if (gl->rsp.new_category.compare("indef") != 0) {
             sk.alert.list_cats.push_back(gl->rsp.new_category);
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         }   
                 
         if (gl->rsp.new_description.compare("indef") != 0) {
             sk.alert.description = gl->rsp.new_description;
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         }   
         
     }

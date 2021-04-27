@@ -28,6 +28,7 @@
 
 string CollectorObject::node_id;
 string CollectorObject::probe_id;
+string CollectorObject::project_id;
 
 char CollectorObject::remote_control[OS_HEADER_SIZE];
 char CollectorObject::remote_update[OS_HEADER_SIZE];
@@ -327,6 +328,8 @@ int CollectorObject::GetConfig() {
     
     cy->addKey("zap_result");
     
+    cy->addKey("project_id");
+    
     cy->ParsConfig();
     
     strncpy(dockerbench_result, (char*) cy->getParameter("dockerbench_result").c_str(), sizeof(dockerbench_result));
@@ -342,6 +345,8 @@ int CollectorObject::GetConfig() {
     strncpy(trivy_result, (char*) cy->getParameter("trivy_result").c_str(), sizeof(trivy_result));
     
     strncpy(zap_result, (char*) cy->getParameter("zap_result").c_str(), sizeof(zap_result));
+    
+    project_id = cy->getParameter("project_id");
     
     return 1;
 }

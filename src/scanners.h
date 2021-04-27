@@ -13,8 +13,8 @@
  *   permissions and limitations under the License.
  */
 
-#ifndef UPDATES_H
-#define	UPDATES_H
+#ifndef SCANNERS_H
+#define	SCANNERS_H
 
 #include <boost/asio.hpp>
 #include "base64.h"
@@ -24,7 +24,7 @@
 using boost::asio::ip::tcp;
 using namespace std;
 
-class Updates : public Controller,
+class Scanners : public Controller,
         public ExceptionListener,
         public MessageListener {
 public: 
@@ -32,13 +32,13 @@ public:
     Destination* consumerCommand;
     MessageConsumer* consumer;
     int update_status;
-    
+        
     BinData bd;
     std::stringstream strStream, comp;
     
     FiltersSingleton fs;
         
-    Updates() {
+    Scanners() {
         consumer = NULL;
         update_status = 0;
     }
@@ -53,12 +53,15 @@ public:
     int Go();
     void onMessage(const Message* message);
     void onException(const CMSException& ex AMQCPP_UNUSED);
-    string onBytesMessage(const Message* message);
     string onTextMessage(const Message* message);
-    string SendArToWazuh(string agent, string json);
-    string SendArToSuricata(string json);
-    string CreateAgentWazuh(string json);
-    string DockerContainer(string id, string cmd);
+        
+    string ScanDockerBench(void);
+    string ScanKubeBench(void);
+    string ScanKubeHunter(string target);
+    string ScanNmap(string target);
+    string ScanSnyk(string target);
+    string ScanTrivy(string target);
+    string ScanZap(string target);
     
     void ResetStreams() {
         comp.str("");
@@ -67,9 +70,7 @@ public:
         strStream.clear();
     }
     
-    
-    int IsHomeNetwork(string ip);
 };
 
-#endif	/* UPDATES_H */
+#endif	/* SCANNERS_H */
 

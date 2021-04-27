@@ -86,6 +86,7 @@ sensors:
   misc_redis: "altprobe_misc"
 
 scanners:
+  project_id: "indef"
   # Path to Docker-bench scan result file, for example /root/docker-bench-security/result.json
   dockerbench_result: "indef" 
   # Path to Kube-bench result file, for example /etc/altprobe/kubebench-report.json

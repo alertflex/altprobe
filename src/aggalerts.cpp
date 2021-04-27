@@ -284,7 +284,7 @@ void AggAlerts::SendCrsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.info += std::to_string(c);
     sk.alert.info += " times";
     
-    sk.alert.status = "aggregated_new";
+    sk.alert.status = "aggregated";
     sk.alert.user_name = "indef";
     sk.alert.agent_name = "indef";
     sk.alert.filter = fs.filter.desc;
@@ -414,7 +414,7 @@ void AggAlerts::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.info += std::to_string(c);
     sk.alert.info += " times";
     
-    sk.alert.status = "aggregated_new";
+    sk.alert.status = "aggregated";
     sk.alert.user_name = "indef";
     sk.alert.agent_name = "indef";
     sk.alert.filter = fs.filter.desc;
@@ -537,7 +537,7 @@ void AggAlerts::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.info += std::to_string(c);
     sk.alert.info += " times";
     
-    sk.alert.status = "aggregated_new";
+    sk.alert.status = "aggregated";
     sk.alert.user_name = "indef";
     sk.alert.agent_name = "indef";
     sk.alert.filter = fs.filter.desc;

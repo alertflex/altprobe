@@ -27,6 +27,7 @@ public:
     //
     static string node_id;
     static string probe_id;
+    static string project_id;
     
     static char remote_control[OS_HEADER_SIZE];
     static char remote_update[OS_HEADER_SIZE];

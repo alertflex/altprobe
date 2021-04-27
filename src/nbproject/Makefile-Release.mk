@@ -52,6 +52,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/nids.o \
 	${OBJECTDIR}/remlog.o \
 	${OBJECTDIR}/remstat.o \
+	${OBJECTDIR}/scanners.o \
 	${OBJECTDIR}/sinks.o \
 	${OBJECTDIR}/source.o \
 	${OBJECTDIR}/updates.o
@@ -164,6 +165,11 @@ ${OBJECTDIR}/remstat.o: remstat.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/remstat.o remstat.cpp
+	
+${OBJECTDIR}/scanners.o: scanners.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/scanners.o scanners.cpp
 
 ${OBJECTDIR}/sinks.o: sinks.cpp
 	${MKDIR} -p ${OBJECTDIR}

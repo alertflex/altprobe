@@ -662,7 +662,7 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     sk.alert.action = "indef";     
     sk.alert.location = rec.location;
     sk.alert.info = rec.rule.info;
-    sk.alert.status = "processed_new";
+    sk.alert.status = "processed";
     sk.alert.user_name = rec.user;
     sk.alert.agent_name = rec.agent;
     sk.alert.filter = fs.filter.desc;
@@ -718,37 +718,37 @@ void Hids::SendAlert(int s, GrayList*  gl) {
             
         if (gl->rsp.profile.compare("indef") != 0) {
             sk.alert.action = gl->rsp.profile;
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         }
         
         if (gl->rsp.new_type.compare("indef") != 0) {
             sk.alert.alert_type = gl->rsp.new_type;
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         }  
         
         if (gl->rsp.new_source.compare("indef") != 0) {
             sk.alert.alert_source = gl->rsp.new_source;
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         } 
         
         if (gl->rsp.new_event.compare("indef") != 0) {
             sk.alert.event_id = gl->rsp.new_event;
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         }    
             
         if (gl->rsp.new_severity != 0) {
             sk.alert.alert_severity = gl->rsp.new_severity;
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         }   
             
         if (gl->rsp.new_category.compare("indef") != 0) {
             sk.alert.list_cats.push_back(gl->rsp.new_category);
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         }   
                 
         if (gl->rsp.new_description.compare("indef") != 0) {
             sk.alert.description = gl->rsp.new_description;
-            sk.alert.status = "modified_new";
+            sk.alert.status = "modified";
         }   
         
     }

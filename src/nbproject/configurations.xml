@@ -22,6 +22,7 @@
       <itemPath>nids.h</itemPath>
       <itemPath>remlog.h</itemPath>
       <itemPath>remstat.h</itemPath>
+	  <itemPath>scanners.h</itemPath>
       <itemPath>sinks.h</itemPath>
       <itemPath>source.h</itemPath>
       <itemPath>updates.h</itemPath>
@@ -50,6 +51,7 @@
       <itemPath>nids.cpp</itemPath>
       <itemPath>remlog.cpp</itemPath>
       <itemPath>remstat.cpp</itemPath>
+	  <itemPath>scanners.cpp</itemPath>
       <itemPath>sinks.cpp</itemPath>
       <itemPath>source.cpp</itemPath>
       <itemPath>updates.cpp</itemPath>
@@ -155,6 +157,10 @@
       </item>
       <item path="remstat.h" ex="false" tool="3" flavor2="0">
       </item>
+	  <item path="scanners.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="scanners.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="sinks.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="sinks.h" ex="false" tool="3" flavor2="0">
@@ -257,6 +263,10 @@
       <item path="remstat.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="remstat.h" ex="false" tool="3" flavor2="0">
+      </item>
+	  <item path="scanners.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="scanners.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="sinks.cpp" ex="false" tool="1" flavor2="0">
       </item>

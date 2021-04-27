@@ -100,7 +100,7 @@ void Source::SendAlertMultiple(int type) {
     sk.alert.action = "indef";
     sk.alert.location = "indef";
     sk.alert.info = "indef";
-    sk.alert.status = "processed_new";
+    sk.alert.status = "processed";
     sk.alert.user_name = "indef";
     sk.alert.agent_name = "indef";
     sk.alert.filter = fs.filter.desc;
