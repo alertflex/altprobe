@@ -275,11 +275,11 @@ string Updates::onBytesMessage(const Message* message) {
                     }
                     break;
                 case 1 : {
-                    string dir_path(wazuh_conf);
-                    string file_name(OSSEC_CONFIG);
+                    string dir_path(modsec_conf);
+                    string file_name(MODSEC_CONFIG);
                     string file_path = dir_path + file_name;
                     ostream.open(file_path, ios_base::trunc);
-                    cmd = "/etc/altprobe/scripts/restart-wazuh.sh";
+                    cmd = "/etc/altprobe/scripts/restart-modsec.sh";
                     }
                     break;
                 case 2 : {
@@ -290,6 +290,15 @@ string Updates::onBytesMessage(const Message* message) {
                     cmd = "/etc/altprobe/scripts/restart-suri.sh";
                     }
                     break;
+                case 3 : {
+                    string dir_path(wazuh_conf);
+                    string file_name(OSSEC_CONFIG);
+                    string file_path = dir_path + file_name;
+                    ostream.open(file_path, ios_base::trunc);
+                    cmd = "/etc/altprobe/scripts/restart-wazuh.sh";
+                    }
+                    break;
+                
                 
                 default:
                     return "\"status\": 400 }";
@@ -325,6 +334,20 @@ string Updates::onBytesMessage(const Message* message) {
                     }
                     break;
                 case 1 : {
+                    string rules_path(modsec_local);
+                    string file_path = rules_path + rule_name;
+                    ostream.open(file_path, ios_base::trunc);
+                    cmd = "/etc/altprobe/scripts/rulesup-modsec.sh";
+                    }
+                    break;
+                 case 2 : {
+                    string rules_path(suri_local);
+                    string file_path = rules_path + rule_name;
+                    ostream.open(file_path, ios_base::trunc);
+                    cmd = "/etc/altprobe/scripts/rulesup-suri.sh";
+                    }
+                    break;
+                case 3 : {
                     string dir_path(wazuh_local);
                     string rules_path(WAZUH_RULES);
                     string file_path = dir_path + rules_path + rule_name;
@@ -332,7 +355,7 @@ string Updates::onBytesMessage(const Message* message) {
                     cmd = "/etc/altprobe/scripts/rulesup-wazuh.sh";
                     }
                     break;
-                case 2 : {
+                case 4 : {
                     string dir_path(wazuh_local);
                     string rules_path(WAZUH_DECODERS);
                     string file_path = dir_path + rules_path + rule_name;
@@ -340,14 +363,7 @@ string Updates::onBytesMessage(const Message* message) {
                     cmd = "/etc/altprobe/scripts/rulesup-wazuh.sh";
                     }
                     break;
-                case 3 : {
-                    string rules_path(suri_local);
-                    string file_path = rules_path + rule_name;
-                    ostream.open(file_path, ios_base::trunc);
-                    cmd = "/etc/altprobe/scripts/rulesup-suri.sh";
-                    }
-                    break;
-                
+               
                 default:
                     return "\"status\": 400 }";
             }

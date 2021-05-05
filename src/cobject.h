@@ -51,16 +51,40 @@ public:
     static bool dockerSocketStatus;
     
     // scanners
+    static char dependencycheck_result[OS_BUFFER_SIZE]; 
     static char dockerbench_result[OS_BUFFER_SIZE]; 
     static char kubebench_result[OS_BUFFER_SIZE]; 
     static char kubehunter_result[OS_BUFFER_SIZE]; 
     static char nmap_result[OS_BUFFER_SIZE]; 
-    static char snyk_result[OS_BUFFER_SIZE]; 
     static char trivy_result[OS_BUFFER_SIZE];
     static char zap_result[OS_BUFFER_SIZE]; 
     
     // sensors
-    // Wazuh config parameters
+    
+    static char falco_log[OS_BUFFER_SIZE]; 
+    static int falcolog_status;
+    static char falco_conf[OS_BUFFER_SIZE]; 
+    static char falco_local[OS_BUFFER_SIZE];
+    static char falco_rules[OS_BUFFER_SIZE];
+    
+    static char modsec_log[OS_BUFFER_SIZE];
+    static int modseclog_status;
+    static char modsec_conf[OS_BUFFER_SIZE];
+    static char modsec_local[OS_BUFFER_SIZE];
+    static char modsec_rules[OS_BUFFER_SIZE];
+    
+    static char suri_log[OS_BUFFER_SIZE]; 
+    static int surilog_status;
+    static char suri_conf[OS_BUFFER_SIZE]; 
+    static char suri_local[OS_BUFFER_SIZE];
+    static char suri_rules[OS_BUFFER_SIZE];
+    
+    static char wazuh_log[OS_BUFFER_SIZE];
+    static int wazuhlog_status;
+    static char wazuh_conf[OS_BUFFER_SIZE];
+    static char wazuh_local[OS_BUFFER_SIZE];
+    static char wazuh_rules[OS_BUFFER_SIZE];
+    
     static char wazuh_host[OS_HEADER_SIZE];
     static int wazuh_port;
     static char wazuh_user[OS_HEADER_SIZE];
@@ -68,25 +92,6 @@ public:
     static string wazuh_token;
     static bool wazuhServerStatus;
     
-    static char falco_log[OS_BUFFER_SIZE]; 
-    static int falcolog_status;
-    static char suri_log[OS_BUFFER_SIZE]; 
-    static int surilog_status;
-    static char wazuh_log[OS_BUFFER_SIZE];
-    static int wazuhlog_status;
-    
-    static char falco_conf[OS_BUFFER_SIZE]; 
-    static char falco_local[OS_BUFFER_SIZE];
-    static char falco_rules[OS_BUFFER_SIZE];
-        
-    static char suri_conf[OS_BUFFER_SIZE]; 
-    static char suri_local[OS_BUFFER_SIZE];
-    static char suri_rules[OS_BUFFER_SIZE];
-    
-    static char wazuh_conf[OS_BUFFER_SIZE];
-    static char wazuh_local[OS_BUFFER_SIZE];
-    static char wazuh_rules[OS_BUFFER_SIZE];
-        
     char collector_time[OS_DATETIME_SIZE]; 
     
     //Syslog info string

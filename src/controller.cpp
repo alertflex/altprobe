@@ -147,17 +147,17 @@ void Controller::CheckStatus() {
     
     connection_error++;
     
-    if (connection_error > 10) {
+    if (connection_error > 100) {
         
         if (altprobe_mode == 1) {
             if (daemon_pid_file_kill_wait(SIGTERM, 5) < 0)
                 // daemon_log(LOG_ERR, "Failed to kill AlertFlex collector: %s.", strerror(errno));
-                SysLog( "Failed to kill alertflex collector, update/controller module.");
+                SysLog( "Failed to kill alertflex collector, controller/sensors/update modules.");
                 // else daemon_log(LOG_ERR, "AlertFlex collector is stopping.");
-            else SysLog( "Alertflex collector is stopping, update/controller module.");
+            else SysLog( "Alertflex collector is stopping, controller/sensors/update modules.");
         } else {
             kill(p_pid, SIGTERM); 
-            SysLog( "Alertflex collector is stopping, update/controller module.");
+            SysLog( "Alertflex collector is stopping, controller/sensors/update modules.");
         }
         
     }
@@ -434,7 +434,7 @@ int Controller::SendMessage(Event* e) {
                     byte_message->setIntProperty("sensor", ((BinData*) e)->sensor_type);
                     byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
                     break;
-                case 7 :
+                case 5 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     break;
                 case 8 :
@@ -444,6 +444,9 @@ int Controller::SendMessage(Event* e) {
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     break;
                 case 10 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    break;
+                case 11 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     break;
                 

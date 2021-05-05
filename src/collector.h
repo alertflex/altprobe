@@ -28,7 +28,7 @@
 #include "ids.h"
 #include "hids.h"
 #include "nids.h"
-#include "misc.h"
+#include "waf.h"
 #include "crs.h"
 #include "remlog.h"
 #include "remstat.h"
@@ -69,7 +69,7 @@ public:
         
     Hids* hids;
     Nids* nids; 
-    Misc* misc; 
+    Waf* waf; 
     Crs* crs;
     RemLog* rem_log;
     RemStat* rem_stat;
@@ -80,12 +80,12 @@ public:
     
     string ref_id;
     
-    Collector(Crs* c, Hids* h, Nids* n, Misc* m, RemLog* rl, RemStat* rs) {
+    Collector(Crs* c, Hids* h, Nids* n, Waf* w, RemLog* rl, RemStat* rs) {
     
         crs = c;
         hids = h;
         nids = n;
-        misc = m;
+        waf = w;
         rem_log = rl;
         rem_stat = rs;
                 
@@ -104,9 +104,11 @@ public:
     void UpdateFalcoConfig();
     void UpdateSuriConfig();
     void UpdateOssecConfig();
+    void UpdateModsecConfig();
     void UpdateFalcoRules();
     void UpdateSuriRules();
     void UpdateOssecRules();
+    void UpdateModsecRules();
     
     bool GetToken();
     string GetAgents(string url_request);

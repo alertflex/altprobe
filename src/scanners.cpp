@@ -156,7 +156,7 @@ void Scanners::onMessage(const Message* message) {
         if (dynamic_cast<const TextMessage*> (message)) {
             bodyJson = onTextMessage(message);
         } else {
-            SysLog("ActiveMQ CMS Exception occurred: update module");
+            SysLog("ActiveMQ CMS Exception occurred: scanners module");
             CheckStatus();
             return;
         }
@@ -174,7 +174,7 @@ void Scanners::onMessage(const Message* message) {
         tmpProd = NULL;
         
     } catch (CMSException& e) {
-        SysLog("ActiveMQ CMS Exception occurred: update module");
+        SysLog("ActiveMQ CMS Exception occurred: scanners module");
         CheckStatus();
         return;
     }
@@ -187,7 +187,7 @@ void Scanners::onMessage(const Message* message) {
 // If something bad happens you see it here as this class is also been
 // registered as an ExceptionListener with the connection.
 void Scanners::onException(const CMSException& ex AMQCPP_UNUSED) {
-    SysLog("ActiveMQ CMS Exception occurred: update module");
+    SysLog("ActiveMQ CMS Exception occurred: scanners module");
     CheckStatus();
 }
 
@@ -244,6 +244,30 @@ string Scanners::onTextMessage(const Message* message) {
     
         return "\"status\": 400, \"status_text\": \"wrong actuator or action\" }"; 
     } 
+    
+    if(!actuator_profile.compare("dependency_check")) {
+        
+        if(!action.compare("scan")) {
+                    
+            try {
+                
+                string target = pt.get<string>("target.device.device_id","indef");
+                        
+                if(!target.compare("indef")) {
+    
+                    return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+                } 
+            
+                string res =  ScanDependencyCheck(target);
+                        
+                return res;
+            
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+            }
+                
+        } 
+    }
     
     if(!actuator_profile.compare("docker_bench")) {
         
@@ -327,7 +351,7 @@ string Scanners::onTextMessage(const Message* message) {
         } 
     }
     
-    if(!actuator_profile.compare("snyk")) {
+    if(!actuator_profile.compare("sonarqube")) {
         
         if(!action.compare("scan")) {
                     
@@ -340,7 +364,7 @@ string Scanners::onTextMessage(const Message* message) {
                     return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
                 } 
             
-                string res =  ScanSnyk(target);
+                string res =  ScanSonarQube(target);
                         
                 return res;
             
@@ -402,6 +426,43 @@ string Scanners::onTextMessage(const Message* message) {
     return "\"status\": 400, \"status_text\": \"wrong actuator or action\" }";
 }
 
+string Scanners::ScanDependencyCheck(string target) {
+    
+    try {
+        
+        string cmd = "/etc/altprobe/scripts/dependency-check.sh " + target;
+        
+        system(cmd.c_str());
+        
+        std::ifstream dependencycheck_report;
+        
+        dependencycheck_report.open(dependencycheck_result,ios::binary);
+        strStream << dependencycheck_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 5;
+        bd.target = target;
+        SendMessage(&bd);
+                
+        dependencycheck_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "dependency-check: error";
+    } 
+    
+    return "\"status\": 200 }";
+    
+}
+
 string Scanners::ScanDockerBench(void) {
     
     try {
@@ -425,7 +486,7 @@ string Scanners::ScanDockerBench(void) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 5;
+        bd.event_type = 6;
         SendMessage(&bd);
                 
         docker_report.close();
@@ -437,7 +498,7 @@ string Scanners::ScanDockerBench(void) {
         return "docker_bench: error";
     } 
     
-    return "ok";
+    return "\"status\": 200 }";
     
 }
 
@@ -461,7 +522,7 @@ string Scanners::ScanKubeBench(void) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 6;
+        bd.event_type = 7;
         SendMessage(&bd);
                 
         kubebench_report.close();
@@ -473,7 +534,7 @@ string Scanners::ScanKubeBench(void) {
         return "kube_bench: error";
     } 
     
-    return "ok";
+    return "\"status\": 200 }";
     
 }
 
@@ -497,7 +558,7 @@ string Scanners::ScanKubeHunter(string target) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 7;
+        bd.event_type = 8;
         bd.target = target;
         SendMessage(&bd);
                 
@@ -510,7 +571,7 @@ string Scanners::ScanKubeHunter(string target) {
         return "kube_hunter: error";
     } 
     
-    return "ok";
+    return "\"status\": 200 }";
     
 }
 
@@ -535,7 +596,7 @@ string Scanners::ScanNmap(string target) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 8;
+        bd.event_type = 9;
         bd.target = target;
         SendMessage(&bd);
                 
@@ -548,46 +609,27 @@ string Scanners::ScanNmap(string target) {
         return "nmap: error";
     } 
     
-    return "ok";
+    return "\"status\": 200 }";
     
 }
 
-string Scanners::ScanSnyk(string target) {
+string Scanners::ScanSonarQube(string target) {
     
     try {
         
-        string cmd = "/etc/altprobe/scripts/snyk.sh " + target;
+        string cmd = "/etc/altprobe/scripts/sonarqube.sh " + target;
         
         system(cmd.c_str());
         
-        std::ifstream snyk_report;
-        
-        snyk_report.open(snyk_result,ios::binary);
-        strStream << snyk_report.rdbuf();
-        
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
-        
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 9;
-        bd.target = target;
-        SendMessage(&bd);
-                
-        snyk_report.close();
-        boost::iostreams::close(in);
-        ResetStreams();
-        
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
-        return "snyk: error";
+        return "sonarqube: error";
     } 
     
-    return "ok";
+    return "\"status\": 200 }";
     
 }
+
 
 string Scanners::ScanTrivy(string target) {
     
@@ -622,7 +664,7 @@ string Scanners::ScanTrivy(string target) {
         return "trivy: error";
     } 
     
-    return "ok";
+    return "\"status\": 200 }";
     
 }
 
@@ -659,7 +701,7 @@ string Scanners::ScanZap(string target) {
         return "zap: error";
     } 
     
-    return "ok";
+    return "\"status\": 200 }";
     
 }
 

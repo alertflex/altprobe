@@ -185,6 +185,8 @@ public:
     
     IdsPolicy hids;
     
+    IdsPolicy waf;
+    
     void Reset() {
         ref_id.clear();
         desc.clear();
@@ -192,6 +194,7 @@ public:
         crs.Reset();
         nids.Reset();
         hids.Reset();
+        waf.Reset();
     }
 };
 

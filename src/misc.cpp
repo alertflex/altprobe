@@ -85,7 +85,7 @@ int Misc::Go(void) {
             return 1;
         }
         
-        IncrementEventsCounter();
+        // IncrementEventsCounter();
         
         if (res != 0) sk.SendAlert();
             

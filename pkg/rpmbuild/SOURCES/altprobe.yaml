@@ -31,7 +31,7 @@ collector:
   timer_update: 1
   
   # Allow remote management of collector from controller
-  remote_control: "true"
+  remote_control: "false"
   # Allow update of configs, filters, rules between collector and controller
   remote_update: "true"
   
@@ -59,6 +59,23 @@ controller:
   cert_verify: "_cert_verify"
   key: "_amq_key"
   key_pwd: "_key_pwd"
+  
+scanners:
+  project_id: "indef"
+  # Path to Dependency-check scan result file, for example /root/reports/dependency-check-report.json
+  dependencycheck_result: "indef"
+  # Path to Docker-bench scan result file, for example /root/docker-bench-security/result.json
+  dockerbench_result: "indef" 
+  # Path to Kube-bench result file, for example /etc/altprobe/kubebench-report.json
+  kubebench_result: "indef"
+  # Path to Kube-hunter result file
+  kubehunter_result: "indef"
+  # Path to Nmap result file
+  nmap_result: "indef"
+  # Path to Trivy result file
+  trivy_result: "indef"
+  # Path to OWASP ZAP result file
+  zap_result: "indef"
     
 sensors:
   # Altprobe can read events of falco, suricata, wazuh directly from log files.
@@ -68,6 +85,12 @@ sensors:
   falco_conf: "/etc/falco/"
   falco_rules: "/etc/falco/rules.d/"
   falco_local: "/etc/falco/rules.available/"
+  
+  modsec_log: "_modsec_log"
+  modsec_redis: "altprobe_waf" 
+  modsec_conf: "/etc/nginx/modsec/"
+  modsec_rules: "/usr/local/owasp-modsecurity-crs-3.0.2/"
+  modsec_local: "/etc/nginx/modsec/rules/"
   
   suri_log: "_suri_log"
   suri_redis: "altprobe_nids" 
@@ -84,21 +107,3 @@ sensors:
   # For reading of events from altprobe clients (misc), only Redis intefrace can be used.
   # in case value "indef", module is not in use 
   misc_redis: "altprobe_misc"
-
-scanners:
-  project_id: "indef"
-  # Path to Docker-bench scan result file, for example /root/docker-bench-security/result.json
-  dockerbench_result: "indef" 
-  # Path to Kube-bench result file, for example /etc/altprobe/kubebench-report.json
-  kubebench_result: "indef"
-  # Path to Kube-hunter result file
-  kubehunter_result: "indef"
-  # Path to Nmap result file
-  nmap_result: "indef"
-  # Path to Snyk result file
-  snyk_result: "indef"
-  # Path to Trivy result file
-  trivy_result: "indef"
-  # Path to OWASP ZAP result file
-  zap_result: "indef"
-  

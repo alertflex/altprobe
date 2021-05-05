@@ -38,6 +38,17 @@
             },
             "gray_list": [ 
             ]
+        },
+        "waf": {
+            "log": true,
+            "severity": {
+                "threshold": 1,
+                "level0": 5,
+                "level1": 4,
+                "level2": 3
+            },
+            "gray_list": [ 
+            ]
         }
     }
 }

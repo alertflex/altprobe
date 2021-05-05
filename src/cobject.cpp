@@ -50,15 +50,39 @@ char CollectorObject::docker_socket[OS_BUFFER_SIZE];
 bool CollectorObject::dockerSocketStatus;
 
 // scanners
+char CollectorObject::dependencycheck_result[OS_BUFFER_SIZE];
 char CollectorObject::dockerbench_result[OS_BUFFER_SIZE]; 
 char CollectorObject::kubebench_result[OS_BUFFER_SIZE]; 
 char CollectorObject::kubehunter_result[OS_BUFFER_SIZE]; 
 char CollectorObject::nmap_result[OS_BUFFER_SIZE]; 
-char CollectorObject::snyk_result[OS_BUFFER_SIZE]; 
 char CollectorObject::trivy_result[OS_BUFFER_SIZE]; 
 char CollectorObject::zap_result[OS_BUFFER_SIZE]; 
 
 // sensors
+char CollectorObject::falco_log[OS_BUFFER_SIZE]; 
+int CollectorObject::falcolog_status = 1;
+char CollectorObject::falco_conf[OS_BUFFER_SIZE];
+char CollectorObject::falco_local[OS_BUFFER_SIZE];
+char CollectorObject::falco_rules[OS_BUFFER_SIZE];
+
+char CollectorObject::modsec_log[OS_BUFFER_SIZE];
+int CollectorObject::modseclog_status = 1;
+char CollectorObject::modsec_conf[OS_BUFFER_SIZE];
+char CollectorObject::modsec_local[OS_BUFFER_SIZE];
+char CollectorObject::modsec_rules[OS_BUFFER_SIZE];
+
+char CollectorObject::suri_log[OS_BUFFER_SIZE]; 
+int CollectorObject::surilog_status = 1;
+char CollectorObject::suri_conf[OS_BUFFER_SIZE];
+char CollectorObject::suri_local[OS_BUFFER_SIZE];
+char CollectorObject::suri_rules[OS_BUFFER_SIZE];
+
+char CollectorObject::wazuh_log[OS_BUFFER_SIZE];
+int CollectorObject::wazuhlog_status = 1;
+char CollectorObject::wazuh_conf[OS_BUFFER_SIZE];
+char CollectorObject::wazuh_local[OS_BUFFER_SIZE];
+char CollectorObject::wazuh_rules[OS_BUFFER_SIZE];
+
 char CollectorObject::wazuh_host[OS_HEADER_SIZE];
 int CollectorObject::wazuh_port;
 char CollectorObject::wazuh_user[OS_HEADER_SIZE];
@@ -66,24 +90,9 @@ char CollectorObject::wazuh_pwd[OS_HEADER_SIZE];
 string CollectorObject::wazuh_token;
 bool CollectorObject::wazuhServerStatus;
 
-char CollectorObject::falco_log[OS_BUFFER_SIZE]; 
-int CollectorObject::falcolog_status = 1;
-char CollectorObject::suri_log[OS_BUFFER_SIZE]; 
-int CollectorObject::surilog_status = 1;
-char CollectorObject::wazuh_log[OS_BUFFER_SIZE];
-int CollectorObject::wazuhlog_status = 1;
-
-char CollectorObject::falco_conf[OS_BUFFER_SIZE];
-char CollectorObject::falco_local[OS_BUFFER_SIZE];
-char CollectorObject::falco_rules[OS_BUFFER_SIZE];
-
-char CollectorObject::suri_conf[OS_BUFFER_SIZE];
-char CollectorObject::suri_local[OS_BUFFER_SIZE];
-char CollectorObject::suri_rules[OS_BUFFER_SIZE];
-
-char CollectorObject::wazuh_conf[OS_BUFFER_SIZE];
-char CollectorObject::wazuh_local[OS_BUFFER_SIZE];
-char CollectorObject::wazuh_rules[OS_BUFFER_SIZE];
+static char modsec_conf[OS_BUFFER_SIZE];
+    static char modsec_local[OS_BUFFER_SIZE];
+    static char modsec_rules[OS_BUFFER_SIZE];
 
 char CollectorObject::SysLogInfo[OS_LONG_HEADER_SIZE];
 
@@ -224,27 +233,23 @@ int CollectorObject::GetConfig() {
     cy = new ConfigYaml("sensors");
     
     cy->addKey("falco_log");
-    
-    cy->addKey("suri_log");
-    
-    cy->addKey("wazuh_log");
-    
     cy->addKey("falco_conf");
-    
     cy->addKey("falco_local");
-    
     cy->addKey("falco_rules");
     
+    cy->addKey("modsec_log");
+    cy->addKey("modsec_conf");
+    cy->addKey("modsec_local");
+    cy->addKey("modsec_rules");
+    
+    cy->addKey("suri_log");
     cy->addKey("suri_conf");
-    
     cy->addKey("suri_local");
-    
     cy->addKey("suri_rules");
     
+    cy->addKey("wazuh_log");
     cy->addKey("wazuh_conf");
-    
     cy->addKey("wazuh_local");
-    
     cy->addKey("wazuh_rules");
     
     cy->ParsConfig();
@@ -252,6 +257,11 @@ int CollectorObject::GetConfig() {
     strncpy(falco_log, (char*) cy->getParameter("falco_log").c_str(), sizeof(falco_log));
     if (!strcmp (falco_log, "indef")) { 
         falcolog_status = 0;
+    } 
+    
+    strncpy(modsec_log, (char*) cy->getParameter("modsec_log").c_str(), sizeof(modsec_log));
+    if (!strcmp (modsec_log, "indef")) { 
+        modseclog_status = 0;
     } 
     
     strncpy(suri_log, (char*) cy->getParameter("suri_log").c_str(), sizeof(suri_log));
@@ -276,9 +286,24 @@ int CollectorObject::GetConfig() {
             SysLog("config file notification: falco_local update disabled");
         }
         
-         strncpy(falco_rules, (char*) cy->getParameter("falco_rules").c_str(), sizeof(falco_rules));
+        strncpy(falco_rules, (char*) cy->getParameter("falco_rules").c_str(), sizeof(falco_rules));
         if (!strcmp (falco_rules, "indef")) { 
             SysLog("config file notification: falco_rules update disabled");
+        }
+         
+        strncpy(modsec_conf, (char*) cy->getParameter("modsec_conf").c_str(), sizeof(modsec_conf));
+        if (!strcmp (modsec_conf, "indef")) { 
+            SysLog("config file notification: modsec_conf update disabled");
+        }
+    
+        strncpy(modsec_local, (char*) cy->getParameter("modsec_local").c_str(), sizeof(modsec_local));
+        if (!strcmp (modsec_local, "indef")) { 
+            SysLog("config file notification:  modsec_local update disabled");
+        }
+        
+        strncpy(modsec_rules, (char*) cy->getParameter("modsec_rules").c_str(), sizeof(modsec_rules));
+        if (!strcmp (modsec_rules, "indef")) { 
+            SysLog("config file notification: modsec_rules disabled");
         }
     
         strncpy(suri_conf, (char*) cy->getParameter("suri_conf").c_str(), sizeof(suri_conf));
@@ -314,6 +339,8 @@ int CollectorObject::GetConfig() {
     
     cy = new ConfigYaml( "scanners");
     
+    cy->addKey("dependencycheck_result");
+    
     cy->addKey("dockerbench_result");
     
     cy->addKey("kubebench_result");
@@ -321,8 +348,6 @@ int CollectorObject::GetConfig() {
     cy->addKey("kubehunter_result");
     
     cy->addKey("nmap_result");
-    
-    cy->addKey("snyk_result");
     
     cy->addKey("trivy_result");
     
@@ -332,6 +357,8 @@ int CollectorObject::GetConfig() {
     
     cy->ParsConfig();
     
+    strncpy(dependencycheck_result, (char*) cy->getParameter("dependencycheck_result").c_str(), sizeof(dependencycheck_result));
+    
     strncpy(dockerbench_result, (char*) cy->getParameter("dockerbench_result").c_str(), sizeof(dockerbench_result));
     
     strncpy(kubebench_result, (char*) cy->getParameter("kubebench_result").c_str(), sizeof(kubebench_result));
@@ -339,8 +366,6 @@ int CollectorObject::GetConfig() {
     strncpy(kubehunter_result, (char*) cy->getParameter("kubehunter_result").c_str(), sizeof(kubehunter_result));
     
     strncpy(nmap_result, (char*) cy->getParameter("nmap_result").c_str(), sizeof(nmap_result));
-    
-    strncpy(snyk_result, (char*) cy->getParameter("snyk_result").c_str(), sizeof(snyk_result));
     
     strncpy(trivy_result, (char*) cy->getParameter("trivy_result").c_str(), sizeof(trivy_result));
     

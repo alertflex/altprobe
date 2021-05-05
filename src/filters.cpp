@@ -185,6 +185,36 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             filter.nids.gl.push_back(gl);
         }
         
+        // WAF
+        filter.waf.log = filters.get<bool>("waf.log");
+        filter.waf.severity.threshold = filters.get<int>("waf.severity.threshold");
+        filter.waf.severity.level0 = filters.get<int>("waf.severity.level0");
+        filter.waf.severity.level1 = filters.get<int>("waf.severity.level1");
+        filter.waf.severity.level2 = filters.get<int>("waf.severity.level2");
+               
+        bpt::ptree waf_gray_list = filters.get_child("waf.gray_list");
+        BOOST_FOREACH(bpt::ptree::value_type &waf_list, waf_gray_list) {
+            
+            GrayList* gl = new GrayList();
+            
+            gl->event = waf_list.second.get<string>("event");
+            gl->host = waf_list.second.get<string>("host");
+            gl->match = waf_list.second.get<string>("match");
+            
+            gl->agr.reproduced = waf_list.second.get<int>("aggregate.reproduced");  
+            gl->agr.in_period = waf_list.second.get<int>("aggregate.in_period");  
+            
+            gl->rsp.profile = waf_list.second.get<string>("response.profile");
+            gl->rsp.new_type = waf_list.second.get<string>("response.new_type");  
+            gl->rsp.new_source = waf_list.second.get<string>("response.new_source");    
+            gl->rsp.new_event = waf_list.second.get<string>("response.new_event");           
+            gl->rsp.new_severity = waf_list.second.get<int>("response.new_severity");
+            gl->rsp.new_category = waf_list.second.get<string>("response.new_category");
+            gl->rsp.new_description = waf_list.second.get<string>("response.new_description");
+            
+            filter.waf.gl.push_back(gl);
+        }
+        
         pt.clear();
         
     } catch (const std::exception & ex) {

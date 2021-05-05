@@ -231,6 +231,7 @@ GrayList* Nids::CheckGrayList() {
         std::vector<GrayList*>::iterator i, end;
         
         for (i = fs.filter.nids.gl.begin(), end = fs.filter.nids.gl.end(); i != end; ++i) {
+            
             int event_id = std::stoi((*i)->event);
             if (event_id == rec.alert.signature_id) {
                 

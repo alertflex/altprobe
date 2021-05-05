@@ -86,7 +86,7 @@ void Source::SendAlertMultiple(int type) {
             break;
         case 3:
             sk.alert.alert_type = "NET";
-            sk.alert.alert_source = "Modsecurity";
+            sk.alert.alert_source = "ModSecurity";
             break;
         default:
             sk.alert.alert_type = "MISC";

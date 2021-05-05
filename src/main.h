@@ -96,6 +96,7 @@
 #define OSSEC_CONFIG "ossec.conf"
 #define SURI_CONFIG "suricata.yaml"
 #define FALCO_CONFIG "falco.yaml"
+#define MODSEC_CONFIG "modsecurity.conf"
 
 #define WAZUH_RULES "rules/"
 #define WAZUH_DECODERS "decoders/"

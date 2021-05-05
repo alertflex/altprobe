@@ -128,6 +128,7 @@ public:
 extern boost::lockfree::spsc_queue<IdsRecord> q_hids;
 extern boost::lockfree::spsc_queue<IdsRecord> q_nids;
 extern boost::lockfree::spsc_queue<IdsRecord> q_crs;
+extern boost::lockfree::spsc_queue<IdsRecord> q_waf;
 
 #endif	/* IDS_H */
 

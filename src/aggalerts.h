@@ -35,11 +35,13 @@ public:
     std::list<IdsRecord> crs_alerts_list;
     std::list<IdsRecord> hids_alerts_list;
     std::list<IdsRecord> nids_alerts_list;
+    std::list<IdsRecord> waf_alerts_list;
        
     //Alerts stat
     IdsStat crs_stat;
     IdsStat hids_stat;
     IdsStat nids_stat;
+    IdsStat waf_stat;
         
     virtual int Open();
     virtual void Close();
@@ -62,6 +64,10 @@ public:
     void UpdateNidsAlerts();
     void SendNidsAlert(std::list<IdsRecord>::iterator r, int c);
     void ResetNidsAlert();
+    
+    void UpdateWafAlerts();
+    void SendWafAlert(std::list<IdsRecord>::iterator r, int c);
+    void ResetWafAlert();
     
 };
 

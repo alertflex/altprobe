@@ -54,12 +54,13 @@ public:
     void onMessage(const Message* message);
     void onException(const CMSException& ex AMQCPP_UNUSED);
     string onTextMessage(const Message* message);
-        
+   
+    string ScanDependencyCheck(string target);
     string ScanDockerBench(void);
     string ScanKubeBench(void);
     string ScanKubeHunter(string target);
     string ScanNmap(string target);
-    string ScanSnyk(string target);
+    string ScanSonarQube(string target);
     string ScanTrivy(string target);
     string ScanZap(string target);
     

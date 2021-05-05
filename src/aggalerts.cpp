@@ -59,6 +59,7 @@ int AggAlerts::Go(void) {
             ResetCrsAlert();
             ResetHidsAlert();
             ResetNidsAlert();
+            ResetWafAlert();
         }
         
         RoutineJob();
@@ -73,10 +74,10 @@ void AggAlerts::ProcessAlerts() {
     
     counter = 0;
     
-    while (!q_crs.empty() || !q_nids.empty() || !q_hids.empty()) {
+    while (!q_crs.empty() || !q_hids.empty() || !q_nids.empty() || !q_waf.empty()) {
         
-        if (!q_nids.empty()) {
-            q_nids.pop(ids_rec);
+        if (!q_crs.empty()) {
+            q_crs.pop(ids_rec);
             PushRecord();
             counter++;
         }
@@ -87,8 +88,14 @@ void AggAlerts::ProcessAlerts() {
             counter++;
         }
         
-        if (!q_crs.empty()) {
-            q_crs.pop(ids_rec);
+        if (!q_nids.empty()) {
+            q_nids.pop(ids_rec);
+            PushRecord();
+            counter++;
+        }
+        
+        if (!q_waf.empty()) {
+            q_waf.pop(ids_rec);
             PushRecord();
             counter++;
         }
@@ -132,6 +139,18 @@ void AggAlerts::PushRecord() {
         if (ids_rec.severity == 1) crs_stat.s1_counter++;
         if (ids_rec.severity == 2) crs_stat.s2_counter++;
         if (ids_rec.severity == 3) crs_stat.s3_counter++;
+        
+        if (ids_rec.filter) crs_stat.filter_counter++;
+        
+    } 
+    
+    if (ids_rec.ids_type == 5) {
+        if(ids_rec.agr.reproduced != 0) UpdateWafAlerts();
+        
+        if (ids_rec.severity == 0) waf_stat.s0_counter++;
+        if (ids_rec.severity == 1) waf_stat.s1_counter++;
+        if (ids_rec.severity == 2) waf_stat.s2_counter++;
+        if (ids_rec.severity == 3) waf_stat.s3_counter++;
         
         if (ids_rec.filter) crs_stat.filter_counter++;
         
@@ -199,6 +218,24 @@ void AggAlerts::RoutineJob() {
     ss << ", \"nids_s3\": ";
     ss << to_string(nids_stat.s3_counter);
     
+    ss << ", \"waf_agg\": ";
+    ss << to_string(waf_stat.agg_counter);
+    
+    ss << ", \"waf_filter\": ";
+    ss << to_string(waf_stat.filter_counter);
+        
+    ss << ", \"waf_s0\": ";
+    ss << to_string(waf_stat.s0_counter);
+        
+    ss << ", \"waf_s1\": ";
+    ss << to_string(waf_stat.s1_counter);
+    
+    ss << ", \"waf_s2\": ";
+    ss << to_string(waf_stat.s2_counter);
+    
+    ss << ", \"waf_s3\": ";
+    ss << to_string(waf_stat.s3_counter);
+    
     ss << ", \"time_of_survey\": \"";
     ss << GetNodeTime();
     ss << "\" } }";
@@ -211,6 +248,7 @@ void AggAlerts::RoutineJob() {
     crs_stat.Reset();
     hids_stat.Reset();
     nids_stat.Reset();
+    waf_stat.Reset();
 }
 
 void AggAlerts::UpdateCrsAlerts() {
@@ -585,6 +623,122 @@ void AggAlerts::ResetNidsAlert() {
     for(i = nids_alerts_list.begin(), end = nids_alerts_list.end(); i != end; ++i) {
         if ((i->alert_time + i->agr.in_period) < current_time)
             nids_alerts_list.erase(i++);
+    }
+}
+
+void AggAlerts::UpdateWafAlerts() {
+    std::list<IdsRecord>::iterator i, end;
+    time_t current_time;
+    
+    for(i = waf_alerts_list.begin(), end = waf_alerts_list.end(); i != end; ++i) {
+        if (i->ref_id.compare(ids_rec.ref_id) == 0)  { 
+            if (i->event.compare(ids_rec.event) == 0) {
+                if (i->host.compare("indef") == 0 || i->host.compare(ids_rec.dst_ip) == 0 || i->host.compare(ids_rec.src_ip) == 0) {
+                    if (i->match.compare(ids_rec.match) == 0) {
+                        //get current time
+                        current_time = time(NULL);
+                        i->count++;  
+                        if ((i->alert_time + i->agr.in_period) < current_time) {
+                            if (i->count >= i->agr.reproduced) {
+                                SendWafAlert(i, i->count);
+                                waf_alerts_list.erase(i);
+                            }
+                            else {
+                                waf_alerts_list.erase(i);
+                                goto new_waf_alert;
+                            }
+                            return;
+                        }
+                    }
+                }
+            }  
+        }
+    } 
+new_waf_alert:
+    waf_stat.agg_counter++;
+    ids_rec.count = 1;
+    waf_alerts_list.push_back(ids_rec);
+}
+
+void AggAlerts::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
+    
+    sk.alert.ref_id = r->ref_id;
+    sk.alert.sensor_id = r->ids;
+    
+    if (r->rsp.new_severity != 0) sk.alert.alert_severity = r->rsp.new_severity;
+    else sk.alert.alert_severity = r->severity;
+    
+    if (r->rsp.new_source.compare("indef") != 0)  sk.alert.alert_source = r->rsp.new_source;
+    else sk.alert.alert_source = "ModSecurity";
+    
+    if (r->rsp.new_type.compare("indef") != 0) sk.alert.alert_type = r->rsp.new_type;
+    else sk.alert.alert_type = "NET";
+    
+    sk.alert.event_severity = 0;
+    
+    if (r->rsp.new_event.compare("indef") != 0) sk.alert.event_id = r->rsp.new_event;
+    else sk.alert.event_id = r->event;
+    
+    if (r->rsp.new_description.compare("indef") != 0)  sk.alert.description = r->rsp.new_description;
+    else sk.alert.description = r->desc;
+    
+    if (r->rsp.profile.compare("indef") != 0) sk.alert.action = r->rsp.profile;
+    else sk.alert.action = "indef";
+    
+    sk.alert.location = "indef";
+    
+    sk.alert.info = "Message has been repeated ";
+    sk.alert.info += std::to_string(c);
+    sk.alert.info += " times";
+    
+    sk.alert.status = "aggregated";
+    sk.alert.user_name = "indef";
+    sk.alert.agent_name = "indef";
+    sk.alert.filter = fs.filter.desc;
+    
+    copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
+    if (r->rsp.new_category.compare("indef") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
+    
+    sk.alert.event_time = GetNodeTime();
+    sk.alert.event_json = "indef";
+    
+    sk.alert.src_ip = r->src_ip;
+    sk.alert.dst_ip = r->dst_ip;
+    sk.alert.src_hostname = "indef";
+    sk.alert.dst_hostname = r->agent;
+    sk.alert.src_port = 0;
+    sk.alert.dst_port = 0;
+    
+    sk.alert.file_name = "indef";
+    sk.alert.file_path = "indef";
+	
+    sk.alert.hash_md5 = "indef";
+    sk.alert.hash_sha1 = "indef";
+    sk.alert.hash_sha256 = "indef";
+	
+    sk.alert.process_id = 0;
+    sk.alert.process_name = "indef";
+    sk.alert.process_cmdline = "indef";
+    sk.alert.process_path = "indef";
+    
+    sk.alert.url_hostname = "indef";
+    sk.alert.url_path = "indef";
+    
+    sk.alert.container_id = "indef";
+    sk.alert.container_name = "indef";
+    
+    sk.SendAlert();
+}
+
+void AggAlerts::ResetWafAlert() {
+    std::list<IdsRecord>::iterator i, end;
+    time_t current_time;
+    
+    current_time = time(NULL);
+    
+    for(i = waf_alerts_list.begin(), end = waf_alerts_list.end(); i != end; ++i) {
+        if ((i->alert_time + i->agr.in_period) < current_time)
+            waf_alerts_list.erase(i++);
     }
 }
 

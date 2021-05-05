@@ -184,18 +184,24 @@ int Collector::Go(void) {
                 }
                 
                 UpdateFalcoConfig();
+                
+                UpdateModsecConfig();
             
                 UpdateSuriConfig();
             
                 UpdateOssecConfig();
-            
+                
                 UpdateFalcoRules();
+                
+                UpdateModsecRules();
             
                 UpdateSuriRules();
             
                 UpdateOssecRules();
                 
                 UpdateContainers();
+                
+                
             
                 string update_notification = "update for altprobe has been done";
                 SysLog((char*) update_notification.c_str());
@@ -215,7 +221,7 @@ void Collector::StatJob() {
     unsigned long ccrs = crs->ResetEventsCounter();
     unsigned long chids = hids->ResetEventsCounter();
     unsigned long cnids = nids->ResetEventsCounter();
-    unsigned long cmisc = misc->ResetEventsCounter();
+    unsigned long cwaf = waf->ResetEventsCounter();
     unsigned long cremlog = rem_log->ResetEventsCounter();
     unsigned long vremlog = rem_log->ResetEventsVolume();
     unsigned long cremstat = rem_stat->ResetEventsCounter();
@@ -233,8 +239,8 @@ void Collector::StatJob() {
     ss << ", \"nids\": ";
     ss << to_string(cnids);
     
-    ss << ", \"misc\": ";
-    ss << to_string(cmisc);
+    ss << ", \"waf\": ";
+    ss << to_string(cwaf);
     
     ss << ", \"log_counter\": ";
     ss << to_string(cremlog);
@@ -743,30 +749,24 @@ void Collector::UpdateFalcoConfig() {
     
 }
 
-
-void Collector::UpdateOssecConfig() {
+void Collector::UpdateModsecConfig() {
     
-    if (!strcmp (wazuh_conf, "indef")) return; 
+    if (!strcmp (modsec_conf, "indef")) return; 
     
     try {
         
-        std::ifstream ossec_config;
-        string dir_path(wazuh_conf);
-        string file_name(OSSEC_CONFIG);
+        std::ifstream modsec_config;
+        string dir_path(modsec_conf);
+        string file_name(MODSEC_CONFIG);
         string file_path = dir_path + file_name;
+        //SysLog((char*) file_path.c_str());
+        modsec_config.open(file_path,ios::binary);
+        strStream << modsec_config.rdbuf();
         
-        ossec_config.open(file_path,ios::binary);
-        strStream << ossec_config.rdbuf();
-            
         boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
         in.push(boost::iostreams::gzip_compressor());
         in.push(strStream);
         boost::iostreams::copy(in, comp);
-        boost::iostreams::close(in);
-
-        //string s = std::to_string(rep_size);
-        //string output = "logs compressed = " + s;
-        // SysLog((char*) strStream.str().c_str());
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
@@ -774,7 +774,7 @@ void Collector::UpdateOssecConfig() {
         bd.event_type = 3;
         sk.SendMessage(&bd);
         
-        ossec_config.close();
+        modsec_config.close();
         boost::iostreams::close(in);
         ResetStreams();
         
@@ -824,6 +824,48 @@ void Collector::UpdateSuriConfig() {
     
     return;
 }
+
+void Collector::UpdateOssecConfig() {
+    
+    if (!strcmp (wazuh_conf, "indef")) return; 
+    
+    try {
+        
+        std::ifstream ossec_config;
+        string dir_path(wazuh_conf);
+        string file_name(OSSEC_CONFIG);
+        string file_path = dir_path + file_name;
+        
+        ossec_config.open(file_path,ios::binary);
+        strStream << ossec_config.rdbuf();
+            
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        boost::iostreams::close(in);
+
+        //string s = std::to_string(rep_size);
+        //string output = "logs compressed = " + s;
+        // SysLog((char*) strStream.str().c_str());
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.sensor_type = 3;
+        bd.event_type = 3;
+        sk.SendMessage(&bd);
+        
+        ossec_config.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+    } 
+    
+    return;
+}
+
 
 void Collector::UpdateFalcoRules() {
     
@@ -876,17 +918,16 @@ void Collector::UpdateFalcoRules() {
     
 }
 
-void Collector::UpdateOssecRules() {
+void Collector::UpdateModsecRules() {
     
-    if (!strcmp (wazuh_rules, "indef")) return; 
+    if (!strcmp (modsec_rules, "indef")) return; 
     
     try {
         
-        string root(wazuh_rules);
-        string rules(WAZUH_RULES);
-        
-        path p (root + rules);
-        
+        string root(modsec_rules);
+                
+        path p (root + "rules");
+
         directory_iterator end_itr;
         
         // cycle through the directory
@@ -900,9 +941,9 @@ void Collector::UpdateOssecRules() {
                 
                 file_path = itr->path();
                 file_name = file_path.filename().string();
-                std::ifstream ossec_rules;
-                ossec_rules.open(file_path.string(),ios::binary);
-                strStream << ossec_rules.rdbuf();
+                std::ifstream modsec_rules;
+                modsec_rules.open(file_path.string(),ios::binary);
+                strStream << modsec_rules.rdbuf();
         
                 boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
                 in.push(boost::iostreams::gzip_compressor());
@@ -916,7 +957,7 @@ void Collector::UpdateOssecRules() {
                 rd.event_type = 4;
                 sk.SendMessage(&rd);
         
-                ossec_rules.close();
+                modsec_rules.close();
                 boost::iostreams::close(in);
                 ResetStreams();
             }
@@ -978,6 +1019,61 @@ void Collector::UpdateSuriRules() {
     
     return;
 }
+
+void Collector::UpdateOssecRules() {
+    
+    if (!strcmp (wazuh_rules, "indef")) return; 
+    
+    try {
+        
+        string root(wazuh_rules);
+        string rules(WAZUH_RULES);
+        
+        path p (root + rules);
+        
+        directory_iterator end_itr;
+        
+        // cycle through the directory
+        int i = 0;
+        path file_path;
+        string file_name;
+        
+        for (directory_iterator itr(p); itr != end_itr; ++itr, i++) {
+            
+            if (is_regular_file(itr->path())) {
+                
+                file_path = itr->path();
+                file_name = file_path.filename().string();
+                std::ifstream ossec_rules;
+                ossec_rules.open(file_path.string(),ios::binary);
+                strStream << ossec_rules.rdbuf();
+        
+                boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+                in.push(boost::iostreams::gzip_compressor());
+                in.push(strStream);
+                boost::iostreams::copy(in, comp);
+                
+                rd.data = comp.str();
+                rd.name_rule = file_name;
+                rd.ref_id = fs.filter.ref_id;
+                rd.sensor_type = 3;
+                rd.event_type = 4;
+                sk.SendMessage(&rd);
+        
+                ossec_rules.close();
+                boost::iostreams::close(in);
+                ResetStreams();
+            }
+        }
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+    } 
+    
+    return;
+}
+
+
 
 
 

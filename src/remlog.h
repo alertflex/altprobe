@@ -21,6 +21,7 @@
 #include "hids.h"
 #include "nids.h"
 #include "crs.h"
+#include "waf.h"
 
 using namespace std;
 

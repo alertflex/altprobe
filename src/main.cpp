@@ -95,6 +95,22 @@ void * thread_crs(void *arg) {
     pthread_exit(0);
 }
 
+Waf waf("modsec_redis");
+pthread_t pthread_waf;
+
+void* exit_thread_waf_arg;
+void exit_thread_waf(void* arg) { waf.Close(); }
+
+void * thread_waf(void *arg) {
+    
+    pthread_cleanup_push(exit_thread_waf, exit_thread_waf_arg);
+    
+    while (waf.Go()) { }
+    
+    pthread_cleanup_pop(1);
+    pthread_exit(0);
+}
+
 Nids nids("suri_redis");
 pthread_t pthread_nids;
 
@@ -192,7 +208,7 @@ void * thread_scanners(void *arg) {
 }
 
 
-Collector collr(&crs, &hids, &nids, &misc, &remlog, &remstat);
+Collector collr(&crs, &hids, &nids, &waf, &remlog, &remstat);
 pthread_t pthread_collr;
 
 void* exit_thread_collr_arg;
@@ -227,6 +243,9 @@ int LoadConfig(void)
     
     //crs
     if (!crs.GetConfig()) return 0;
+    
+    //waf
+    if (!waf.GetConfig()) return 0;
     
     //remlog
     if (!remlog.GetConfig()) return 0;
@@ -330,6 +349,18 @@ int InitThreads(int mode, pid_t pid)
                 return 0;
             }
         } else daemon_log(LOG_ERR,"CRS source is disabled");
+    } 
+    
+    //waf
+    if (waf.GetStatus()) {
+        
+        if (waf.Open()) {
+            
+            if (pthread_create(&pthread_waf, NULL, thread_waf, &arg)) {
+                daemon_log(LOG_ERR,"error creating thread for WAF module");
+                return 0;
+            }
+        } else daemon_log(LOG_ERR,"WAF source is disabled");
     } 
     
         
@@ -437,6 +468,12 @@ void KillsThreads(void)
     if (crs.GetStatus()) {
         pthread_cancel(pthread_crs);
         pthread_join(pthread_crs, NULL);
+    }
+    
+    //waf
+    if (waf.GetStatus()) {
+        pthread_cancel(pthread_waf);
+        pthread_join(pthread_waf, NULL);
     }
     
     //remlog
