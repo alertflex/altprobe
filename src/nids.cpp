@@ -29,7 +29,7 @@ int Nids::Open() {
         fp = fopen(suri_log, "r");
         if(fp == NULL) {
             SysLog("failed open suricata log file");
-            return 0;
+            return status = 0;
         }
         
         fseek(fp,0,SEEK_END);
@@ -45,7 +45,7 @@ int Nids::Open() {
                 // handle error
                 sprintf(level, "failed open redis server interface: %s\n", c->errstr);
                 SysLog(level);
-                return 0;
+                status = 0;
             }
         }  else status = 0;
     }
@@ -257,8 +257,6 @@ GrayList* Nids::CheckGrayList() {
 
 int Nids::ParsJson () {
     
-    // SysLog(payload);
-    
     if (surilog_status == 1) {
         jsonPayload.assign(file_payload, GetBufferSize(file_payload));
         
@@ -276,6 +274,22 @@ int Nids::ParsJson () {
         return 0;
     } 
     
+    bool is_aws_firewall = false;
+    string aws_firewall = "indef";
+    
+    if (surilog_status != 1) {
+        
+        aws_firewall = pt.get<string>("firewall_name","indef");
+        
+        if (aws_firewall.compare("indef") != 0) {
+            
+            is_aws_firewall = true;
+            ss1 << jsonPayload;
+            bpt::read_json(ss1, pt1);
+            pt = pt1.get_child("event");
+        }
+    }
+    
     string event_type = pt.get<string>("event_type","");
     
     if (surilog_status == 1) {
@@ -283,7 +297,10 @@ int Nids::ParsJson () {
         rec.sensor = probe_id + ".nids";
         
     } else {
-        rec.sensor = pt.get<string>("sensor-name","");
+        
+        if (is_aws_firewall) rec.sensor = aws_firewall;
+        else rec.sensor = pt.get<string>("sensor-name","indef");
+        
     }
     
     if (event_type.compare("alert") == 0) {

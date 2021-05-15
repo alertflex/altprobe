@@ -36,7 +36,7 @@ int Hids::Open() {
         fp = fopen(wazuh_log, "r");
         if(fp == NULL) {
             SysLog("failed open wazuh log file");
-            return 0;
+            return status = 0;
         }
             
         fseek(fp,0,SEEK_END);
@@ -53,7 +53,7 @@ int Hids::Open() {
                 // handle error
                 sprintf(level, "failed open redis server interface: %s\n", c->errstr);
                 SysLog(level);
-                return 0;
+                status = 0;
             }
         } else status = 0;
     }

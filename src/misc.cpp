@@ -36,7 +36,7 @@ int Misc::Open() {
             // handle error
             sprintf(level, "failed open redis server interface: %s\n", c->errstr);
             SysLog(level);
-            return 0;
+            status = 0;
         }
     
     } else status = 0;

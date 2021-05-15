@@ -35,7 +35,7 @@ int Crs::Open() {
         fp = fopen(falco_log, "r");
         if(fp == NULL) {
             SysLog("failed open falco log file");
-            return 0;
+            return status = 0;
         }
         
         fseek(fp,0,SEEK_END);
@@ -52,7 +52,7 @@ int Crs::Open() {
                 // handle error
                 sprintf(level, "failed open redis server interface: %s\n", c->errstr);
                 SysLog(level);
-                return 0;
+                status = 0;
             }
         } else status = 0;
     }

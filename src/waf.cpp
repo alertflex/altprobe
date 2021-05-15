@@ -204,7 +204,7 @@ int Waf::Open() {
         fp = fopen(modsec_log, "r");
         if(fp == NULL) {
             SysLog("failed open nginx error log file");
-            return 0;
+            return status = 0;
         }
         
         fseek(fp,0,SEEK_END);
@@ -220,7 +220,7 @@ int Waf::Open() {
                 // handle error
                 sprintf(level, "failed open redis server interface: %s\n", c->errstr);
                 SysLog(level);
-                return 0;
+                status = 0;
             }
         } else status = 0;
     }

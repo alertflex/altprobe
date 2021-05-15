@@ -116,7 +116,7 @@ int Scanners::Open(int mode, pid_t pid) {
         
             amq_conn = true;
             
-            string log = "Altprobe listen scanners bus";
+            string log = "listens scanners bus";
             SysLog((char*) log.c_str());
  
         } catch (CMSException& e) {

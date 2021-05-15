@@ -202,8 +202,8 @@ public:
     // create netstat record
     Netstat net_stat;
     
-    bpt::ptree pt;
-    stringstream ss;
+    bpt::ptree pt, pt1;
+    stringstream ss, ss1;
     
     Nids (string skey) : Source(skey) {
         ClearRecords();
@@ -214,6 +214,8 @@ public:
     void ResetStream() {
         ss.str("");
         ss.clear();
+        ss1.str("");
+        ss1.clear();
     }
     
     void ResetJsontree() {

@@ -108,7 +108,7 @@ int Updates::Open(int mode, pid_t pid) {
         
             amq_conn = true;
             
-            string log = "Altprobe listen sensors bus";
+            string log = "listens sensors bus";
             SysLog((char*) log.c_str());
  
         } catch (CMSException& e) {

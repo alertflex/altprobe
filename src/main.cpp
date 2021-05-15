@@ -550,7 +550,7 @@ int start(pid_t pid) {
             return 255;
         }
 
-        daemon_log(ret != 0 ? LOG_ERR : LOG_INFO, "altprobe collector started with code %i", ret);
+        daemon_log(ret != 0 ? LOG_ERR : LOG_INFO, "collector started with code %i", ret);
         
         return ret;
 
@@ -601,7 +601,7 @@ int start(pid_t pid) {
         /* Send OK to parent process */
         daemon_retval_send(0);
 
-        daemon_log(LOG_INFO, "altprobe collector has been successfully started");
+        daemon_log(LOG_INFO, "collector has been successfully started");
 
         /* Prepare for select() on the signal fd */
         FD_ZERO(&fds);

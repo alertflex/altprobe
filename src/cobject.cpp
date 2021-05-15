@@ -32,8 +32,6 @@ string CollectorObject::project_id;
 
 char CollectorObject::remote_control[OS_HEADER_SIZE];
 char CollectorObject::remote_update[OS_HEADER_SIZE];
-
-
 bool CollectorObject::rcStatus;
 bool CollectorObject::ruStatus;
 
@@ -110,7 +108,7 @@ int CollectorObject::GetConfig() {
     
     cy->addKey("log_path");
     cy->addKey("log_size");
-    
+        
     cy->addKey("timer_start");
     cy->addKey("timer_sleep");
         

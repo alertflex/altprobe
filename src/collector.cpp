@@ -42,7 +42,7 @@ int  Collector::Open() {
     
     if (wazuhServerStatus) {
         if (GetToken()){
-            SysLog("connection between Wazuh server and Altprobe is established");
+            SysLog("connection with Wazuh server is established");
         } 
     }
     
@@ -178,32 +178,32 @@ int Collector::Go(void) {
                 
                 if (wazuhServerStatus) {
                     if (GetToken()) {
-                        SysLog("connection between Wazuh server and Altprobe is established");
                         UpdateAgents();
+                    } else {
+                        SysLog("connection with Wazuh server is lost");
                     }
                 }
                 
                 UpdateFalcoConfig();
                 
                 UpdateModsecConfig();
-            
+                
                 UpdateSuriConfig();
-            
+                
                 UpdateOssecConfig();
                 
                 UpdateFalcoRules();
                 
                 UpdateModsecRules();
-            
-                UpdateSuriRules();
-            
-                UpdateOssecRules();
                 
+                UpdateSuriRules();
+               
+                UpdateOssecRules();
+               
                 UpdateContainers();
                 
                 
-            
-                string update_notification = "update for altprobe has been done";
+                string update_notification = "update has been done";
                 SysLog((char*) update_notification.c_str());
             }
         
@@ -368,11 +368,11 @@ void Collector::ParsAgents (const string& json) {
                 string name = agents.second.get<string>("name");
                 string status = agents.second.get<string>("status");
                 string dateAdd = agents.second.get<string>("dateAdd");
-                string version = agents.second.get<string>("version");
-                string manager_host = agents.second.get<string>("manager");
+                string version = "wazuh"; //agents.second.get<string>("version");
+                string manager_host = probe_id + ".hids"; //agents.second.get<string>("manager");
                 string os_platform = agents.second.get<string>("os.platform", "indef");
                 string os_version = agents.second.get<string>("os.version", "indef");
-                string os_name = agents.second.get<string>("os.name", "indef");
+                string os_name = agents.second.get<string>("os.name", "indef"); 
         
                 fs.UpdateAgentsList(id, ip, name, status, dateAdd, version, manager_host, os_platform, os_version, os_name);
             }
@@ -386,7 +386,7 @@ void Collector::ParsAgents (const string& json) {
 }
 
 void Collector::UpdateAgents(void) {
-        
+    
     string payload = GetAgents("/agents");
     
     if (!payload.empty()) {
@@ -751,6 +751,8 @@ void Collector::UpdateFalcoConfig() {
 
 void Collector::UpdateModsecConfig() {
     
+    if (modseclog_status == 0) return;
+    
     if (!strcmp (modsec_conf, "indef")) return; 
     
     try {
@@ -786,6 +788,8 @@ void Collector::UpdateModsecConfig() {
 }
 
 void Collector::UpdateSuriConfig() {
+    
+    if (surilog_status == 0) return;
     
     if (!strcmp (suri_conf, "indef")) return; 
     
@@ -826,6 +830,8 @@ void Collector::UpdateSuriConfig() {
 }
 
 void Collector::UpdateOssecConfig() {
+    
+    if (wazuhlog_status == 0) return;
     
     if (!strcmp (wazuh_conf, "indef")) return; 
     
@@ -868,6 +874,8 @@ void Collector::UpdateOssecConfig() {
 
 
 void Collector::UpdateFalcoRules() {
+    
+    if (falcolog_status == 0) return;
     
     if (!strcmp (falco_rules, "indef")) return; 
     
@@ -919,6 +927,8 @@ void Collector::UpdateFalcoRules() {
 }
 
 void Collector::UpdateModsecRules() {
+    
+    if (modseclog_status == 0) return;
     
     if (!strcmp (modsec_rules, "indef")) return; 
     
@@ -972,6 +982,8 @@ void Collector::UpdateModsecRules() {
 
 void Collector::UpdateSuriRules() {
     
+    if (surilog_status == 0) return;
+    
     if (!strcmp (suri_rules, "indef")) return; 
     
     try {
@@ -1021,6 +1033,8 @@ void Collector::UpdateSuriRules() {
 }
 
 void Collector::UpdateOssecRules() {
+    
+    if (wazuhlog_status == 0) return;
     
     if (!strcmp (wazuh_rules, "indef")) return; 
     
