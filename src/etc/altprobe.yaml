@@ -35,10 +35,10 @@ collector:
   # Allow update of configs, filters, rules between collector and controller
   remote_update: "true"
   
-  # Docker unix socket filename for active response, if value is indef interface to socket disabled
-  socket_docker: "/var/run/docker.sock"
-  # Suricata unix socket filename for active response, if value is indef interface to socket disabled
-  socket_suricata: "/run/suricata/suricata-command.socket"
+  # Docker unix socket filename for active response - /var/run/docker.sock , if value is indef interface to socket disabled
+  socket_docker: "indef"
+  # Suricata unix socket filename for active response - /run/suricata/suricata-command.socket , if value is indef interface to socket disabled
+  socket_suricata: "indef"
   
   # Altprobe can read an agents status via Wazuh API  (report_timer is used as a period of reading)
   wazuhapi_host: "127.0.0.1"
