@@ -78,7 +78,7 @@ scanners:
   zap_result: "indef"
     
 sensors:
-  # Altprobe can read events of falco, suricata, wazuh directly from log files.
+  # Altprobe can read events of falco, suricata, wazuh, modsecurity directly from log files.
   # If xxx_log is "indef" redis interface will be used. In case xxx_redis is "indef", module is not in use
   falco_log: "_falco_log"
   falco_redis: "altprobe_crs" 

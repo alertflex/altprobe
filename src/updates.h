@@ -58,6 +58,7 @@ public:
     string SendArToWazuh(string agent, string json);
     string SendArToSuricata(string json);
     string CreateAgentWazuh(string json);
+    string DeleteAgentWazuh(string agent);
     string DockerContainer(string id, string cmd);
     
     void ResetStreams() {

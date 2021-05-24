@@ -55,14 +55,16 @@ public:
     void onException(const CMSException& ex AMQCPP_UNUSED);
     string onTextMessage(const Message* message);
    
-    string ScanDependencyCheck(string target);
-    string ScanDockerBench(void);
-    string ScanKubeBench(void);
-    string ScanKubeHunter(string target);
-    string ScanNmap(string target);
-    string ScanSonarQube(string target);
-    string ScanTrivy(string target);
-    string ScanZap(string target);
+    string ScanDependencyCheck(string target, string container);
+    string ScanDockerBench(string container);
+    string ScanKubeBench(string container);
+    string ScanKubeHunter(string target, string container);
+    string ScanNmap(string target, string container);
+    string ScanSonarQube(string target, string container);
+    string ScanTrivy(string target, string container);
+    string ScanZap(string target, string container);
+    
+    string DockerContainer(string id, string cmd);
     
     void ResetStreams() {
         comp.str("");

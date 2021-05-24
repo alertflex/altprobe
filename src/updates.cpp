@@ -391,6 +391,9 @@ string Updates::onTextMessage(const Message* message) {
                 
     string c2json = textMessage->getText();
     
+    //************************************************************************************************************************
+    SysLog((char*) c2json.c_str());
+    
     stringstream c2json_ss(c2json);
     bpt::ptree pt;
     bpt::read_json(c2json_ss, pt);
@@ -440,7 +443,7 @@ string Updates::onTextMessage(const Message* message) {
     
     if(!actuator_profile.compare("wazuh_agent")) {
         
-        if(!wazuh_token.compare("create")) {
+        if(!wazuh_token.compare("indef")) {
             return "\"status\": 400, \"status_text\": \"problem with Wazuh api\" }"; 
         }
         
@@ -459,6 +462,27 @@ string Updates::onTextMessage(const Message* message) {
                 string jsonCreateAgent = "{ \"name\": \"" + agent + "\", \"ip\": \"" + ip + "\" }";
         
                 string res =  CreateAgentWazuh(jsonCreateAgent);
+        
+                return res;
+            
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong args\" }"; 
+            }
+                
+        } 
+        
+        if(!action.compare("delete")) {
+        
+            try {
+            
+                string agent = pt.get<string>("args.x-alertflex:wazuh_agent.id","indef");
+                
+                if(!agent.compare("indef")) {
+    
+                    return "\"status\": 400, \"status_text\": \"agent id is missing\" }"; 
+                } 
+                
+                string res =  DeleteAgentWazuh(agent);
         
                 return res;
             
@@ -687,16 +711,10 @@ string Updates::CreateAgentWazuh(string json) {
         if (response.size() > 0) {
             payload << &response;
         }
-
-        // Read until EOF, writing data to output as we go.
-        boost::system::error_code error;
-        while (boost::asio::read(socket, response,boost::asio::transfer_at_least(1), error)) {
-            payload << &response;
-        }
-
-        if (error != boost::asio::error::eof) {
-            throw boost::system::system_error(error);
-        }
+        
+        boost::asio::read_until(socket, response, boost::regex("}.*}"));
+        
+        payload << &response;
         
         stringstream response_ss(payload.str());
         bpt::ptree pt;
@@ -711,6 +729,106 @@ string Updates::CreateAgentWazuh(string json) {
         } 
         
         return "\"status\": 200, \"result\": { \"x-alertflex:wazuh_agent\": { \"id\": \"" + id + "\", \"key\": \"" + key + "\"} } }";
+        
+    }
+    catch (std::exception& e) {
+        
+    }
+
+    return "\"status\": 400, \"status_text\": \"wazuh api exception\" }";
+}
+
+string Updates::DeleteAgentWazuh(string agent) {
+    
+    try {
+        
+        boost::asio::io_service io_service;
+        
+        string hostAddress;
+        string ip(wazuh_host);
+        stringstream ss;
+        ss << wazuh_port;
+        string port = ss.str();
+        
+        if (wazuh_port != 80) {
+            hostAddress = ip + ":" + port;
+        } else { 
+            
+            hostAddress = ip;
+        }
+        
+        // Get a list of endpoints corresponding to the server name.
+        tcp::resolver resolver(io_service);
+        tcp::resolver::query query(ip, port);
+        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+
+        tcp::socket socket(io_service);
+        boost::asio::connect(socket, endpoint_iterator);
+        
+        boost::asio::streambuf request;
+        ostream request_stream(&request);
+        request_stream << "DELETE /agents?status=all&purge=true&older_than=10s&agents_list=" + agent + " HTTP/1.1\r\n";  
+        request_stream << "Host: " << hostAddress << "\r\n";
+        request_stream << "Authorization: Bearer "<< wazuh_token << "\r\n";
+        request_stream << "Accept: */*\r\n";
+        request_stream << "Connection: close\r\n\r\n";
+        
+        boost::asio::write(socket, request);
+
+        // Read the response status line. The response streambuf will automatically
+        // grow to accommodate the entire line. The growth may be limited by passing
+        // a maximum size to the streambuf constructor.
+        
+        boost::asio::streambuf response;
+        boost::asio::read_until(socket, response, "\r\n");
+
+        // Check that response is OK.
+        istream response_stream(&response);
+        string http_version;
+        response_stream >> http_version;
+        unsigned int status_code;
+        response_stream >> status_code;
+        string status_message;
+        getline(response_stream, status_message);
+        
+        if (!response_stream || http_version.substr(0, 5) != "HTTP/") {
+            return "\"status\": 400, \"status_text\": \"error response from wazuh api\" }";
+        }
+        
+        if (status_code != 200) {
+            return "\"status\": 400, \"status_text\": \"error response from wazuh api\" }";
+        }
+        
+        // Read the response headers, which are terminated by a blank line.
+        boost::asio::read_until(socket, response, "\r\n\r\n");
+
+        // Process the response headers.
+        string header;
+        while (getline(response_stream, header) && header != "\r") { }
+        
+        stringstream  payload;
+        // Write whatever content we already have to output.
+        if (response.size() > 0) {
+            payload << &response;
+        }
+        
+        boost::asio::read_until(socket, response, boost::regex("}.*}"));
+        
+        payload << &response;
+        
+        stringstream response_ss(payload.str());
+        bpt::ptree pt;
+        bpt::read_json(response_ss, pt);
+        
+        int total_affected_items = pt.get<int>("data.total_affected_items",0);
+        int total_failed_items = pt.get<int>("data.total_failed_items",0);
+                
+        if(total_affected_items != 1 || total_failed_items != 0) {
+    
+            return "\"status\": 400, \"status_text\": \"error response from wazuh - key or id\" }"; 
+        } 
+        
+        return  "\"status\": 200 }";
         
     }
     catch (std::exception& e) {

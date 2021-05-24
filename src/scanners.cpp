@@ -237,8 +237,11 @@ string Scanners::onTextMessage(const Message* message) {
     
     
     string action =  pt.get<string>("action","indef");
+    
     string actuator_profile =  pt.get<string>("actuator.x-alertflex.profile","indef");
     
+    string container =  pt.get<string>("actuator.x-alertflex.container","indef");
+        
     
     if(!actuator_profile.compare("indef") || !action.compare("indef")) {
     
@@ -258,7 +261,7 @@ string Scanners::onTextMessage(const Message* message) {
                     return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
                 } 
             
-                string res =  ScanDependencyCheck(target);
+                string res =  ScanDependencyCheck(target, container);
                         
                 return res;
             
@@ -275,7 +278,7 @@ string Scanners::onTextMessage(const Message* message) {
                     
             try {
             
-                string res =  ScanDockerBench();
+                string res =  ScanDockerBench(container);
                         
                 return res;
             
@@ -292,7 +295,7 @@ string Scanners::onTextMessage(const Message* message) {
                     
             try {
             
-                string res =  ScanKubeBench();
+                string res =  ScanKubeBench(container);
                         
                 return res;
             
@@ -316,7 +319,7 @@ string Scanners::onTextMessage(const Message* message) {
                     return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
                 } 
             
-                string res =  ScanKubeHunter(target);
+                string res =  ScanKubeHunter(target, container);
                         
                 return res;
             
@@ -340,7 +343,7 @@ string Scanners::onTextMessage(const Message* message) {
                     return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
                 } 
             
-                string res =  ScanNmap(target);
+                string res =  ScanNmap(target, container);
                         
                 return res;
             
@@ -364,7 +367,7 @@ string Scanners::onTextMessage(const Message* message) {
                     return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
                 } 
             
-                string res =  ScanSonarQube(target);
+                string res =  ScanSonarQube(target, container);
                         
                 return res;
             
@@ -388,7 +391,7 @@ string Scanners::onTextMessage(const Message* message) {
                     return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
                 } 
             
-                string res =  ScanTrivy(target);
+                string res =  ScanTrivy(target, container);
                         
                 return res;
             
@@ -412,7 +415,7 @@ string Scanners::onTextMessage(const Message* message) {
                     return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
                 } 
             
-                string res =  ScanZap(target);
+                string res =  ScanZap(target, container);
                         
                 return res;
             
@@ -426,13 +429,24 @@ string Scanners::onTextMessage(const Message* message) {
     return "\"status\": 400, \"status_text\": \"wrong actuator or action\" }";
 }
 
-string Scanners::ScanDependencyCheck(string target) {
+string Scanners::ScanDependencyCheck(string target, string container) {
     
     try {
         
-        string cmd = "/etc/altprobe/scripts/dependency-check.sh " + target;
+        if(!container.compare("indef")) {
         
-        system(cmd.c_str());
+            string cmd = "/etc/altprobe/scripts/dependency-check.sh " + target;
+        
+            system(cmd.c_str());
+        
+        } else {
+            
+            string res = DockerContainer(container, "start");
+        
+            if (res.compare("ok")) {
+                return "dependency-check container: error";
+            }
+        }
         
         std::ifstream dependencycheck_report;
         
@@ -463,15 +477,26 @@ string Scanners::ScanDependencyCheck(string target) {
     
 }
 
-string Scanners::ScanDockerBench(void) {
+string Scanners::ScanDockerBench(string container) {
     
     try {
         
         // command example - cd /root/docker-bench-security && sh docker-bench-security.sh -l report
         
-        string cmd = "/etc/altprobe/scripts/docker-bench.sh";
+        if(!container.compare("indef")) {
         
-        system(cmd.c_str());
+            string cmd = "/etc/altprobe/scripts/docker-bench.sh";
+        
+            system(cmd.c_str());
+        
+        } else {
+             
+            string res = DockerContainer(container, "start");
+        
+            if (res.compare("ok")) {
+                return "docker-bench container: error";
+            }
+        }
         
         std::ifstream docker_report;
         
@@ -502,13 +527,24 @@ string Scanners::ScanDockerBench(void) {
     
 }
 
-string Scanners::ScanKubeBench(void) {
+string Scanners::ScanKubeBench(string container) {
     
     try {
         
-        string cmd = "/etc/altprobe/scripts/kube-bench.sh";
+        if(!container.compare("indef")) {
         
-        system(cmd.c_str());
+            string cmd = "/etc/altprobe/scripts/kube-bench.sh";
+        
+            system(cmd.c_str());
+        
+        } else {
+             
+            string res = DockerContainer(container, "start");
+        
+            if (res.compare("ok")) {
+                return "kube-check container: error";
+            }
+        }
         
         std::ifstream kubebench_report;
         
@@ -538,13 +574,24 @@ string Scanners::ScanKubeBench(void) {
     
 }
 
-string Scanners::ScanKubeHunter(string target) {
+string Scanners::ScanKubeHunter(string target, string container) {
     
     try {
         
-        string cmd = "/etc/altprobe/scripts/kube-hunter.sh " + target;
+        if(!container.compare("indef")) {
         
-        system(cmd.c_str());
+            string cmd = "/etc/altprobe/scripts/kube-hunter.sh " + target;
+        
+            system(cmd.c_str());
+        
+        } else {
+             
+            string res = DockerContainer(container, "start");
+        
+            if (res.compare("ok")) {
+                return "kube-hunter container: error";
+            }
+        }
         
         std::ifstream kubehunter_report;
         
@@ -576,13 +623,24 @@ string Scanners::ScanKubeHunter(string target) {
 }
 
 
-string Scanners::ScanNmap(string target) {
+string Scanners::ScanNmap(string target, string container) {
     
     try {
         
-        string cmd = "/etc/altprobe/scripts/nmap.sh " + target;
+        if(!container.compare("indef")) {
         
-        system(cmd.c_str());
+            string cmd = "/etc/altprobe/scripts/nmap.sh " + target;
+        
+            system(cmd.c_str());
+        
+        } else {
+             
+            string res = DockerContainer(container, "start");
+        
+            if (res.compare("ok")) {
+                return "nmap container: error";
+            }
+        }
         
         std::ifstream nmap_report;
         
@@ -613,13 +671,24 @@ string Scanners::ScanNmap(string target) {
     
 }
 
-string Scanners::ScanSonarQube(string target) {
+string Scanners::ScanSonarQube(string target, string container) {
     
     try {
         
-        string cmd = "/etc/altprobe/scripts/sonarqube.sh " + target;
+        if(!container.compare("indef")) {
         
-        system(cmd.c_str());
+            string cmd = "/etc/altprobe/scripts/sonarqube.sh " + target;
+        
+            system(cmd.c_str());
+        
+        } else {
+             
+            string res = DockerContainer(container, "start");
+        
+            if (res.compare("ok")) {
+                return "sonarqube container: error";
+            }
+        }
         
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
@@ -631,13 +700,24 @@ string Scanners::ScanSonarQube(string target) {
 }
 
 
-string Scanners::ScanTrivy(string target) {
+string Scanners::ScanTrivy(string target, string container) {
     
     try {
         
-        string cmd = "/etc/altprobe/scripts/trivy.sh " + target;
+        if(!container.compare("indef")) {
         
-        system(cmd.c_str());
+            string cmd = "/etc/altprobe/scripts/trivy.sh " + target;
+        
+            system(cmd.c_str());
+        
+        } else {
+             
+            string res = DockerContainer(container, "start");
+        
+            if (res.compare("ok")) {
+                return "trivy container: error";
+            }
+        }
         
         std::ifstream trivy_report;
         
@@ -668,13 +748,24 @@ string Scanners::ScanTrivy(string target) {
     
 }
 
-string Scanners::ScanZap(string target) {
+string Scanners::ScanZap(string target, string container) {
     
     try {
         
-        string cmd = "/etc/altprobe/scripts/zap.sh " + target;
+        if(!container.compare("indef")) {
         
-        system(cmd.c_str());
+            string cmd = "/etc/altprobe/scripts/zap.sh " + target;
+        
+            system(cmd.c_str());
+        
+        } else {
+             
+            string res = DockerContainer(container, "start");
+        
+            if (res.compare("ok")) {
+                return "zap container: error";
+            }
+        }
         
         std::ifstream zap_report;
         
@@ -703,6 +794,75 @@ string Scanners::ScanZap(string target) {
     
     return "\"status\": 200 }";
     
+}
+
+string Scanners::DockerContainer(string id, string cmd) {
+    
+    int sck;
+    struct sockaddr_un addr;
+    int ret;
+    
+    if (dockerSocketStatus) {
+    
+        try {
+        
+            /* create socket */
+            sck = socket(AF_UNIX, SOCK_STREAM, 0);
+            if (sck == -1) {
+                close (sck);
+                return "can not create socket";
+            }
+            
+            /* set address */
+            addr.sun_family = AF_UNIX;
+            strncpy(addr.sun_path, docker_socket, sizeof(addr.sun_path));
+            addr.sun_path[sizeof(addr.sun_path) - 1] = 0;
+
+            /* Connect to unix socket */
+            ret = connect(sck, (struct sockaddr *) &addr, sizeof(addr));
+            if (ret == -1) {
+                close (sck);
+                return "can not connect to socket";
+            }
+        
+            std::string req = "POST /v1.40/containers/";
+            req += id;
+            req += "/";
+            req += cmd;
+            req += " HTTP/1.1\r\n";
+            req += "Host: localhost\r\n";
+            req += "Accept: */*\r\n\r\n";
+        
+            int siz = req.size();
+
+            ret = send(sck, req.c_str(), siz, 0);
+            if (ret == -1) {
+                close (sck);
+                return "can not send request";
+            } else if (ret < siz) {
+                close (sck);
+                return "unable send all size of message";
+            }
+        
+            char buffer[SOCKET_BUFFER_SIZE];
+            memset(buffer, 0, sizeof(buffer));
+        
+            ret = read(sck, buffer, SOCKET_BUFFER_SIZE);
+            if (ret == -1) {
+                close (sck);
+                return "can not read answer";
+            } 
+        
+            close (sck);
+            return "ok";
+        
+        } catch (std::exception& e) {
+            close (sck);
+            return "docker_unixsocket: exception";
+        }
+    }
+
+    return "docker_unixsocket: error";
 }
 
 
