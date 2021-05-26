@@ -2,7 +2,7 @@
 ---
 # Altprobe collector configuration file.
 
-# Collector version 0.7
+# Collector version 0.9
 collector:
   node: "_node_id"
   probe: "_probe_id"
@@ -25,22 +25,22 @@ collector:
   timer_sleep:   1000  
   # period reports generation of collector statistic in sec, 
   # if 0 then the functionality is off (default 300 - 5 min)
-  timer_report: 60  
-  # timer to run scans (docker-bench and trivy ) for docker, send IDS backup of configs and rules to controller
-  # measure in timer_scan*timer_report (default 12 - 60 min)
-  timer_update: 1
+  timer_report: 300  
+  # timer to backup/update of IDS configs and rules to controller, check status agents and containers
+  # measure in timer_update*timer_report (default 12 - 60 min)
+  timer_update: 12
   
   # Allow remote management of collector from controller
   remote_control: "false"
   # Allow update of configs, filters, rules between collector and controller
   remote_update: "true"
   
-  # Docker unix socket filename for active response, if value is indef interface to socket disabled
-  socket_docker: "/var/run/docker.sock"
-  # Suricata unix socket filename for active response, if value is indef interface to socket disabled
-  socket_suricata: "/run/suricata/suricata-command.socket"
+  # Docker unix socket filename for active response - /var/run/docker.sock , if value is indef interface to socket disabled
+  socket_docker: "indef"
+  # Suricata unix socket filename for active response - /run/suricata/suricata-command.socket , if value is indef interface to socket disabled
+  socket_suricata: "indef"
   
-  # Altprobe reads via Wazuh API an agents status (use report_timer as a period of reading)
+  # Altprobe can read an agents status via Wazuh API  (report_timer is used as a period of reading)
   wazuhapi_host: "127.0.0.1"
   wazuhapi_port: 55000  
   wazuhapi_user: "_wazuh_user"
@@ -51,7 +51,7 @@ collector:
   redis_port: 6379 
   
 controller:
-  # Send alerts and statistics to Central Node (ActiveMQ interface)
+  # ActiveMQ interface for communication with Cnode
   url: "_amq_url"
   user: "_amq_user"
   pwd: "_amq_pwd"
@@ -70,6 +70,8 @@ scanners:
   kubebench_result: "indef"
   # Path to Kube-hunter result file
   kubehunter_result: "indef"
+  # Path to Nikto result file
+  nikto_result: "indef"
   # Path to Nmap result file
   nmap_result: "indef"
   # Path to Trivy result file
@@ -78,7 +80,7 @@ scanners:
   zap_result: "indef"
     
 sensors:
-  # Altprobe can read events of falco, suricata, wazuh directly from log files.
+  # Altprobe can read events of falco, suricata, wazuh, modsecurity directly from log files.
   # If xxx_log is "indef" redis interface will be used. In case xxx_redis is "indef", module is not in use
   falco_log: "_falco_log"
   falco_redis: "altprobe_crs" 
@@ -104,6 +106,6 @@ sensors:
   wazuh_rules: "/var/ossec/ruleset/"
   wazuh_local: "/var/ossec/etc/"
   
-  # For reading of events from altprobe clients (misc), only Redis intefrace can be used.
-  # in case value "indef", module is not in use 
+  # you can send events with type "MISC" to altprobe via Redis interface, 
+  # it can be useful for implementation new events sources and testing
   misc_redis: "altprobe_misc"

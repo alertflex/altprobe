@@ -44,6 +44,7 @@ install -m 0755 $RPM_SOURCE_DIR/scripts/docker-bench.sh $RPM_BUILD_ROOT/etc/altp
 install -m 0755 $RPM_SOURCE_DIR/scripts/kube-bench.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/kube-bench.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/kube-hunter.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/kube-hunter.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/sonarqube.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/sonarqube.sh
+install -m 0755 $RPM_SOURCE_DIR/scripts/nikto.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/nikto.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/nmap.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/nmap.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/trivy.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/trivy.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/zap.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/zap.sh
@@ -73,6 +74,7 @@ install -m 0755 $RPM_SOURCE_DIR/scripts/altprobe-stop $RPM_BUILD_ROOT/usr/sbin/a
 /etc/altprobe/scripts/docker-bench.sh
 /etc/altprobe/scripts/kube-bench.sh
 /etc/altprobe/scripts/kube-hunter.sh
+/etc/altprobe/scripts/nikto.sh
 /etc/altprobe/scripts/nmap.sh
 /etc/altprobe/scripts/sonarqube.sh
 /etc/altprobe/scripts/trivy.sh

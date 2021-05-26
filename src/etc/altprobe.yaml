@@ -70,6 +70,8 @@ scanners:
   kubebench_result: "indef"
   # Path to Kube-hunter result file
   kubehunter_result: "indef"
+  # Path to Nikto result file
+  nikto_result: "indef"
   # Path to Nmap result file
   nmap_result: "indef"
   # Path to Trivy result file

@@ -426,6 +426,30 @@ string Scanners::onTextMessage(const Message* message) {
         } 
     }
     
+    if(!actuator_profile.compare("nikto")) {
+        
+        if(!action.compare("scan")) {
+                    
+            try {
+                
+                string target = pt.get<string>("target.device.device_id","indef");
+                        
+                if(!target.compare("indef")) {
+    
+                    return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+                } 
+            
+                string res =  ScanNikto(target, container);
+                        
+                return res;
+            
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+            }
+                
+        } 
+    }
+    
     return "\"status\": 400, \"status_text\": \"wrong actuator or action\" }";
 }
 
@@ -790,6 +814,54 @@ string Scanners::ScanZap(string target, string container) {
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
         return "zap: error";
+    } 
+    
+    return "\"status\": 200 }";
+    
+}
+
+string Scanners::ScanNikto(string target, string container) {
+    
+    try {
+        
+        if(!container.compare("indef")) {
+        
+            string cmd = "/etc/altprobe/scripts/nikto.sh " + target;
+        
+            system(cmd.c_str());
+        
+        } else {
+             
+            string res = DockerContainer(container, "start");
+        
+            if (res.compare("ok")) {
+                return "nikto container: error";
+            }
+        }
+        
+        std::ifstream nikto_report;
+        
+        nikto_report.open(nikto_result,ios::binary);
+        strStream << nikto_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 12;
+        bd.target = target;
+        SendMessage(&bd);
+                
+        nikto_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "nikto: error";
     } 
     
     return "\"status\": 200 }";

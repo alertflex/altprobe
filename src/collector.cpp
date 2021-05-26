@@ -450,12 +450,12 @@ void Collector::UpdateAgents(void) {
                 /*
                 payload = GetAgents("/syscollector/" + i->id + "/processes");
                 
-                PushAgents(payload,"processes",i->id);
+                PushAgents(payload,"processes",i->id); */
                 
                 payload = GetAgents("/syscollector/" + i->id + "/packages");
                 
                 PushAgents(payload,"packages",i->id);
-                */
+                
                 payload = GetAgents("/sca/" + i->id);
                 
                 stringstream ss(payload);

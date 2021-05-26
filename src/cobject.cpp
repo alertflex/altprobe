@@ -55,6 +55,7 @@ char CollectorObject::kubehunter_result[OS_BUFFER_SIZE];
 char CollectorObject::nmap_result[OS_BUFFER_SIZE]; 
 char CollectorObject::trivy_result[OS_BUFFER_SIZE]; 
 char CollectorObject::zap_result[OS_BUFFER_SIZE]; 
+char CollectorObject::nikto_result[OS_BUFFER_SIZE]; 
 
 // sensors
 char CollectorObject::falco_log[OS_BUFFER_SIZE]; 
@@ -351,6 +352,8 @@ int CollectorObject::GetConfig() {
     
     cy->addKey("zap_result");
     
+    cy->addKey("nikto_result");
+    
     cy->addKey("project_id");
     
     cy->ParsConfig();
@@ -368,6 +371,8 @@ int CollectorObject::GetConfig() {
     strncpy(trivy_result, (char*) cy->getParameter("trivy_result").c_str(), sizeof(trivy_result));
     
     strncpy(zap_result, (char*) cy->getParameter("zap_result").c_str(), sizeof(zap_result));
+    
+    strncpy(nikto_result, (char*) cy->getParameter("nikto_result").c_str(), sizeof(nikto_result));
     
     project_id = cy->getParameter("project_id");
     

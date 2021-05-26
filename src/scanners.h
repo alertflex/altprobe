@@ -63,6 +63,7 @@ public:
     string ScanSonarQube(string target, string container);
     string ScanTrivy(string target, string container);
     string ScanZap(string target, string container);
+    string ScanNikto(string target, string container);
     
     string DockerContainer(string id, string cmd);
     
