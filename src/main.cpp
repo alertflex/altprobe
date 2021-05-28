@@ -21,6 +21,7 @@
 
 #include "aggalerts.h"
 #include "aggnet.h"
+#include "aws.h"
 #include "hids.h"
 #include "crs.h"
 #include "misc.h"
@@ -74,6 +75,22 @@ void * thread_misc(void *arg) {
     pthread_cleanup_push(exit_thread_misc, exit_thread_misc_arg);
     
     while (misc.Go()) { }
+    
+    pthread_cleanup_pop(1);
+    pthread_exit(0);
+}
+
+AwsWaf aws("aws_redis");
+pthread_t pthread_aws;
+
+void* exit_thread_aws_arg;
+void exit_thread_aws(void* arg) { aws.Close(); }
+
+void * thread_aws(void *arg) {
+    
+    pthread_cleanup_push(exit_thread_aws, exit_thread_aws_arg);
+    
+    while (aws.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
@@ -235,6 +252,9 @@ int LoadConfig(void)
     //misc
     if (!misc.GetConfig()) return 0;
     
+    //aws
+    if (!aws.GetConfig()) return 0;
+    
     //hids
     if (!hids.GetConfig()) return 0;
     
@@ -309,6 +329,20 @@ int InitThreads(int mode, pid_t pid)
             }
             
         } else daemon_log(LOG_ERR,"MISC source is disabled");
+            
+    }
+    
+     //aws
+    if (aws.GetStatus()) {
+        
+        if (aws.Open()) {
+            
+            if (pthread_create(&pthread_aws, NULL, thread_aws, &arg)) {
+                daemon_log(LOG_ERR,"error creating thread for AWS module");
+                return 0;
+            }
+            
+        } else daemon_log(LOG_ERR,"AWS source is disabled");
             
     }
     
@@ -450,6 +484,12 @@ void KillsThreads(void)
     if (misc.GetStatus()) {
         pthread_cancel(pthread_misc);
         pthread_join(pthread_misc, NULL);
+    }
+    
+    //aws
+    if (aws.GetStatus()) {
+        pthread_cancel(pthread_aws);
+        pthread_join(pthread_aws, NULL);
     }
     
     //hids

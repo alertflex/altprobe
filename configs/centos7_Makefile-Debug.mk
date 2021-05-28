@@ -37,6 +37,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/aggalerts.o \
 	${OBJECTDIR}/aggnet.o \
+	${OBJECTDIR}/aws.o \
 	${OBJECTDIR}/cobject.o \
 	${OBJECTDIR}/collector.o \
 	${OBJECTDIR}/config.o \
@@ -92,6 +93,11 @@ ${OBJECTDIR}/aggnet.o: aggnet.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/aggnet.o aggnet.cpp
+	
+${OBJECTDIR}/aws.o: aws.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/aws.o aws.cpp
 
 ${OBJECTDIR}/cobject.o: cobject.cpp
 	${MKDIR} -p ${OBJECTDIR}

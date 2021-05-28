@@ -447,14 +447,10 @@ void Collector::UpdateAgents(void) {
             q_stats_collr.push(report);
             
             for (i = fs.agents_list.begin(), end = fs.agents_list.end(); i != end; ++i) {
-                /*
-                payload = GetAgents("/syscollector/" + i->id + "/processes");
-                
-                PushAgents(payload,"processes",i->id); */
                 
                 payload = GetAgents("/syscollector/" + i->id + "/packages");
                 
-                PushAgents(payload,"packages",i->id);
+                PushAgents(payload,"packages_list",i->id);
                 
                 payload = GetAgents("/sca/" + i->id);
                 

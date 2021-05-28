@@ -6,6 +6,7 @@
                    projectFiles="true">
       <itemPath>aggalerts.h</itemPath>
       <itemPath>aggnet.h</itemPath>
+	  <itemPath>aws.h</itemPath>
       <itemPath>base64.h</itemPath>
       <itemPath>cobject.h</itemPath>
       <itemPath>collector.h</itemPath>
@@ -37,6 +38,7 @@
                    projectFiles="true">
       <itemPath>aggalerts.cpp</itemPath>
       <itemPath>aggnet.cpp</itemPath>
+	  <itemPath>aws.cpp</itemPath>
       <itemPath>cobject.cpp</itemPath>
       <itemPath>collector.cpp</itemPath>
       <itemPath>config.cpp</itemPath>
@@ -96,6 +98,10 @@
       <item path="aggnet.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="aggnet.h" ex="false" tool="3" flavor2="0">
+      </item>
+	  <item path="aws.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="aws.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="base64.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -207,6 +213,10 @@
       <item path="aggnet.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="aggnet.h" ex="false" tool="3" flavor2="0">
+      </item>
+	  <item path="aws.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="aws.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="base64.h" ex="false" tool="3" flavor2="0">
       </item>
