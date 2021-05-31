@@ -176,14 +176,15 @@ sudo systemctl enable altprobe.service
 
 if [[ $BUILD_PACKAGE == yes ]]
 then
-	cd $INSTALL_PATH/pkg
-	sudo chmod u+x dpkg/altprobe_1.0-1/etc/altprobe/scripts/*
+    cd $INSTALL_PATH/pkg
+    sudo chmod u+x dpkg/altprobe_1.0-1/etc/altprobe/scripts/*
     sudo chmod u+x dpkg/altprobe_1.0-1/usr/local/bin/altprob*
     sudo cp -rp dpkg ~
     sudo cp /usr/local/bin/altprobe ~/dpkg/altprobe_1.0-1/usr/local/bin/
+    sudo mkdir ~/dpkg/altprobe_1.0-1/usr/local/lib/
     sudo cp /usr/local/lib/libhiredis.so.1.0.1-dev ~/dpkg/altprobe_1.0-1/usr/local/lib/
     sudo cp /usr/local/lib/libactivemq-cpp.so.19.0.5 ~/dpkg/altprobe_1.0-1/usr/local/lib/
-	sudo chown -R root:root ~/dpkg
+    sudo chown -R root:root ~/dpkg
     cd ~/dpkg
     sudo dpkg-deb --build altprobe_1.0-1
 fi
