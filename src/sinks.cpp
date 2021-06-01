@@ -64,7 +64,9 @@ int Sinks::GetConfig() {
         }
         
         alerts_threshold = stoi(cy->getParameter("alerts_threshold"));
+        
         strncpy(redis_host, (char*) cy->getParameter("redis_host").c_str(), sizeof(redis_host));
+        
         redis_port = stoi(cy->getParameter("redis_port"));
     }
         

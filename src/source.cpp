@@ -25,7 +25,9 @@ int Source::GetConfig() {
     //Read filter config
     if(!fs.GetFiltersConfig()) return 0;
     
-    if (!redis_key.compare("indef")) {
+    string redis_host(sk.redis_host);
+    
+    if (!redis_key.compare("indef") || !redis_host.compare("indef") || sk.redis_port == 0) {
     
         redis_status = 0;
        

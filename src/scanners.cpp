@@ -241,6 +241,8 @@ string Scanners::onTextMessage(const Message* message) {
     string actuator_profile =  pt.get<string>("actuator.x-alertflex.profile","indef");
     
     string container =  pt.get<string>("actuator.x-alertflex.container","indef");
+    
+    int delay = pt.get<int>("args.delay",0);
         
     
     if(!actuator_profile.compare("indef") || !action.compare("indef")) {
@@ -256,12 +258,12 @@ string Scanners::onTextMessage(const Message* message) {
                 
                 string target = pt.get<string>("target.device.device_id","indef");
                         
-                if(!target.compare("indef")) {
+                if(!target.compare("indef") && !container.compare("indef")) {
     
-                    return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
                 } 
             
-                string res =  ScanDependencyCheck(target, container);
+                string res =  ScanDependencyCheck(target, container, delay);
                         
                 return res;
             
@@ -277,8 +279,8 @@ string Scanners::onTextMessage(const Message* message) {
         if(!action.compare("scan")) {
                     
             try {
-            
-                string res =  ScanDockerBench(container);
+                
+                string res =  ScanDockerBench(container, delay);
                         
                 return res;
             
@@ -295,7 +297,7 @@ string Scanners::onTextMessage(const Message* message) {
                     
             try {
             
-                string res =  ScanKubeBench(container);
+                string res =  ScanKubeBench(container, delay);
                         
                 return res;
             
@@ -314,12 +316,12 @@ string Scanners::onTextMessage(const Message* message) {
                 
                 string target = pt.get<string>("target.device.device_id","indef");
                         
-                if(!target.compare("indef")) {
+                if(!target.compare("indef") && !container.compare("indef")) {
     
-                    return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
                 } 
             
-                string res =  ScanKubeHunter(target, container);
+                string res =  ScanKubeHunter(target, container, delay);
                         
                 return res;
             
@@ -338,12 +340,12 @@ string Scanners::onTextMessage(const Message* message) {
                 
                 string target = pt.get<string>("target.device.device_id","indef");
                         
-                if(!target.compare("indef")) {
+                if(!target.compare("indef") && !container.compare("indef")) {
     
-                    return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
                 } 
             
-                string res =  ScanNmap(target, container);
+                string res =  ScanNmap(target, container, delay);
                         
                 return res;
             
@@ -362,12 +364,12 @@ string Scanners::onTextMessage(const Message* message) {
                 
                 string target = pt.get<string>("target.device.device_id","indef");
                         
-                if(!target.compare("indef")) {
+                if(!target.compare("indef") && !container.compare("indef")) {
     
-                    return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
                 } 
             
-                string res =  ScanSonarQube(target, container);
+                string res =  ScanSonarQube(target, container, delay);
                         
                 return res;
             
@@ -385,13 +387,13 @@ string Scanners::onTextMessage(const Message* message) {
             try {
                 
                 string target = pt.get<string>("target.device.device_id","indef");
-                        
-                if(!target.compare("indef")) {
+                
+                if(!target.compare("indef") && !container.compare("indef")) {
     
-                    return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
                 } 
             
-                string res =  ScanTrivy(target, container);
+                string res =  ScanTrivy(target, container, delay);
                         
                 return res;
             
@@ -409,13 +411,13 @@ string Scanners::onTextMessage(const Message* message) {
             try {
                 
                 string target = pt.get<string>("target.device.device_id","indef");
-                        
-                if(!target.compare("indef")) {
+                
+                if(!target.compare("indef") && !container.compare("indef")) {
     
-                    return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
                 } 
             
-                string res =  ScanZap(target, container);
+                string res =  ScanZap(target, container, delay);
                         
                 return res;
             
@@ -433,13 +435,13 @@ string Scanners::onTextMessage(const Message* message) {
             try {
                 
                 string target = pt.get<string>("target.device.device_id","indef");
-                        
-                if(!target.compare("indef")) {
+                
+                if(!target.compare("indef") && !container.compare("indef")) {
     
-                    return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
                 } 
             
-                string res =  ScanNikto(target, container);
+                string res =  ScanNikto(target, container, delay);
                         
                 return res;
             
@@ -453,9 +455,11 @@ string Scanners::onTextMessage(const Message* message) {
     return "\"status\": 400, \"status_text\": \"wrong actuator or action\" }";
 }
 
-string Scanners::ScanDependencyCheck(string target, string container) {
+string Scanners::ScanDependencyCheck(string target, string container, int delay) {
     
     try {
+        
+        std::remove(dependencycheck_result);
         
         if(!container.compare("indef")) {
         
@@ -465,11 +469,20 @@ string Scanners::ScanDependencyCheck(string target, string container) {
         
         } else {
             
-            string res = DockerContainer(container, "start");
+            string res = DockerCommand(container, "start");
         
             if (res.compare("ok")) {
                 return "dependency-check container: error";
             }
+            
+            int res_wait = 0;
+            int i = 0;
+            for (; i < delay && res_wait == 0; i++) {
+                sleep(1);
+                res_wait = DockerWait(container);
+            }
+            
+            if(res_wait == 0) return "dependency-check container: error";
         }
         
         std::ifstream dependencycheck_report;
@@ -501,9 +514,11 @@ string Scanners::ScanDependencyCheck(string target, string container) {
     
 }
 
-string Scanners::ScanDockerBench(string container) {
+string Scanners::ScanDockerBench(string container, int delay) {
     
     try {
+        
+         std::remove(dockerbench_result);
         
         // command example - cd /root/docker-bench-security && sh docker-bench-security.sh -l report
         
@@ -515,11 +530,20 @@ string Scanners::ScanDockerBench(string container) {
         
         } else {
              
-            string res = DockerContainer(container, "start");
+            string res = DockerCommand(container, "start");
         
             if (res.compare("ok")) {
                 return "docker-bench container: error";
             }
+            
+            int res_wait = 0;
+            int i = 0;
+            for (; i < delay && res_wait == 0; i++) {
+                sleep(1);
+                res_wait = DockerWait(container);
+            }
+            
+            if(res_wait == 0) return "docker-bench container: error";
         }
         
         std::ifstream docker_report;
@@ -541,7 +565,7 @@ string Scanners::ScanDockerBench(string container) {
         docker_report.close();
         boost::iostreams::close(in);
         ResetStreams();
-        
+       
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
         return "docker_bench: error";
@@ -551,9 +575,11 @@ string Scanners::ScanDockerBench(string container) {
     
 }
 
-string Scanners::ScanKubeBench(string container) {
+string Scanners::ScanKubeBench(string container, int delay) {
     
     try {
+        
+        std::remove(kubebench_result);
         
         if(!container.compare("indef")) {
         
@@ -563,11 +589,20 @@ string Scanners::ScanKubeBench(string container) {
         
         } else {
              
-            string res = DockerContainer(container, "start");
+            string res = DockerCommand(container, "start");
         
             if (res.compare("ok")) {
-                return "kube-check container: error";
+                return "kube-bench container: error";
             }
+            
+            int res_wait = 0;
+            int i = 0;
+            for (; i < delay && res_wait == 0; i++) {
+                sleep(1);
+                res_wait = DockerWait(container);
+            }
+            
+            if(res_wait == 0) return "kube-bench container: error";
         }
         
         std::ifstream kubebench_report;
@@ -598,9 +633,11 @@ string Scanners::ScanKubeBench(string container) {
     
 }
 
-string Scanners::ScanKubeHunter(string target, string container) {
+string Scanners::ScanKubeHunter(string target, string container, int delay) {
     
     try {
+        
+        std::remove(kubehunter_result);
         
         if(!container.compare("indef")) {
         
@@ -610,11 +647,20 @@ string Scanners::ScanKubeHunter(string target, string container) {
         
         } else {
              
-            string res = DockerContainer(container, "start");
+            string res = DockerCommand(container, "start");
         
             if (res.compare("ok")) {
                 return "kube-hunter container: error";
             }
+            
+            int res_wait = 0;
+            int i = 0;
+            for (; i < delay && res_wait == 0; i++) {
+                sleep(1);
+                res_wait = DockerWait(container);
+            }
+            
+            if(res_wait == 0) return "kube-hunter container: error";
         }
         
         std::ifstream kubehunter_report;
@@ -647,9 +693,11 @@ string Scanners::ScanKubeHunter(string target, string container) {
 }
 
 
-string Scanners::ScanNmap(string target, string container) {
+string Scanners::ScanNmap(string target, string container, int delay) {
     
     try {
+        
+        std::remove(nmap_result);
         
         if(!container.compare("indef")) {
         
@@ -659,11 +707,20 @@ string Scanners::ScanNmap(string target, string container) {
         
         } else {
              
-            string res = DockerContainer(container, "start");
+            string res = DockerCommand(container, "start");
         
             if (res.compare("ok")) {
                 return "nmap container: error";
             }
+            
+            int res_wait = 0;
+            int i = 0;
+            for (; i < delay && res_wait == 0; i++) {
+                sleep(1);
+                res_wait = DockerWait(container);
+            }
+            
+            if(res_wait == 0) return "nmap container: error";
         }
         
         std::ifstream nmap_report;
@@ -695,7 +752,7 @@ string Scanners::ScanNmap(string target, string container) {
     
 }
 
-string Scanners::ScanSonarQube(string target, string container) {
+string Scanners::ScanSonarQube(string target, string container, int delay) {
     
     try {
         
@@ -707,11 +764,20 @@ string Scanners::ScanSonarQube(string target, string container) {
         
         } else {
              
-            string res = DockerContainer(container, "start");
+            string res = DockerCommand(container, "start");
         
             if (res.compare("ok")) {
                 return "sonarqube container: error";
             }
+            
+            int res_wait = 0;
+            int i = 0;
+            for (; i < delay && res_wait == 0; i++) {
+                sleep(1);
+                res_wait = DockerWait(container);
+            }
+            
+            if(res_wait == 0) return "sonarqube container: error";
         }
         
     } catch (const std::exception & ex) {
@@ -724,9 +790,11 @@ string Scanners::ScanSonarQube(string target, string container) {
 }
 
 
-string Scanners::ScanTrivy(string target, string container) {
+string Scanners::ScanTrivy(string target, string container, int delay) {
     
     try {
+        
+        std::remove(trivy_result);
         
         if(!container.compare("indef")) {
         
@@ -736,11 +804,20 @@ string Scanners::ScanTrivy(string target, string container) {
         
         } else {
              
-            string res = DockerContainer(container, "start");
+            string res = DockerCommand(container, "start");
         
             if (res.compare("ok")) {
                 return "trivy container: error";
             }
+            
+            int res_wait = 0;
+            int i = 0;
+            for (; i < delay && res_wait == 0; i++) {
+                sleep(1);
+                res_wait = DockerWait(container);
+            }
+            
+            if(res_wait == 0) return "trivy container: error";
         }
         
         std::ifstream trivy_report;
@@ -772,9 +849,11 @@ string Scanners::ScanTrivy(string target, string container) {
     
 }
 
-string Scanners::ScanZap(string target, string container) {
+string Scanners::ScanZap(string target, string container, int delay) {
     
     try {
+        
+        std::remove(zap_result);
         
         if(!container.compare("indef")) {
         
@@ -784,11 +863,20 @@ string Scanners::ScanZap(string target, string container) {
         
         } else {
              
-            string res = DockerContainer(container, "start");
+            string res = DockerCommand(container, "start");
         
             if (res.compare("ok")) {
                 return "zap container: error";
             }
+            
+            int res_wait = 0;
+            int i = 0;
+            for (; i < delay && res_wait == 0; i++) {
+                sleep(1);
+                res_wait = DockerWait(container);
+            }
+            
+            if(res_wait == 0) return "zap container: error";
         }
         
         std::ifstream zap_report;
@@ -820,9 +908,11 @@ string Scanners::ScanZap(string target, string container) {
     
 }
 
-string Scanners::ScanNikto(string target, string container) {
+string Scanners::ScanNikto(string target, string container, int delay) {
     
     try {
+        
+        std::remove(nikto_result);
         
         if(!container.compare("indef")) {
         
@@ -831,12 +921,23 @@ string Scanners::ScanNikto(string target, string container) {
             system(cmd.c_str());
         
         } else {
-             
-            string res = DockerContainer(container, "start");
+                         
+            string res = DockerCommand(container, "start");
         
             if (res.compare("ok")) {
                 return "nikto container: error";
             }
+            
+            
+            int res_wait = 0;
+            int i = 0;
+            for (; i < delay && res_wait == 0; i++) {
+                sleep(1);
+                res_wait = DockerWait(container);
+            }
+            
+            if(res_wait == 0) return "nikto container: error";
+            
         }
         
         std::ifstream nikto_report;
@@ -868,7 +969,7 @@ string Scanners::ScanNikto(string target, string container) {
     
 }
 
-string Scanners::DockerContainer(string id, string cmd) {
+string Scanners::DockerCommand(string id, string cmd) {
     
     int sck;
     struct sockaddr_un addr;
@@ -937,6 +1038,100 @@ string Scanners::DockerContainer(string id, string cmd) {
     return "docker_unixsocket: error";
 }
 
+int Scanners::DockerWait(string id) {
+    
+    int sck;
+    struct sockaddr_un addr;
+    int ret;
+    
+    char* buffer;
+    buffer = new char[SOCKET_BUFFER_SIZE];
+    
+    if (dockerSocketStatus) {
+    
+        try {
+            
+            /* create socket */
+            sck = socket(AF_UNIX, SOCK_STREAM, 0);
+            if (sck == -1) {
+                delete [] buffer;
+                close (sck);
+                return 0;
+            }
+            
+            /* set address */
+            addr.sun_family = AF_UNIX;
+            strncpy(addr.sun_path, docker_socket, sizeof(addr.sun_path));
+            addr.sun_path[sizeof(addr.sun_path) - 1] = 0;
+
+            /* Connect to unix socket */
+            ret = connect(sck, (struct sockaddr *) &addr, sizeof(addr));
+            if (ret == -1) {
+                delete [] buffer;
+                close (sck);
+                return 0;
+            }
+        
+            std::string req = "POST /v1.40/containers/";
+            req += id;
+            req += "/wait";
+            req += " HTTP/1.1\r\n";
+            req += "Host: localhost\r\n";
+            req += "Accept: */*\r\n\r\n";
+        
+            int siz = req.size();
+
+            ret = send(sck, req.c_str(), siz, 0);
+            if (ret == -1) {
+                delete [] buffer;
+                close (sck);
+                return 0;
+            } else if (ret < siz) {
+                delete [] buffer;
+                close (sck);
+                return 0;
+            }
+        
+            ret = read(sck, buffer, SOCKET_BUFFER_SIZE);
+            if (ret == -1) {
+                delete [] buffer;
+                close (sck);
+                return 0;
+            } 
+            
+            char res = ' ';
+            int j = 0;
+            
+            for (int i = 0; i < SOCKET_BUFFER_SIZE; i++) {
+            
+                char test = (char) buffer[i];
+            
+                if (j == 12) {
+                    
+                    res = test;
+                    
+                    if (res == '0') {
+                        delete [] buffer;
+                        close (sck);
+                        return 1;
+                    }
+                    
+                    break;
+                }
+            
+                if ( test == '\n') j++;
+            }
+        
+        } catch (std::exception& e) {
+            
+        }
+        
+        close (sck);
+    }
+
+    delete [] buffer;
+    return 0;
+}
 
 
 
