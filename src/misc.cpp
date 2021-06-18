@@ -126,7 +126,7 @@ int Misc::ParsJson(char* redis_payload) {
         sk.alert.status = "processed";
         sk.alert.user_name = pt.get<string>("alert.user_name","");
         sk.alert.agent_name = pt.get<string>("alert.agent_name","");
-        sk.alert.filter = fs.filter.desc;
+        sk.alert.filter = fs.filter.name;
                         
         string cats = pt.get<string>("alert.categories","");
         sk.alert.list_cats.push_back(cats);

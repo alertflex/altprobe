@@ -64,7 +64,7 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
         bpt::read_json(ss, pt);
         
         filter.ref_id =  pt.get<string>("ref_id");
-        filter.desc =  pt.get<string>("filter_desc");
+        filter.name =  pt.get<string>("filter_name");
                 
         bpt::ptree home_networks = pt.get_child("home_net");
         BOOST_FOREACH(bpt::ptree::value_type &h_nets, home_networks) {
@@ -94,6 +94,13 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
         }
         
         bpt::ptree filters = pt.get_child("sources");
+        
+        // Netflow
+        filter.netflow.log = filters.get<bool>("netflow.log");
+        filter.netflow.floodMaxRequests = filters.get<int>("netflow.flood.max_requests");
+        filter.netflow.floodSeverity = filters.get<int>("netflow.flood.severity");
+        filter.netflow.trafficMaxVolume = filters.get<int>("netflow.traffic.max_volume");
+        filter.netflow.trafficSeverity = filters.get<int>("netflow.traffic.severity");
         
         // CRS
         filter.crs.log = filters.get<bool>("crs.log");

@@ -105,7 +105,7 @@ void Source::SendAlertMultiple(int type) {
     sk.alert.status = "processed";
     sk.alert.user_name = "indef";
     sk.alert.agent_name = "indef";
-    sk.alert.filter = fs.filter.desc;
+    sk.alert.filter = fs.filter.name;
     
     sk.alert.list_cats.push_back("Multiple alert");
     

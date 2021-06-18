@@ -80,6 +80,27 @@ public:
     }
 };
 
+class NetflowPolicy {
+public:
+    int floodMaxRequests;
+    int trafficMaxVolume;
+    int floodSeverity;
+    int trafficSeverity;
+    bool log;
+        
+    void Reset() {
+        floodMaxRequests = 0;
+        trafficMaxVolume = 0;
+        floodSeverity = 0;
+        trafficSeverity = 0;
+        log = false;
+    }
+    
+    NetflowPolicy () {
+        Reset();
+    }
+};
+
 class Aggregator {
 public:
     int reproduced;
@@ -175,7 +196,7 @@ public:
 class Filters {
 public:
     string ref_id;
-    string desc;
+    string name;
     	
     std::vector<Network*> home_nets;
         
@@ -187,14 +208,17 @@ public:
     
     IdsPolicy waf;
     
+    NetflowPolicy netflow;
+    
     void Reset() {
         ref_id.clear();
-        desc.clear();
+        name.clear();
         home_nets.clear();
         crs.Reset();
         nids.Reset();
         hids.Reset();
         waf.Reset();
+        netflow.Reset();
     }
 };
 

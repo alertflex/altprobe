@@ -325,7 +325,7 @@ void AggAlerts::SendCrsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.status = "aggregated";
     sk.alert.user_name = "indef";
     sk.alert.agent_name = "indef";
-    sk.alert.filter = fs.filter.desc;
+    sk.alert.filter = fs.filter.name;
     
     copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
     if (r->rsp.new_category.compare("indef") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
@@ -455,7 +455,7 @@ void AggAlerts::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.status = "aggregated";
     sk.alert.user_name = "indef";
     sk.alert.agent_name = "indef";
-    sk.alert.filter = fs.filter.desc;
+    sk.alert.filter = fs.filter.name;
     
     copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
     if (r->rsp.new_category.compare("indef") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
@@ -578,7 +578,7 @@ void AggAlerts::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.status = "aggregated";
     sk.alert.user_name = "indef";
     sk.alert.agent_name = "indef";
-    sk.alert.filter = fs.filter.desc;
+    sk.alert.filter = fs.filter.name;
     
     copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
     if (r->rsp.new_category.compare("indef") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
@@ -694,7 +694,7 @@ void AggAlerts::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.status = "aggregated";
     sk.alert.user_name = "indef";
     sk.alert.agent_name = "indef";
-    sk.alert.filter = fs.filter.desc;
+    sk.alert.filter = fs.filter.name;
     
     copy(r->list_cats.begin(),r->list_cats.end(),back_inserter(sk.alert.list_cats));
     if (r->rsp.new_category.compare("indef") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);

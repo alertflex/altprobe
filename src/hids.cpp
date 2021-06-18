@@ -665,7 +665,7 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     sk.alert.status = "processed";
     sk.alert.user_name = rec.user;
     sk.alert.agent_name = rec.agent;
-    sk.alert.filter = fs.filter.desc;
+    sk.alert.filter = fs.filter.name;
     
     if (!rec.rule.list_cats.empty())
         copy(rec.rule.list_cats.begin(),rec.rule.list_cats.end(),back_inserter(sk.alert.list_cats));

@@ -611,7 +611,7 @@ void Waf::SendAlert(int s, GrayList*  gl) {
     sk.alert.status = "processed";
     sk.alert.user_name = "indef";
     sk.alert.agent_name = probe_id;
-    sk.alert.filter = fs.filter.desc;
+    sk.alert.filter = fs.filter.name;
    
     if (!rec.ma.list_tags.empty())
         copy(rec.ma.list_tags.begin(),rec.ma.list_tags.end(),back_inserter(sk.alert.list_cats));

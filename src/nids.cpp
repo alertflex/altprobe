@@ -875,7 +875,7 @@ void Nids::SendAlert(int s, GrayList* gl) {
     sk.alert.status = "processed";
     sk.alert.user_name = "indef";
     sk.alert.agent_name = probe_id;
-    sk.alert.filter = fs.filter.desc;
+    sk.alert.filter = fs.filter.name;
         
     sk.alert.list_cats.push_back(rec.alert.category);
     
