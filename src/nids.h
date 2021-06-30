@@ -201,6 +201,8 @@ public:
     
     // create netstat record
     Netstat net_stat;
+    // create netflow record
+    Netflow net_flow;
     
     bpt::ptree pt, pt1;
     stringstream ss, ss1;
@@ -238,6 +240,7 @@ public:
     void ClearRecords() {
         rec.Reset();
         net_stat.Reset();
+        net_flow.Reset();
         ResetJsontree();
         jsonPayload.clear();
     }

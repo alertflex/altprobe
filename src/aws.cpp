@@ -206,6 +206,16 @@ int AwsWaf::ParsJson() {
                 
         rec.host = "indef";
         
+        if (fs.filter.netflow.log) {
+            net_flow.ids = rec.sensor;
+            net_flow.flows_type = 3;
+            net_flow.ref_id = fs.filter.ref_id;
+            net_flow.dst_ip = rec.host;
+            net_flow.src_ip = rec.clientIp;
+            net_flow.bytes = 0;
+            q_netflow.push(net_flow);
+        }
+        
         ResetStreams();
         
     } catch (const std::exception & ex) {

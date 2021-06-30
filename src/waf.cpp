@@ -459,6 +459,16 @@ int Waf::ParsJson() {
                         
             return 1;
         }
+        
+        if (fs.filter.netflow.log) {
+            net_flow.ids = rec.sensor;
+            net_flow.flows_type = 2;
+            net_flow.ref_id = fs.filter.ref_id;
+            net_flow.dst_ip = rec.ma.hostname;
+            net_flow.src_ip = rec.ma.client;
+            net_flow.bytes = 0;
+            q_netflow.push(net_flow);
+        }
     
            
     } catch (const std::exception & ex) {

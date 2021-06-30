@@ -26,6 +26,7 @@
 #include "filters.h"
 #include "config.h"
 #include "source.h"
+#include "netstat.h"
 
 using namespace std;
 
@@ -113,6 +114,9 @@ public:
     // ModSecurity record
     ModsecRecord rec;
     
+    // create netflow record
+    Netflow net_flow;
+    
     string event_time;
         
     bpt::ptree pt;
@@ -149,6 +153,7 @@ public:
     void ClearRecords() {
         event_time.clear();
 	rec.Reset();
+        net_flow.Reset();
         jsonPayload.clear();
         ResetJsontree();
     }

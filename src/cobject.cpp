@@ -32,6 +32,7 @@ string CollectorObject::project_id;
 
 char CollectorObject::remote_control[OS_HEADER_SIZE];
 char CollectorObject::remote_update[OS_HEADER_SIZE];
+
 bool CollectorObject::rcStatus;
 bool CollectorObject::ruStatus;
 
@@ -104,7 +105,7 @@ int CollectorObject::GetConfig() {
     
     cy->addKey("remote_control");
     cy->addKey("remote_update");
-               
+    
     cy->addKey("time_zone");
     
     cy->addKey("log_path");

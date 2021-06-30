@@ -194,7 +194,7 @@ int Nids::Go(void) {
                 gl = CheckGrayList();
                 
                 severity = PushIdsRecord(gl);
-                    
+                                    
                 if (gl != NULL) {
                     if (gl->rsp.profile.compare("suppress") != 0) {
                         SendAlert(severity, gl);
@@ -447,6 +447,16 @@ int Nids::ParsJson () {
         rec.netflow.start = pt.get<string>("netflow.start","");
         rec.netflow.end = pt.get<string>("netflow.end","");
         rec.netflow.age = pt.get<int>("netflow.age",0);
+        
+        if (fs.filter.netflow.log) {
+            net_flow.ids = rec.sensor;
+            net_flow.flows_type = 1;
+            net_flow.ref_id = rec.ref_id;
+            net_flow.dst_ip = rec.dst_ip;
+            net_flow.src_ip = rec.src_ip;
+            net_flow.bytes = rec.netflow.bytes;
+            q_netflow.push(net_flow);
+        }
         
         ResetStream();
         return rec.event_type;

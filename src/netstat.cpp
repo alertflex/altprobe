@@ -16,4 +16,5 @@
 #include "netstat.h"
 
 boost::lockfree::spsc_queue<Netstat> q_netstat{NET_QUEUE_SIZE};
+boost::lockfree::spsc_queue<Netflow> q_netflow{NET_QUEUE_SIZE};
 

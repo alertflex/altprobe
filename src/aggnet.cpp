@@ -51,11 +51,12 @@ int AggNet::Go(void) {
             
     while(1) {    
         gettimeofday(&start, NULL);
+        
         while (sk.GetReportsPeriod() > seconds) {
             gettimeofday(&end, NULL);
             seconds  = end.tv_sec  - start.tv_sec;
             
-            ProcessNetstat();
+            ProcessNetData();
             
         }
         
@@ -66,23 +67,75 @@ int AggNet::Go(void) {
     return 1;
 }
 
-void AggNet::ProcessNetstat() {
+void AggNet::ProcessNetData() {
     
     counter = 0;
 
-    while (!q_netstat.empty()) {
+    while (!q_netstat.empty() || !q_netflow.empty()) {
 	
-	q_netstat.pop(netstat_rec);
+	if (ProcessNetStat()) counter++;
         
-        if (UpdateNetstat(netstat_rec)) netstat_list.push_back(netstat_rec);
-        
-        counter++;
+        if (ProcessNetFlow()) counter++;
     }
     
     if (!counter) {
         
         usleep(GetGosleepTimer()*60);
     }
+}
+
+bool AggNet::ProcessNetFlow() {
+    
+    if (!q_netflow.empty()) {
+	
+	q_netflow.pop(netflow_rec);
+        
+        UpdateTrafficThresholds(netflow_rec);
+        
+        return true;
+    }
+    
+    return false;
+}
+
+
+void AggNet::UpdateTrafficThresholds(Netflow nf) {
+    
+    std::vector<TrafficThresholds>::iterator i, end;
+    
+    for(i = traf_thres.begin(), end = traf_thres.end(); i != end; ++i) {
+        if (i->ref_id.compare(nf.ref_id) == 0)  {      
+            
+            if (i->ids.compare(nf.ids) == 0)  {
+                
+                if ((i->ip.compare(nf.src_ip) == 0)) { 
+                    
+                    i->volume = i->volume + nf.bytes;
+                    i->counter++;
+                    
+                    return;
+                }
+            }
+        }
+    }  
+    
+    int type_ip = IsValidIp(nf.src_ip); // check is valid ip
+    if (type_ip >= 0) traf_thres.push_back(TrafficThresholds(nf.ref_id, nf.flows_type, nf.ids, nf.src_ip));
+}
+
+
+bool AggNet::ProcessNetStat() {
+    
+    if (!q_netstat.empty()) {
+	
+	q_netstat.pop(netstat_rec);
+        
+        if (UpdateNetstat(netstat_rec)) netstat_list.push_back(netstat_rec);
+        
+        return true;
+    }
+    
+    return false;
 }
 
 bool AggNet::UpdateNetstat(Netstat ns) {
@@ -105,6 +158,8 @@ bool AggNet::UpdateNetstat(Netstat ns) {
 }
 
 void AggNet::RoutineJob() {
+    
+    FlushTrafficThresholds();
     
     report = "{ \"type\": \"net_stat\", \"data\" : [ ";
     
@@ -192,4 +247,154 @@ void AggNet::RoutineJob() {
     
     report.clear();    
     netstat_list.clear();
+}
+
+void AggNet::FlushTrafficThresholds() {
+    
+    std::vector<TrafficThresholds>::iterator i, end;
+    
+    boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
+    
+    for(i = traf_thres.begin(), end = traf_thres.end(); i != end; ++i) {
+        
+        if (i->ref_id.compare(fs.filter.ref_id) == 0)  { 
+            
+            switch (i->type) { // 1 - suri, 2 - modsec-waf, 3 - aws-waf)
+    
+                case 1:
+                    if (fs.filter.netflow.trafficMaxVolume <= i->volume) SendAlertTraffic(i);
+                    break;
+                case 2:
+                    if (fs.filter.netflow.floodMaxRequests <= i->counter) SendAlertFlood(i);
+                    break;
+                case 3:
+                    if (fs.filter.netflow.floodMaxRequests <= i->counter) SendAlertFlood(i);
+                break;
+            }
+        }
+    }
+    
+    traf_thres.clear();
+    
+}
+
+void AggNet::SendAlertFlood(std::vector<TrafficThresholds>::iterator r) {
+    
+    sk.alert.ref_id = r->ref_id;
+    sk.alert.sensor_id = r->ids;
+    sk.alert.alert_severity = fs.filter.netflow.floodSeverity;
+    sk.alert.event_severity = fs.filter.netflow.floodSeverity;
+    sk.alert.alert_type = "NET";
+    
+    switch (r->type) { // 1 - suri, 2 - modsec-waf, 3 - aws-waf)
+    
+        case 2:
+            sk.alert.alert_source = "ModSecurity";
+            break;
+        case 3:
+            sk.alert.alert_source = "AwsWaf";
+            break;
+    }
+    
+    sk.alert.event_id = "10";
+    sk.alert.sensor_id = r->ids;
+    
+    sk.alert.description = " ";
+    sk.alert.action = "indef";
+    sk.alert.location = "indef";
+    sk.alert.info = "Flood IP has been detected";
+    
+    sk.alert.status = "processed";
+    sk.alert.user_name = "indef";
+    sk.alert.agent_name = "indef";
+    sk.alert.filter = fs.filter.name;
+    
+    sk.alert.list_cats.push_back("flood");
+    
+    sk.alert.event_time = GetNodeTime();
+    sk.alert.event_json = "indef";
+    
+    sk.alert.src_ip = r->ip;
+    sk.alert.dst_ip = r->ip;
+    sk.alert.src_hostname = "indef";
+    sk.alert.dst_hostname = "indef";
+    sk.alert.src_port = 0;
+    sk.alert.dst_port = 0;
+    
+    sk.alert.file_name = "indef";
+    sk.alert.file_path = "indef";
+	
+    sk.alert.hash_md5 = "indef";
+    sk.alert.hash_sha1 = "indef";
+    sk.alert.hash_sha256 = "indef";
+	
+    sk.alert.process_id = 0;
+    sk.alert.process_name = "indef";
+    sk.alert.process_cmdline = "indef";
+    sk.alert.process_path = "indef";
+    
+    sk.alert.url_hostname = "indef";
+    sk.alert.url_path = "indef";
+    
+    sk.alert.container_id = "indef";
+    sk.alert.container_name = "indef";
+    
+    sk.SendAlert();
+}
+
+void AggNet::SendAlertTraffic(std::vector<TrafficThresholds>::iterator r) {
+    
+    sk.alert.ref_id = r->ref_id;
+    sk.alert.sensor_id = r->ids;
+    sk.alert.alert_severity = fs.filter.netflow.trafficSeverity;
+    sk.alert.event_severity = fs.filter.netflow.trafficSeverity;
+    sk.alert.alert_type = "NET";
+    
+    sk.alert.alert_source = "Suricata";
+    
+    
+    sk.alert.event_id = "11";
+    sk.alert.sensor_id = r->ids;
+    
+    sk.alert.description = " ";
+    sk.alert.action = "indef";
+    sk.alert.location = "indef";
+    sk.alert.info = "High volume of traffic for IP has been detected";
+    
+    sk.alert.status = "processed";
+    sk.alert.user_name = "indef";
+    sk.alert.agent_name = "indef";
+    sk.alert.filter = fs.filter.name;
+    
+    sk.alert.list_cats.push_back("traffic");
+    
+    sk.alert.event_time = GetNodeTime();
+    sk.alert.event_json = "indef";
+    
+    sk.alert.src_ip = r->ip;
+    sk.alert.dst_ip = r->ip;
+    sk.alert.src_hostname = "indef";
+    sk.alert.dst_hostname = "indef";
+    sk.alert.src_port = 0;
+    sk.alert.dst_port = 0;
+    
+    sk.alert.file_name = "indef";
+    sk.alert.file_path = "indef";
+	
+    sk.alert.hash_md5 = "indef";
+    sk.alert.hash_sha1 = "indef";
+    sk.alert.hash_sha256 = "indef";
+	
+    sk.alert.process_id = 0;
+    sk.alert.process_name = "indef";
+    sk.alert.process_cmdline = "indef";
+    sk.alert.process_path = "indef";
+    
+    sk.alert.url_hostname = "indef";
+    sk.alert.url_path = "indef";
+    
+    sk.alert.container_id = "indef";
+    sk.alert.container_name = "indef";
+    
+    sk.SendAlert();
 }

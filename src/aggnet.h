@@ -23,27 +23,65 @@
 
 using namespace std;
 
+class TrafficThresholds {
+public:
+    string ref_id;
+    int type; // 1 - suri, 2 - modsec-waf, 3 - aws-waf
+    string ids;
+    string ip;
+    unsigned int volume;
+    unsigned int counter;
+                
+    void Reset() {
+        ref_id.clear();
+        type = 0;
+        ids.clear();
+        ip.clear();
+        volume = 0;
+        counter = 0;
+    }
+        
+    TrafficThresholds (string r, int t, string id, string i) {
+        ref_id = r;
+        type = t;
+        ids = id;
+        ip = i;
+        volume = 0;
+        counter = 0;
+    }
+};
+
 class AggNet : public Source {
 public: 
     
     Netstat netstat_rec;
+    Netflow netflow_rec;
     int counter;
         
     //Statistics data
     std::vector<Netstat> netstat_list;
-        
+    
+    //TrafficThresholds data
+    std::vector<TrafficThresholds> traf_thres;
+            
     virtual int GetConfig();
     
     virtual int Open();
     virtual void Close();
     
     int Go();
-    void ProcessNetstat();
+    void ProcessNetData();
+    bool ProcessNetStat();
+    bool ProcessNetFlow();
     void RoutineJob();
-    
-    bool UpdateNetstat(Netstat ns);
-    void FlushNetstat();
         
+    bool UpdateNetstat(Netstat ns);
+    void UpdateTrafficThresholds(Netflow nf);
+    void FlushTrafficThresholds();
+    
+    void SendAlertFlood(std::vector<TrafficThresholds>::iterator r);
+    void SendAlertTraffic(std::vector<TrafficThresholds>::iterator r);
+            
 };
 
 extern boost::lockfree::spsc_queue<string> q_agg_net;
