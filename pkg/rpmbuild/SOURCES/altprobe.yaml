@@ -7,8 +7,8 @@ collector:
   node: "_node_id"
   probe: "_probe_id"
   
-  # Time difference between collector and controller's, timezones in hours
-  time_zone: 0
+  # Time difference between collector and controller's (hours)
+  time_delta: 0
   
   # Alerts threshold in case of alerts overloading in Redis, if the threshold is exceeded, 
   # the collector omits next alerts until Redis list is not empty

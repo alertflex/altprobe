@@ -36,7 +36,7 @@ char CollectorObject::remote_update[OS_HEADER_SIZE];
 bool CollectorObject::rcStatus;
 bool CollectorObject::ruStatus;
 
-int CollectorObject::timezone;
+int CollectorObject::time_delta;
 char CollectorObject::log_path[OS_BUFFER_SIZE]; 
 int CollectorObject::log_size;
 
@@ -106,7 +106,7 @@ int CollectorObject::GetConfig() {
     cy->addKey("remote_control");
     cy->addKey("remote_update");
     
-    cy->addKey("time_zone");
+    cy->addKey("time_delta");
     
     cy->addKey("log_path");
     cy->addKey("log_size");
@@ -138,7 +138,7 @@ int CollectorObject::GetConfig() {
         return 0;
     }
     
-    timezone = stoi(cy->getParameter("time_zone"));
+    time_delta = stoi(cy->getParameter("time_delta"));
     
     log_size = stoi(cy->getParameter("log_size"));
     if (log_size == 0) log_size = 100;
@@ -385,6 +385,8 @@ string CollectorObject::GetNodeTime() {
     struct tm * timeinfo;
         
     time(&rawtime);
+    if (time_delta != 0) rawtime = rawtime + time_delta*3600;
+    
     timeinfo = localtime(&rawtime);
     strftime(collector_time,sizeof(collector_time),"%Y-%m-%d %H:%M:%S",timeinfo);
     
@@ -396,6 +398,8 @@ string CollectorObject::GetGraylogFormat() {
     struct tm * timeinfo;
         
     time(&rawtime);
+    if (time_delta != 0) rawtime = rawtime + time_delta*3600;
+    
     timeinfo = localtime(&rawtime);
     strftime(collector_time,sizeof(collector_time),"%Y-%m-%dT%H:%M:%S.000Z",timeinfo);
     

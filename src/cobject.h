@@ -35,7 +35,7 @@ public:
     static bool rcStatus;
     static bool ruStatus;
     
-    static int timezone;
+    static int time_delta;
     static int log_size;
     static char log_path[OS_BUFFER_SIZE]; 
     
@@ -106,7 +106,7 @@ public:
         wazuhServerStatus = true;
         rcStatus = false;
         ruStatus = true;
-        timezone = 0;
+        time_delta = 0;
         log_size = 0;
         startup_timer = 0;
         gosleep_timer = 0;
