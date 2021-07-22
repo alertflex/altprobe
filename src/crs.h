@@ -39,9 +39,8 @@ public:
     string fd_cip_name; // Domain name associated with the client IP address.
     string fd_sip_name; // Domain name associated with the server IP address.
     
-    string fd_name; // name file
-    string fd_directory; // path to file
-    
+    string fd_path; // file path
+        
     unsigned int  proc_pid; 
     string proc_cmdline; 
     string proc_name;
@@ -49,6 +48,8 @@ public:
     
     string container_id;
     string container_name;
+    
+    string cloud_instance;
     
     void Reset() {
         
@@ -61,9 +62,8 @@ public:
         fd_cip_name.clear();
         fd_sip_name.clear();
         
-        fd_name.clear();
-        fd_directory.clear();
-        
+        fd_path.clear();
+                
         proc_pid = 0;
         proc_cmdline.clear();
         proc_name.clear();
@@ -71,6 +71,8 @@ public:
         
         container_id.clear();
         container_name.clear();
+        
+        cloud_instance.clear();
     }
 };
 

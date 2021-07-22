@@ -344,8 +344,7 @@ int Hids::ParsJson() {
         
         string rationale = pt.get<string>("data.vulnerability.rationale","indef");
         ReplaceAll(rationale, "\"", "");
-        ReplaceAll(rationale, "\\", "\\\\\\\\");
-        
+                
         report += rationale;
         
         report += "\", \"time_of_survey\": \"";
@@ -358,11 +357,6 @@ int Hids::ParsJson() {
         ResetStreams();
         return 0;
     }
-    
-    string full_log = pt.get<string>("full_log","indef");
-    ReplaceAll(full_log, "\"", "");
-    ReplaceAll(full_log, "\\", "\\\\\\\\");
-    rec.rule.info = full_log;
     
     rec.agent = pt.get<string>("agent.name","indef");
     
@@ -380,9 +374,40 @@ int Hids::ParsJson() {
     
     rec.rule.level = pt.get<int>("rule.level",0);
     
-    rec.rule.desc = pt.get<string>("rule.description","");
+    rec.location = loc;
+    ReplaceAll(rec.location, "\"", "");
+    ReplaceAll(rec.location, "\'", "");
+    ReplaceAll(rec.location, "\r", " ");
+    ReplaceAll(rec.location, "\n", " ");
+    ReplaceAll(rec.location, "\\", "\\\\");
+    
+    rec.file.file_path = pt.get<string>("syscheck.path","indef");
+    ReplaceAll(rec.file.file_path, "\"", "");
+    ReplaceAll(rec.file.file_path, "\'", "");
+    ReplaceAll(rec.file.file_path, "\r", " ");
+    ReplaceAll(rec.file.file_path, "\n", " ");
+    ReplaceAll(rec.file.file_path, "\\", "\\\\");
+    
+    rec.file.reg_value = pt.get<string>("syscheck.value_name","indef");
+    ReplaceAll(rec.file.reg_value, "\"", "");
+    ReplaceAll(rec.file.reg_value, "\'", "");
+    ReplaceAll(rec.file.reg_value, "\r", " ");
+    ReplaceAll(rec.file.reg_value, "\n", " ");
+    ReplaceAll(rec.file.reg_value, "\\", "\\\\");
+    
+    rec.rule.desc = pt.get<string>("rule.description","indef");
     ReplaceAll(rec.rule.desc, "\"", "");
-    ReplaceAll(rec.rule.desc, "\\", "\\\\\\\\");
+    ReplaceAll(rec.rule.desc, "\'", "");
+    ReplaceAll(rec.rule.desc, "\r", " ");
+    ReplaceAll(rec.rule.desc, "\n", " ");
+    ReplaceAll(rec.rule.desc, "\\", "\\\\");
+    
+    rec.rule.info = pt.get<string>("full_log","indef");
+    ReplaceAll(rec.rule.info, "\"", "");
+    ReplaceAll(rec.rule.info, "\'", "");
+    ReplaceAll(rec.rule.info, "\r", " ");
+    ReplaceAll(rec.rule.info, "\n", " ");
+    ReplaceAll(rec.rule.info, "\\", "\\\\");
     
     try {
     
@@ -454,20 +479,11 @@ int Hids::ParsJson() {
     
     } catch (bpt::ptree_bad_path& e) {}
     
-    
-    rec.location = loc;
-    ReplaceAll(rec.location, "\"", "");
-    ReplaceAll(rec.location, "\\", "\\\\\\\\");
-        
-    rec.file.filename = pt.get<string>("syscheck.path","indef");
-    ReplaceAll(rec.file.filename, "\"", "");
-    ReplaceAll(rec.file.filename, "\\", "\\\\\\\\");
-    
     rec.file.md5 = pt.get<string>("syscheck.md5_after","");
     
     rec.file.sha1 = pt.get<string>("syscheck.sha1_after","");
     
-    rec.file.sha256 = pt.get<string>("syscheck.owner_before","");
+    rec.file.sha256 = pt.get<string>("syscheck.sha256_after","");
     
     rec.process_id = pt.get<int>("syscheck.audit.process.id", 0);
         
@@ -495,10 +511,13 @@ int Hids::ParsJson() {
 
 void Hids::CreateLog() {
     
+    
+       
+    
     report = "{\"version\": \"1.1\",\"node\":\"";
     report += node_id;
     
-    if (rec.file.filename.compare("") != 0) {
+    if (rec.file.file_path.compare("indef") != 0) {
         report += "\",\"short_message\":\"alert-fim\"";
         report += ",\"full_message\":\"Alert from OSSEC/Wazuh FIM\"";
         report += ",\"level\":";
@@ -559,9 +578,10 @@ void Hids::CreateLog() {
     report += rec.process_name;
     report += "\",\"user\":\"";
     report += rec.user;
-    if (rec.file.filename.compare("") != 0) {
-        report += "\",\"filename\":\"";
-        report += rec.file.filename;
+    
+    if (rec.file.file_path.compare("indef") != 0) {
+        report += "\",\"file_path\":\"";
+        report += rec.file.file_path;
         report += "\",\"md5\":\"";
         report += rec.file.md5;
         report += "\",\"sha1\":\"";
@@ -569,6 +589,7 @@ void Hids::CreateLog() {
         report += "\",\"sha256\":\"";
         report += rec.file.sha256;
     }
+    
     report += "\"}";
     
     q_logs_hids.push(report);
@@ -612,11 +633,11 @@ int Hids::PushRecord(GrayList* gl) {
     ids_rec.ids = rec.sensor;
     ids_rec.action = "indef";
                 
-    if (rec.file.filename.compare("") == 0) {
+    if (rec.file.file_path.compare("") == 0) {
         ids_rec.location = rec.location;
         ids_rec.ids_type = 2;
     }  else {
-        ids_rec.file = rec.file.filename;
+        ids_rec.file = rec.file.file_path;
         ids_rec.ids_type = 1;
     }
         
@@ -672,11 +693,8 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     else 
         sk.alert.list_cats.push_back("wazuh");
     
-    sk.alert.event_json = jsonPayload;
-    
     sk.alert.event_time = rec.timestamp;
-    sk.alert.event_json = jsonPayload;
-    
+        
     sk.alert.src_ip = rec.srcip;
     sk.alert.dst_ip = rec.dstip;
     sk.alert.src_hostname = "indef";
@@ -684,7 +702,7 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     sk.alert.src_port = rec.srcport;
     sk.alert.dst_port = rec.dstport;
         
-    sk.alert.file_name = "indef";
+    sk.alert.reg_value = "indef";
     sk.alert.file_path = "indef";
 	
     sk.alert.hash_md5 = "indef";
@@ -701,13 +719,15 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     
     sk.alert.container_id = "indef";
     sk.alert.container_name = "indef";
+    
+    sk.alert.cloud_instance = "indef";
         
-    if (rec.file.filename.compare("indef") != 0) {
+    if (rec.file.file_path.compare("indef") != 0) {
             
         sk.alert.alert_type = "FILE";
             
-        sk.alert.file_name = rec.file.filename;
-        sk.alert.file_path = rec.file.filename;
+        sk.alert.reg_value = rec.file.reg_value;
+        sk.alert.file_path = rec.file.file_path;
         
         sk.alert.hash_md5 = rec.file.md5;
         sk.alert.hash_sha1 = rec.file.sha1;

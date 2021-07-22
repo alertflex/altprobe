@@ -50,13 +50,15 @@ public:
 class OssecFile
 {
 public:
-    string filename;
+    string file_path;
+    string reg_value;
     string md5;
     string sha1;
     string sha256;
     
     void Reset() {
-        filename.clear();
+        reg_value.clear();
+        file_path.clear();
         md5.clear();
         sha1.clear();
         sha256.clear();

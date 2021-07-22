@@ -199,7 +199,6 @@ public:
     string info;
     string user_name;
     string agent_name;
-    string event_json;
     string event_time;
     
     std::vector<string> list_cats;
@@ -211,8 +210,8 @@ public:
     unsigned int src_port;
     unsigned int dst_port;
 	
-    string file_name;
     string file_path;
+    string reg_value;
 	
     string hash_md5;
     string hash_sha1;
@@ -228,6 +227,8 @@ public:
     
     string container_id;
     string container_name;
+    
+    string cloud_instance;
     
     void Reset() {
         
@@ -251,7 +252,7 @@ public:
 	src_port = 0;
 	dst_port = 0;
 	
-	file_name.clear();
+	reg_value.clear();
 	file_path.clear();
 	
 	hash_md5.clear();
@@ -269,6 +270,8 @@ public:
         container_id.clear();
         container_name.clear();
         
+        cloud_instance.clear();
+        
         user_name.clear();
 	agent_name.clear();
 		
@@ -277,7 +280,6 @@ public:
 	filter.clear();
 	status.clear();
 	info.clear();
-	event_json.clear();
 	event_time.clear();
         
         list_cats.clear();

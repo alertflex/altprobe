@@ -890,8 +890,7 @@ void Nids::SendAlert(int s, GrayList* gl) {
     sk.alert.list_cats.push_back(rec.alert.category);
     
     sk.alert.event_time = rec.time_stamp;
-    sk.alert.event_json = jsonPayload;
-            
+                
     if (gl != NULL) {
             
         if (gl->rsp.profile.compare("indef") != 0) {
@@ -940,7 +939,7 @@ void Nids::SendAlert(int s, GrayList* gl) {
     sk.alert.src_hostname = rec.src_agent;
     sk.alert.dst_hostname = rec.dst_agent;
     
-    sk.alert.file_name = "indef";
+    sk.alert.reg_value = "indef";
     sk.alert.file_path = "indef";
 	
     sk.alert.hash_md5 = "indef";
@@ -957,6 +956,8 @@ void Nids::SendAlert(int s, GrayList* gl) {
     
     sk.alert.container_id = "indef";
     sk.alert.container_name = "indef";
+    
+    sk.alert.cloud_instance = "indef";
     
     sk.SendAlert();
     ResetStream();

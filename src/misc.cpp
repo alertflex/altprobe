@@ -112,51 +112,53 @@ int Misc::ParsJson(char* redis_payload) {
         // check is alert
         
         sk.alert.ref_id  = fs.filter.ref_id;
-        sk.alert.sensor_id = pt.get<string>("alert.sensor_id","");
+        sk.alert.sensor_id = pt.get<string>("alert.sensor_id","indef");
                 
         sk.alert.alert_severity = pt.get<int>("alert.alert_severity",0);
-        sk.alert.alert_source = pt.get<string>("alert.alert_source","");
-        sk.alert.alert_type = pt.get<string>("alert.alert_type","");
+        sk.alert.alert_source = pt.get<string>("alert.alert_source","indef");
+        sk.alert.alert_type = pt.get<string>("alert.alert_type","indef");
         sk.alert.event_severity = pt.get<int>("alert.event_severity",0);
-        sk.alert.event_id = pt.get<string>("alert.event_id","");
-        sk.alert.description = pt.get<string>("alert.description","");
-        sk.alert.action = pt.get<string>("alert.action","");
-        sk.alert.location = pt.get<string>("alert.tags","");
-        sk.alert.info = pt.get<string>("alert.info","");
+        sk.alert.event_id = pt.get<string>("alert.event_id","indef");
+        sk.alert.description = pt.get<string>("alert.description","indef");
+        sk.alert.action = pt.get<string>("alert.action","indef");
+        sk.alert.location = pt.get<string>("alert.tags","indef");
+        sk.alert.info = pt.get<string>("alert.info","indef");
         sk.alert.status = "processed";
-        sk.alert.user_name = pt.get<string>("alert.user_name","");
-        sk.alert.agent_name = pt.get<string>("alert.agent_name","");
+        sk.alert.user_name = pt.get<string>("alert.user_name","indef");
+        sk.alert.agent_name = pt.get<string>("alert.agent_name","indef");
         sk.alert.filter = fs.filter.name;
                         
-        string cats = pt.get<string>("alert.categories","");
+        string cats = pt.get<string>("alert.categories","indef");
         sk.alert.list_cats.push_back(cats);
         
         sk.alert.event_time = GetNodeTime();
-        sk.alert.event_json = pt.get<string>("alert.event_json","");
-        
-        sk.alert.dst_ip = pt.get<string>("alert.dst_ip","");
-        sk.alert.src_ip = pt.get<string>("alert.src_ip","");
+                
+        sk.alert.dst_ip = pt.get<string>("alert.dst_ip","indef");
+        sk.alert.src_ip = pt.get<string>("alert.src_ip","indef");
         sk.alert.dst_port = pt.get<int>("alert.dst_port",0);
         sk.alert.src_port = pt.get<int>("alert.src_port",0);
-        sk.alert.dst_hostname = pt.get<string>("alert.dst_hostname","");
-        sk.alert.src_hostname = pt.get<string>("alert.src_hostname","");
+        sk.alert.dst_hostname = pt.get<string>("alert.dst_hostname","indef");
+        sk.alert.src_hostname = pt.get<string>("alert.src_hostname","indef");
         
-        sk.alert.file_name = pt.get<string>("alert.file_name","");
-        sk.alert.file_path = pt.get<string>("alert.file_path","");
+        sk.alert.reg_value = pt.get<string>("alert.reg_value","indef");
+        sk.alert.file_path = pt.get<string>("alert.file_path","indef");
 	
-        sk.alert.hash_md5 = pt.get<string>("alert.hash_md5","");
-        sk.alert.hash_sha1 = pt.get<string>("alert.hash_sha1","");
+        sk.alert.hash_md5 = pt.get<string>("alert.hash_md5","indef");
+        sk.alert.hash_sha1 = pt.get<string>("alert.hash_sha1","indef");
+        sk.alert.hash_sha256 = pt.get<string>("alert.hash_sha1","indef");
 	
         sk.alert.process_id = pt.get<int>("alert.process_id",0);
-        sk.alert.process_name = pt.get<string>("alert.process_name","");
-        sk.alert.process_cmdline = pt.get<string>("alert.process_cmdline","");
-        sk.alert.process_path = pt.get<string>("alert.process_path","");
+        sk.alert.process_name = pt.get<string>("alert.process_name","indef");
+        sk.alert.process_cmdline = pt.get<string>("alert.process_cmdline","indef");
+        sk.alert.process_path = pt.get<string>("alert.process_path","indef");
     
-        sk.alert.url_hostname = pt.get<string>("alert.url_hostname","");
-        sk.alert.url_path = pt.get<string>("alert.url_path","");
+        sk.alert.url_hostname = pt.get<string>("alert.url_hostname","indef");
+        sk.alert.url_path = pt.get<string>("alert.url_path","indef");
     
-        sk.alert.container_id = pt.get<string>("alert.container_id","");
-        sk.alert.container_name = pt.get<string>("alert.container_name","");
+        sk.alert.container_id = pt.get<string>("alert.container_id","indef");
+        sk.alert.container_name = pt.get<string>("alert.container_name","indef");
+        
+        sk.alert.container_name = pt.get<string>("alert.cloud_instance","indef");
     
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());

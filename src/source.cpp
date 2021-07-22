@@ -110,8 +110,7 @@ void Source::SendAlertMultiple(int type) {
     sk.alert.list_cats.push_back("Multiple alert");
     
     sk.alert.event_time = GetNodeTime();
-    sk.alert.event_json = "";
-    
+        
     sk.alert.src_ip = "indef";
     sk.alert.dst_ip = "indef";
     sk.alert.src_hostname = "indef";
@@ -119,7 +118,7 @@ void Source::SendAlertMultiple(int type) {
     sk.alert.src_port = 0;
     sk.alert.dst_port = 0;
         
-    sk.alert.file_name = "indef";
+    sk.alert.reg_value = "indef";
     sk.alert.file_path = "indef";
 	
     sk.alert.hash_md5 = "indef";
@@ -136,6 +135,8 @@ void Source::SendAlertMultiple(int type) {
     
     sk.alert.container_id = "indef";
     sk.alert.container_name = "indef";
+    
+    sk.alert.cloud_instance = "indef";
     
     sk.SendAlert();
         

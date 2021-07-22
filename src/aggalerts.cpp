@@ -331,8 +331,7 @@ void AggAlerts::SendCrsAlert(std::list<IdsRecord>::iterator r, int c) {
     if (r->rsp.new_category.compare("indef") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
     
     sk.alert.event_time = GetNodeTime();
-    sk.alert.event_json = "indef";
-    
+        
     sk.alert.src_ip = "indef";
     sk.alert.dst_ip = "indef";
     sk.alert.src_hostname = "indef";
@@ -340,7 +339,7 @@ void AggAlerts::SendCrsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.src_port = 0;
     sk.alert.dst_port = 0;
     
-    sk.alert.file_name = "indef";
+    sk.alert.reg_value = "indef";
     sk.alert.file_path = "indef";
 	
     sk.alert.hash_md5 = "indef";
@@ -357,6 +356,8 @@ void AggAlerts::SendCrsAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.container_id = "indef";
     sk.alert.container_name = "indef";
+    
+    sk.alert.cloud_instance = "indef";
         
     sk.SendAlert();
 }
@@ -461,8 +462,7 @@ void AggAlerts::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     if (r->rsp.new_category.compare("indef") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
     
     sk.alert.event_time = GetNodeTime();
-    sk.alert.event_json = "indef";
-    
+        
     sk.alert.src_ip = r->src_ip;
     sk.alert.dst_ip = r->dst_ip;
     sk.alert.src_hostname = "indef";
@@ -470,7 +470,7 @@ void AggAlerts::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.src_port = 0;
     sk.alert.dst_port = 0;
     
-    sk.alert.file_name = "indef";
+    sk.alert.reg_value = "indef";
     sk.alert.file_path = "indef";
 	
     sk.alert.hash_md5 = "indef";
@@ -487,6 +487,8 @@ void AggAlerts::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.container_id = "indef";
     sk.alert.container_name = "indef";
+    
+    sk.alert.cloud_instance = "indef";
     
     sk.SendAlert();
 }
@@ -584,8 +586,7 @@ void AggAlerts::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     if (r->rsp.new_category.compare("indef") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
     
     sk.alert.event_time = GetNodeTime();
-    sk.alert.event_json = "indef";
-    
+        
     sk.alert.src_ip = r->src_ip;
     sk.alert.dst_ip = r->dst_ip;
     sk.alert.src_hostname = "indef";
@@ -593,7 +594,7 @@ void AggAlerts::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.src_port = 0;
     sk.alert.dst_port = 0;
     
-    sk.alert.file_name = "indef";
+    sk.alert.reg_value = "indef";
     sk.alert.file_path = "indef";
 	
     sk.alert.hash_md5 = "indef";
@@ -610,6 +611,8 @@ void AggAlerts::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.container_id = "indef";
     sk.alert.container_name = "indef";
+    
+    sk.alert.cloud_instance = "indef";
     
     sk.SendAlert();
 }
@@ -700,8 +703,7 @@ void AggAlerts::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
     if (r->rsp.new_category.compare("indef") != 0) sk.alert.list_cats.push_back(r->rsp.new_category);
     
     sk.alert.event_time = GetNodeTime();
-    sk.alert.event_json = "indef";
-    
+        
     sk.alert.src_ip = r->src_ip;
     sk.alert.dst_ip = r->dst_ip;
     sk.alert.src_hostname = "indef";
@@ -709,7 +711,7 @@ void AggAlerts::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
     sk.alert.src_port = 0;
     sk.alert.dst_port = 0;
     
-    sk.alert.file_name = "indef";
+    sk.alert.reg_value = "indef";
     sk.alert.file_path = "indef";
 	
     sk.alert.hash_md5 = "indef";
@@ -726,6 +728,8 @@ void AggAlerts::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.container_id = "indef";
     sk.alert.container_name = "indef";
+    
+    sk.alert.cloud_instance = "indef";
     
     sk.SendAlert();
 }

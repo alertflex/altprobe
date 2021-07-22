@@ -629,8 +629,7 @@ void Waf::SendAlert(int s, GrayList*  gl) {
         sk.alert.list_cats.push_back("waf");
     
     sk.alert.event_time = event_time;
-    sk.alert.event_json = jsonPayload;
-    
+        
     if (gl != NULL) {
             
         if (gl->rsp.profile.compare("indef") != 0) {
@@ -677,7 +676,7 @@ void Waf::SendAlert(int s, GrayList*  gl) {
     sk.alert.dst_hostname = rec.ma.hostname;
     sk.alert.src_hostname = rec.ma.client;
         
-    sk.alert.file_name = rec.ma.file;
+    sk.alert.reg_value = rec.ma.file;
     sk.alert.file_path = rec.ma.file;
 	
     sk.alert.hash_md5 = "indef";
@@ -694,6 +693,8 @@ void Waf::SendAlert(int s, GrayList*  gl) {
     
     sk.alert.container_id = "indef";
     sk.alert.container_name = "indef";
+    
+    sk.alert.cloud_instance = "indef";
     
     sk.SendAlert();
         

@@ -159,9 +159,6 @@ void Sinks::SendAlert(void) {
         al << "\",\"info\": \"";
         al << alert.info;
         
-        al << "\",\"event_json\": \"";
-        al << alert.event_json;
-        
         al << "\"}}";
         
         persist.WriteLog(al.str());    

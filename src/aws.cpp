@@ -362,8 +362,7 @@ void AwsWaf::SendAlert(int s, GrayList*  gl) {
         sk.alert.list_cats.push_back("waf");
     
     sk.alert.event_time = GetGraylogFormat();
-    sk.alert.event_json = jsonPayload;
-    
+        
     if (gl != NULL) {
             
         if (gl->rsp.profile.compare("indef") != 0) {
@@ -410,7 +409,7 @@ void AwsWaf::SendAlert(int s, GrayList*  gl) {
     sk.alert.dst_hostname = rec.host;
     sk.alert.src_hostname = rec.clientIp;
         
-    sk.alert.file_name = "indef";
+    sk.alert.reg_value = "indef";
     sk.alert.file_path = "indef";
 	
     sk.alert.hash_md5 = "indef";
@@ -427,6 +426,8 @@ void AwsWaf::SendAlert(int s, GrayList*  gl) {
     
     sk.alert.container_id = "indef";
     sk.alert.container_name = "indef";
+    
+    sk.alert.cloud_instance = "indef";
     
     sk.SendAlert();
         

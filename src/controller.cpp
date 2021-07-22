@@ -287,8 +287,7 @@ int Controller::SendMessage(Event* e) {
         if (msg_type == 0) {
             
             // Create an alert
-            string strEventJson(((Alert*) e)->event_json);
-            auto_ptr<TextMessage> message(session->createTextMessage(strEventJson));
+            auto_ptr<TextMessage> message(session->createTextMessage());
             
             message->setIntProperty("msg_type", 1);
             
@@ -376,8 +375,8 @@ int Controller::SendMessage(Event* e) {
             
             message->setIntProperty("dst_port", ((Alert*) e)->dst_port);
 			
-            string strFileName(((Alert*) e)->file_name);
-            message->setStringProperty("file_name", strFileName);
+            string strRegValue(((Alert*) e)->reg_value);
+            message->setStringProperty("reg_value", strRegValue);
             
             string strFilePath(((Alert*) e)->file_path);
             message->setStringProperty("file_path", strFilePath);
@@ -413,6 +412,9 @@ int Controller::SendMessage(Event* e) {
                         
             string strContainerName(((Alert*) e)->container_name);
             message->setStringProperty("container_name", strContainerName);
+            
+            string strCloudInstance(((Alert*) e)->cloud_instance);
+            message->setStringProperty("cloud_instance", strCloudInstance);
             
             producerAlerts->send(message.get());
             

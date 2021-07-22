@@ -301,7 +301,7 @@ int Crs::ParsJson() {
     
     string output = pt.get<string>("output","");
     ReplaceAll(output, "\"", "");
-    ReplaceAll(output, "\\", "\\\\\\\\");
+    // ReplaceAll(output, "\\", "\\\\\\\\");
     rec.output = output;
     
     rec.priority = pt.get<string>("priority","");
@@ -332,9 +332,8 @@ int Crs::ParsJson() {
         rec.fields.fd_cip_name = output_fields.get<string>(bpt::ptree::path_type("fd.cip.name", '/'),"indef");
         rec.fields.fd_sip_name = output_fields.get<string>(bpt::ptree::path_type("fd.sip.name", '/'),"indef");
         
-        rec.fields.fd_name = output_fields.get<string>(bpt::ptree::path_type("fd.name", '/'),"indef");
-        rec.fields.fd_directory = output_fields.get<string>(bpt::ptree::path_type("fd.directory", '/'),"indef");
-        
+        rec.fields.fd_path = output_fields.get<string>(bpt::ptree::path_type("fd.name", '/'),"indef");
+                
         rec.fields.proc_pid = output_fields.get<int>(bpt::ptree::path_type("proc.pid", '/'),0);
         rec.fields.proc_cmdline = output_fields.get<string>(bpt::ptree::path_type("proc.cmdline", '/'),"indef");
         rec.fields.proc_name = output_fields.get<string>(bpt::ptree::path_type("proc.name", '/'),"indef");
@@ -345,6 +344,14 @@ int Crs::ParsJson() {
         rec.fields.container_name = output_fields.get<string>(bpt::ptree::path_type("container.name", '/'),"indef");
     
         rec.fields.user_name = output_fields.get<string>(bpt::ptree::path_type("user.name", '/'),"indef");
+        
+        string cloudInstance = rec.fields.fd_cip_name = output_fields.get<string>(bpt::ptree::path_type("ka.req.pod.containers.image", '/'),"indef");
+        
+        if (cloudInstance.compare("indef") == 0) {
+           cloudInstance = rec.fields.fd_cip_name = output_fields.get<string>(bpt::ptree::path_type("ka.target.resource", '/'),"indef"); 
+        }
+        
+        rec.fields.cloud_instance = cloudInstance;
     }
         
     ResetStreams();
@@ -405,11 +412,8 @@ void Crs::CreateLog() {
     report += "\",\"server_hostname\":\"";
     report += rec.fields.fd_sip_name;
     
-    report += "\",\"file_name\":\"";
-    report += rec.fields.fd_name;
-    
-    report += "\",\"file_directory\":\"";
-    report += rec.fields.fd_directory;
+    report += "\",\"file_path\":\"";
+    report += rec.fields.fd_path;
     
     report += "\",\"process_pid\":";
     report += std::to_string(rec.fields.proc_pid);
@@ -517,8 +521,7 @@ void Crs::SendAlert(int s, GrayList*  gl) {
     sk.alert.list_cats.push_back("falco");
     
     sk.alert.event_time = rec.timestamp;
-    sk.alert.event_json = jsonPayload;
-        
+            
     if (gl != NULL) {
             
         if (gl->rsp.profile.compare("indef") != 0) {
@@ -570,8 +573,8 @@ void Crs::SendAlert(int s, GrayList*  gl) {
     sk.alert.src_port = rec.fields.fd_cport;
     sk.alert.dst_port = rec.fields.fd_sport;
     
-    sk.alert.file_name = rec.fields.fd_name;
-    sk.alert.file_path = rec.fields.fd_directory;
+    sk.alert.reg_value = "indef";
+    sk.alert.file_path = rec.fields.fd_path;
 	
     sk.alert.hash_md5 = "indef";
     sk.alert.hash_sha1 = "indef";
@@ -587,6 +590,8 @@ void Crs::SendAlert(int s, GrayList*  gl) {
     
     sk.alert.container_id = rec.fields.container_id;
     sk.alert.container_name = rec.fields.container_name;
+    
+    sk.alert.cloud_instance = rec.fields.cloud_instance;
     
     sk.SendAlert();
     
