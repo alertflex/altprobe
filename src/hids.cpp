@@ -580,7 +580,7 @@ void Hids::CreateLog() {
     report += rec.user;
     
     if (rec.file.file_path.compare("indef") != 0) {
-        report += "\",\"file_path\":\"";
+        report += "\",\"filename\":\"";
         report += rec.file.file_path;
         report += "\",\"md5\":\"";
         report += rec.file.md5;
@@ -703,7 +703,7 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     sk.alert.dst_port = rec.dstport;
         
     sk.alert.reg_value = "indef";
-    sk.alert.file_path = "indef";
+    sk.alert.file_name = "indef";
 	
     sk.alert.hash_md5 = "indef";
     sk.alert.hash_sha1 = "indef";
@@ -727,7 +727,7 @@ void Hids::SendAlert(int s, GrayList*  gl) {
         sk.alert.alert_type = "FILE";
             
         sk.alert.reg_value = rec.file.reg_value;
-        sk.alert.file_path = rec.file.file_path;
+        sk.alert.file_name = rec.file.file_path;
         
         sk.alert.hash_md5 = rec.file.md5;
         sk.alert.hash_sha1 = rec.file.sha1;

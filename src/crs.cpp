@@ -574,7 +574,7 @@ void Crs::SendAlert(int s, GrayList*  gl) {
     sk.alert.dst_port = rec.fields.fd_sport;
     
     sk.alert.reg_value = "indef";
-    sk.alert.file_path = rec.fields.fd_path;
+    sk.alert.file_name = rec.fields.fd_path;
 	
     sk.alert.hash_md5 = "indef";
     sk.alert.hash_sha1 = "indef";

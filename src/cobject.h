@@ -210,7 +210,8 @@ public:
     unsigned int src_port;
     unsigned int dst_port;
 	
-    string file_path;
+    string file_name;
+        
     string reg_value;
 	
     string hash_md5;
@@ -253,8 +254,8 @@ public:
 	dst_port = 0;
 	
 	reg_value.clear();
-	file_path.clear();
-	
+	file_name.clear();
+	        
 	hash_md5.clear();
 	hash_sha1.clear();
         hash_sha256.clear();

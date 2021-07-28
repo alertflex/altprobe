@@ -141,7 +141,7 @@ int Misc::ParsJson(char* redis_payload) {
         sk.alert.src_hostname = pt.get<string>("alert.src_hostname","indef");
         
         sk.alert.reg_value = pt.get<string>("alert.reg_value","indef");
-        sk.alert.file_path = pt.get<string>("alert.file_path","indef");
+        sk.alert.file_name = pt.get<string>("alert.file_name","indef");
 	
         sk.alert.hash_md5 = pt.get<string>("alert.hash_md5","indef");
         sk.alert.hash_sha1 = pt.get<string>("alert.hash_sha1","indef");

@@ -119,7 +119,7 @@ void Source::SendAlertMultiple(int type) {
     sk.alert.dst_port = 0;
         
     sk.alert.reg_value = "indef";
-    sk.alert.file_path = "indef";
+    sk.alert.file_name = "indef";
 	
     sk.alert.hash_md5 = "indef";
     sk.alert.hash_sha1 = "indef";

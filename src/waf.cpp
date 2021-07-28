@@ -677,7 +677,7 @@ void Waf::SendAlert(int s, GrayList*  gl) {
     sk.alert.src_hostname = rec.ma.client;
         
     sk.alert.reg_value = rec.ma.file;
-    sk.alert.file_path = rec.ma.file;
+    sk.alert.file_name = rec.ma.file;
 	
     sk.alert.hash_md5 = "indef";
     sk.alert.hash_sha1 = "indef";

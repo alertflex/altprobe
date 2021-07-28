@@ -410,7 +410,7 @@ void AwsWaf::SendAlert(int s, GrayList*  gl) {
     sk.alert.src_hostname = rec.clientIp;
         
     sk.alert.reg_value = "indef";
-    sk.alert.file_path = "indef";
+    sk.alert.file_name = "indef";
 	
     sk.alert.hash_md5 = "indef";
     sk.alert.hash_sha1 = "indef";

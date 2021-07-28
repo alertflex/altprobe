@@ -940,7 +940,7 @@ void Nids::SendAlert(int s, GrayList* gl) {
     sk.alert.dst_hostname = rec.dst_agent;
     
     sk.alert.reg_value = "indef";
-    sk.alert.file_path = "indef";
+    sk.alert.file_name = "indef";
 	
     sk.alert.hash_md5 = "indef";
     sk.alert.hash_sha1 = "indef";

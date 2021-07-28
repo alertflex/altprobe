@@ -378,8 +378,8 @@ int Controller::SendMessage(Event* e) {
             string strRegValue(((Alert*) e)->reg_value);
             message->setStringProperty("reg_value", strRegValue);
             
-            string strFilePath(((Alert*) e)->file_path);
-            message->setStringProperty("file_path", strFilePath);
+            string strFileName(((Alert*) e)->file_name);
+            message->setStringProperty("file_name", strFileName);
             
             string strMD5(((Alert*) e)->hash_md5);
             message->setStringProperty("hash_md5", strMD5);
