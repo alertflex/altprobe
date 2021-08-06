@@ -61,11 +61,11 @@ sudo sed -i "s/_wazuh_log/$WAZUH_LOG/g" /etc/altprobe/altprobe.yaml
 
 sudo chmod go-rwx /etc/altprobe/altprobe.yaml
 
-sudo ln -s /usr/local/bin/altprobe /usr/sbin/altprobe
-sudo ln -s /usr/local/bin/altprobe-restart /usr/sbin/altprobe-restart
-sudo ln -s /usr/local/bin/altprobe-start /usr/sbin/altprobe-start
-sudo ln -s /usr/local/bin/altprobe-status /usr/sbin/altprobe-status
-sudo ln -s /usr/local/bin/altprobe-stop /usr/sbin/altprobe-stop
+sudo ln -s /usr/sbin/altprobe /usr/local/bin/altprobe
+sudo ln -s /usr/sbin/altprobe-restart /usr/local/bin/altprobe-restart 
+sudo ln -s /usr/sbin/altprobe-start /usr/local/bin/altprobe-start 
+sudo ln -s /usr/sbin/altprobe-status /usr/local/bin/altprobe-status
+sudo ln -s /usr/sbin/altprobe-stop /usr/local/bin/altprobe-stop 
 
 if [[ $INSTALL_REDIS == yes ]]
 then
@@ -147,6 +147,8 @@ fi
 sudo systemctl daemon-reload
 sudo systemctl enable altprobe.service
 sudo systemctl start altprobe.service
+
+rm -r /home/ec2-user/altprobe
 
 exit 0
 
