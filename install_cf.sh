@@ -70,7 +70,8 @@ sudo ln -s /usr/local/bin/altprobe-stop /usr/sbin/altprobe-stop
 if [[ $INSTALL_REDIS == yes ]]
 then
 	echo "*** installation redis ***"
-	sudo yum -y install redis 
+	sudo yum -y install redis
+	sudo sed -i "s/bind 127.0.0.1/bind 0.0.0.0/g" /etc/redis.conf
 	sudo systemctl enable redis
 	sudo systemctl start redis
 fi
