@@ -1079,27 +1079,39 @@ void Collector::UpdateOssecRules() {
         int i = 0;
         
         for (directory_iterator itr(p); itr != end_itr; ++itr, i++) {
-            
+            SysLog("***");
             if (is_regular_file(itr->path())) {
-                
+                SysLog("1");
                 filePath = itr->path();
+				SysLog("2");
                 fileName = filePath.filename().string();
+				SysLog("3");
                 std::ifstream ossec_rules;
+				SysLog("4");
                 ossec_rules.open(filePath.string(),ios::binary);
+				SysLog("5");
                 strStream << ossec_rules.rdbuf();
-        
+				SysLog("6");
                 boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+				SysLog("7");
                 in.push(boost::iostreams::gzip_compressor());
+				SysLog("8");
                 in.push(strStream);
+				SysLog("9");
                 boost::iostreams::copy(in, comp);
-                
+                SysLog("10");
                 rd.data = comp.str();
+				SysLog("11");
                 rd.name_rule = fileName;
+				SysLog("12");
                 rd.ref_id = fs.filter.ref_id;
+				SysLog("13");
                 rd.sensor_type = 3;
+				SysLog("14");
                 rd.event_type = 4;
+				SysLog("15");
                 sk.SendMessage(&rd);
-        
+				SysLog("16");
                 ossec_rules.close();
                 boost::iostreams::close(in);
                 ResetStreams();
