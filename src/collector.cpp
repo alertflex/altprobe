@@ -202,9 +202,7 @@ int Collector::Go(void) {
                
                 UpdateContainers();
                 
-                
-                string update_notification = "update has been done";
-                SysLog((char*) update_notification.c_str());
+                SysLog("update has been done");
             }
         
             counter_reports = 0;
@@ -367,6 +365,7 @@ void Collector::UpdateAgents(void) {
                         }
                     } catch (const std::exception & ex) {
                         SysLog((char*) ex.what());
+                        SysLog("Collector::UpdateAgents");
                     } 
                     
                     pt.clear();
@@ -504,6 +503,7 @@ void Collector::ParsAgents () {
     
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
+        SysLog("Collector::ParsAgents");
     } 
 }
 
@@ -533,6 +533,7 @@ void Collector::PushAgents(const string&  type, const string&  agent) {
             
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
+        SysLog("Collector::PushAgents");
     } 
     
     pt.clear();
@@ -564,6 +565,7 @@ void Collector::UpdateContainers(void) {
     
         } catch (const std::exception & ex) {
             SysLog((char*) ex.what());
+            SysLog("Collector::UpdateContainers");
         } 
     }
     
@@ -611,8 +613,8 @@ void Collector::GetContainers() {
 	ret = send(sck, req.c_str(), siz, 0);
 	if (ret == -1) {
             SysLog("Can not send request to docker socket");
-             containers_payload.clear();
-             return;
+            containers_payload.clear();
+            return;
 	} else if (ret < siz) {
             SysLog("Unable to send all size message to docker socket");
             containers_payload.clear();
@@ -694,6 +696,7 @@ void Collector::GetContainers() {
     
     } catch (std::exception& ex) {
         SysLog((char*) ex.what());
+        SysLog("Collector::GetContainers");
     }
 
     containers_payload.clear();
@@ -724,6 +727,7 @@ void Collector::ParsContainers() {
     
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
+        SysLog("Collector::ParsContainers");
     } 
     
     containers_payload.clear();
@@ -764,6 +768,7 @@ void Collector::UpdateFalcoConfig() {
         
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
+        SysLog("Collector::UpdateFalcoConfig");
     } 
     
     return;
@@ -803,6 +808,7 @@ void Collector::UpdateModsecConfig() {
         
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
+        SysLog("Collector::UpdateModsecConfig");
     } 
     
     return;
@@ -845,6 +851,7 @@ void Collector::UpdateSuriConfig() {
         
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
+        SysLog("Collector::UpdateSuriConfig");
     } 
     
     return;
@@ -888,6 +895,7 @@ void Collector::UpdateOssecConfig() {
         
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
+        SysLog("Collector::UpdateOssecConfig");
     } 
     
     return;
@@ -941,6 +949,7 @@ void Collector::UpdateFalcoRules() {
         
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
+        SysLog("Collector::UpdateFalcoRules");
     } 
     
     return;
@@ -996,6 +1005,7 @@ void Collector::UpdateModsecRules() {
         
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
+        SysLog("Collector::UpdateModsecRules");
     } 
     
     return;
@@ -1048,6 +1058,7 @@ void Collector::UpdateSuriRules() {
         
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
+        SysLog("Collector::UpdateSuriRules");
     } 
     
     return;
@@ -1103,6 +1114,7 @@ void Collector::UpdateOssecRules() {
         
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
+        SysLog("Collector::UpdateOssecRules");
     } 
     
     return;
