@@ -1067,12 +1067,13 @@ void Collector::UpdateOssecRules() {
     if (!strcmp (wazuh_rules, "indef")) return; 
     
     try {
-        
+        SysLog("wazuh_rules");
         string root(wazuh_rules);
+		SysLog("WAZUH_RULES");
         string rules(WAZUH_RULES);
-        
+        SysLog("path p");
         path p (root + rules);
-        
+        SysLog("dir it");
         directory_iterator end_itr;
         
         // cycle through the directory
