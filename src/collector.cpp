@@ -264,134 +264,14 @@ void Collector::StatJob() {
     ss.clear();
 }
 
-string Collector::GetAgents(string url_request) {
-    
-    try {
-        
-        boost::asio::io_service io_service;
-        
-        string hostAddress;
-        string ip(wazuh_host);
-        stringstream ss;
-        ss << wazuh_port;
-        string port = ss.str();
-        
-        if (wazuh_port != 80) {
-            hostAddress = ip + ":" + port;
-        } else { 
-            
-            hostAddress = ip;
-        }
-        
-        tcp::resolver resolver(io_service);
-        tcp::resolver::query query(ip, port);
-        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
-        tcp::socket socket(io_service);
-        boost::asio::connect(socket, endpoint_iterator);
-
-        boost::asio::streambuf request;
-        ostream request_stream(&request);
-        request_stream << "GET " << url_request << " HTTP/1.1\r\n";  
-        request_stream << "Host: " << hostAddress << "\r\n";
-        request_stream << "Authorization: Bearer "<< wazuh_token << "\r\n";
-        request_stream << "Accept: */*\r\n";
-        request_stream << "Connection: close\r\n\r\n";
-
-        boost::asio::write(socket, request);
-
-        boost::asio::streambuf response;
-        boost::asio::read_until(socket, response, "\r\n");
-
-        istream response_stream(&response);
-        string http_version;
-        response_stream >> http_version;
-        unsigned int status_code;
-        response_stream >> status_code;
-        string status_message;
-        getline(response_stream, status_message);
-        
-        if (!response_stream || http_version.substr(0, 5) != "HTTP/") return NULL;
-        
-        if (status_code != 200) return "";
-        
-        boost::asio::read_until(socket, response, "\r\n\r\n");
-
-        string header;
-        while (getline(response_stream, header) && header != "\r") { }
-        
-        stringstream  payload;
-        if (response.size() > 0) {
-            payload << &response;
-        }
-
-        boost::system::error_code error;
-        while (boost::asio::read(socket, response,boost::asio::transfer_at_least(1), error)) {
-            payload << &response;
-        }
-
-        if (error != boost::asio::error::eof) {
-            throw boost::system::system_error(error);
-        }
-        
-        return payload.str();
-    
-    } catch (std::exception& ex) { 
-        
-    }
-
-    return "";
-   
-}
-
-void Collector::ParsAgents (const string& json) {
-    
-    stringstream ss(json);
-    
-    try {
-    
-        bpt::ptree pt;
-        bpt::read_json(ss, pt);
-        
-        int err =  pt.get<int>("error");
-        
-        if(err == 0) {
-    
-            int totalItems =  pt.get<int>("data.total_affected_items");
-    
-            bpt::ptree agents_ptree = pt.get_child("data.affected_items");
-    
-            BOOST_FOREACH(bpt::ptree::value_type &agents, agents_ptree) {
-            
-                string id = agents.second.get<string>("id");
-                string ip = agents.second.get<string>("ip");
-                string name = agents.second.get<string>("name");
-                string status = agents.second.get<string>("status");
-                string dateAdd = agents.second.get<string>("dateAdd");
-                string version = "wazuh"; //agents.second.get<string>("version");
-                string manager_host = probe_id + ".hids"; //agents.second.get<string>("manager");
-                string os_platform = agents.second.get<string>("os.platform", "indef");
-                string os_version = agents.second.get<string>("os.version", "indef");
-                string os_name = agents.second.get<string>("os.name", "indef"); 
-        
-                fs.UpdateAgentsList(id, ip, name, status, dateAdd, version, manager_host, os_platform, os_version, os_name);
-            }
-        }
-        
-        pt.clear();
-    
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-    } 
-}
 
 void Collector::UpdateAgents(void) {
     
-    string payload = GetAgents("/agents");
-    
-    if (!payload.empty()) {
+    GetAgents("/agents");
+    if (!agents_payload.empty()) {
         
-        ParsAgents(payload);
+        ParsAgents();
     
         if (fs.agents_list.size() != 0) {
     
@@ -448,57 +328,188 @@ void Collector::UpdateAgents(void) {
             
             for (i = fs.agents_list.begin(), end = fs.agents_list.end(); i != end; ++i) {
                 
-                payload = GetAgents("/syscollector/" + i->id + "/packages");
+                GetAgents("/syscollector/" + i->id + "/packages");
+                if (!agents_payload.empty()) PushAgents("packages_list", i->id);
                 
-                PushAgents(payload,"packages_list",i->id);
                 
-                payload = GetAgents("/sca/" + i->id);
+                GetAgents("/sca/" + i->id);
+                if (!agents_payload.empty()) {
+                    
+                    stringstream ss(agents_payload);
                 
-                stringstream ss(payload);
-                
-                bpt::ptree pt;
+                    bpt::ptree pt;
     
-                try {
+                    try {
     
-                    bpt::read_json(ss, pt);
+                        bpt::read_json(ss, pt);
     
-                    int err =  pt.get<int>("error");
+                        int err =  pt.get<int>("error");
     
-                    if(err == 0) {
+                        if(err == 0) {
     
-                        int totalItems =  pt.get<int>("data.total_affected_items");
+                            int totalItems =  pt.get<int>("data.total_affected_items");
     
-                        bpt::ptree policy_ptree = pt.get_child("data.affected_items");
+                            bpt::ptree policy_ptree = pt.get_child("data.affected_items");
     
-                        BOOST_FOREACH(bpt::ptree::value_type &policies, policy_ptree) {
+                            BOOST_FOREACH(bpt::ptree::value_type &policies, policy_ptree) {
         
-                            string policy_id = policies.second.get<string>("policy_id");
+                                string policy_id = policies.second.get<string>("policy_id");
             
-                            string url = "/sca/";
-                            url += i->id;
-                            url += "/checks/";
-                            url += policy_id;
-                            url += "?result=failed";
+                                string url = "/sca/";
+                                url += i->id;
+                                url += "/checks/";
+                                url += policy_id;
+                                url += "?result=failed";
             
-                            payload = GetAgents(url);
-            
-                            PushAgents(payload,"sca",i->id);
+                                GetAgents(url);
+                                if (!agents_payload.empty()) PushAgents("sca",i->id);
+                            }
                         }
-                    }
-    
-                } catch (const std::exception & ex) {
-                    SysLog((char*) ex.what());
-                } 
-                
-                pt.clear();
+                    } catch (const std::exception & ex) {
+                        SysLog((char*) ex.what());
+                    } 
+                    
+                    pt.clear();
+                }
             }
         }
     }
 }
 
-void Collector::PushAgents(string json, string type, string agent) {
+void Collector::GetAgents(const string& url_request) {
     
-    stringstream ss(json);
+    try {
+        
+        boost::asio::io_service io_service;
+        
+        string hostAddress;
+        string ip(wazuh_host);
+        stringstream ss;
+        ss << wazuh_port;
+        string port = ss.str();
+        
+        if (wazuh_port != 80) {
+            hostAddress = ip + ":" + port;
+        } else { 
+            
+            hostAddress = ip;
+        }
+        
+        tcp::resolver resolver(io_service);
+        tcp::resolver::query query(ip, port);
+        tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+
+        tcp::socket socket(io_service);
+        boost::asio::connect(socket, endpoint_iterator);
+
+        boost::asio::streambuf request;
+        ostream request_stream(&request);
+        request_stream << "GET " << url_request << " HTTP/1.1\r\n";  
+        request_stream << "Host: " << hostAddress << "\r\n";
+        request_stream << "Authorization: Bearer "<< wazuh_token << "\r\n";
+        request_stream << "Accept: */*\r\n";
+        request_stream << "Connection: close\r\n\r\n";
+
+        boost::asio::write(socket, request);
+
+        boost::asio::streambuf response;
+        boost::asio::read_until(socket, response, "\r\n");
+
+        istream response_stream(&response);
+        string http_version;
+        response_stream >> http_version;
+        unsigned int status_code;
+        response_stream >> status_code;
+        string status_message;
+        getline(response_stream, status_message);
+        
+        if (!response_stream || http_version.substr(0, 5) != "HTTP/") {
+            
+            agents_payload.clear();
+            return;
+        }
+        
+        if (status_code != 200) {
+            
+            agents_payload.clear();
+            return;
+        }
+        
+        boost::asio::read_until(socket, response, "\r\n\r\n");
+
+        string header;
+        while (getline(response_stream, header) && header != "\r") { }
+        
+        stringstream  payload;
+        if (response.size() > 0) {
+            payload << &response;
+        }
+
+        boost::system::error_code error;
+        while (boost::asio::read(socket, response,boost::asio::transfer_at_least(1), error)) {
+            payload << &response;
+        }
+
+        if (error != boost::asio::error::eof) {
+            throw boost::system::system_error(error);
+        }
+        
+        agents_payload = payload.str();
+        
+        return;
+    
+    } catch (std::exception& ex) { 
+        
+    }
+
+    agents_payload.clear();
+   
+}
+
+void Collector::ParsAgents () {
+    
+    stringstream ss(agents_payload);
+    
+    try {
+    
+        bpt::ptree pt;
+        bpt::read_json(ss, pt);
+        
+        int err =  pt.get<int>("error");
+        
+        if(err == 0) {
+    
+            int totalItems =  pt.get<int>("data.total_affected_items");
+    
+            bpt::ptree agents_ptree = pt.get_child("data.affected_items");
+    
+            BOOST_FOREACH(bpt::ptree::value_type &agents, agents_ptree) {
+            
+                string id = agents.second.get<string>("id");
+                string ip = agents.second.get<string>("ip");
+                string name = agents.second.get<string>("name");
+                string status = agents.second.get<string>("status");
+                string dateAdd = agents.second.get<string>("dateAdd");
+                string version = "wazuh"; //agents.second.get<string>("version");
+                string manager_host = probe_id + ".hids"; //agents.second.get<string>("manager");
+                string os_platform = agents.second.get<string>("os.platform", "indef");
+                string os_version = agents.second.get<string>("os.version", "indef");
+                string os_name = agents.second.get<string>("os.name", "indef"); 
+        
+                fs.UpdateAgentsList(id, ip, name, status, dateAdd, version, manager_host, os_platform, os_version, os_name);
+            }
+        }
+        
+        pt.clear();
+    
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+    } 
+}
+
+void Collector::PushAgents(const string&  type, const string&  agent) {
+    
+    stringstream ss(agents_payload);
     stringstream ss1;
     
     bpt::ptree pt;
@@ -527,7 +538,39 @@ void Collector::PushAgents(string json, string type, string agent) {
     pt.clear();
 }
 
-string Collector::GetContainers(void) {
+void Collector::UpdateContainers(void) {
+    
+    if (dockerSocketStatus) {
+    
+        try {
+    
+            GetContainers();
+            
+            if (!containers_payload.empty()) {
+            
+                ParsContainers();
+        
+                if (!containers_payload.empty()) {
+        
+                    string report = "{ \"type\": \"containers_list\",\"probe\": \"";
+                    report += probe_id;
+                    report += "\", \"data\" : ";
+                    report += containers_payload;
+                    report += " }";
+        
+                    q_stats_collr.push(report);
+                }
+            }
+    
+        } catch (const std::exception & ex) {
+            SysLog((char*) ex.what());
+        } 
+    }
+    
+    containers_payload.clear();
+}
+
+void Collector::GetContainers() {
     
     try {
         
@@ -542,7 +585,8 @@ string Collector::GetContainers(void) {
 	sck = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (sck == -1) {
             SysLog("can not create docker socket");
-            return "";
+            containers_payload.clear();
+            return;
 	}
 
 	/* set address */
@@ -554,7 +598,8 @@ string Collector::GetContainers(void) {
 	ret = connect(sck, (struct sockaddr *) &addr, sizeof(addr));
 	if (ret == -1) {
             SysLog("can not connect to docket socket");
-            return "";
+            containers_payload.clear();
+            return;
 	}
         
         std::string req = "GET /v1.40/containers/json HTTP/1.1\r\n";
@@ -566,10 +611,12 @@ string Collector::GetContainers(void) {
 	ret = send(sck, req.c_str(), siz, 0);
 	if (ret == -1) {
             SysLog("Can not send request to docker socket");
-            return "";
+             containers_payload.clear();
+             return;
 	} else if (ret < siz) {
             SysLog("Unable to send all size message to docker socket");
-            return "";
+            containers_payload.clear();
+            return;
 	}
         
         char buffer[SOCKET_BUFFER_SIZE];
@@ -578,7 +625,8 @@ string Collector::GetContainers(void) {
 	ret = read(sck, buffer, SOCKET_BUFFER_SIZE);
 	if (ret == -1) {
             SysLog("Can not read answer from docker socket");
-            return "";
+            containers_payload.clear();
+            return;
 	} 
         
         int i = 0;
@@ -586,8 +634,7 @@ string Collector::GetContainers(void) {
         int k = 0;
         
         bool chunked = false;
-        std::string str_buffer = "";
-        
+                
         for (; i < SOCKET_BUFFER_SIZE && k <= 7; i++) {
             char test = (char) buffer[i];
             if ( test == '\n') k++;
@@ -603,7 +650,7 @@ string Collector::GetContainers(void) {
             if (str_chunked.find("chunked") != std::string::npos) {
                 chunked = true;
             } else {
-                str_buffer.append(buffer + i);
+                containers_payload.append(buffer + i);
             }
         }
         
@@ -637,24 +684,24 @@ string Collector::GetContainers(void) {
         
             if (chunked) {
                 begin_str = i - j;
-                str_buffer.append(buffer + begin_str, j);
+                containers_payload.append(buffer + begin_str, j);
             }
         }
         
         close(sck);
         
-        return str_buffer;
+        return;
     
     } catch (std::exception& ex) {
         SysLog((char*) ex.what());
     }
 
-    return "";
+    containers_payload.clear();
 }
 
-void Collector::ParsContainers(const string& json) {
+void Collector::ParsContainers() {
     
-    stringstream ss(json);
+    stringstream ss(containers_payload);
     
     try {
         
@@ -672,36 +719,14 @@ void Collector::ParsContainers(const string& json) {
         }
         
         pt.clear();
+        
+        return;
     
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
     } 
-}
-
-void Collector::UpdateContainers(void) {
     
-    if (dockerSocketStatus) {
-    
-        try {
-    
-            string payload = GetContainers();
-            ParsContainers(payload);
-        
-            if (!payload.empty()) {
-        
-                string report = "{ \"type\": \"containers_list\",\"probe\": \"";
-                report += probe_id;
-                report += "\", \"data\" : ";
-                report += payload;
-                report += " }";
-        
-                q_stats_collr.push(report);
-            }
-    
-        } catch (const std::exception & ex) {
-            SysLog((char*) ex.what());
-        } 
-    }
+    containers_payload.clear();
 }
 
 void Collector::UpdateFalcoConfig() {

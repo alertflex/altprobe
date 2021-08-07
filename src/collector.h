@@ -65,6 +65,10 @@ public:
 class Collector : public Source {
 public: 
     
+    string agents_payload;
+    
+    string containers_payload;
+    
     std::vector<Container> containers_list;
         
     Hids* hids;
@@ -111,16 +115,18 @@ public:
     void UpdateModsecRules();
     
     bool GetToken();
-    string GetAgents(string url_request);
-    void ParsAgents(const string&  json);
-    void UpdateAgents(void);
-    void PushAgents(string json, string type, string agent);
+    void GetAgents(const string& url_request);
+    void ParsAgents();
+    void UpdateAgents();
+    void PushAgents(const string& type, const string& agent);
     
-    string GetContainers(void);  
-    void ParsContainers(const string& json);
-    void UpdateContainers(void);
+    void GetContainers();  
+    void ParsContainers();
+    void UpdateContainers();
         
     void ResetStreams() {
+        agents_payload.clear();
+        containers_payload.clear();
         comp.str("");
         comp.clear();
         strStream.str("");
