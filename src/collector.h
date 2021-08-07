@@ -77,6 +77,9 @@ public:
     Crs* crs;
     RemLog* rem_log;
     RemStat* rem_stat;
+    
+    path filePath;
+    string fileName;
         
     BinData bd;
     Rule rd;
@@ -94,6 +97,7 @@ public:
         rem_stat = rs;
                 
         wazuhServerStatus = false;
+        ResetStreams();
     }
         
     virtual int GetConfig();
@@ -125,8 +129,9 @@ public:
     void UpdateContainers();
         
     void ResetStreams() {
-        agents_payload.clear();
-        containers_payload.clear();
+        
+        filePath.clear();
+        fileName.clear();
         comp.str("");
         comp.clear();
         strStream.str("");

@@ -266,6 +266,8 @@ void Collector::StatJob() {
 
 void Collector::UpdateAgents(void) {
     
+    agents_payload.clear();
+    
     GetAgents("/agents");
     if (!agents_payload.empty()) {
         
@@ -541,6 +543,8 @@ void Collector::PushAgents(const string&  type, const string&  agent) {
 
 void Collector::UpdateContainers(void) {
     
+    containers_payload.clear();
+    
     if (dockerSocketStatus) {
     
         try {
@@ -568,8 +572,6 @@ void Collector::UpdateContainers(void) {
             SysLog("Collector::UpdateContainers");
         } 
     }
-    
-    containers_payload.clear();
 }
 
 void Collector::GetContainers() {
@@ -916,17 +918,15 @@ void Collector::UpdateFalcoRules() {
         
         // cycle through the directory
         int i = 0;
-        path file_path;
-        string file_name;
-        
+                
         for (directory_iterator itr(p); itr != end_itr; ++itr, i++) {
             
             if (is_regular_file(itr->path())) {
                 
-                file_path = itr->path();
-                file_name = file_path.filename().string();
+                filePath = itr->path();
+                fileName = filePath.filename().string();
                 std::ifstream falco_rules;
-                falco_rules.open(file_path.string(),ios::binary);
+                falco_rules.open(filePath.string(),ios::binary);
                 strStream << falco_rules.rdbuf();
         
                 boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
@@ -935,7 +935,7 @@ void Collector::UpdateFalcoRules() {
                 boost::iostreams::copy(in, comp);
                 
                 rd.data = comp.str();
-                rd.name_rule = file_name;
+                rd.name_rule = fileName;
                 rd.ref_id = fs.filter.ref_id;
                 rd.sensor_type = 0;
                 rd.event_type = 4;
@@ -972,17 +972,15 @@ void Collector::UpdateModsecRules() {
         
         // cycle through the directory
         int i = 0;
-        path file_path;
-        string file_name;
         
         for (directory_iterator itr(p); itr != end_itr; ++itr, i++) {
             
             if (is_regular_file(itr->path())) {
                 
-                file_path = itr->path();
-                file_name = file_path.filename().string();
+                filePath = itr->path();
+                fileName = filePath.filename().string();
                 std::ifstream modsec_rules;
-                modsec_rules.open(file_path.string(),ios::binary);
+                modsec_rules.open(filePath.string(),ios::binary);
                 strStream << modsec_rules.rdbuf();
         
                 boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
@@ -991,7 +989,7 @@ void Collector::UpdateModsecRules() {
                 boost::iostreams::copy(in, comp);
                 
                 rd.data = comp.str();
-                rd.name_rule = file_name;
+                rd.name_rule = fileName;
                 rd.ref_id = fs.filter.ref_id;
                 rd.sensor_type = 1;
                 rd.event_type = 4;
@@ -1025,17 +1023,15 @@ void Collector::UpdateSuriRules() {
         
         // cycle through the directory
         int i = 0;
-        path file_path;
-        string file_name;
         
         for (directory_iterator itr(p); itr != end_itr; ++itr, i++) {
             
             if (is_regular_file(itr->path())) {
                 
-                file_path = itr->path();
-                file_name = file_path.filename().string();
+                filePath = itr->path();
+                fileName = filePath.filename().string();
                 std::ifstream suri_rules;
-                suri_rules.open(file_path.string(),ios::binary);
+                suri_rules.open(filePath.string(),ios::binary);
                 strStream << suri_rules.rdbuf();
         
                 boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
@@ -1044,7 +1040,7 @@ void Collector::UpdateSuriRules() {
                 boost::iostreams::copy(in, comp);
                 
                 rd.data = comp.str();
-                rd.name_rule = file_name;
+                rd.name_rule = fileName;
                 rd.ref_id = fs.filter.ref_id;
                 rd.sensor_type = 2;
                 rd.event_type = 4;
@@ -1081,17 +1077,15 @@ void Collector::UpdateOssecRules() {
         
         // cycle through the directory
         int i = 0;
-        path file_path;
-        string file_name;
         
         for (directory_iterator itr(p); itr != end_itr; ++itr, i++) {
             
             if (is_regular_file(itr->path())) {
                 
-                file_path = itr->path();
-                file_name = file_path.filename().string();
+                filePath = itr->path();
+                fileName = filePath.filename().string();
                 std::ifstream ossec_rules;
-                ossec_rules.open(file_path.string(),ios::binary);
+                ossec_rules.open(filePath.string(),ios::binary);
                 strStream << ossec_rules.rdbuf();
         
                 boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
@@ -1100,7 +1094,7 @@ void Collector::UpdateOssecRules() {
                 boost::iostreams::copy(in, comp);
                 
                 rd.data = comp.str();
-                rd.name_rule = file_name;
+                rd.name_rule = fileName;
                 rd.ref_id = fs.filter.ref_id;
                 rd.sensor_type = 3;
                 rd.event_type = 4;
