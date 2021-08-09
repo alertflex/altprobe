@@ -54,6 +54,8 @@ install -m 0755 $RPM_SOURCE_DIR/scripts/altprobe-restart $RPM_BUILD_ROOT/usr/sbi
 install -m 0755 $RPM_SOURCE_DIR/scripts/altprobe-start $RPM_BUILD_ROOT/usr/sbin/altprobe-start
 install -m 0755 $RPM_SOURCE_DIR/scripts/altprobe-status $RPM_BUILD_ROOT/usr/sbin/altprobe-status
 install -m 0755 $RPM_SOURCE_DIR/scripts/altprobe-stop $RPM_BUILD_ROOT/usr/sbin/altprobe-stop
+install -d -m 0755 $RPM_BUILD_ROOT/usr/lib
+install -m 0755 $RPM_SOURCE_DIR/libactivemq-cpp.so.20 $RPM_BUILD_ROOT/usr/lib/libactivemq-cpp.so.20
 
 
 %files
@@ -84,5 +86,6 @@ install -m 0755 $RPM_SOURCE_DIR/scripts/altprobe-stop $RPM_BUILD_ROOT/usr/sbin/a
 /usr/sbin/altprobe-start
 /usr/sbin/altprobe-status
 /usr/sbin/altprobe-stop
+/usr/lib/libactivemq-cpp.so.20
 
 %changelog

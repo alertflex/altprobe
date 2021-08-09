@@ -36,9 +36,9 @@ echo "*** Installation alertflex collector started***"
 sudo yum -y update
 
 echo "*** installation activemq ***"
-sudo yum -y install hiredis hiredis-devel activemq-cpp.x86_64 activemq-cpp-devel.x86_64
-sudo curl -L -O "https://github.com/alertflex/altprobe/releases/download/v1.0.1/altprobe-1.0-1.el7.x86_64.rpm"
-sudo rpm -i altprobe-1.0-1.el7.x86_64.rpm
+sudo yum -y install hiredis hiredis-devel
+sudo curl -L -O "https://github.com/alertflex/altprobe/releases/download/v1.0.1/altprobe-1.0-1.amzn2.x86_64.rpm"
+sudo rpm -i altprobe-1.0-1.amzn2.x86_64.rpm
 
 sudo sed -i "s/_project_id/$PROJECT_ID/g" /etc/altprobe/filters.json
 sudo sed -i "s/_node_id/$NODE_ID/g" /etc/altprobe/altprobe.yaml
