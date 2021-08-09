@@ -37,6 +37,7 @@ echo "*** installation activemq ***"
 sudo yum -y install apr-devel redis hiredis hiredis-devel boost-devel boost-thread
 sudo curl -L -O "https://github.com/alertflex/altprobe/releases/download/v1.0.1/altprobe-1.0-1.amzn2.x86_64.rpm"
 sudo rpm -i altprobe-1.0-1.amzn2.x86_64.rpm
+sudo ldconfig
 
 sudo sed -i "s/_project_id/$PROJECT_ID/g" /etc/altprobe/filters.json
 sudo sed -i "s/_node_id/$NODE_ID/g" /etc/altprobe/altprobe.yaml
