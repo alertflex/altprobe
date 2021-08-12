@@ -66,7 +66,7 @@ sudo ln -s /usr/sbin/altprobe-start /usr/local/bin/altprobe-start
 sudo ln -s /usr/sbin/altprobe-status /usr/local/bin/altprobe-status
 sudo ln -s /usr/sbin/altprobe-stop /usr/local/bin/altprobe-stop 
 
-sudo sed -i "s/bind 127.0.0.1 -::1/bind 0.0.0.0/g" /etc/redis/redis.conf
+sudo sed -i "s/bind 127.0.0.1/bind 0.0.0.0/g" /etc/redis.conf
 sudo systemctl enable redis
 sudo systemctl start redis
 
