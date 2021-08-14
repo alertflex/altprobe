@@ -259,16 +259,19 @@ void AggNet::FlushTrafficThresholds() {
         
         if (i->ref_id.compare(fs.filter.ref_id) == 0)  { 
             
+            int max_volume = fs.filter.netflow.trafficMaxVolume;
+            int max_requests = fs.filter.netflow.floodMaxRequests;
+            
             switch (i->type) { // 1 - suri, 2 - modsec-waf, 3 - aws-waf)
     
                 case 1:
-                    if (fs.filter.netflow.trafficMaxVolume <= i->volume) SendAlertTraffic(i);
+                    if (max_volume != 0 && max_volume <= i->volume) SendAlertTraffic(i);
                     break;
                 case 2:
-                    if (fs.filter.netflow.floodMaxRequests <= i->counter) SendAlertFlood(i);
+                    if (max_requests != 0 && max_requests <= i->counter) SendAlertFlood(i);
                     break;
                 case 3:
-                    if (fs.filter.netflow.floodMaxRequests <= i->counter) SendAlertFlood(i);
+                    if (max_requests != 0 && max_requests <= i->counter) SendAlertFlood(i);
                 break;
             }
         }

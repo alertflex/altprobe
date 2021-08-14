@@ -342,7 +342,7 @@ void AwsWaf::SendAlert(int s, GrayList*  gl) {
     sk.alert.ref_id =  fs.filter.ref_id;
     sk.alert.sensor_id = rec.sensor;
     sk.alert.alert_severity = s;
-    sk.alert.alert_source = "AWS WAF";
+    sk.alert.alert_source = "AwsWaf";
     sk.alert.alert_type = "NET";
     sk.alert.event_severity = rec.severity;
     sk.alert.event_id = rec.terminatingRuleId;
