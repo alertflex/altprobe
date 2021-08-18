@@ -18,8 +18,12 @@ sudo amazon-linux-extras enable epel redis6
 sudo yum clean metadata
 
 echo "*** install packages  ***"
-sudo yum -y install epel-release redis autoconf automake gcc make gcc-c++ git libtool libyaml libyaml-devel zlib zlib-devel boost-devel boost-thread libdaemon-devel openssl-libs openssl-devel apr-devel hiredis hiredis-devel
-
+sudo yum -y install epel-release redis autoconf automake gcc make gcc-c++ git libtool libyaml libyaml-devel zlib zlib-devel boost-devel boost-thread libdaemon-devel openssl-libs openssl-devel apr-devel
+sudo curl -L -O "https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/h/hiredis-0.12.1-2.el7.x86_64.rpm"
+sudo rpm -i hiredis-0.12.1-2.el7.x86_64.rpm
+sudo curl -L -O "https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/h/hiredis-devel-0.12.1-2.el7.x86_64.rpm"
+sudo rpm -i hiredis-devel-0.12.1-2.el7.x86_64.rpm
+sudo ldconfig
 sudo yum -y update
 
 git clone https://gitbox.apache.org/repos/asf/activemq-cpp.git 
