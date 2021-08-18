@@ -14,11 +14,19 @@ echo "*** Installation alertflex collector started***"
 
 sudo bash -c 'echo "Defaults timestamp_timeout=50" >> /etc/sudoers.d/99_sudo_include_file'
 
-sudo amazon-linux-extras enable epel redis6
+sudo amazon-linux-extras enable epel
 sudo yum clean metadata
 
 echo "*** install packages  ***"
-sudo yum -y install epel-release redis autoconf automake gcc make gcc-c++ git libtool libyaml libyaml-devel zlib zlib-devel boost-devel boost-thread libdaemon-devel openssl-libs openssl-devel apr-devel
+sudo yum -y install epel-release autoconf automake gcc make gcc-c++ git libtool libyaml libyaml-devel zlib zlib-devel boost-devel boost-thread libdaemon-devel openssl-libs openssl-devel apr-devel
+
+if [[ $INSTALL_REDIS == yes ]]
+then
+	echo "*** installation redis ***"
+	sudo yum -y install redis 
+	sudo systemctl enable redis
+fi
+
 sudo curl -L -O "https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/h/hiredis-0.12.1-2.el7.x86_64.rpm"
 sudo rpm -i hiredis-0.12.1-2.el7.x86_64.rpm
 sudo curl -L -O "https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/h/hiredis-devel-0.12.1-2.el7.x86_64.rpm"
