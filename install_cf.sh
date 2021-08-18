@@ -14,12 +14,14 @@ export AMQ_KEY=indef
 export KEY_PWD=indef
 export FALCO_LOG=indef
 export MODSEC_LOG=indef
-export SURI_LOG=indef
-export WAZUH_LOG='\/var\/ossec\/logs\/alerts\/alerts.json'
 export INSTALL_WAZUH=yes
+export WAZUH_LOG='\/var\/ossec\/logs\/alerts\/alerts.json'
 export WAZUH_HOST=127.0.0.1
 export WAZUH_USER=wazuh
 export WAZUH_PWD=wazuh
+export INSTALL_SURICATA=yes
+export SURI_LOG='\/var\/log\/suricata\/eve.json'
+export SURICATA_INTERFACE=eth1
 
 
 CURRENT_PATH=`pwd`
@@ -34,7 +36,11 @@ echo "*** Installation alertflex collector started***"
 sudo yum -y update
 
 echo "*** installation activemq ***"
-sudo yum -y install apr-devel redis hiredis hiredis-devel boost-devel boost-thread
+sudo yum -y install apr-devel redis boost-devel boost-thread
+sudo curl -L -O "https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/h/hiredis-0.12.1-2.el7.x86_64.rpm"
+sudo rpm -i hiredis-0.12.1-2.el7.x86_64.rpm
+sudo curl -L -O "https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/h/hiredis-devel-0.12.1-2.el7.x86_64.rpm"
+sudo rpm -i hiredis-devel-0.12.1-2.el7.x86_64.rpm
 sudo curl -L -O "https://github.com/alertflex/altprobe/releases/download/v1.0.1/altprobe-1.0-1.amzn2.x86_64.rpm"
 sudo rpm -i altprobe-1.0-1.amzn2.x86_64.rpm
 sudo ldconfig
@@ -70,11 +76,38 @@ sudo sed -i "s/bind 127.0.0.1 -::1/bind 0.0.0.0/g" /etc/redis/redis.conf
 sudo systemctl enable redis
 sudo systemctl start redis
 
+if [[ $INSTALL_SURICATA == yes ]]
+then
+    echo "*** installation suricata ***"
+    sudo yum -y install suricata
+    sudo cp ./configs/suricata.yaml /etc/suricata/
+	
+    sudo suricata-update enable-source oisf/trafficid
+    sudo suricata-update enable-source et/open
+    sudo suricata-update enable-source ptresearch/attackdetection
+    sudo suricata-update update-sources
+    sudo suricata-update
+	
+    sudo bash -c 'cat << EOF > /etc/systemd/system/suricata.service
+[Unit]
+Description=Suricata Intrusion Detection Service
+After=syslog.target network-online.target
+
+[Service]
+ExecStart=/usr/sbin/suricata -c /etc/suricata/suricata.yaml -i _monitoring_interface
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+    sudo sed -i "s/_monitoring_interface/$SURICATA_INTERFACE/g" /etc/systemd/system/suricata.service
+    sudo systemctl enable suricata
+fi
+
 if [[ $INSTALL_WAZUH == yes ]]
 then
 
-	echo "*** installation OSSEC/WAZUH server ***"
-	sudo bash -c 'cat > /etc/yum.repos.d/wazuh.repo <<\EOF
+    echo "*** installation OSSEC/WAZUH server ***"
+    sudo bash -c 'cat > /etc/yum.repos.d/wazuh.repo <<\EOF
 [wazuh_repo]
 gpgcheck=1
 gpgkey=https://packages.wazuh.com/key/GPG-KEY-WAZUH
@@ -84,11 +117,9 @@ baseurl=https://packages.wazuh.com/4.x/yum/
 protect=1
 EOF'
     sudo yum -y install wazuh-manager
-	
-	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
-	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
-	
-	sudo bash -c 'cat << EOF > /var/ossec/api/configuration/api.yaml
+    sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
+    sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
+    sudo bash -c 'cat << EOF > /var/ossec/api/configuration/api.yaml
 host: 127.0.0.1
 
 https:
@@ -100,10 +131,10 @@ remote_commands:
     enabled: yes
     exceptions: []
 EOF'
-	sudo systemctl enable wazuh-manager
-	sudo systemctl start wazuh-manager
+    sudo systemctl enable wazuh-manager
+    sudo systemctl start wazuh-manager
 
-	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
+    sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
 [Unit]
 Description=Altprobe
 After=wazuh-manager.service
@@ -120,7 +151,7 @@ RestartSec=30s
 WantedBy=multi-user.target
 EOF'
 else
-	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
+    sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
 [Unit]
 Description=Altprobe
 After=network-online.target
