@@ -74,8 +74,6 @@ install -m 0755 $RPM_SOURCE_DIR/libactivemq-cpp.so.20 $RPM_BUILD_ROOT/usr/lib/li
 /etc/altprobe/scripts/docker-bench.sh
 /etc/altprobe/scripts/kube-bench.sh
 /etc/altprobe/scripts/kube-hunter.sh
-/etc/altprobe/scripts/nikto.sh
-/etc/altprobe/scripts/nmap.sh
 /etc/altprobe/scripts/sonarqube.sh
 /etc/altprobe/scripts/trivy.sh
 /etc/altprobe/scripts/zap.sh
