@@ -152,7 +152,6 @@ install:
 	chmod u+x ./scripts/docker-bench.sh
 	chmod u+x ./scripts/kube-bench.sh
 	chmod u+x ./scripts/kube-hunter.sh
-	chmod u+x ./scripts/nmap.sh
 	chmod u+x ./scripts/sonarqube.sh
 	chmod u+x ./scripts/trivy.sh
 	chmod u+x ./scripts/zap.sh
@@ -168,7 +167,6 @@ install:
 	cp ./scripts/docker-bench.sh /etc/altprobe/scripts/
 	cp ./scripts/kube-bench.sh /etc/altprobe/scripts/
 	cp ./scripts/kube-hunter.sh /etc/altprobe/scripts/
-	cp ./scripts/nmap.sh /etc/altprobe/scripts/
 	cp ./scripts/sonarqube.sh /etc/altprobe/scripts/
 	cp ./scripts/trivy.sh /etc/altprobe/scripts/
 	cp ./scripts/zap.sh /etc/altprobe/scripts/
