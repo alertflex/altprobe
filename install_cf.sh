@@ -21,7 +21,6 @@ export WAZUH_USER=wazuh
 export WAZUH_PWD=wazuh
 export INSTALL_SURICATA=yes
 export SURI_LOG='\/var\/log\/suricata\/eve.json'
-export SURICATA_INTERFACE=eth1
 export INSTALL_REDIS=yes
 
 CURRENT_PATH=`pwd`
@@ -80,17 +79,23 @@ then
 	sudo suricata-update update-sources
 	sudo suricata-update
 
-	sudo bash -c 'cat << EOF > /etc/systemd/system/suricata.service
+	sudo bash -c 'cat << EOF > /etc/systemd/system/suri-run.sh
+#!/bin/bash
+ip link set dev eth1 up
+/usr/bin/suricata -c /etc/suricata/suricata.yaml -i eth1
+EOF'
+
+    sudo chmod u+x /etc/systemd/system/suri-run.sh
+
+    sudo bash -c 'cat << EOF > /etc/systemd/system/suricata.service
 [Unit]
 Description=Suricata Intrusion Detection Service
 After=syslog.target network-online.target
 [Service]
-ExecStart=ip link set dev eth1 up && /usr/bin/suricata -c /etc/suricata/suricata.yaml -i _monitoring_interface
+ExecStart=/etc/systemd/system/suri-run.sh
 [Install]
 WantedBy=multi-user.target
-EOF'
-
-	sudo sed -i "s/_monitoring_interface/$SURICATA_INTERFACE/g" /etc/systemd/system/suricata.service
+EOF' 
 	
 	sudo systemctl daemon-reload
 	sudo systemctl enable suricata
