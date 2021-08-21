@@ -85,7 +85,7 @@ then
 Description=Suricata Intrusion Detection Service
 After=syslog.target network-online.target
 [Service]
-ExecStart=/usr/bin/suricata -c /etc/suricata/suricata.yaml -i _monitoring_interface
+ExecStart=ip link set dev eth1 up && /usr/bin/suricata -c /etc/suricata/suricata.yaml -i _monitoring_interface
 [Install]
 WantedBy=multi-user.target
 EOF'
