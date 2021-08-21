@@ -60,49 +60,48 @@ sudo sed -i "s/_wazuh_log/$WAZUH_LOG/g" /etc/altprobe/altprobe.yaml
 
 if [[ $INSTALL_SURICATA == yes ]]
 then
-    echo "*** installation suricata ***"
-    sudo yum -y install suricata
-    sudo cp ./configs/suricata.yaml /etc/suricata/
-	
-    sudo suricata-update enable-source oisf/trafficid
-    sudo suricata-update enable-source et/open
-    sudo suricata-update enable-source ptresearch/attackdetection
-    sudo suricata-update update-sources
-    sudo suricata-update
-	
-    sudo bash -c 'cat << EOF > /etc/systemd/system/suricata.service
+	sudo add-apt-repository --yes ppa:oisf/suricata-stable
+	sudo apt-get update
+	sudo apt-get -y install suricata
+	sudo cp ./configs/suricata.yaml /etc/suricata/
+
+	sudo suricata-update enable-source oisf/trafficid
+	sudo suricata-update enable-source et/open
+	sudo suricata-update enable-source ptresearch/attackdetection
+	sudo suricata-update update-sources
+	sudo suricata-update
+
+	sudo bash -c 'cat << EOF > /etc/systemd/system/suricata.service
 [Unit]
 Description=Suricata Intrusion Detection Service
 After=syslog.target network-online.target
-
 [Service]
-ExecStart=/usr/sbin/suricata -c /etc/suricata/suricata.yaml -i _monitoring_interface
-
+ExecStart=/usr/bin/suricata -c /etc/suricata/suricata.yaml -i _monitoring_interface
 [Install]
 WantedBy=multi-user.target
 EOF'
-    sudo sed -i "s/_monitoring_interface/$SURICATA_INTERFACE/g" /etc/systemd/system/suricata.service
-    sudo systemctl enable suricata
-    sudo systemctl start suricata
+
+	sudo sed -i "s/_monitoring_interface/$SURICATA_INTERFACE/g" /etc/systemd/system/suricata.service
+	sudo systemctl enable suricata
 fi
 
 if [[ $INSTALL_WAZUH == yes ]]
 then
-
-    echo "*** installation OSSEC/WAZUH server ***"
-    sudo bash -c 'cat > /etc/yum.repos.d/wazuh.repo <<\EOF
-[wazuh_repo]
-gpgcheck=1
-gpgkey=https://packages.wazuh.com/key/GPG-KEY-WAZUH
-enabled=1
-name=Wazuh repository
-baseurl=https://packages.wazuh.com/4.x/yum/
-protect=1
-EOF'
-    sudo yum -y install wazuh-manager
-    sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
-    sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
-    sudo bash -c 'cat << EOF > /var/ossec/api/configuration/api.yaml
+	
+	echo "*** installation OSSEC/WAZUH server ***"
+	sudo apt-get update
+	sudo apt-get -y install curl apt-transport-https lsb-release
+	curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | sudo apt-key add -
+	echo "deb https://packages.wazuh.com/4.x/apt/ stable main" | sudo tee -a /etc/apt/sources.list.d/wazuh.list
+	sudo apt-get update
+	sudo apt-get -y install wazuh-manager
+	sudo systemctl daemon-reload
+    sudo systemctl enable wazuh-manager
+	
+	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
+	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
+	
+	sudo bash -c 'cat << EOF > /var/ossec/api/configuration/api.yaml
 host: 127.0.0.1
 
 https:
@@ -114,10 +113,8 @@ remote_commands:
     enabled: yes
     exceptions: []
 EOF'
-    sudo systemctl enable wazuh-manager
-    sudo systemctl start wazuh-manager
 
-    sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
+sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
 [Unit]
 Description=Altprobe
 After=wazuh-manager.service
@@ -134,7 +131,7 @@ RestartSec=30s
 WantedBy=multi-user.target
 EOF'
 else
-    sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
+	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
 [Unit]
 Description=Altprobe
 After=network-online.target
@@ -154,10 +151,6 @@ fi
 
 sudo systemctl daemon-reload
 sudo systemctl enable altprobe.service
-sudo systemctl start altprobe.service
-
-exit 0
-
 
 
 
