@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #load technical project data for Alertflex collector
-source ./env_ami.sh
+source ./env_cf.sh
 
-export INSTALL_PATH=/home/ec2-user/altprobe
+export INSTALL_PATH=/home/ubuntu/altprobe
 export NODE_ID=node01
 export PROBE_ID=probe01
 export AMQ_URL='tcp:\/\/127.0.0.1:61616'
@@ -24,38 +24,20 @@ export SURI_LOG='\/var\/log\/suricata\/eve.json'
 export SURICATA_INTERFACE=eth1
 export INSTALL_REDIS=yes
 
-
 CURRENT_PATH=`pwd`
 if [[ $INSTALL_PATH != $CURRENT_PATH ]]
 then
-    echo "Please change install directory"
-    exit 0
+	echo "Please change install directory"
+	exit 0
 fi
 
 echo "*** Installation alertflex collector started***"
-
-sudo yum -y update
-
-echo "*** installation activemq ***"
-sudo yum -y install apr-devel boost-devel boost-thread
-
-if [[ $INSTALL_REDIS == yes ]]
-then
-     echo "*** installation redis ***"
-     sudo yum -y install redis 
-     sudo sed -i "s/bind 127.0.0.1/bind 0.0.0.0/g" /etc/redis.conf
-     sudo systemctl enable redis
-     sudo systemctl start redis
-fi
-
-sudo curl -L -O "https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/h/hiredis-0.12.1-2.el7.x86_64.rpm"
-sudo rpm -i hiredis-0.12.1-2.el7.x86_64.rpm
-sudo curl -L -O "https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/h/hiredis-devel-0.12.1-2.el7.x86_64.rpm"
-sudo rpm -i hiredis-devel-0.12.1-2.el7.x86_64.rpm
-sudo curl -L -O "https://github.com/alertflex/altprobe/releases/download/v1.0.1/altprobe-1.0-1.amzn2.x86_64.rpm"
-sudo rpm -i altprobe-1.0-1.amzn2.x86_64.rpm
+sudo apt-get -y update
+sudo apt-get -y install libc6-dev build-essential libtool libdaemon-dev libboost-all-dev libyaml-0-2 libyaml-dev m4 pkg-config libssl-dev apt-transport-https apache2-dev libapr1-dev libaprutil1-dev
+curl -L -O "https://github.com/alertflex/altprobe/releases/download/v1.0.1/altprobe_1.0-1.deb"
+sudo dpkg -i altprobe_1.0-1.deb
+sudo chmod go-rwx /etc/altprobe/altprobe.yaml
 sudo ldconfig
-sudo yum -y update
 
 sudo sed -i "s/_project_id/$PROJECT_ID/g" /etc/altprobe/filters.json
 sudo sed -i "s/_node_id/$NODE_ID/g" /etc/altprobe/altprobe.yaml
@@ -75,14 +57,6 @@ sudo sed -i "s/_falco_log/$FALCO_LOG/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_modsec_log/$MODSEC_LOG/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_suri_log/$SURI_LOG/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_log/$WAZUH_LOG/g" /etc/altprobe/altprobe.yaml
-
-sudo chmod go-rwx /etc/altprobe/altprobe.yaml
-
-sudo ln -s /usr/sbin/altprobe /usr/local/bin/altprobe
-sudo ln -s /usr/sbin/altprobe-restart /usr/local/bin/altprobe-restart 
-sudo ln -s /usr/sbin/altprobe-start /usr/local/bin/altprobe-start 
-sudo ln -s /usr/sbin/altprobe-status /usr/local/bin/altprobe-status
-sudo ln -s /usr/sbin/altprobe-stop /usr/local/bin/altprobe-stop 
 
 if [[ $INSTALL_SURICATA == yes ]]
 then
@@ -181,8 +155,6 @@ fi
 sudo systemctl daemon-reload
 sudo systemctl enable altprobe.service
 sudo systemctl start altprobe.service
-
-rm -r /home/ec2-user/altprobe
 
 exit 0
 
