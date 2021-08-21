@@ -31,6 +31,16 @@ then
 	exit 0
 fi
 
+if [[ $INSTALL_REDIS == yes ]]
+then
+     echo "*** installation redis ***"
+     sudo apt-get -y install redis 
+     sudo sed -i "s/127.0.0.1 ::1/bind 0.0.0.0/g" /etc/redis/redis.conf
+	 sudo systemctl daemon-reload
+     sudo systemctl enable redis
+     sudo systemctl start redis
+fi
+
 echo "*** Installation alertflex collector started***"
 sudo apt-get -y update
 sudo apt-get -y install libc6-dev build-essential libtool libdaemon-dev libboost-all-dev libyaml-0-2 libyaml-dev m4 pkg-config libssl-dev apt-transport-https apache2-dev libapr1-dev libaprutil1-dev
@@ -42,7 +52,6 @@ sudo ldconfig
 sudo sed -i "s/_project_id/$PROJECT_ID/g" /etc/altprobe/filters.json
 sudo sed -i "s/_node_id/$NODE_ID/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_probe_id/$PROBE_ID/g" /etc/altprobe/altprobe.yaml
-sudo sed -i "s/_redis_host/$REDIS_HOST/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_host/$WAZUH_HOST/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
@@ -82,7 +91,10 @@ WantedBy=multi-user.target
 EOF'
 
 	sudo sed -i "s/_monitoring_interface/$SURICATA_INTERFACE/g" /etc/systemd/system/suricata.service
+	
+	sudo systemctl daemon-reload
 	sudo systemctl enable suricata
+	sudo systemctl start suricata
 fi
 
 if [[ $INSTALL_WAZUH == yes ]]
@@ -95,8 +107,6 @@ then
 	echo "deb https://packages.wazuh.com/4.x/apt/ stable main" | sudo tee -a /etc/apt/sources.list.d/wazuh.list
 	sudo apt-get update
 	sudo apt-get -y install wazuh-manager
-	sudo systemctl daemon-reload
-    sudo systemctl enable wazuh-manager
 	
 	sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
 	sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml
@@ -114,7 +124,11 @@ remote_commands:
     exceptions: []
 EOF'
 
-sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
+    sudo systemctl daemon-reload
+    sudo systemctl enable wazuh-manager
+	sudo systemctl start wazuh-manager
+
+    sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
 [Unit]
 Description=Altprobe
 After=wazuh-manager.service
@@ -130,6 +144,7 @@ RestartSec=30s
 [Install]
 WantedBy=multi-user.target
 EOF'
+
 else
 	sudo bash -c 'cat << EOF > /etc/systemd/system/altprobe.service
 [Unit]
@@ -151,6 +166,9 @@ fi
 
 sudo systemctl daemon-reload
 sudo systemctl enable altprobe.service
+sudo systemctl start altprobe.service
+
+exit 0
 
 
 
