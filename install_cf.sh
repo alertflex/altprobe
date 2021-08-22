@@ -34,7 +34,7 @@ if [[ $INSTALL_REDIS == yes ]]
 then
      echo "*** installation redis ***"
      sudo apt-get -y install redis 
-     sudo sed -i "s/127.0.0.1 ::1/bind 0.0.0.0/g" /etc/redis/redis.conf
+     sudo sed -i "s/bind 127.0.0.1 ::1/bind 0.0.0.0/g" /etc/redis/redis.conf
 	 sudo systemctl daemon-reload
      sudo systemctl enable redis
      sudo systemctl start redis
