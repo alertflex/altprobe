@@ -36,9 +36,25 @@ int Nids::Open() {
         stat(suri_log, &buf);    
         file_size = (unsigned long) buf.st_size;
         
+        if (redis_status == 1) {
+            
+            c = redisConnect(sk.redis_host, sk.redis_port);
+    
+            if (c != NULL && c->err) {
+                // handle error
+                sprintf(level, "failed open redis server interface: %s\n", c->errstr);
+                SysLog(level);
+                
+                return status = 0;
+            }
+            
+            status = 2;
+        }  
+        
     } else {
         
         if (redis_status == 1) {
+            
             c = redisConnect(sk.redis_host, sk.redis_port);
     
             if (c != NULL && c->err) {
@@ -57,13 +73,13 @@ void Nids::Close() {
     
     sk.Close();
     
-    if (status == 1) {
+    if (status > 0) {
         
         if (surilog_status == 1) {
             if (fp != NULL) fclose(fp);
-        } else {
-            if (redis_status == 1) redisFree(c);
-        }
+        } 
+        
+        if (redis_status == 1) redisFree(c);
         
         status = 0;
     }
@@ -134,7 +150,8 @@ int Nids::Go(void) {
     
     GrayList* gl;
     int severity;
-    int res = 0;
+    int read_res = 0;
+    int pars_res = 0;
     
     ClearRecords();
     
@@ -142,23 +159,17 @@ int Nids::Go(void) {
         
         if (surilog_status == 1) {
             
-            res = ReadFile();
+            read_res = ReadFile();
             
-            if (res == -1) {
+            if (read_res == -1) {
                 SysLog("failed reading suricata events from log");
                 return 1;
             }
         
-            if (res == 0) {
-                
-                usleep(GetGosleepTimer()*60);
-                alerts_counter = 0;
-                return 1;
-                
-            } else res = ParsJson();
+            if (read_res > 0) pars_res = ParsJson(1);
+        } 
         
-        
-        } else {
+        if (redis_status == 1 && read_res == 0) {
         
             // read Suricata data 
             reply = (redisReply *) redisCommand( c, (const char *) redis_key.c_str());
@@ -171,25 +182,29 @@ int Nids::Go(void) {
             }
         
             if (reply->type == REDIS_REPLY_STRING) {
-                res = ParsJson();
-            } else {
-                freeReplyObject(reply);
-                usleep(GetGosleepTimer()*60);
-            
-                alerts_counter = 0;
-                return 1;
+                pars_res = ParsJson(2);
+                read_res == 1;
             }
+            
+            freeReplyObject(reply);
+        }
+        
+        if (read_res == 0) {
+            
+            usleep(GetGosleepTimer()*60);
+            alerts_counter = 0;
+            return 1;
         }
         
         IncrementEventsCounter();
         
-        if (res != 0) {
+        if (pars_res > 0) {
             
             boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
             
-            if (fs.filter.nids.log) CreateLogPayload(res);
+            if (fs.filter.nids.log) CreateLogPayload(pars_res);
         
-            if (res == 1 && alerts_counter <= sk.alerts_threshold) {
+            if (pars_res == 1 && alerts_counter <= sk.alerts_threshold) {
                 
                 gl = CheckGrayList();
                 
@@ -213,12 +228,8 @@ int Nids::Go(void) {
                 }
             } 
         } 
-            
-        if (redis_status == 1) freeReplyObject(reply);
     } 
-    else {
-        usleep(GetGosleepTimer()*60);
-    }
+    else usleep(GetGosleepTimer()*60);
         
     return 1;
 }
@@ -255,9 +266,9 @@ GrayList* Nids::CheckGrayList() {
 }
 
 
-int Nids::ParsJson () {
+int Nids::ParsJson (int output_type) {
     
-    if (surilog_status == 1) {
+    if (output_type == 1) {
         jsonPayload.assign(file_payload, GetBufferSize(file_payload));
         
     } else {
@@ -275,13 +286,13 @@ int Nids::ParsJson () {
     } 
     
     bool is_aws_firewall = false;
-    string aws_firewall = "indef";
+    string firewall_name = "indef";
     
-    if (surilog_status != 1) {
+    if (output_type == 2) {
         
-        aws_firewall = pt.get<string>("firewall_name","indef");
+        firewall_name = pt.get<string>("firewall_name","indef");
         
-        if (aws_firewall.compare("indef") != 0) {
+        if (firewall_name.compare("indef") != 0) {
             
             is_aws_firewall = true;
             ss1 << jsonPayload;
@@ -298,9 +309,9 @@ int Nids::ParsJson () {
         
     } else {
         
-        if (is_aws_firewall) rec.sensor = aws_firewall;
-        else rec.sensor = pt.get<string>("sensor-name","indef");
+        if (!is_aws_firewall) firewall_name = pt.get<string>("sensor-name","indef");
         
+        rec.sensor = probe_id + "." + firewall_name;
     }
     
     if (event_type.compare("alert") == 0) {
@@ -525,6 +536,7 @@ int Nids::ParsJson () {
     } 
     
     ResetStream();
+    
     return 0;
 }
 

@@ -291,9 +291,9 @@ int InitThreads(int mode, pid_t pid)
     int arg = 1;
     
     // aggalerts
-    if (aggalerts.GetStatus()) {
+    if (aggalerts.GetStatus() > 0) {
         
-        if (!aggalerts.Open()) {
+        if (!aggalerts.Open() > 0) {
             daemon_log(LOG_ERR,"cannot open Aggregation alerts module");
             return 0;
         }
@@ -305,9 +305,9 @@ int InitThreads(int mode, pid_t pid)
     }
     
     //aggnet
-    if (aggnet.GetStatus()) {
+    if (aggnet.GetStatus() > 0) {
         
-        if (!aggnet.Open()) {
+        if (!aggnet.Open() > 0) {
             daemon_log(LOG_ERR,"cannot open Aggregation net module");
             return 0;
         }
@@ -319,9 +319,9 @@ int InitThreads(int mode, pid_t pid)
     }
     
      //misc
-    if (misc.GetStatus()) {
+    if (misc.GetStatus() > 0) {
         
-        if (misc.Open()) {
+        if (misc.Open() > 0) {
             
             if (pthread_create(&pthread_misc, NULL, thread_misc, &arg)) {
                 daemon_log(LOG_ERR,"error creating thread for MISC module");
@@ -333,9 +333,9 @@ int InitThreads(int mode, pid_t pid)
     }
     
      //aws
-    if (aws.GetStatus()) {
+    if (aws.GetStatus() > 0) {
         
-        if (aws.Open()) {
+        if (aws.Open() > 0) {
             
             if (pthread_create(&pthread_aws, NULL, thread_aws, &arg)) {
                 daemon_log(LOG_ERR,"error creating thread for AWS module");
@@ -347,9 +347,9 @@ int InitThreads(int mode, pid_t pid)
     }
     
     //hids
-    if (hids.GetStatus()) {
+    if (hids.GetStatus() > 0) {
         
-        if (hids.Open()) {
+        if (hids.Open() > 0) {
             
             if (pthread_create(&pthread_hids, NULL, thread_hids, &arg)) {
                 daemon_log(LOG_ERR,"error creating thread for HIDS module");
@@ -361,9 +361,9 @@ int InitThreads(int mode, pid_t pid)
     
         
     //nids
-    if (nids.GetStatus()) {
+    if (nids.GetStatus() > 0) {
         
-        if (nids.Open()) {
+        if (nids.Open() > 0) {
             
             if (pthread_create(&pthread_nids, NULL, thread_nids, &arg)) {
                 daemon_log(LOG_ERR,"error creating thread for NIDS module");
@@ -374,9 +374,9 @@ int InitThreads(int mode, pid_t pid)
     }
     
     //crs
-    if (crs.GetStatus()) {
+    if (crs.GetStatus() > 0) {
         
-        if (crs.Open()) {
+        if (crs.Open() > 0) {
             
             if (pthread_create(&pthread_crs, NULL, thread_crs, &arg)) {
                 daemon_log(LOG_ERR,"error creating thread for CRS module");
@@ -386,9 +386,9 @@ int InitThreads(int mode, pid_t pid)
     } 
     
     //waf
-    if (waf.GetStatus()) {
+    if (waf.GetStatus() > 0) {
         
-        if (waf.Open()) {
+        if (waf.Open() > 0) {
             
             if (pthread_create(&pthread_waf, NULL, thread_waf, &arg)) {
                 daemon_log(LOG_ERR,"error creating thread for WAF module");
@@ -399,8 +399,9 @@ int InitThreads(int mode, pid_t pid)
     
         
     //remlog
-    if (remlog.GetStatus()) {
-        if (!remlog.Open()) {
+    if (remlog.GetStatus() > 0) {
+        
+        if (!remlog.Open() > 0) {
             daemon_log(LOG_ERR,"cannot open RemLog module");
             return 0;
         }
@@ -412,8 +413,9 @@ int InitThreads(int mode, pid_t pid)
     }
     
     //remstat
-    if (remstat.GetStatus()) {
-        if (!remstat.Open()) {
+    if (remstat.GetStatus() > 0) {
+        
+        if (!remstat.Open() > 0) {
             daemon_log(LOG_ERR,"cannot open RemStat module");
             return 0;
         }
@@ -425,12 +427,13 @@ int InitThreads(int mode, pid_t pid)
     }
     
     // updates
-    if (updates.GetStatus()) {
+    if (updates.GetStatus() > 0) {
         
         if (!updates.Open(mode,pid)) {
             daemon_log(LOG_ERR,"cannot open Update module");
             return 0;
         }
+        
         if (pthread_create(&pthread_updates, NULL, thread_updates, &arg)) {
             daemon_log(LOG_ERR,"error creating thread for Update module");
             return 0;
@@ -438,12 +441,13 @@ int InitThreads(int mode, pid_t pid)
     }
     
     // scanners
-    if (scanners.GetStatus()) {
+    if (scanners.GetStatus() > 0) {
         
         if (!scanners.Open(mode,pid)) {
             daemon_log(LOG_ERR,"cannot open Scanners module");
             return 0;
         }
+        
         if (pthread_create(&pthread_scanners, NULL, thread_scanners, &arg)) {
             daemon_log(LOG_ERR,"error creating thread for Scanners module");
             return 0;
@@ -451,8 +455,9 @@ int InitThreads(int mode, pid_t pid)
     }
     
     //collector
-    if (collr.GetStatus()) {
-        if (!collr.Open()) {
+    if (collr.GetStatus() > 0) {
+        
+        if (!collr.Open() > 0) {
             daemon_log(LOG_ERR,"cannot open Collector module");
             return 0;
         }
