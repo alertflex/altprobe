@@ -230,7 +230,7 @@ public:
     void IsFileModified();
     int Go();
     
-    int ParsJson ();
+    int ParsJson (int output_type);
     GrayList* CheckGrayList();
     bool CheckFlowsLog(int r);
     void CreateLogPayload(int r);
