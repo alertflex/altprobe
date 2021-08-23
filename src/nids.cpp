@@ -146,10 +146,6 @@ int Nids::ReadFile() {
 
 int Nids::Go(void) {
     
-    // boost::shared_lock<boost::shared_mutex> lock(fs.filters_update_lock);
-    
-    GrayList* gl;
-    int severity;
     int read_res = 0;
     int pars_res = 0;
     
@@ -166,10 +162,19 @@ int Nids::Go(void) {
                 return 1;
             }
         
-            if (read_res > 0) pars_res = ParsJson(1);
+            if (read_res > 0) {
+                
+                IncrementEventsCounter();
+                pars_res = ParsJson(1);
+                
+                if (pars_res > 0) ProcessEvent(pars_res);
+                    
+            }
         } 
         
-        if (redis_status == 1 && read_res == 0) {
+        if (redis_status == 1) {
+            
+            if (read_res > 0) ClearRecords();
         
             // read Suricata data 
             reply = (redisReply *) redisCommand( c, (const char *) redis_key.c_str());
@@ -182,8 +187,13 @@ int Nids::Go(void) {
             }
         
             if (reply->type == REDIS_REPLY_STRING) {
+                
+                read_res = 1;
+                
+                IncrementEventsCounter();
                 pars_res = ParsJson(2);
-                read_res == 1;
+                
+                if (pars_res > 0) ProcessEvent(pars_res);
             }
             
             freeReplyObject(reply);
@@ -195,45 +205,46 @@ int Nids::Go(void) {
             alerts_counter = 0;
             return 1;
         }
-        
-        IncrementEventsCounter();
-        
-        if (pars_res > 0) {
-            
-            boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
-            
-            if (fs.filter.nids.log) CreateLogPayload(pars_res);
-        
-            if (pars_res == 1 && alerts_counter <= sk.alerts_threshold) {
-                
-                gl = CheckGrayList();
-                
-                severity = PushIdsRecord(gl);
-                                    
-                if (gl != NULL) {
-                    if (gl->rsp.profile.compare("suppress") != 0) {
-                        SendAlert(severity, gl);
-                    }
-                } else {
-                    if (fs.filter.nids.severity.threshold <= severity) SendAlert(severity, NULL);
-                }
-                    
-                if (sk.alerts_threshold != 0) {
-            
-                    if (alerts_counter < sk.alerts_threshold) alerts_counter++;
-                    else {
-                        SendAlertMultiple(2);
-                        alerts_counter++;
-                    }
-                }
-            } 
-        } 
     } 
     else usleep(GetGosleepTimer()*60);
         
     return 1;
 }
 
+
+void Nids::ProcessEvent(int pars_res) {
+    
+    GrayList* gl;
+    int severity;
+    
+    boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
+        
+    if (fs.filter.nids.log) CreateLogPayload(pars_res);
+    
+    if (pars_res == 1 && alerts_counter <= sk.alerts_threshold) {
+        
+        gl = CheckGrayList();
+        
+        severity = PushIdsRecord(gl);
+                            
+        if (gl != NULL) {
+            if (gl->rsp.profile.compare("suppress") != 0) {
+                SendAlert(severity, gl);
+            }
+        } else {
+            if (fs.filter.nids.severity.threshold <= severity) SendAlert(severity, NULL);
+        }
+            
+        if (sk.alerts_threshold != 0) {
+    
+            if (alerts_counter < sk.alerts_threshold) alerts_counter++;
+            else {
+                SendAlertMultiple(2);
+                alerts_counter++;
+            }
+        }
+    } 
+}
 
 GrayList* Nids::CheckGrayList() {
     
@@ -268,18 +279,20 @@ GrayList* Nids::CheckGrayList() {
 
 int Nids::ParsJson (int output_type) {
     
+    
     if (output_type == 1) {
-        jsonPayload.assign(file_payload, GetBufferSize(file_payload));
-        
+        jsonPayload.assign(file_payload, GetBufferSize(reply->str));
     } else {
         jsonPayload.assign(reply->str, GetBufferSize(reply->str));
     }
     
     try {
+        
         ss << jsonPayload;
         bpt::read_json(ss, pt);
     
     } catch (const std::exception & ex) {
+        
         ResetStream();
         SysLog((char*) ex.what());
         return 0;
@@ -972,7 +985,6 @@ void Nids::SendAlert(int s, GrayList* gl) {
     sk.alert.cloud_instance = "indef";
     
     sk.SendAlert();
-    ResetStream();
 }
 
 int Nids::PushIdsRecord(GrayList* gl) {
