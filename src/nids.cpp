@@ -281,7 +281,7 @@ int Nids::ParsJson (int output_type) {
     
     
     if (output_type == 1) {
-        jsonPayload.assign(file_payload, GetBufferSize(reply->str));
+        jsonPayload.assign(file_payload, GetBufferSize(file_payload));
     } else {
         jsonPayload.assign(reply->str, GetBufferSize(reply->str));
     }
@@ -312,20 +312,15 @@ int Nids::ParsJson (int output_type) {
             bpt::read_json(ss1, pt1);
             pt = pt1.get_child("event");
         }
-    }
-    
-    string event_type = pt.get<string>("event_type","");
-    
-    if (surilog_status == 1) {
-    
-        rec.sensor = probe_id + ".nids";
-        
-    } else {
         
         if (!is_aws_firewall) firewall_name = pt.get<string>("sensor-name","indef");
         
         rec.sensor = probe_id + "." + firewall_name;
+    } else {
+        rec.sensor = probe_id + ".nids";
     }
+    
+    string event_type = pt.get<string>("event_type","");
     
     if (event_type.compare("alert") == 0) {
         
