@@ -229,6 +229,7 @@ public:
     int ReadFile();
     void IsFileModified();
     int Go();
+    void ProcessEvent(int pars_res);
     
     int ParsJson (int output_type);
     GrayList* CheckGrayList();

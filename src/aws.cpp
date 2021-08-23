@@ -168,10 +168,22 @@ int AwsWaf::ParsJson() {
         
         jsonPayload.assign(reply->str, GetBufferSize(reply->str));
         
-        ss << jsonPayload;
-        bpt::read_json(ss, pt);
+        try {
         
-        rec.sensor = pt.get<string>("httpSourceName","indef");
+            ss << jsonPayload;
+            bpt::read_json(ss, pt);
+            
+        } catch (const std::exception & ex) {
+            ss.str("");
+            ss.clear();
+            SysLog((char*) ex.what());
+            return 0;
+        } 
+        
+        rec.httpSourceName = pt.get<string>("httpSourceName","indef");
+        rec.httpSourceId = pt.get<string>("httpSourceId","indef");
+        rec.webaclId = pt.get<string>("webaclId","indef");
+        
         rec.action = pt.get<string>("action","indef");
         
         if (rec.action.compare("BLOCK") == 0) {
@@ -180,11 +192,30 @@ int AwsWaf::ParsJson() {
             rec.is_alert = true;
         }
         
+        if (rec.is_alert) {
+            
+            bpt::ptree rule_group = pt.get_child("ruleGroupList");
+            BOOST_FOREACH(bpt::ptree::value_type &rules, rule_group) {
+                
+                rec.ruleGroupId = rules.second.get<string>("ruleGroupId","indef");
+            
+                string termAction = rules.second.get<string>("terminatingRule.action","indef");
+                
+                if (termAction.compare("BLOCK") == 0) {
+                    
+                    rec.ruleId = rules.second.get<string>("terminatingRule.ruleId","indef");
+                    break;
+                    
+                } else rec.ruleId = "indef";
+            }
+        }  
+        
         rec.terminatingRuleId = pt.get<string>("terminatingRuleId","indef");
         rec.terminatingRuleType = pt.get<string>("terminatingRuleType","indef");
         
         rec.list_cats.push_back("waf");
-        rec.list_cats.push_back(rec.terminatingRuleType);
+        rec.list_cats.push_back("aws-waf");
+        rec.list_cats.push_back(rec.terminatingRuleId);
         
         rec.clientIp = pt.get<string>("httpRequest.clientIp","indef");
         rec.country = pt.get<string>("httpRequest.country","indef");
@@ -197,7 +228,7 @@ int AwsWaf::ParsJson() {
             
             string host = hosts.second.get<string>("name","indef");
             
-            if (host.compare("Host") == 0) {
+            if (host.compare("host") == 0) {
                 rec.host = hosts.second.get<string>("value", "indef");
                 ResetStreams();
                 return 1;
@@ -207,7 +238,7 @@ int AwsWaf::ParsJson() {
         rec.host = "indef";
         
         if (fs.filter.netflow.log) {
-            net_flow.ids = rec.sensor;
+            net_flow.ids = rec.httpSourceId;
             net_flow.flows_type = 3;
             net_flow.ref_id = fs.filter.ref_id;
             net_flow.dst_ip = rec.host;
@@ -247,7 +278,7 @@ void AwsWaf::CreateLog() {
     report += GetGraylogFormat();
 		
     report += "\",\"description\":\"web ACL event from AWS WAF\",\"sensor\":\"";
-    report += rec.sensor;
+    report += rec.httpSourceId;
     
     report += "\",\"terminatingRuleId\":\"";
     report += rec.terminatingRuleId;
@@ -290,7 +321,7 @@ int AwsWaf::PushRecord(GrayList* gl) {
             
     ids_rec.ref_id = fs.filter.ref_id;
     
-    ids_rec.event = rec.terminatingRuleId;
+    ids_rec.event = rec.ruleId;
             
     copy(rec.list_cats.begin(),rec.list_cats.end(),back_inserter(ids_rec.list_cats));
     
@@ -302,7 +333,7 @@ int AwsWaf::PushRecord(GrayList* gl) {
     ids_rec.dst_ip = rec.host;
     
     ids_rec.agent = "indef";
-    ids_rec.ids = rec.sensor;
+    ids_rec.ids = probe_id + "." + rec.httpSourceId;
     ids_rec.action = "indef";
                 
     ids_rec.location = rec.uri;
@@ -340,19 +371,19 @@ int AwsWaf::PushRecord(GrayList* gl) {
 void AwsWaf::SendAlert(int s, GrayList*  gl) {
     
     sk.alert.ref_id =  fs.filter.ref_id;
-    sk.alert.sensor_id = rec.sensor;
+    sk.alert.sensor_id = probe_id + "." + rec.httpSourceId;
     sk.alert.alert_severity = s;
     sk.alert.alert_source = "AwsWaf";
     sk.alert.alert_type = "NET";
     sk.alert.event_severity = rec.severity;
-    sk.alert.event_id = rec.terminatingRuleId;
+    sk.alert.event_id = rec.ruleId;
     sk.alert.description = "web ACL event from AWS WAF";
-    sk.alert.action = "indef";     
-    sk.alert.location = "uri: " + rec.uri;
-    sk.alert.info = "httpMethod: " + rec.httpMethod;
+    sk.alert.action = "BLOCK";     
+    sk.alert.location = rec.webaclId;
+    sk.alert.info = "httpMethod: " + rec.httpMethod + ", uri: " + rec.uri;
     sk.alert.status = "processed";
     sk.alert.user_name = "indef";
-    sk.alert.agent_name = probe_id;
+    sk.alert.agent_name = rec.httpSourceName;
     sk.alert.filter = fs.filter.name;
     sk.alert.action = rec.action;
    

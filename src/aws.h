@@ -36,10 +36,17 @@ class AwsWafRecord : CollectorObject {
 public:
     
     bool is_alert;
-    string sensor;
+    string httpSourceName;
+    string httpSourceId;
+    string webaclId;
+    
     unsigned int severity;
+    
     string terminatingRuleId;
     string terminatingRuleType;
+    
+    string ruleGroupId;
+    string ruleId;
     string action; // BLOCK or ALLOW , if block then alert
     
     string clientIp;
@@ -53,10 +60,14 @@ public:
     
     void Reset() {
         is_alert = false;
-        sensor.clear();
+        httpSourceName.clear();
+        httpSourceId.clear();
+        webaclId.clear();
         severity = 0;
         terminatingRuleId.clear();
         terminatingRuleType.clear();
+        ruleGroupId.clear();
+        ruleId.clear();
         action.clear();
         clientIp.clear();
         country.clear();
