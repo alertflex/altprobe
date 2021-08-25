@@ -439,6 +439,8 @@ int Nids::ParsJson (int output_type) {
         
     if (event_type.compare("netflow") == 0) {
         
+        rec.ref_id =  fs.filter.ref_id;
+        
         rec.event_type = 4;
         
         rec.time_stamp = pt.get<string>("timestamp","");
@@ -474,6 +476,7 @@ int Nids::ParsJson (int output_type) {
             net_flow.dst_ip = rec.dst_ip;
             net_flow.src_ip = rec.src_ip;
             net_flow.bytes = rec.netflow.bytes;
+            
             q_netflow.push(net_flow);
         }
         
@@ -1040,7 +1043,7 @@ int Nids::PushIdsRecord(GrayList* gl) {
             
         }
     }
-                                    
+    
     q_nids.push(ids_rec);
     
     return ids_rec.severity;

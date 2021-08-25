@@ -461,6 +461,7 @@ int Waf::ParsJson() {
         }
         
         if (fs.filter.netflow.log) {
+            
             net_flow.ids = rec.sensor;
             net_flow.flows_type = 2;
             net_flow.ref_id = fs.filter.ref_id;

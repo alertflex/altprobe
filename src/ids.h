@@ -26,7 +26,7 @@ class IdsRecord
 public:
     
     string ref_id;
-    int ids_type; // 1 - fim, 2 - hids, 3 - nids, 4 - crs
+    int ids_type; // 1 - fim, 2 - hids, 3 - nids, 4 - crs, 5 - waf
     string src_ip;             
     string dst_ip; 
     string ids;

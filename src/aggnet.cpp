@@ -50,9 +50,11 @@ int AggNet::Go(void) {
     long seconds = 0;
             
     while(1) {    
+        
         gettimeofday(&start, NULL);
         
         while (sk.GetReportsPeriod() > seconds) {
+            
             gettimeofday(&end, NULL);
             seconds  = end.tv_sec  - start.tv_sec;
             
@@ -71,60 +73,14 @@ void AggNet::ProcessNetData() {
     
     counter = 0;
 
-    while (!q_netstat.empty() || !q_netflow.empty()) {
-	
-	if (ProcessNetStat()) counter++;
-        
-        if (ProcessNetFlow()) counter++;
-    }
-    
-    if (!counter) {
-        
-        usleep(GetGosleepTimer()*60);
-    }
-}
-
-bool AggNet::ProcessNetFlow() {
-    
     if (!q_netflow.empty()) {
-	
-	q_netflow.pop(netflow_rec);
+        
+        q_netflow.pop(netflow_rec);
         
         UpdateTrafficThresholds(netflow_rec);
         
-        return true;
+        counter++;
     }
-    
-    return false;
-}
-
-
-void AggNet::UpdateTrafficThresholds(Netflow nf) {
-    
-    std::vector<TrafficThresholds>::iterator i, end;
-    
-    for(i = traf_thres.begin(), end = traf_thres.end(); i != end; ++i) {
-        if (i->ref_id.compare(nf.ref_id) == 0)  {      
-            
-            if (i->ids.compare(nf.ids) == 0)  {
-                
-                if ((i->ip.compare(nf.src_ip) == 0)) { 
-                    
-                    i->volume = i->volume + nf.bytes;
-                    i->counter++;
-                    
-                    return;
-                }
-            }
-        }
-    }  
-    
-    int type_ip = IsValidIp(nf.src_ip); // check is valid ip
-    if (type_ip >= 0) traf_thres.push_back(TrafficThresholds(nf.ref_id, nf.flows_type, nf.ids, nf.src_ip));
-}
-
-
-bool AggNet::ProcessNetStat() {
     
     if (!q_netstat.empty()) {
 	
@@ -132,11 +88,64 @@ bool AggNet::ProcessNetStat() {
         
         if (UpdateNetstat(netstat_rec)) netstat_list.push_back(netstat_rec);
         
-        return true;
+        counter++;
     }
     
-    return false;
+    if (counter == 0) usleep(GetGosleepTimer()*60);
+   
 }
+
+void AggNet::UpdateTrafficThresholds(Netflow nf) {
+    
+    bool dst_check = false;
+    bool src_check = false;
+    
+    std::vector<TrafficThresholds>::iterator i, end;
+    
+    for(i = traf_thres.begin(), end = traf_thres.end(); i != end; ++i) {
+        
+        if (i->ref_id.compare(nf.ref_id) == 0)  {      
+            
+            if (i->ids.compare(nf.ids) == 0)  {
+                
+                if (i->ip.compare(nf.dst_ip) == 0 && !dst_check) { 
+                    
+                    i->volume = i->volume + nf.bytes;
+                    i->counter++;
+                    
+                    if (src_check == true) return;
+                    dst_check = true;
+                    
+                }
+                
+                if (i->ip.compare(nf.src_ip) == 0 && !src_check) { 
+                    
+                    i->volume = i->volume + nf.bytes;
+                    i->counter++;
+                    
+                    if (dst_check == true) return;
+                    src_check = true;
+                    
+                }
+            }
+        }
+    }  
+    
+    if (!src_check) {
+        int type_ip = IsValidIp(nf.src_ip); // check is valid ip
+        if (type_ip >= 0) {
+            traf_thres.push_back(TrafficThresholds(nf.ref_id, nf.flows_type, nf.ids, nf.src_ip, nf.bytes));
+        }
+    }
+    
+    if (!dst_check) {
+        int type_ip = IsValidIp(nf.dst_ip); // check is valid ip
+        if (type_ip >= 0) {
+            traf_thres.push_back(TrafficThresholds(nf.ref_id, nf.flows_type, nf.ids, nf.dst_ip, nf.bytes));
+        }
+    }
+}
+
 
 bool AggNet::UpdateNetstat(Netstat ns) {
     
@@ -265,7 +274,7 @@ void AggNet::FlushTrafficThresholds() {
             switch (i->type) { // 1 - suri, 2 - modsec-waf, 3 - aws-waf)
     
                 case 1:
-                    if (max_volume != 0 && max_volume <= i->volume) SendAlertTraffic(i);
+                    if (max_volume != 0 && max_volume <= i->volume/1024) SendAlertTraffic(i);
                     break;
                 case 2:
                     if (max_requests != 0 && max_requests <= i->counter) SendAlertFlood(i);
