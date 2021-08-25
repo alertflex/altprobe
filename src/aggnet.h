@@ -41,13 +41,13 @@ public:
         counter = 0;
     }
         
-    TrafficThresholds (string r, int t, string id, string i) {
+    TrafficThresholds (string r, int t, string id, string i, unsigned int v) {
         ref_id = r;
         type = t;
         ids = id;
         ip = i;
-        volume = 0;
-        counter = 0;
+        volume = v;
+        counter = 1;
     }
 };
 
@@ -71,8 +71,6 @@ public:
     
     int Go();
     void ProcessNetData();
-    bool ProcessNetStat();
-    bool ProcessNetFlow();
     void RoutineJob();
         
     bool UpdateNetstat(Netstat ns);

@@ -49,7 +49,6 @@ public:
     virtual int GetConfig();
     
     int Go();
-    void PushRecord();
     void ProcessAlerts();
     void RoutineJob();
     

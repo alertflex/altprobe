@@ -230,14 +230,12 @@ int AwsWaf::ParsJson() {
             
             if (host.compare("host") == 0) {
                 rec.host = hosts.second.get<string>("value", "indef");
-                ResetStreams();
-                return 1;
+                break;
             } 
         }        
                 
-        rec.host = "indef";
-        
         if (fs.filter.netflow.log) {
+            
             net_flow.ids = rec.httpSourceId;
             net_flow.flows_type = 3;
             net_flow.ref_id = fs.filter.ref_id;

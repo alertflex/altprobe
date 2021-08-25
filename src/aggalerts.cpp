@@ -50,7 +50,9 @@ int AggAlerts::Go(void) {
     while(1) {    
         
         gettimeofday(&start, NULL);
+        
         while (sk.GetReportsPeriod() > seconds) {
+            
             gettimeofday(&end, NULL);
             seconds  = end.tv_sec  - start.tv_sec;
             
@@ -60,9 +62,11 @@ int AggAlerts::Go(void) {
             ResetHidsAlert();
             ResetNidsAlert();
             ResetWafAlert();
+            
         }
         
         RoutineJob();
+        
         seconds = 0;
         
     }
@@ -72,67 +76,12 @@ int AggAlerts::Go(void) {
 
 void AggAlerts::ProcessAlerts() {
     
-    counter = 0;
+    int counter = 0 ;
     
-    while (!q_crs.empty() || !q_hids.empty() || !q_nids.empty() || !q_waf.empty()) {
+    if (!q_crs.empty()) {
         
-        if (!q_crs.empty()) {
-            q_crs.pop(ids_rec);
-            PushRecord();
-            counter++;
-        }
+        q_crs.pop(ids_rec);
         
-        if (!q_hids.empty()) {
-            q_hids.pop(ids_rec);
-            PushRecord();
-            counter++;
-        }
-        
-        if (!q_nids.empty()) {
-            q_nids.pop(ids_rec);
-            PushRecord();
-            counter++;
-        }
-        
-        if (!q_waf.empty()) {
-            q_waf.pop(ids_rec);
-            PushRecord();
-            counter++;
-        }
-    }       
-        
-    if (!counter) {
-        
-        usleep(GetGosleepTimer()*60);
-    }
-}
-
-void AggAlerts::PushRecord() {
-    
-    if (ids_rec.ids_type == 1 || ids_rec.ids_type == 2) {
-        if (ids_rec.agr.reproduced != 0) UpdateHidsAlerts();
-        
-        if (ids_rec.severity == 0) hids_stat.s0_counter++;
-        if (ids_rec.severity == 1) hids_stat.s1_counter++;
-        if (ids_rec.severity == 2) hids_stat.s2_counter++;
-        if (ids_rec.severity == 3) hids_stat.s3_counter++;
-        
-        if (ids_rec.filter) hids_stat.filter_counter++;
-        
-    }
-        
-    if (ids_rec.ids_type == 3) {
-        if(ids_rec.agr.reproduced != 0) UpdateNidsAlerts();
-        
-        if (ids_rec.severity == 0) nids_stat.s0_counter++;
-        if (ids_rec.severity == 1) nids_stat.s1_counter++;
-        if (ids_rec.severity == 2) nids_stat.s2_counter++;
-        if (ids_rec.severity == 3) nids_stat.s3_counter++;
-        
-        if (ids_rec.filter) nids_stat.filter_counter++;
-    } 
-    
-    if (ids_rec.ids_type == 4) {
         if(ids_rec.agr.reproduced != 0) UpdateCrsAlerts();
         
         if (ids_rec.severity == 0) crs_stat.s0_counter++;
@@ -142,19 +91,58 @@ void AggAlerts::PushRecord() {
         
         if (ids_rec.filter) crs_stat.filter_counter++;
         
-    } 
-    
-    if (ids_rec.ids_type == 5) {
-        if(ids_rec.agr.reproduced != 0) UpdateWafAlerts();
+        counter++;
+    }
         
+    if (!q_hids.empty()) {
+        
+        q_hids.pop(ids_rec);
+        
+        if (ids_rec.agr.reproduced != 0) UpdateHidsAlerts();
+        
+        if (ids_rec.severity == 0) hids_stat.s0_counter++;
+        if (ids_rec.severity == 1) hids_stat.s1_counter++;
+        if (ids_rec.severity == 2) hids_stat.s2_counter++;
+        if (ids_rec.severity == 3) hids_stat.s3_counter++;
+        
+        if (ids_rec.filter) hids_stat.filter_counter++;
+        
+        counter++;
+    }
+        
+    if (!q_nids.empty()) {
+        
+        q_nids.pop(ids_rec);
+        
+        if(ids_rec.agr.reproduced != 0) UpdateNidsAlerts();
+    
+        if (ids_rec.severity == 0) nids_stat.s0_counter++;
+        if (ids_rec.severity == 1) nids_stat.s1_counter++;
+        if (ids_rec.severity == 2) nids_stat.s2_counter++;
+        if (ids_rec.severity == 3) nids_stat.s3_counter++;
+    
+        if (ids_rec.filter) nids_stat.filter_counter++;
+        
+        counter++;
+    }
+    
+    if (!q_waf.empty()) {
+        
+        q_waf.pop(ids_rec);
+        
+        if(ids_rec.agr.reproduced != 0) UpdateWafAlerts();
+    
         if (ids_rec.severity == 0) waf_stat.s0_counter++;
         if (ids_rec.severity == 1) waf_stat.s1_counter++;
         if (ids_rec.severity == 2) waf_stat.s2_counter++;
         if (ids_rec.severity == 3) waf_stat.s3_counter++;
-        
+    
         if (ids_rec.filter) crs_stat.filter_counter++;
         
-    } 
+        counter++;
+    }
+    
+    if (counter == 0) usleep(GetGosleepTimer()*60);
 }
 
 void AggAlerts::RoutineJob() {
