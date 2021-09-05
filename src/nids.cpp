@@ -45,10 +45,10 @@ int Nids::Open() {
                 sprintf(level, "failed open redis server interface: %s\n", c->errstr);
                 SysLog(level);
                 
-                return status = 0;
-            }
+                redis_status = 0;
+                status = 1;
             
-            status = 2;
+            } else status = 2;
         }  
         
     } else {
@@ -63,7 +63,8 @@ int Nids::Open() {
                 SysLog(level);
                 status = 0;
             }
-        }  else status = 0;
+        
+        } else status = 0;
     }
     
     if (maxmind_status) {
