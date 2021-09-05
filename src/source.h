@@ -19,6 +19,8 @@
 #include <mutex>
 
 #include "hiredis.h"
+#include "GeoIP.h"
+#include "GeoIPCity.h"
 #include "sinks.h"
 #include "ids.h"
 #include "filters.h"
@@ -34,6 +36,14 @@ public:
     string config_key;
     string redis_key;
     static int config_flag;
+    
+    GeoIP *gi;
+    string src_cc;
+    string src_latitude;
+    string src_longitude;
+    string dst_cc;
+    string dst_latitude;
+    string dst_longitude;
     
     std::mutex m_monitor_counter;
     unsigned long events_counter;
@@ -52,6 +62,12 @@ public:
     
     Source () {
         config_key = "indef";
+        src_cc = "indef";
+        src_latitude = "0.0";
+        src_longitude = "0.0";
+        dst_cc = "indef";
+        dst_latitude = "0.0";
+        dst_longitude = "0.0";
         status = 1;
         redis_status = 1;
         events_counter = 0;
@@ -77,6 +93,8 @@ public:
     void SendAlertMultiple(int type);
     string GetAgent(string ip);
     bool SuppressAlert(string ip);
+    void SetGeoBySrcIp(string ip);
+    void SetGeoByDstIp(string ip);
     
 };
 

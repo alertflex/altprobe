@@ -219,7 +219,7 @@ void Collector::StatJob() {
     unsigned long ccrs = crs->ResetEventsCounter();
     unsigned long chids = hids->ResetEventsCounter();
     unsigned long cnids = nids->ResetEventsCounter();
-    unsigned long cwaf = waf->ResetEventsCounter();
+    unsigned long cwaf = waf->ResetEventsCounter() + aws_waf->ResetEventsCounter();
     unsigned long cremlog = rem_log->ResetEventsCounter();
     unsigned long vremlog = rem_log->ResetEventsVolume();
     unsigned long cremstat = rem_stat->ResetEventsCounter();

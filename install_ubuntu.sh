@@ -11,10 +11,11 @@ then
 fi
 
 echo "*** Installation alertflex collector started***"
+sudo add-apt-repository ppa:maxmind/ppa -y
 sudo apt-get update
 sudo apt-get -y install libpcre3 libpcre3-dbg libpcre3-dev  libnss3-dev libc6-dev libnspr4-dev build-essential autoconf automake libtool libpcap-dev libnet1-dev \
 libyaml-0-2 libyaml-dev zlib1g zlib1g-dev libcap-ng-dev libcap-ng0 libmagic-dev libjansson-dev libjansson4 libdaemon-dev libboost-all-dev \
-make autoconf autoconf-archive m4 pkg-config git libssl-dev apt-transport-https curl python-simplejson
+make autoconf autoconf-archive m4 pkg-config git libssl-dev apt-transport-https curl python-simplejson xz-utils libgeoip1 libgeoip-dev geoip-bin
 sudo ldconfig
 
 echo "*** installation hiredis***"
@@ -61,6 +62,8 @@ sudo sed -i "s/_suri_log/$SURI_LOG/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_log/$WAZUH_LOG/g" /etc/altprobe/altprobe.yaml
 
 sudo chmod go-rwx /etc/altprobe/altprobe.yaml
+sudo curl https://files-cdn.liferay.com/mirrors/geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.xz -o /etc/altprobe/GeoLiteCity.dat.xz
+sudo unxz /etc/altprobe/GeoLiteCity.dat.xz
 
 cd ..
 

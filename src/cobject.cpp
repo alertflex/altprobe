@@ -30,6 +30,9 @@ string CollectorObject::node_id;
 string CollectorObject::probe_id;
 string CollectorObject::project_id;
 
+char CollectorObject::maxmind_path[OS_BUFFER_SIZE]; 
+bool CollectorObject::maxmind_status;
+
 char CollectorObject::remote_control[OS_HEADER_SIZE];
 char CollectorObject::remote_update[OS_HEADER_SIZE];
 
@@ -101,6 +104,8 @@ int CollectorObject::GetConfig() {
     cy->addKey("node");
     cy->addKey("probe");
     
+    cy->addKey("geo_db");
+    
     cy->addKey("remote_control");
     cy->addKey("remote_update");
     
@@ -134,6 +139,12 @@ int CollectorObject::GetConfig() {
     if (!probe_id.compare("")) {
         SysLog("config file error: parameter probe id");
         return 0;
+    }
+    
+    strncpy(maxmind_path, (char*) cy->getParameter("geo_db").c_str(), sizeof(maxmind_path));
+    if (!strcmp (maxmind_path, "indef")) { 
+        maxmind_status = false;
+        SysLog("config file notification: ip geo is disabled");
     }
     
     time_delta = stoi(cy->getParameter("time_delta"));
@@ -391,6 +402,7 @@ string CollectorObject::GetGraylogFormat() {
     if (time_delta != 0) rawtime = rawtime + time_delta*3600;
     
     timeinfo = localtime(&rawtime);
+    // yyyy-MM-dd'T'HH:mm:ss.SSSZ
     strftime(collector_time,sizeof(collector_time),"%Y-%m-%dT%H:%M:%S.000Z",timeinfo);
     
     return string(collector_time);

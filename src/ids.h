@@ -26,7 +26,7 @@ class IdsRecord
 public:
     
     string ref_id;
-    int ids_type; // 1 - fim, 2 - hids, 3 - nids, 4 - crs, 5 - waf
+    
     string src_ip;             
     string dst_ip; 
     string ids;
@@ -42,11 +42,10 @@ public:
     string agent;
     string container;
     
-                        
-    std::vector<string> list_cats;
-    
     // for checking of reproduce the alert
     bool filter = false;
+    
+    std::vector<string> list_cats;
     
     string match;
     string host;
@@ -59,8 +58,9 @@ public:
         
     void Reset() {
         
+        filter = false;
+        
         ref_id.clear();
-        ids_type = 0;
         src_ip.clear();
         dst_ip.clear(); 
         ids.clear(); 
@@ -77,8 +77,6 @@ public:
         container.clear();
         
         list_cats.clear();
-        
-        filter = false;
         
         match.clear();
         host.clear();
@@ -125,10 +123,12 @@ public:
     }
 };
 
+
 extern boost::lockfree::spsc_queue<IdsRecord> q_hids;
 extern boost::lockfree::spsc_queue<IdsRecord> q_nids;
 extern boost::lockfree::spsc_queue<IdsRecord> q_crs;
 extern boost::lockfree::spsc_queue<IdsRecord> q_waf;
+extern boost::lockfree::spsc_queue<IdsRecord> q_aws_waf;
 
 #endif	/* IDS_H */
 

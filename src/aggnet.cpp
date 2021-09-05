@@ -77,6 +77,10 @@ void AggNet::ProcessNetData() {
         
         q_netflow.pop(netflow_rec);
         
+        UpdateTopTalkers(netflow_rec);
+    
+        UpdateCountries(netflow_rec);
+        
         UpdateTrafficThresholds(netflow_rec);
         
         counter++;
@@ -95,6 +99,14 @@ void AggNet::ProcessNetData() {
    
 }
 
+void AggNet::RoutineJob() {
+    
+    FlushTrafficThresholds();
+    FlushTopTalkers();
+    FlushCountries();
+    FlushNetStat();
+}
+
 void AggNet::UpdateTrafficThresholds(Netflow nf) {
     
     bool dst_check = false;
@@ -106,12 +118,12 @@ void AggNet::UpdateTrafficThresholds(Netflow nf) {
         
         if (i->ref_id.compare(nf.ref_id) == 0)  {      
             
-            if (i->ids.compare(nf.ids) == 0)  {
+            if (i->sensor.compare(nf.sensor) == 0)  {
                 
                 if (i->ip.compare(nf.dst_ip) == 0 && !dst_check) { 
                     
-                    i->volume = i->volume + nf.bytes;
-                    i->counter++;
+                    i->bytes = i->bytes + nf.bytes;
+                    i->sessions++;
                     
                     if (src_check == true) return;
                     dst_check = true;
@@ -120,8 +132,8 @@ void AggNet::UpdateTrafficThresholds(Netflow nf) {
                 
                 if (i->ip.compare(nf.src_ip) == 0 && !src_check) { 
                     
-                    i->volume = i->volume + nf.bytes;
-                    i->counter++;
+                    i->bytes = i->bytes + nf.bytes;
+                    i->sessions++;
                     
                     if (dst_check == true) return;
                     src_check = true;
@@ -134,16 +146,48 @@ void AggNet::UpdateTrafficThresholds(Netflow nf) {
     if (!src_check) {
         int type_ip = IsValidIp(nf.src_ip); // check is valid ip
         if (type_ip >= 0) {
-            traf_thres.push_back(TrafficThresholds(nf.ref_id, nf.flows_type, nf.ids, nf.src_ip, nf.bytes));
+            traf_thres.push_back(TrafficThresholds(nf.ref_id, nf.sensor, nf.type, nf.bytes, nf.sessions, nf.src_ip));
         }
     }
     
     if (!dst_check) {
         int type_ip = IsValidIp(nf.dst_ip); // check is valid ip
         if (type_ip >= 0) {
-            traf_thres.push_back(TrafficThresholds(nf.ref_id, nf.flows_type, nf.ids, nf.dst_ip, nf.bytes));
+            traf_thres.push_back(TrafficThresholds(nf.ref_id, nf.sensor, nf.type, nf.bytes, nf.sessions, nf.dst_ip));
         }
     }
+}
+
+void AggNet::FlushTrafficThresholds() {
+    
+    std::vector<TrafficThresholds>::iterator i, end;
+    
+    boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
+    
+    for(i = traf_thres.begin(), end = traf_thres.end(); i != end; ++i) {
+        
+        if (i->ref_id.compare(fs.filter.ref_id) == 0)  { 
+            
+            int max_volume = fs.filter.netflow.trafficMaxVolume;
+            int max_requests = fs.filter.netflow.floodMaxRequests;
+            
+            switch (i->type) { // 1 - suri, 2 - modsec-waf, 3 - aws-waf)
+    
+                case 1:
+                    if (max_volume != 0 && max_volume <= i->bytes/1024) SendAlertTraffic(i);
+                    break;
+                case 2:
+                    if (max_requests != 0 && max_requests <= i->sessions) SendAlertFlood(i);
+                    break;
+                case 3:
+                    if (max_requests != 0 && max_requests <= i->sessions) SendAlertFlood(i);
+                break;
+            }
+        }
+    }
+    
+    traf_thres.clear();
+    
 }
 
 
@@ -166,10 +210,8 @@ bool AggNet::UpdateNetstat(Netstat ns) {
     return true;
 }
 
-void AggNet::RoutineJob() {
-    
-    FlushTrafficThresholds();
-    
+void AggNet::FlushNetStat() {
+
     report = "{ \"type\": \"net_stat\", \"data\" : [ ";
     
     std::vector<Netstat>::iterator it, end;
@@ -251,49 +293,248 @@ void AggNet::RoutineJob() {
     report.resize(report.size() - 1);
     report += " ] }";
     
-        
     q_agg_net.push(report);
     
     report.clear();    
     netstat_list.clear();
+    
 }
 
-void AggNet::FlushTrafficThresholds() {
+void AggNet::UpdateTopTalkers(Netflow nf) {
     
-    std::vector<TrafficThresholds>::iterator i, end;
+    std::vector<TopTalker>::iterator i, end;
     
-    boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
-    
-    for(i = traf_thres.begin(), end = traf_thres.end(); i != end; ++i) {
+    for(i = top_talkers.begin(), end = top_talkers.end(); i != end; ++i) {
+        if (i->ref_id.compare(nf.ref_id) == 0)  {      
         
-        if (i->ref_id.compare(fs.filter.ref_id) == 0)  { 
+            if (i->sensor.compare(nf.sensor) == 0)  {
             
-            int max_volume = fs.filter.netflow.trafficMaxVolume;
-            int max_requests = fs.filter.netflow.floodMaxRequests;
-            
-            switch (i->type) { // 1 - suri, 2 - modsec-waf, 3 - aws-waf)
-    
-                case 1:
-                    if (max_volume != 0 && max_volume <= i->volume/1024) SendAlertTraffic(i);
-                    break;
-                case 2:
-                    if (max_requests != 0 && max_requests <= i->counter) SendAlertFlood(i);
-                    break;
-                case 3:
-                    if (max_requests != 0 && max_requests <= i->counter) SendAlertFlood(i);
-                break;
+                if ((i->src_ip.compare(nf.src_ip) == 0) && (i->dst_ip.compare(nf.dst_ip) == 0)) { 
+                    i->bytes = i->bytes + nf.bytes;
+                    i->sessions++;
+                    return;
+                }
+        
+                if ((i->src_ip.compare(nf.dst_ip) == 0) && (i->dst_ip.compare(nf.src_ip) == 0)) { 
+                    i->bytes = i->bytes + nf.bytes;
+                    i->sessions++;
+                    return;
+                }
             }
+        }
+    }  
+    
+    top_talkers.push_back(TopTalker(nf.ref_id, nf.sensor, nf.type, nf.bytes, nf.sessions, nf.src_ip, nf.dst_ip, nf.src_country, nf.dst_country));
+}
+
+bool SortTopBytes(TopTalker left, TopTalker right) {
+    
+    return left.bytes > right.bytes;
+ 
+} 
+
+bool SortTopSessions(TopTalker left, TopTalker right) {
+    
+    return left.sessions > right.sessions;
+ 
+} 
+
+void AggNet::FlushTopTalkers() {
+    
+    std::vector<TopTalker>::iterator it_tlk, end_tlk;
+    
+    report = "{ \"type\": \"net_topbytes\", \"data\" : [ ";
+        
+    int i = 10;
+        
+    std::sort(top_talkers.begin(), top_talkers.end(), SortTopBytes);
+                
+    for(it_tlk = top_talkers.begin(), end_tlk = top_talkers.end(); it_tlk != end_tlk && i > 0; ++it_tlk) {
+        
+        i--;
+        
+        if (it_tlk->bytes > 0) {
+            
+            report += "{ \"ref_id\": \"";
+            report += it_tlk->ref_id;
+        
+            report += "\", \"sensor\": \"";
+            report += it_tlk->sensor;
+        
+            report += "\", \"src_ip\": \"";
+            report += it_tlk->src_ip;
+        
+            report += "\", \"dst_ip\": \"";
+            report += it_tlk->dst_ip;
+        
+            report += "\", \"src_country\": \"";
+            report += it_tlk->src_country;
+        
+            report += "\", \"dst_country\": \"";
+            report += it_tlk->dst_country;
+        
+            report += "\", \"bytes\": ";
+            report += std::to_string(it_tlk->bytes);
+        
+            report += ", \"time_of_survey\": \"";
+            report += GetNodeTime();
+            report += "\" } ,";
         }
     }
     
-    traf_thres.clear();
+    report.resize(report.size() - 1);
+    
+    report += " ] }";
+    
+    q_agg_net.push(report);
+    
+    report.clear();
+    
+    report = "{ \"type\": \"net_topsessions\", \"data\" : [ ";
+        
+    i = 10;
+    
+    std::sort(top_talkers.begin(), top_talkers.end(), SortTopSessions);
+                
+    for(it_tlk = top_talkers.begin(), end_tlk = top_talkers.end(); it_tlk != end_tlk && i > 0; ++it_tlk) {
+        
+        i--;
+        
+        report += "{ \"ref_id\": \"";
+        report += it_tlk->ref_id;
+        
+        report += "\", \"sensor\": \"";
+        report += it_tlk->sensor;
+        
+        report += "\", \"src_ip\": \"";
+        report += it_tlk->src_ip;
+        
+        report += "\", \"dst_ip\": \"";
+        report += it_tlk->dst_ip;
+        
+        report += "\", \"src_country\": \"";
+        report += it_tlk->src_country;
+        
+        report += "\", \"dst_country\": \"";
+        report += it_tlk->dst_country;
+        
+        report += "\", \"sessions\": ";
+        report += std::to_string(it_tlk->sessions);
+        
+        report += ", \"time_of_survey\": \"";
+        report += GetNodeTime();
+        report += "\" } ,";
+       
+    }
+    
+    report.resize(report.size() - 1);
+    
+    report += " ] }";
+    
+    q_agg_net.push(report);
+    
+    report.clear();
+    
+    
+    top_talkers.clear();
     
 }
+
+
+void AggNet::UpdateCountries(Netflow nf) {
+    
+    bool flag_src = false, flag_dst = false, flag_both = false;
+    unsigned long traf;
+    
+    if (nf.src_country.compare(nf.dst_country) == 0) flag_both = true;
+    
+    std::vector<Country>::iterator i, end;
+    
+    for(i = countries.begin(), end = countries.end(); i != end; ++i) {
+        
+        if (i->ref_id.compare(nf.ref_id) == 0)  { 
+            
+            if (i->sensor.compare(nf.sensor) == 0)  { 
+                
+                if (i->country.compare(nf.src_country) == 0) { 
+                    
+                    i->bytes = i->bytes + nf.bytes;
+                    i->sessions++;
+                    
+                    flag_src =true;
+                }
+            
+                if (!(flag_both && flag_src)) {
+                    
+                    if (i->country.compare(nf.dst_country) == 0) {
+                        
+                        i->bytes = i->bytes + nf.bytes;
+                        i->sessions++;
+                        
+                        flag_dst = true;
+                    }
+                    
+                }
+        
+                if (flag_src && flag_dst) return;
+                if (flag_src && flag_both) return;
+            }
+        }
+    }  
+    
+    if (!flag_src) {
+        countries.push_back(Country(nf.ref_id, nf.sensor, nf.type, nf.bytes, nf.sessions, nf.src_country));
+    }
+        
+    if (!flag_dst && !flag_both) {
+        countries.push_back(Country(nf.ref_id, nf.sensor, nf.type, nf.bytes, nf.sessions, nf.dst_country));
+    }
+}
+
+void AggNet::FlushCountries() {
+    
+    report = "{ \"type\": \"net_countries\", \"data\" : [ ";
+        
+    std::vector<Country>::iterator it, end;
+        
+    for(it = countries.begin(), end = countries.end(); it != end; ++it) {
+            
+        report += "{ \"ref_id\": \"";
+        report += it->ref_id;
+        
+        report += "\", \"sensor\": \"";
+        report += it->sensor;
+        
+        report += "\", \"country\": \"";
+        report += it->country;
+                
+        report += "\", \"bytes\": ";
+        report += std::to_string(it->bytes);
+        
+        report += ", \"sessions\": ";
+        report += std::to_string(it->sessions);
+            
+        report += ", \"time_of_survey\": \"";
+        report += GetNodeTime();
+        report += "\" } ,";
+    
+    }
+    
+    report.resize(report.size() - 1);
+    report += " ] }";
+        
+    q_agg_net.push(report);
+    
+    report.clear();
+    top_talkers.clear();
+    
+}
+
 
 void AggNet::SendAlertFlood(std::vector<TrafficThresholds>::iterator r) {
     
     sk.alert.ref_id = r->ref_id;
-    sk.alert.sensor_id = r->ids;
+    sk.alert.sensor_id = r->sensor;
     sk.alert.alert_severity = fs.filter.netflow.floodSeverity;
     sk.alert.event_severity = fs.filter.netflow.floodSeverity;
     sk.alert.alert_type = "NET";
@@ -309,8 +550,7 @@ void AggNet::SendAlertFlood(std::vector<TrafficThresholds>::iterator r) {
     }
     
     sk.alert.event_id = "10";
-    sk.alert.sensor_id = r->ids;
-    
+        
     sk.alert.description = " ";
     sk.alert.action = "indef";
     sk.alert.location = "indef";
@@ -358,17 +598,15 @@ void AggNet::SendAlertFlood(std::vector<TrafficThresholds>::iterator r) {
 void AggNet::SendAlertTraffic(std::vector<TrafficThresholds>::iterator r) {
     
     sk.alert.ref_id = r->ref_id;
-    sk.alert.sensor_id = r->ids;
+    sk.alert.sensor_id = r->sensor;
     sk.alert.alert_severity = fs.filter.netflow.trafficSeverity;
     sk.alert.event_severity = fs.filter.netflow.trafficSeverity;
     sk.alert.alert_type = "NET";
     
     sk.alert.alert_source = "Suricata";
     
-    
     sk.alert.event_id = "11";
-    sk.alert.sensor_id = r->ids;
-    
+       
     sk.alert.description = " ";
     sk.alert.action = "indef";
     sk.alert.location = "indef";

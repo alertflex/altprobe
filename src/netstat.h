@@ -110,21 +110,28 @@ class Netflow {
 public:
     string ref_id;
     
-    int flows_type; // 1 - suri, 2 - modsec-waf, 3 - aws-waf
-    
-    string ids;
+    string sensor;
+    int type;  // 1 - suri, 2 - modsec-waf, 3 - aws-waf)
     
     string src_ip; 
-    string dst_ip;  
-    unsigned int bytes; 
+    string dst_ip; 
+    string src_country;
+    string dst_country;
+    
+    long bytes; 
+    long sessions; 
       
         
     void Reset() {
         ref_id.clear();
-        ids.clear();
+        sensor.clear();
+        type = 0;
         src_ip.clear();
         dst_ip.clear();
+        src_country.clear();
+        dst_country.clear();
         bytes = 0;
+        sessions = 0;
     }
     
     Netflow () {

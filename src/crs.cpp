@@ -182,8 +182,6 @@ int Crs::Go(void) {
             }
         }
         
-        IncrementEventsCounter();
-        
         if (res != 0 ) {  
             
             boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
@@ -262,6 +260,8 @@ GrayList* Crs::CheckGrayList() {
 int Crs::ParsJson() {
     
     string message;
+    
+    IncrementEventsCounter();
     
     try {
     
@@ -469,8 +469,7 @@ int Crs::PushRecord(GrayList* gl) {
     ids_rec.container = rec.fields.container_id;
     ids_rec.ids = rec.sensor;
     ids_rec.action = "indef";
-    ids_rec.ids_type = 4;
-                
+                    
     if (gl != NULL) {
         
         ids_rec.filter = true;
@@ -493,9 +492,9 @@ int Crs::PushRecord(GrayList* gl) {
             
         }
     }
-                
-    q_crs.push(ids_rec);
     
+    q_crs.push(ids_rec);
+                
     return ids_rec.severity;
 }
 

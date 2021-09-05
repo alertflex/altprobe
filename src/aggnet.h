@@ -23,31 +23,86 @@
 
 using namespace std;
 
-class TrafficThresholds {
+class Counters {
 public:
+    
     string ref_id;
-    int type; // 1 - suri, 2 - modsec-waf, 3 - aws-waf
-    string ids;
-    string ip;
-    unsigned int volume;
-    unsigned int counter;
+    string sensor;
+    int type; // 1 - suri, 2 - modsec-waf, 3 - aws-waf)
+   
+    long bytes; 
+    long sessions; 
+       
+    Counters (string ref, string sen, int t, unsigned long b, unsigned long ses) {  
+        ref_id = ref;
+        sensor = sen;
+        type = t;
+        bytes = b;
+        sessions = ses;
+    }
+    
+    void ResetCounters() {
+        ref_id.clear();
+        sensor.clear();
+        type = 0;
+        bytes = 0;
+        sessions = 0;
+    }
+    
+};
+
+class TopTalker : public Counters {
+public:  
+    
+    string src_ip;
+    string dst_ip;
+    string src_country;
+    string dst_country;
+        
                 
     void Reset() {
-        ref_id.clear();
-        type = 0;
-        ids.clear();
-        ip.clear();
-        volume = 0;
-        counter = 0;
+        src_ip.clear();
+        dst_ip.clear();
+        src_country.clear();
+        dst_country.clear();
+        ResetCounters();
     }
         
-    TrafficThresholds (string r, int t, string id, string i, unsigned int v) {
-        ref_id = r;
-        type = t;
-        ids = id;
+    TopTalker (string ref, string sen, int t, unsigned long b, unsigned long ses, string srcip, string dstip, string scc, string dcc) 
+        : Counters(ref, sen, t, b, ses) {
+        src_ip = srcip;
+        dst_ip = dstip;
+        src_country = scc;
+        dst_country = dcc;
+    }
+};
+
+class Country : public Counters {
+public:  
+    
+    string country;
+               
+    void Reset() {
+        country.clear();
+        ResetCounters();
+    }
+        
+    Country (string ref, string sen, int t, unsigned long b, unsigned long ses, string cc) : Counters(ref, sen, t, b, ses) {
+        country = cc;
+    }
+};
+
+class TrafficThresholds : public Counters {
+public:
+    string ip;
+                    
+    void Reset() {
+        ip.clear();
+        ResetCounters();
+    }
+        
+    TrafficThresholds (string ref, string sen, int t, unsigned long b, unsigned long ses, string i) : Counters(ref, sen, t, b, ses) {
         ip = i;
-        volume = v;
-        counter = 1;
     }
 };
 
@@ -56,10 +111,15 @@ public:
     
     Netstat netstat_rec;
     Netflow netflow_rec;
+    
     int counter;
         
     //Statistics data
     std::vector<Netstat> netstat_list;
+    
+    std::vector<TopTalker> top_talkers;
+    
+    std::vector<Country> countries;
     
     //TrafficThresholds data
     std::vector<TrafficThresholds> traf_thres;
@@ -74,8 +134,16 @@ public:
     void RoutineJob();
         
     bool UpdateNetstat(Netstat ns);
+    void FlushNetStat();
+    
     void UpdateTrafficThresholds(Netflow nf);
     void FlushTrafficThresholds();
+    
+    void UpdateTopTalkers(Netflow nf);
+    void FlushTopTalkers();
+    
+    void UpdateCountries(Netflow nf);
+    void FlushCountries();
     
     void SendAlertFlood(std::vector<TrafficThresholds>::iterator r);
     void SendAlertTraffic(std::vector<TrafficThresholds>::iterator r);

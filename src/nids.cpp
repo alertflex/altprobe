@@ -66,6 +66,16 @@ int Nids::Open() {
         }  else status = 0;
     }
     
+    if (maxmind_status) {
+        
+        gi = GeoIP_open(maxmind_path, GEOIP_INDEX_CACHE);
+
+        if (gi == NULL) {
+            SysLog("error opening maxmind database\n");
+            maxmind_status = false;
+        }
+    }
+    
     return status;
 }
 
@@ -164,7 +174,6 @@ int Nids::Go(void) {
         
             if (read_res > 0) {
                 
-                IncrementEventsCounter();
                 pars_res = ParsJson(1);
                 
                 if (pars_res > 0) ProcessEvent(pars_res);
@@ -190,7 +199,6 @@ int Nids::Go(void) {
                 
                 read_res = 1;
                 
-                IncrementEventsCounter();
                 pars_res = ParsJson(2);
                 
                 if (pars_res > 0) ProcessEvent(pars_res);
@@ -216,6 +224,8 @@ void Nids::ProcessEvent(int pars_res) {
     
     GrayList* gl;
     int severity;
+    
+    IncrementEventsCounter();
     
     boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
         
@@ -333,10 +343,12 @@ int Nids::ParsJson (int output_type) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
+        SetGeoBySrcIp(rec.dst_ip);
         rec.src_agent = GetAgent(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
+        SetGeoByDstIp(rec.dst_ip);
         rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
@@ -374,10 +386,12 @@ int Nids::ParsJson (int output_type) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
+        SetGeoBySrcIp(rec.dst_ip);
         rec.src_agent = GetAgent(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
+        SetGeoByDstIp(rec.dst_ip);
         rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
@@ -418,10 +432,12 @@ int Nids::ParsJson (int output_type) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
+        SetGeoBySrcIp(rec.dst_ip);
         rec.src_agent = GetAgent(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
+        SetGeoByDstIp(rec.dst_ip);
         rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
@@ -450,10 +466,12 @@ int Nids::ParsJson (int output_type) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
+        SetGeoBySrcIp(rec.dst_ip);
         rec.src_agent = GetAgent(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
+        SetGeoByDstIp(rec.dst_ip);
         rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
@@ -470,12 +488,17 @@ int Nids::ParsJson (int output_type) {
         rec.netflow.age = pt.get<int>("netflow.age",0);
         
         if (fs.filter.netflow.log) {
-            net_flow.ids = rec.sensor;
-            net_flow.flows_type = 1;
+            
             net_flow.ref_id = rec.ref_id;
+            net_flow.sensor = rec.sensor;
+            net_flow.type = 1;
             net_flow.dst_ip = rec.dst_ip;
             net_flow.src_ip = rec.src_ip;
+            net_flow.dst_country = dst_cc;
+            net_flow.src_country = src_cc;
+            
             net_flow.bytes = rec.netflow.bytes;
+            net_flow.sessions = 1;
             
             q_netflow.push(net_flow);
         }
@@ -495,10 +518,12 @@ int Nids::ParsJson (int output_type) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
+        SetGeoBySrcIp(rec.dst_ip);
         rec.src_agent = GetAgent(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
+        SetGeoByDstIp(rec.dst_ip);
         rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
@@ -599,6 +624,18 @@ void Nids::CreateLogPayload(int r) {
             report +=  "\",\"dstip\":\"";
             report +=  rec.dst_ip;
             
+            report += "\",\"src_ip_geo_country\":\"";
+            report += src_cc; 
+            
+            report += "\",\"dst_ip_geo_country\":\"";
+            report += dst_cc; 
+    
+            report += "\",\"src_ip_geo_location\":\"";
+            report += src_latitude + "," + src_longitude; 
+            
+            report += "\",\"dst_ip_geo_location\":\"";
+            report += dst_latitude + "," + dst_longitude; 
+            
             report += "\",\"srcagent\":\"";
             report += rec.src_agent;
 			
@@ -662,6 +699,18 @@ void Nids::CreateLogPayload(int r) {
 			
             report +=  "\",\"dstip\":\"";
             report +=  rec.dst_ip;
+            
+            report += "\",\"src_ip_geo_country\":\"";
+            report += src_cc; 
+            
+            report += "\",\"dst_ip_geo_country\":\"";
+            report += dst_cc; 
+    
+            report += "\",\"src_ip_geo_location\":\"";
+            report += src_latitude + "," + src_longitude; 
+            
+            report += "\",\"dst_ip_geo_location\":\"";
+            report += dst_latitude + "," + dst_longitude; 
             
             report += "\",\"srcagent\":\"";
             report += rec.src_agent;
@@ -737,6 +786,18 @@ void Nids::CreateLogPayload(int r) {
             report +=  "\",\"dstip\":\"";
             report +=  rec.dst_ip;
             
+            report += "\",\"src_ip_geo_country\":\"";
+            report += src_cc; 
+            
+            report += "\",\"dst_ip_geo_country\":\"";
+            report += dst_cc; 
+    
+            report += "\",\"src_ip_geo_location\":\"";
+            report += src_latitude + "," + src_longitude; 
+            
+            report += "\",\"dst_ip_geo_location\":\"";
+            report += dst_latitude + "," + dst_longitude; 
+            
             report += "\",\"srcagent\":\"";
             report += rec.src_agent;
 			
@@ -796,6 +857,12 @@ void Nids::CreateLogPayload(int r) {
             report += "\",\"srcip\":\"";
             report += rec.src_ip;
             
+            report += "\",\"src_ip_geo_country\":\"";
+            report += src_cc; 
+            
+            report += "\",\"src_ip_geo_location\":\"";
+            report += src_latitude + "," + src_longitude; 
+            
             report += "\",\"srcagent\":\"";
             report += rec.src_agent;
             
@@ -804,6 +871,12 @@ void Nids::CreateLogPayload(int r) {
 			
             report += ",\"dstip\":\"";
             report += rec.dst_ip;
+            
+            report += "\",\"dst_ip_geo_country\":\"";
+            report += dst_cc; 
+            
+            report += "\",\"dst_ip_geo_location\":\"";
+            report += dst_latitude + "," + dst_longitude; 
             
             report += "\",\"dstagent\":\"";
             report += rec.dst_agent;
@@ -852,6 +925,12 @@ void Nids::CreateLogPayload(int r) {
             report += "\",\"srcip\":\"";
             report += rec.src_ip;
             
+            report += "\",\"src_ip_geo_country\":\"";
+            report += src_cc; 
+            
+            report += "\",\"src_ip_geo_location\":\"";
+            report += src_latitude + "," + src_longitude; 
+            
             report += "\",\"srcagent\":\"";
             report += rec.src_agent;
             
@@ -860,6 +939,12 @@ void Nids::CreateLogPayload(int r) {
 			
             report += ",\"dstip\":\"";
             report += rec.dst_ip;
+            
+            report += "\",\"dst_ip_geo_country\":\"";
+            report += dst_cc; 
+            
+            report += "\",\"dst_ip_geo_location\":\"";
+            report += dst_latitude + "," + dst_longitude; 
             
             report += "\",\"dstagent\":\"";
             report += rec.dst_agent;
@@ -989,8 +1074,6 @@ int Nids::PushIdsRecord(GrayList* gl) {
     // create new ids record
     IdsRecord ids_rec;
                 
-    ids_rec.ids_type = 3;
-                
     ids_rec.ref_id = fs.filter.ref_id;
                 
     ids_rec.list_cats.push_back(rec.alert.category);
@@ -1048,3 +1131,4 @@ int Nids::PushIdsRecord(GrayList* gl) {
     
     return ids_rec.severity;
 }
+

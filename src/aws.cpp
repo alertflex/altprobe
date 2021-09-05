@@ -45,6 +45,16 @@ int AwsWaf::Open() {
         
     } else status = 0;
     
+    if (maxmind_status) {
+        
+        gi = GeoIP_open(maxmind_path, GEOIP_INDEX_CACHE);
+
+        if (gi == NULL) {
+            SysLog("error opening maxmind database\n");
+            maxmind_status = false;
+        }
+    }
+    
     return status;
 }
 
@@ -164,6 +174,8 @@ GrayList* AwsWaf::CheckGrayList() {
 
 int AwsWaf::ParsJson() {
     
+    IncrementEventsCounter();
+    
     try {
         
         jsonPayload.assign(reply->str, GetBufferSize(reply->str));
@@ -218,6 +230,7 @@ int AwsWaf::ParsJson() {
         rec.list_cats.push_back(rec.terminatingRuleId);
         
         rec.clientIp = pt.get<string>("httpRequest.clientIp","indef");
+        SetGeoBySrcIp(rec.clientIp);
         rec.country = pt.get<string>("httpRequest.country","indef");
         rec.uri = pt.get<string>("httpRequest.uri","indef");
         rec.args = pt.get<string>("httpRequest.args","indef");
@@ -232,16 +245,19 @@ int AwsWaf::ParsJson() {
                 rec.host = hosts.second.get<string>("value", "indef");
                 break;
             } 
-        }        
-                
+        } 
+        
         if (fs.filter.netflow.log) {
             
-            net_flow.ids = rec.httpSourceId;
-            net_flow.flows_type = 3;
             net_flow.ref_id = fs.filter.ref_id;
+            net_flow.sensor = rec.httpSourceId;
+            net_flow.type = 3;
             net_flow.dst_ip = rec.host;
+            net_flow.dst_country = "indef";
             net_flow.src_ip = rec.clientIp;
+            net_flow.src_country = src_cc;
             net_flow.bytes = 0;
+            net_flow.sessions = 1;
             q_netflow.push(net_flow);
         }
         
@@ -293,6 +309,12 @@ void AwsWaf::CreateLog() {
     report += "\",\"country\":\"";
     report += rec.country;
     
+    report += "\",\"client_ip_geo_country\":\"";
+    report += src_cc; 
+    
+    report += "\",\"client_ip_geo_location\":\"";
+    report += src_latitude + "," + src_longitude; 
+            
     report += "\",\"uri\":\"";
     report += rec.uri;
     
@@ -335,8 +357,7 @@ int AwsWaf::PushRecord(GrayList* gl) {
     ids_rec.action = "indef";
                 
     ids_rec.location = rec.uri;
-    ids_rec.ids_type = 5;
-    
+       
         
     if (gl != NULL) {
         
@@ -357,11 +378,12 @@ int AwsWaf::PushRecord(GrayList* gl) {
             ids_rec.rsp.new_severity = gl->rsp.new_severity;
             ids_rec.rsp.new_type = gl->rsp.new_type;
             ids_rec.rsp.new_source = gl->rsp.new_source;
+            
         }
     }
-            
-    q_waf.push(ids_rec);
     
+    q_aws_waf.push(ids_rec);
+            
     return ids_rec.severity;
 }
 

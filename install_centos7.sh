@@ -16,7 +16,7 @@ sudo bash -c 'echo "Defaults timestamp_timeout=50" >> /etc/sudoers.d/99_sudo_inc
 
 sudo yum -y install epel-release
 sudo yum -y update
-sudo yum -y install pcre pcre2 autoconf automake gcc make gcc-c++ libtool libnet-devel libyaml libyaml-devel zlib zlib-devel libcap-ng file-libs libdaemon-devel boost-devel boost-thread libmicrohttpd logrotate autoconf-archive m4 git ntp openssl-libs openssl-devel curl ldconfig hiredis hiredis-devel
+sudo yum -y install pcre pcre2 autoconf automake xz gcc make gcc-c++ libtool libnet-devel libyaml libyaml-devel zlib zlib-devel libcap-ng file-libs libdaemon-devel boost-devel boost-thread libmicrohttpd logrotate autoconf-archive m4 git ntp openssl-libs openssl-devel curl ldconfig hiredis hiredis-devel xz GeoIP GeoIP-devel
 
 echo "*** installation activemq ***"
 sudo yum -y install httpd-devel libapreq2-devel apr-util apr-util-devel java-1.8.0-openjdk activemq-cpp.x86_64 activemq-cpp-devel.x86_64
@@ -52,6 +52,8 @@ sudo sed -i "s/_suri_log/$SURI_LOG/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_log/$WAZUH_LOG/g" /etc/altprobe/altprobe.yaml
 
 sudo chmod go-rwx /etc/altprobe/altprobe.yaml
+sudo curl https://files-cdn.liferay.com/mirrors/geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.xz -o /etc/altprobe/GeoLiteCity.dat.xz
+sudo unxz /etc/altprobe/GeoLiteCity.dat.xz
 
 sudo ln -s /usr/local/bin/altprobe /usr/sbin/altprobe
 sudo ln -s /usr/local/bin/altprobe-restart /usr/sbin/altprobe-restart

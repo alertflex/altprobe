@@ -183,8 +183,6 @@ int Hids::Go(void) {
             }
         }
         
-        IncrementEventsCounter();
-        
         if (res != 0 ) {  
             
             boost::shared_lock<boost::shared_mutex> lock(fs.filters_update);
@@ -263,6 +261,8 @@ GrayList* Hids::CheckGrayList() {
 int Hids::ParsJson() {
     
     string message;
+    
+    IncrementEventsCounter();
     
     try {
     
@@ -635,10 +635,8 @@ int Hids::PushRecord(GrayList* gl) {
                 
     if (rec.file.file_path.compare("") == 0) {
         ids_rec.location = rec.location;
-        ids_rec.ids_type = 2;
     }  else {
         ids_rec.file = rec.file.file_path;
-        ids_rec.ids_type = 1;
     }
         
     if (gl != NULL) {
@@ -663,9 +661,9 @@ int Hids::PushRecord(GrayList* gl) {
             
         }
     } 
-            
-    q_hids.push(ids_rec);
     
+    q_hids.push(ids_rec);
+            
     return ids_rec.severity;
 }
 

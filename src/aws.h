@@ -119,11 +119,16 @@ public:
     }
         
     void ClearRecords() {
-        
         net_flow.Reset();
         rec.Reset();
         jsonPayload.clear();
         ResetJsontree();
+        dst_cc = "indef";
+        dst_latitude = "0.0";
+        dst_longitude = "0.0";
+        src_cc = "indef";
+        src_latitude = "0.0";
+        src_longitude = "0.0";
     }
     
 };
