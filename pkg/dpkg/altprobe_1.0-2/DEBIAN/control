@@ -1,8 +1,8 @@
 Package: altprobe
-Version: 1.0-1
+Version: 1.0-2
 Section: base
 Priority: optional
 Architecture: amd64
 Depends: libyaml-0-2, libyaml-dev, libdaemon-dev, libboost-all-dev, libapr1-dev, libssl-dev
-Maintainer: Oleg <info@alertflex.org>
+Maintainer: Oleg Zharkov <info@alertflex.org>
 Description: Alertflex collector
