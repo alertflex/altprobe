@@ -29,6 +29,9 @@ public:
     static string probe_id;
     static string project_id;
     
+    static char maxmind_path[OS_BUFFER_SIZE]; 
+    static bool maxmind_status;
+    
     static char remote_control[OS_HEADER_SIZE];
     static char remote_update[OS_HEADER_SIZE];
     
@@ -102,6 +105,7 @@ public:
         suriSocketStatus = true;
         dockerSocketStatus = true;
         wazuhServerStatus = true;
+        maxmind_status = true;
         rcStatus = false;
         ruStatus = true;
         time_delta = 0;

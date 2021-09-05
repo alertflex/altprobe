@@ -11,10 +11,11 @@ then
 fi
 
 echo "*** Installation alertflex collector started***"
+sudo add-apt-repository ppa:maxmind/ppa -y
 sudo apt-get update
 sudo apt-get -y install libpcre3 libpcre3-dbg libpcre3-dev  libnss3-dev libc6-dev libnspr4-dev build-essential autoconf automake libtool libpcap-dev libnet1-dev \
 libyaml-0-2 libyaml-dev zlib1g zlib1g-dev libcap-ng-dev libcap-ng0 libmagic-dev libjansson-dev libjansson4 libdaemon-dev libboost-all-dev \
-make autoconf autoconf-archive m4 pkg-config git libssl-dev apt-transport-https curl python-simplejson
+make autoconf autoconf-archive m4 pkg-config git libssl-dev apt-transport-https curl python-simplejson xz-utils libgeoip1 libgeoip-dev geoip-bin
 sudo ldconfig
 
 echo "*** installation hiredis***"
@@ -61,6 +62,8 @@ sudo sed -i "s/_suri_log/$SURI_LOG/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_log/$WAZUH_LOG/g" /etc/altprobe/altprobe.yaml
 
 sudo chmod go-rwx /etc/altprobe/altprobe.yaml
+sudo curl https://files-cdn.liferay.com/mirrors/geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.xz -o /etc/altprobe/GeoLiteCity.dat.xz
+sudo unxz /etc/altprobe/GeoLiteCity.dat.xz
 
 cd ..
 
@@ -177,15 +180,15 @@ sudo systemctl enable altprobe.service
 if [[ $BUILD_PACKAGE == yes ]]
 then
     cd $INSTALL_PATH/pkg
-    sudo chmod u+x dpkg/altprobe_1.0-1/etc/altprobe/scripts/*
-    sudo chmod u+x dpkg/altprobe_1.0-1/usr/local/bin/altprob*
+    sudo chmod u+x dpkg/altprobe_1.0-2/etc/altprobe/scripts/*
+    sudo chmod u+x dpkg/altprobe_1.0-2/usr/local/bin/altprob*
     sudo cp -rp dpkg ~
-    sudo cp /usr/local/bin/altprobe ~/dpkg/altprobe_1.0-1/usr/local/bin/
-    sudo mkdir ~/dpkg/altprobe_1.0-1/usr/local/lib/
-    sudo cp /usr/local/lib/libhiredis.so.1.0.1-dev ~/dpkg/altprobe_1.0-1/usr/local/lib/
-    sudo cp /usr/local/lib/libactivemq-cpp.so.19.0.5 ~/dpkg/altprobe_1.0-1/usr/local/lib/
+    sudo cp /usr/local/bin/altprobe ~/dpkg/altprobe_1.0-2/usr/local/bin/
+    sudo mkdir ~/dpkg/altprobe_1.0-2/usr/local/lib/
+    sudo cp /usr/local/lib/libhiredis.so.1.0.1-dev ~/dpkg/altprobe_1.0-2/usr/local/lib/
+    sudo cp /usr/local/lib/libactivemq-cpp.so.19.0.5 ~/dpkg/altprobe_1.0-2/usr/local/lib/
     sudo chown -R root:root ~/dpkg
     cd ~/dpkg
-    sudo dpkg-deb --build altprobe_1.0-1
+    sudo dpkg-deb --build altprobe_1.0-2
 fi
 

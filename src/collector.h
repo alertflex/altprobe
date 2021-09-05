@@ -30,6 +30,7 @@
 #include "nids.h"
 #include "waf.h"
 #include "crs.h"
+#include "aws.h"
 #include "remlog.h"
 #include "remstat.h"
 #include "filters.h"
@@ -75,6 +76,7 @@ public:
     Nids* nids; 
     Waf* waf; 
     Crs* crs;
+    AwsWaf* aws_waf;
     RemLog* rem_log;
     RemStat* rem_stat;
     
@@ -87,8 +89,9 @@ public:
     
     string ref_id;
     
-    Collector(Crs* c, Hids* h, Nids* n, Waf* w, RemLog* rl, RemStat* rs) {
+    Collector(AwsWaf* a, Crs* c, Hids* h, Nids* n, Waf* w, RemLog* rl, RemStat* rs) {
     
+        aws_waf = a;
         crs = c;
         hids = h;
         nids = n;

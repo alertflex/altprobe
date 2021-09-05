@@ -23,7 +23,7 @@ collector:
   timer_start: 30  
   # sleep delay in milisecond (default 1000)
   timer_sleep:   1000  
-  # period reports generation of collector statistic in sec, 
+  # period reports generation for collector statistic in sec, should be not more than 15 min
   # if 0 then the functionality is off (default 300 - 5 min)
   timer_report: 300  
   # timer to backup/update of IDS configs and rules to controller, check status agents and containers
@@ -34,6 +34,9 @@ collector:
   remote_control: "false"
   # Allow update of configs, filters, rules between collector and controller
   remote_update: "true"
+  
+  # path to MaxMind Geo DB
+  geo_db: "/etc/altprobe/GeoLiteCity.dat"
   
   # Docker unix socket filename for active response - /var/run/docker.sock , if value is indef interface to socket disabled
   socket_docker: "indef"

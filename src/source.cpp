@@ -197,3 +197,62 @@ bool Source::SuppressAlert(string ip) {
     return false;
 }
 
+void Source::SetGeoBySrcIp(string ip) {
+    
+    GeoIPRecord *gir;
+    char **ret;
+    
+    if (maxmind_status) {
+        
+        try {
+            gir = GeoIP_record_by_name(gi, (const char *) ip.c_str());
+
+            if (gir != NULL) {
+                src_cc = string(gir->country_code);
+                src_latitude = to_string(gir->latitude);
+                src_longitude = to_string(gir->longitude);
+                GeoIPRecord_delete(gir);
+            
+            } else {
+                src_cc = "indef";
+                src_latitude = "0.0";
+                src_longitude = "0.0";
+            }
+        } catch (Exception& e) {
+            src_cc = "indef";
+            src_latitude = "0.0";
+            src_longitude = "0.0";
+        }
+    } 
+}
+
+void Source::SetGeoByDstIp(string ip) {
+    
+    GeoIPRecord *gir;
+    char **ret;
+    
+    if (maxmind_status) {
+        
+        try {
+            gir = GeoIP_record_by_name(gi, (const char *) ip.c_str());
+
+            if (gir != NULL) {
+                dst_cc = string(gir->country_code);
+                dst_latitude = to_string(gir->latitude);
+                dst_longitude = to_string(gir->longitude);
+                GeoIPRecord_delete(gir);
+            
+            } else {
+                dst_cc = "indef";
+                dst_latitude = "0.0";
+                dst_longitude = "0.0";
+            }
+            
+        } catch (Exception& e) {
+            dst_cc = "indef";
+            dst_latitude = "0.0";
+            dst_longitude = "0.0";
+        }
+    } 
+}
+

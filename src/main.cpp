@@ -225,7 +225,7 @@ void * thread_scanners(void *arg) {
 }
 
 
-Collector collr(&crs, &hids, &nids, &waf, &remlog, &remstat);
+Collector collr(&aws, &crs, &hids, &nids, &waf, &remlog, &remstat);
 pthread_t pthread_collr;
 
 void* exit_thread_collr_arg;

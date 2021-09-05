@@ -18,7 +18,7 @@ sudo amazon-linux-extras enable epel
 sudo yum clean metadata
 
 echo "*** install packages  ***"
-sudo yum -y install epel-release autoconf automake gcc make gcc-c++ git libtool libyaml libyaml-devel zlib zlib-devel boost-devel boost-thread libdaemon-devel openssl-libs openssl-devel apr-devel
+sudo yum -y install epel-release xz GeoIP GeoIP-devel autoconf automake gcc make gcc-c++ git libtool libyaml libyaml-devel zlib zlib-devel boost-devel boost-thread libdaemon-devel openssl-libs openssl-devel apr-devel
 
 if [[ $INSTALL_REDIS == yes ]]
 then
@@ -76,13 +76,17 @@ sudo sed -i "s/_suri_log/$SURI_LOG/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_log/$WAZUH_LOG/g" /etc/altprobe/altprobe.yaml
 
 sudo chmod go-rwx /etc/altprobe/altprobe.yaml
+sudo curl https://files-cdn.liferay.com/mirrors/geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.xz -o /etc/altprobe/GeoLiteCity.dat.xz
+sudo yum -y install xz
+sudo unxz /etc/altprobe/GeoLiteCity.dat.xz
+
+cd ..
 
 sudo ln -s /usr/local/bin/altprobe /usr/sbin/altprobe
 sudo ln -s /usr/local/bin/altprobe-restart /usr/sbin/altprobe-restart
 sudo ln -s /usr/local/bin/altprobe-start /usr/sbin/altprobe-start
 sudo ln -s /usr/local/bin/altprobe-status /usr/sbin/altprobe-status
 sudo ln -s /usr/local/bin/altprobe-stop /usr/sbin/altprobe-stop
-cd ..
 
 if [[ $INSTALL_FALCO == yes ]]
 then

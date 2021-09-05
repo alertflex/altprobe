@@ -30,19 +30,21 @@ public:
     
     IdsRecord ids_rec;
     int counter;
+    stringstream ss;
     
     //waiting alerts 
     std::list<IdsRecord> crs_alerts_list;
     std::list<IdsRecord> hids_alerts_list;
     std::list<IdsRecord> nids_alerts_list;
     std::list<IdsRecord> waf_alerts_list;
-       
+    std::list<IdsRecord> aws_waf_alerts_list;
+    
     //Alerts stat
     IdsStat crs_stat;
     IdsStat hids_stat;
     IdsStat nids_stat;
     IdsStat waf_stat;
-        
+       
     virtual int Open();
     virtual void Close();
     
@@ -67,6 +69,10 @@ public:
     void UpdateWafAlerts();
     void SendWafAlert(std::list<IdsRecord>::iterator r, int c);
     void ResetWafAlert();
+    
+    void UpdateAwsWafAlerts();
+    void SendAwsWafAlert(std::list<IdsRecord>::iterator r, int c);
+    void ResetAwsWafAlert();
     
 };
 

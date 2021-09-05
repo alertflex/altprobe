@@ -16,7 +16,6 @@
 #ifndef NIDS_H
 #define	NIDS_H
 
-
 #include "sinks.h"
 #include "ids.h"
 #include "netstat.h"
@@ -237,13 +236,19 @@ public:
     void CreateLogPayload(int r);
     void SendAlert (int s, GrayList* gl);
     int PushIdsRecord(GrayList* gl);
-                        
+                            
     void ClearRecords() {
         rec.Reset();
         net_stat.Reset();
         net_flow.Reset();
         ResetJsontree();
         jsonPayload.clear();
+        dst_cc = "indef";
+        dst_latitude = "0.0";
+        dst_longitude = "0.0";
+        src_cc = "indef";
+        src_latitude = "0.0";
+        src_longitude = "0.0";
     }
 };
 

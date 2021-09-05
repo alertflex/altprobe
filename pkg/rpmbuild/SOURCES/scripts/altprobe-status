@@ -7,5 +7,5 @@ altprobe status
 echo
 service suricata status
 echo
-/var/ossec/bin/ossec-control status
+/var/ossec/bin/wazuh-control status
 echo
