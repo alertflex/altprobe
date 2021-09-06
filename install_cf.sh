@@ -43,7 +43,7 @@ fi
 echo "*** Installation alertflex collector started***"
 sudo add-apt-repository ppa:maxmind/ppa -y
 sudo apt-get -y update
-sudo apt-get -y install xz-utils libgeoip1 libgeoip-dev geoip-bin libc6-dev build-essential libtool libdaemon-dev libboost-all-dev xz libyaml-0-2 libyaml-dev m4 pkg-config libssl-dev apt-transport-https apache2-dev libapr1-dev libaprutil1-dev
+sudo apt-get -y install libgeoip1 libgeoip-dev geoip-bin libc6-dev build-essential libtool libdaemon-dev libboost-all-dev libyaml-0-2 libyaml-dev m4 pkg-config libssl-dev apt-transport-https apache2-dev libapr1-dev libaprutil1-dev
 curl -L -O "https://github.com/alertflex/altprobe/releases/download/v1.0.2/altprobe_1.0-2.deb"
 sudo dpkg -i altprobe_1.0-2.deb
 sudo chmod go-rwx /etc/altprobe/altprobe.yaml
