@@ -205,8 +205,8 @@ then
 	sudo cp /usr/local/lib/libactivemq-cpp.so.20 /root/rpmbuild/SOURCES/
     sudo chown -R root:root /root/rpmbuild
     sudo rpmbuild -ba /root/rpmbuild/SPECS/altprobe-1.0.spec
-	sudo cp /root/rpmbuild/RPMS/x86_64/altprobe-1.0-1.amzn2.x86_64.rpm $INSTALL_PATH
-	sudo chown ec2-user:ec2-user $INSTALL_PATH/altprobe-1.0-1.amzn2.x86_64.rpm
+	sudo cp /root/rpmbuild/RPMS/x86_64/altprobe-1.0-2.amzn2.x86_64.rpm $INSTALL_PATH
+	sudo chown ec2-user:ec2-user $INSTALL_PATH/altprobe-1.0-2.amzn2.x86_64.rpm
 fi
 
 

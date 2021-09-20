@@ -58,6 +58,8 @@ public:
     static char dockerbench_result[OS_BUFFER_SIZE]; 
     static char kubebench_result[OS_BUFFER_SIZE]; 
     static char kubehunter_result[OS_BUFFER_SIZE]; 
+    static char nmap_result[OS_BUFFER_SIZE]; 
+    static char snyk_result[OS_BUFFER_SIZE]; 
     static char trivy_result[OS_BUFFER_SIZE];
     static char zap_result[OS_BUFFER_SIZE]; 
         

@@ -117,6 +117,8 @@ public:
     string dst_ip; 
     string src_country;
     string dst_country;
+    string src_hostname;
+    string dst_hostname;
     
     long bytes; 
     long sessions; 
@@ -130,6 +132,8 @@ public:
         dst_ip.clear();
         src_country.clear();
         dst_country.clear();
+        src_hostname.clear();
+        dst_hostname.clear();
         bytes = 0;
         sessions = 0;
     }

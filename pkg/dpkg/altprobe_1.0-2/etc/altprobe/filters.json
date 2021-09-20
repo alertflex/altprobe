@@ -4,6 +4,12 @@
     
     "home_net": [
     ],
+	
+	"agents": [
+    ],
+	
+	"hosts": [
+    ],
 
     "sources": { 
         "crs": {

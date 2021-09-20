@@ -71,11 +71,15 @@ scanners:
   dockerbench_result: "indef" 
   # Path to Kube-bench result file, for example /etc/altprobe/kubebench-report.json
   kubebench_result: "indef"
-  # Path to Kube-hunter result file
+  # Path to Kube-hunter result file, for example /root/reports/kube-hunter.json
   kubehunter_result: "indef"
-  # Path to Trivy result file
+  # Path to Nmap result file, for example /root/reports/nmap.xml
+  nmap_result: "indef"
+  # Path to Snyk result file, for example /root/reports/snyk.json
+  snyk_result: "indef"
+  # Path to Trivy result file, for example /root/reports/trivy.json
   trivy_result: "indef"
-  # Path to OWASP ZAP result file
+  # Path to OWASP ZAP result file, for example /root/reports/zap.json
   zap_result: "indef"
     
 sensors:
@@ -105,9 +109,9 @@ sensors:
   wazuh_rules: "/var/ossec/ruleset/"
   wazuh_local: "/var/ossec/etc/"
   
+  # For reading events from AWS WAF
+  aws_redis: "altprobe_aws"
+  
   # you can send events with type "MISC" to altprobe via Redis interface, 
   # it can be useful for implementation new events sources and testing
   misc_redis: "altprobe_misc"
-  
-  # For reading events from AWS WAF
-  aws_redis: "altprobe_aws"

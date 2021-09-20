@@ -23,6 +23,7 @@ int FiltersSingleton::status = 0;
 
 Filters FiltersSingleton::filter;
 std::vector<Agent> FiltersSingleton::agents_list;
+std::vector<Host> FiltersSingleton::hosts_list;
 
 int FiltersSingleton::GetFiltersConfig() {
     
@@ -65,33 +66,47 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
         
         filter.ref_id =  pt.get<string>("ref_id");
         filter.name =  pt.get<string>("filter_name");
-                
+        
+        
+        filter.home_nets.clear();
         bpt::ptree home_networks = pt.get_child("home_net");
         BOOST_FOREACH(bpt::ptree::value_type &h_nets, home_networks) {
             
             Network* net = new Network();
             
-            net->network = h_nets.second.get<string>("node");
             net->network = h_nets.second.get<string>("network");
             net->netmask = h_nets.second.get<string>("netmask");
+            net->node = h_nets.second.get<string>("node");
             net->alert_suppress = h_nets.second.get<bool>("alert_suppress");
             
             filter.home_nets.push_back(net);
         }
         
-        if (!wazuhServerStatus) {
+        
+        bpt::ptree agents = pt.get_child("agents");
+        BOOST_FOREACH(bpt::ptree::value_type &a_list, agents) {
+        
+            string id = a_list.second.get<string>("id");
+            string ip = a_list.second.get<string>("ip");
+            string name = a_list.second.get<string>("name");
             
-            bpt::ptree agents = pt.get_child("agents");
-            BOOST_FOREACH(bpt::ptree::value_type &a_list, agents) {
+            UpdateAgentsList(id, ip, name, "indef", "indef", "indef", "indef", "indef", "indef", "indef");
             
-                string id = a_list.second.get<string>("id");
-                string ip = a_list.second.get<string>("ip");
-                string name = a_list.second.get<string>("name");
-                
-                UpdateAgentsList(id, ip, name, "indef", "indef", "indef", "indef", "indef", "indef", "indef");
-                
-            }
         }
+        
+        
+        hosts_list.clear();
+        bpt::ptree hosts = pt.get_child("hosts");
+        BOOST_FOREACH(bpt::ptree::value_type &h_list, hosts) {
+        
+            string name = h_list.second.get<string>("name");
+            string ip = h_list.second.get<string>("ip");
+            string agent = h_list.second.get<string>("agent");
+            string ec2 = h_list.second.get<string>("ec2");
+            
+            hosts_list.push_back(Host(name, ip, agent, ec2));
+        }
+        
         
         bpt::ptree filters = pt.get_child("sources");
         
@@ -267,21 +282,6 @@ void FiltersSingleton::UpdateAgentsList(string id, string ip, string name, strin
     
 }
 
-string FiltersSingleton::GetAgentNameByIP(string ip) {
-    
-    boost::shared_lock<boost::shared_mutex> lock(agents_update);
-    
-    std::vector<Agent>::iterator i_ag, end_ag;
-    
-    for(i_ag = agents_list.begin(), end_ag = agents_list.end(); i_ag != end_ag; ++i_ag) {
-        if (i_ag->ip.compare(ip) == 0) {
-            return i_ag->name;
-        }
-    }
-    
-    return "indef";
-}
-
 string FiltersSingleton::GetAgentIdByName(string name) {
     
     std::vector<Agent>::iterator i_ag, end_ag;
@@ -289,6 +289,21 @@ string FiltersSingleton::GetAgentIdByName(string name) {
     for(i_ag = agents_list.begin(), end_ag = agents_list.end(); i_ag != end_ag; ++i_ag) {
         if (i_ag->name.compare(name) == 0) {
             return i_ag->id;
+        }
+    }
+    
+    return "";
+}
+
+
+string FiltersSingleton::GetHostnameByIP(string ip) {
+    
+    std::vector<Host>::iterator i_h, end_h;
+    
+    for(i_h = hosts_list.begin(), end_h = hosts_list.end(); i_h != end_h; ++i_h) {
+        
+        if (i_h->ip.compare(ip) == 0) {
+            return i_h->name;
         }
     }
     

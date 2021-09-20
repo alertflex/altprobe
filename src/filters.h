@@ -69,14 +69,36 @@ public:
     bool alert_suppress;
         
     void Reset() {
-        node.clear();
         network.clear();
         netmask.clear();
+        node.clear();
         alert_suppress = false;
     }
     
     Network () {
         Reset();
+    }
+};
+
+class Host {
+public:
+    string name;
+    string ip;
+    string agent;
+    string ec2;
+        
+    void Reset() {
+        name.clear();
+        ip.clear();
+        agent.clear();
+        ec2.clear();
+    }
+    
+    Host (string n, string i, string a, string e) {
+        name = n;
+        ip = i;
+        agent = a;
+        ec2 = e;
     }
 };
 
@@ -233,14 +255,16 @@ public:
     static Filters filter;
     
     static std::vector<Agent> agents_list;
+    
+    static std::vector<Host> hosts_list;
         
     static int GetFiltersConfig();
     static int ParsFiltersConfig(string f);
     
     static void UpdateAgentsList(string id, string ip, string name, string status, 
         string date, string version, string manager, string os_platf, string os_ver, string os_name);
-    static string GetAgentNameByIP(string ip);
     static string GetAgentIdByName(string name);
+    static string GetHostnameByIP(string ip);
             
     int GetStatus() { return status; }
 };

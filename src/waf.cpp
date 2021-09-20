@@ -475,13 +475,16 @@ int Waf::ParsJson() {
             
             net_flow.ref_id = fs.filter.ref_id;
             net_flow.sensor = rec.sensor;
-            net_flow.type = 2;
+            net_flow.dst_hostname = rec.ma.hostname;
             net_flow.dst_ip = rec.ma.hostname;
             net_flow.dst_country = "indef";
             net_flow.src_ip = rec.ma.client;
+            net_flow.src_hostname = "indef";
             net_flow.src_country = src_cc;
             net_flow.bytes = 0;
             net_flow.sessions = 1;
+            net_flow.type = 2;
+            
             q_netflow.push(net_flow);
         }
     

@@ -136,11 +136,11 @@ public:
     string iface;
     long flow_id;
         
-    string src_agent;
+    string src_hostname;
     string src_ip;
     unsigned int src_port;
     
-    string dst_agent;
+    string dst_hostname;
     string dst_ip;
     unsigned int dst_port;
     
@@ -166,10 +166,10 @@ public:
         time_stamp.clear();
         iface.clear();
         flow_id = 0;
-        src_agent.clear();
+        src_hostname.clear();
         src_ip.clear();
         src_port = 0;
-        dst_agent.clear();
+        dst_hostname.clear();
         dst_ip.clear();
         dst_port = 0;
         protocol.clear();

@@ -28,7 +28,7 @@ public:
     
     string ref_id;
     string sensor;
-    int type; // 1 - suri, 2 - modsec-waf, 3 - aws-waf)
+    int type; // 0 - suri, 1 - aws-fw, 2 - modsec-waf, 3 - aws-waf
    
     long bytes; 
     long sessions; 
@@ -58,6 +58,8 @@ public:
     string dst_ip;
     string src_country;
     string dst_country;
+    string src_hostname;
+    string dst_hostname;
         
                 
     void Reset() {
@@ -65,15 +67,19 @@ public:
         dst_ip.clear();
         src_country.clear();
         dst_country.clear();
+        src_hostname.clear();
+        dst_hostname.clear();
         ResetCounters();
     }
         
-    TopTalker (string ref, string sen, int t, unsigned long b, unsigned long ses, string srcip, string dstip, string scc, string dcc) 
+    TopTalker (string ref, string sen, int t, unsigned long b, unsigned long ses, string srcip, string dstip, string scc, string dcc, string sh, string dh) 
         : Counters(ref, sen, t, b, ses) {
         src_ip = srcip;
         dst_ip = dstip;
         src_country = scc;
         dst_country = dcc;
+        src_hostname = sh;
+        dst_hostname = dh;
     }
 };
 

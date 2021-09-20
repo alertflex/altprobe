@@ -344,13 +344,13 @@ int Nids::ParsJson (int output_type) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
-        SetGeoBySrcIp(rec.dst_ip);
-        rec.src_agent = GetAgent(rec.src_ip);
+        rec.src_hostname = GetHostname(rec.src_ip);
+        SetGeoBySrcIp(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
+        rec.dst_hostname = GetHostname(rec.dst_ip);
         SetGeoByDstIp(rec.dst_ip);
-        rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
         rec.protocol = pt.get<string>("proto","");
@@ -387,13 +387,13 @@ int Nids::ParsJson (int output_type) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
-        SetGeoBySrcIp(rec.dst_ip);
-        rec.src_agent = GetAgent(rec.src_ip);
+        rec.src_hostname = GetHostname(rec.src_ip);
+        SetGeoBySrcIp(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
+        rec.dst_hostname = GetHostname(rec.dst_ip);
         SetGeoByDstIp(rec.dst_ip);
-        rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
         rec.protocol = pt.get<string>("proto","");
@@ -433,13 +433,13 @@ int Nids::ParsJson (int output_type) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
-        SetGeoBySrcIp(rec.dst_ip);
-        rec.src_agent = GetAgent(rec.src_ip);
+        rec.src_hostname = GetHostname(rec.src_ip);
+        SetGeoBySrcIp(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
+        rec.dst_hostname = GetHostname(rec.dst_ip);
         SetGeoByDstIp(rec.dst_ip);
-        rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
         rec.protocol = pt.get<string>("proto","");
@@ -467,13 +467,13 @@ int Nids::ParsJson (int output_type) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
-        SetGeoBySrcIp(rec.dst_ip);
-        rec.src_agent = GetAgent(rec.src_ip);
+        rec.src_hostname = GetHostname(rec.src_ip);
+        SetGeoBySrcIp(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
+        rec.dst_hostname = GetHostname(rec.dst_ip);
         SetGeoByDstIp(rec.dst_ip);
-        rec.dst_agent = GetAgent(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
         rec.protocol = pt.get<string>("proto","");
@@ -492,14 +492,16 @@ int Nids::ParsJson (int output_type) {
             
             net_flow.ref_id = rec.ref_id;
             net_flow.sensor = rec.sensor;
-            net_flow.type = 1;
             net_flow.dst_ip = rec.dst_ip;
             net_flow.src_ip = rec.src_ip;
             net_flow.dst_country = dst_cc;
             net_flow.src_country = src_cc;
-            
+            net_flow.dst_hostname = rec.dst_hostname;
+            net_flow.src_hostname = rec.src_hostname;
             net_flow.bytes = rec.netflow.bytes;
             net_flow.sessions = 1;
+            if (is_aws_firewall) net_flow.type = 1;
+            else net_flow.type = 0;
             
             q_netflow.push(net_flow);
         }
@@ -519,13 +521,13 @@ int Nids::ParsJson (int output_type) {
         rec.flow_id = pt.get<long>("flow_id",0);
         
         rec.src_ip = pt.get<string>("src_ip","");
-        SetGeoBySrcIp(rec.dst_ip);
-        rec.src_agent = GetAgent(rec.src_ip);
+        rec.src_hostname = GetHostname(rec.src_ip);
+        SetGeoBySrcIp(rec.src_ip);
         rec.src_port = pt.get<int>("src_port",0);
         
         rec.dst_ip = pt.get<string>("dest_ip","");
         SetGeoByDstIp(rec.dst_ip);
-        rec.dst_agent = GetAgent(rec.dst_ip);
+        rec.dst_hostname = GetHostname(rec.dst_ip);
         rec.dst_port = pt.get<int>("dest_port",0);
         
         rec.protocol = pt.get<string>("proto","");
@@ -637,11 +639,11 @@ void Nids::CreateLogPayload(int r) {
             report += "\",\"dst_ip_geo_location\":\"";
             report += dst_latitude + "," + dst_longitude; 
             
-            report += "\",\"srcagent\":\"";
-            report += rec.src_agent;
+            report += "\",\"srchostname\":\"";
+            report += rec.src_hostname;
 			
-            report += "\",\"dstagent\":\"";
-            report += rec.dst_agent;
+            report += "\",\"dsthostname\":\"";
+            report += rec.dst_hostname;
 			
             report +=  "\",\"srcport\":";
             report +=  std::to_string(rec.src_port);
@@ -713,11 +715,11 @@ void Nids::CreateLogPayload(int r) {
             report += "\",\"dst_ip_geo_location\":\"";
             report += dst_latitude + "," + dst_longitude; 
             
-            report += "\",\"srcagent\":\"";
-            report += rec.src_agent;
+            report += "\",\"srchostname\":\"";
+            report += rec.src_hostname;
 			
-            report += "\",\"dstagent\":\"";
-            report += rec.dst_agent;
+            report += "\",\"dsthostname\":\"";
+            report += rec.dst_hostname;
 			
             report +=  "\",\"srcport\":";
             report +=  std::to_string(rec.src_port);
@@ -799,11 +801,11 @@ void Nids::CreateLogPayload(int r) {
             report += "\",\"dst_ip_geo_location\":\"";
             report += dst_latitude + "," + dst_longitude; 
             
-            report += "\",\"srcagent\":\"";
-            report += rec.src_agent;
+            report += "\",\"srchostname\":\"";
+            report += rec.src_hostname;
 			
-            report += "\",\"dstagent\":\"";
-            report += rec.dst_agent;
+            report += "\",\"dsthostname\":\"";
+            report += rec.dst_hostname;
 			
             report +=  "\",\"srcport\":";
             report +=  std::to_string(rec.src_port);
@@ -864,9 +866,9 @@ void Nids::CreateLogPayload(int r) {
             report += "\",\"src_ip_geo_location\":\"";
             report += src_latitude + "," + src_longitude; 
             
-            report += "\",\"srcagent\":\"";
-            report += rec.src_agent;
-            
+            report += "\",\"srchostname\":\"";
+            report += rec.src_hostname;
+			
             report += "\",\"srcport\":";
             report += std::to_string(rec.src_port);
 			
@@ -879,8 +881,8 @@ void Nids::CreateLogPayload(int r) {
             report += "\",\"dst_ip_geo_location\":\"";
             report += dst_latitude + "," + dst_longitude; 
             
-            report += "\",\"dstagent\":\"";
-            report += rec.dst_agent;
+            report += "\",\"dsthostname\":\"";
+            report += rec.dst_hostname;
 			
             report += "\",\"dstport\":";
             report += std::to_string(rec.dst_port);
@@ -932,8 +934,8 @@ void Nids::CreateLogPayload(int r) {
             report += "\",\"src_ip_geo_location\":\"";
             report += src_latitude + "," + src_longitude; 
             
-            report += "\",\"srcagent\":\"";
-            report += rec.src_agent;
+            report += "\",\"srchostname\":\"";
+            report += rec.src_hostname;
             
             report += "\",\"srcport\":";
             report += std::to_string(rec.src_port);
@@ -947,8 +949,8 @@ void Nids::CreateLogPayload(int r) {
             report += "\",\"dst_ip_geo_location\":\"";
             report += dst_latitude + "," + dst_longitude; 
             
-            report += "\",\"dstagent\":\"";
-            report += rec.dst_agent;
+            report += "\",\"dsthostname\":\"";
+            report += rec.dst_hostname;
 			
             report += "\",\"dstport\":";
             report += std::to_string(rec.dst_port);
@@ -1045,8 +1047,8 @@ void Nids::SendAlert(int s, GrayList* gl) {
     sk.alert.src_port = rec.src_port;
     sk.alert.dst_port = rec.dst_port;
     
-    sk.alert.src_hostname = rec.src_agent;
-    sk.alert.dst_hostname = rec.dst_agent;
+    sk.alert.src_hostname = rec.src_hostname;
+    sk.alert.dst_hostname = rec.dst_hostname;
     
     sk.alert.reg_value = "indef";
     sk.alert.file_name = "indef";
@@ -1103,7 +1105,7 @@ int Nids::PushIdsRecord(GrayList* gl) {
     
     ids_rec.agent = probe_id;
     ids_rec.ids = rec.sensor;
-    ids_rec.location = rec.dst_agent;
+    ids_rec.location = rec.dst_hostname;
                             
     if (gl != NULL) {
         

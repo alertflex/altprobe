@@ -56,6 +56,8 @@ char CollectorObject::dependencycheck_result[OS_BUFFER_SIZE];
 char CollectorObject::dockerbench_result[OS_BUFFER_SIZE]; 
 char CollectorObject::kubebench_result[OS_BUFFER_SIZE]; 
 char CollectorObject::kubehunter_result[OS_BUFFER_SIZE]; 
+char CollectorObject::nmap_result[OS_BUFFER_SIZE]; 
+char CollectorObject::snyk_result[OS_BUFFER_SIZE]; 
 char CollectorObject::trivy_result[OS_BUFFER_SIZE]; 
 char CollectorObject::zap_result[OS_BUFFER_SIZE]; 
 
@@ -360,6 +362,10 @@ int CollectorObject::GetConfig() {
     
     cy->addKey("zap_result");
     
+    cy->addKey("nmap_result");
+     
+    cy->addKey("snyk_result");
+    
     cy->addKey("project_id");
     
     cy->ParsConfig();
@@ -375,6 +381,10 @@ int CollectorObject::GetConfig() {
     strncpy(trivy_result, (char*) cy->getParameter("trivy_result").c_str(), sizeof(trivy_result));
     
     strncpy(zap_result, (char*) cy->getParameter("zap_result").c_str(), sizeof(zap_result));
+    
+    strncpy(nmap_result, (char*) cy->getParameter("nmap_result").c_str(), sizeof(nmap_result));
+    
+    strncpy(snyk_result, (char*) cy->getParameter("snyk_result").c_str(), sizeof(snyk_result));
     
     project_id = cy->getParameter("project_id");
     

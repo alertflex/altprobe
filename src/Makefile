@@ -155,6 +155,8 @@ install:
 	chmod u+x ./scripts/sonarqube.sh
 	chmod u+x ./scripts/trivy.sh
 	chmod u+x ./scripts/zap.sh
+	chmod u+x ./scripts/nmap.sh
+	chmod u+x ./scripts/snyk.sh
 	cp ./scripts/rulesup-falco.sh /etc/altprobe/scripts/
 	cp ./scripts/rulesup-modsec.sh /etc/altprobe/scripts/
 	cp ./scripts/rulesup-wazuh.sh /etc/altprobe/scripts/
@@ -170,6 +172,8 @@ install:
 	cp ./scripts/sonarqube.sh /etc/altprobe/scripts/
 	cp ./scripts/trivy.sh /etc/altprobe/scripts/
 	cp ./scripts/zap.sh /etc/altprobe/scripts/
+	cp ./scripts/nmap.sh /etc/altprobe/scripts/
+	cp ./scripts/snyk.sh /etc/altprobe/scripts/
 		
 update:
 	cp ./dist/Debug/GNU-Linux/collector /usr/local/bin/altprobe

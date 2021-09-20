@@ -143,34 +143,18 @@ void Source::SendAlertMultiple(int type) {
 }
 
 
-string Source::GetAgent(string ip) {
+string Source::GetHostname(string ip) {
     
     if (ip.compare("") == 0) return "indef";
     
-    string agent = fs.GetAgentNameByIP(ip);
+    string hostname = fs.GetHostnameByIP(ip);
     
-    if (agent.compare("") == 0) {
+    if (hostname.compare("") == 0) {
     
-        if (fs.filter.home_nets.size() != 0) {
-        
-            std::vector<Network*>::iterator i, end;
-            
-            for (i = fs.filter.home_nets.begin(), end = fs.filter.home_nets.end(); i != end; ++i) {
-            
-                string net = (*i)->network;
-                string mask = (*i)->netmask;
-            
-                if(IsIPInRange(ip, net, mask)) {
-                    string node = "node-" + (*i)->node;
-                    return node;
-                }
-            }
-        }
-    
-        return "ext-net";
+        hostname = "indef";
     }
     
-    return agent;
+    return hostname;
 }
 
 bool Source::SuppressAlert(string ip) {

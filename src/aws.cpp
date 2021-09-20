@@ -251,13 +251,16 @@ int AwsWaf::ParsJson() {
             
             net_flow.ref_id = fs.filter.ref_id;
             net_flow.sensor = rec.httpSourceId;
-            net_flow.type = 3;
             net_flow.dst_ip = rec.host;
             net_flow.dst_country = "indef";
+            net_flow.dst_hostname = rec.host;
             net_flow.src_ip = rec.clientIp;
             net_flow.src_country = src_cc;
+            net_flow.src_hostname = "indef";
             net_flow.bytes = 0;
             net_flow.sessions = 1;
+            net_flow.type = 3;
+            
             q_netflow.push(net_flow);
         }
         
@@ -458,7 +461,7 @@ void AwsWaf::SendAlert(int s, GrayList*  gl) {
     sk.alert.dst_port = 0;
     sk.alert.src_port = 0;
     sk.alert.dst_hostname = rec.host;
-    sk.alert.src_hostname = rec.clientIp;
+    sk.alert.src_hostname = "indef";
         
     sk.alert.reg_value = "indef";
     sk.alert.file_name = "indef";

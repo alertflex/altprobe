@@ -332,6 +332,54 @@ string Scanners::onTextMessage(const Message* message) {
         } 
     }
     
+    if(!actuator_profile.compare("nmap")) {
+        
+        if(!action.compare("scan")) {
+                    
+            try {
+                
+                string target = pt.get<string>("target.device.device_id","indef");
+                        
+                if(!target.compare("indef") && !container.compare("indef")) {
+    
+                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
+                } 
+            
+                string res =  ScanNmap(target, container, delay);
+                        
+                return res;
+            
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+            }
+                
+        } 
+    }
+    
+    if(!actuator_profile.compare("snyk")) {
+        
+        if(!action.compare("scan")) {
+                    
+            try {
+                
+                string target = pt.get<string>("target.device.device_id","indef");
+                        
+                if(!target.compare("indef") && !container.compare("indef")) {
+    
+                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
+                } 
+            
+                string res =  ScanSnyk(target, container, delay);
+                
+                return res;
+            
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+            }
+                
+        } 
+    }
+    
     if(!actuator_profile.compare("sonarqube")) {
         
         if(!action.compare("scan")) {
@@ -644,6 +692,124 @@ string Scanners::ScanKubeHunter(string target, string container, int delay) {
     
 }
 
+string Scanners::ScanNmap(string target, string container, int delay) {
+    
+    try {
+        
+        std::remove(nmap_result);
+        
+        if(!container.compare("indef")) {
+        
+            string cmd = "/etc/altprobe/scripts/nmap.sh " + target;
+        
+            system(cmd.c_str());
+        
+        } else {
+             
+            string res = DockerCommand(container, "start");
+        
+            if (res.compare("ok")) {
+                return "nmap container: error";
+            }
+            
+            int res_wait = 0;
+            int i = 0;
+            for (; i < delay && res_wait == 0; i++) {
+                sleep(1);
+                res_wait = DockerWait(container);
+            }
+            
+            if(res_wait == 0) return "nmap container: error";
+        }
+        
+        std::ifstream nmap_report;
+        
+        nmap_report.open(nmap_result,ios::binary);
+        strStream << nmap_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 9;
+        bd.target = target;
+        SendMessage(&bd);
+                        
+        nmap_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "nmap: error";
+    } 
+    
+    return "\"status\": 200 }";
+    
+}
+
+string Scanners::ScanSnyk(string target, string container, int delay) {
+    
+    try {
+        
+        std::remove(snyk_result);
+        
+        if(!container.compare("indef")) {
+        
+            string cmd = "/etc/altprobe/scripts/snyk.sh " + target;
+        
+            system(cmd.c_str());
+        
+        } else {
+             
+            string res = DockerCommand(container, "start");
+        
+            if (res.compare("ok")) {
+                return "snyk container: error";
+            }
+            
+            int res_wait = 0;
+            int i = 0;
+            for (; i < delay && res_wait == 0; i++) {
+                sleep(1);
+                res_wait = DockerWait(container);
+            }
+            
+            if(res_wait == 0) return "snyk container: error";
+        }
+        
+        std::ifstream snyk_report;
+        
+        snyk_report.open(snyk_result,ios::binary);
+        strStream << snyk_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 10;
+        bd.target = target;
+        SendMessage(&bd);
+        
+        snyk_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "snyk: error";
+    } 
+    
+    return "\"status\": 200 }";
+    
+}
+
 
 string Scanners::ScanSonarQube(string target, string container, int delay) {
     
@@ -725,7 +891,7 @@ string Scanners::ScanTrivy(string target, string container, int delay) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 9;
+        bd.event_type = 11;
         bd.target = target;
         SendMessage(&bd);
                 
@@ -784,7 +950,7 @@ string Scanners::ScanZap(string target, string container, int delay) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 10;
+        bd.event_type = 12;
         bd.target = target;
         SendMessage(&bd);
                 

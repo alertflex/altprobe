@@ -91,7 +91,7 @@ public:
     long ResetEventsCounter();
     void IncrementEventsCounter();
     void SendAlertMultiple(int type);
-    string GetAgent(string ip);
+    string GetHostname(string ip);
     bool SuppressAlert(string ip);
     void SetGeoBySrcIp(string ip);
     void SetGeoByDstIp(string ip);

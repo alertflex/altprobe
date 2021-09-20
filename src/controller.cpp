@@ -451,6 +451,9 @@ int Controller::SendMessage(Event* e) {
                 case 11 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     break;
+                case 12 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    break;
                 
                 default:
                     break;

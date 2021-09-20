@@ -324,7 +324,7 @@ void AggNet::UpdateTopTalkers(Netflow nf) {
         }
     }  
     
-    top_talkers.push_back(TopTalker(nf.ref_id, nf.sensor, nf.type, nf.bytes, nf.sessions, nf.src_ip, nf.dst_ip, nf.src_country, nf.dst_country));
+    top_talkers.push_back(TopTalker(nf.ref_id, nf.sensor, nf.type, nf.bytes, nf.sessions, nf.src_ip, nf.dst_ip, nf.src_country, nf.dst_country, nf.src_hostname, nf.dst_hostname));
 }
 
 bool SortTopBytes(TopTalker left, TopTalker right) {
@@ -358,8 +358,22 @@ void AggNet::FlushTopTalkers() {
             report += "{ \"ref_id\": \"";
             report += it_tlk->ref_id;
         
-            report += "\", \"sensor\": \"";
+            report += "\", \"sensor_name\": \"";
             report += it_tlk->sensor;
+            
+            string sensor_type;
+            switch (it_tlk->type) {
+                case 0: sensor_type = "suricata";
+                    break;
+                case 1: sensor_type = "aws-fw";
+                    break;
+                case 2: sensor_type = "modsec-waf";
+                    break;
+                case 3: sensor_type = "aws-waf";
+                    break;
+            }
+            report += "\", \"sensor_type\": \"";
+            report += sensor_type;
         
             report += "\", \"src_ip\": \"";
             report += it_tlk->src_ip;
@@ -372,6 +386,12 @@ void AggNet::FlushTopTalkers() {
         
             report += "\", \"dst_country\": \"";
             report += it_tlk->dst_country;
+            
+            report += "\", \"src_hostname\": \"";
+            report += it_tlk->src_hostname;
+        
+            report += "\", \"dst_hostname\": \"";
+            report += it_tlk->dst_hostname;
         
             report += "\", \"bytes\": ";
             report += std::to_string(it_tlk->bytes);
@@ -403,8 +423,22 @@ void AggNet::FlushTopTalkers() {
         report += "{ \"ref_id\": \"";
         report += it_tlk->ref_id;
         
-        report += "\", \"sensor\": \"";
+        report += "\", \"sensor_name\": \"";
         report += it_tlk->sensor;
+        
+        string sensor_type;
+        switch (it_tlk->type) {
+            case 0: sensor_type = "suricata";
+                break;
+            case 1: sensor_type = "aws-fw";
+                break;
+            case 2: sensor_type = "modsec-waf";
+                break;
+            case 3: sensor_type = "aws-waf";
+                break;
+        }
+        report += "\", \"sensor_type\": \"";
+        report += sensor_type;
         
         report += "\", \"src_ip\": \"";
         report += it_tlk->src_ip;
@@ -418,13 +452,19 @@ void AggNet::FlushTopTalkers() {
         report += "\", \"dst_country\": \"";
         report += it_tlk->dst_country;
         
+        report += "\", \"src_hostname\": \"";
+        report += it_tlk->src_hostname;
+        
+        report += "\", \"dst_hostname\": \"";
+        report += it_tlk->dst_hostname;
+        
         report += "\", \"sessions\": ";
         report += std::to_string(it_tlk->sessions);
         
         report += ", \"time_of_survey\": \"";
         report += GetNodeTime();
         report += "\" } ,";
-       
+        
     }
     
     report.resize(report.size() - 1);
