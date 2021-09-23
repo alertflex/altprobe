@@ -1,8 +1,8 @@
 The repository includes Alertflex collector and installation scripts for security sensors (Suricata NIDS, Wazuh HIDS, Falco CRS). 
 
-Alertflex is a SecOps (Security Operations) solution that helps assemble processes and technology to deal with modern IT security risks, threats, and issues.
+Alertflex is a SecOps ( Cyber Security Operations) solution that helps assemble processes and technology to deal with modern IT security risks and threats.
 
-The solution works as a Security Event Manager and Orchestrator for a distributed grid of security sensors and scanners in Hybrid IT infrastructure (on-premises and cloud-based). Alertflex can monitor different types of platforms Windows, Linux, Docker, Kubernetes, AWS and provides a single user interface for more than 20 products. Integrated products are mostly free open-source software in the areas of IDS and DevSecOps, that can be unified by Alertflex into one or several projects.
+The solution works as a Security Event Manager and Orchestrator for a distributed grid of security sensors and scanners in Hybrid IT infrastructure (on-premises and cloud-based). Alertflex can monitor different types of platforms Windows, Linux, Docker, AWS and provides a single user interface for more than 20 products. Integrated products are mostly free open-source software in the areas of IDS and DevSecOps, that can be unified by Alertflex into one or several projects.
 
 ![](https://github.com/alertflex/altprobe/blob/master/img/hld-arch.png)
 
