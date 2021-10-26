@@ -26,7 +26,7 @@
         "hids": {
             "log": true,
             "severity": {
-                "threshold": 1,
+                "threshold": 0,
                 "level0": 2,
                 "level1": 4,
                 "level2": 10
@@ -37,7 +37,7 @@
         "nids": {
             "log": true,
             "severity": {
-                "threshold": 1,
+                "threshold": 0,
                 "level0": 0,
                 "level1": 1,
                 "level2": 2
@@ -48,10 +48,10 @@
         "waf": {
             "log": true,
             "severity": {
-                "threshold": 1,
-                "level0": 5,
-                "level1": 4,
-                "level2": 3
+                "threshold": 0,
+                "level0": 0,
+                "level1": 1,
+                "level2": 2
             },
             "gray_list": [ 
             ]
