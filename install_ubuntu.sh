@@ -185,7 +185,7 @@ then
     sudo cp -rp dpkg ~
     sudo cp /usr/local/bin/altprobe ~/dpkg/altprobe_1.0-2/usr/local/bin/
     sudo mkdir ~/dpkg/altprobe_1.0-2/usr/local/lib/
-    sudo cp /usr/local/lib/libhiredis.so.1.0.1-dev ~/dpkg/altprobe_1.0-2/usr/local/lib/
+    sudo cp /usr/local/lib/libhiredis.so.1.0.3-dev ~/dpkg/altprobe_1.0-2/usr/local/lib/
     sudo cp /usr/local/lib/libactivemq-cpp.so.19.0.5 ~/dpkg/altprobe_1.0-2/usr/local/lib/
     sudo chown -R root:root ~/dpkg
     cd ~/dpkg
