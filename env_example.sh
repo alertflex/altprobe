@@ -9,6 +9,7 @@
 export INSTALL_PATH=/home/alertflex/altprobe
 export PROJECT_ID=0ca7e3b3-1a0c-407a-957d-aab039165217
 export NODE_ID=node01
+# use hostname for probe
 export PROBE_ID=collr01
 
 # controller

@@ -5,6 +5,7 @@
 # Collector version 0.9
 collector:
   node: "_node_id"
+  # use hostname for probe
   probe: "_probe_id"
   
   # Time difference between collector and controller's (hours)
