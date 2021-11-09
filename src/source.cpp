@@ -147,6 +147,8 @@ string Source::GetHostname(string ip) {
     
     if (ip.compare("") == 0) return "indef";
     
+    if (IsValidIp(ip) == -1) return "indef";
+    
     string hostname = fs.GetHostnameByIP(ip);
     
     if (hostname.compare("") == 0) {
@@ -156,6 +158,7 @@ string Source::GetHostname(string ip) {
     
     return hostname;
 }
+
 
 bool Source::SuppressAlert(string ip) {
     

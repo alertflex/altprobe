@@ -265,6 +265,7 @@ public:
         string date, string version, string manager, string os_platf, string os_ver, string os_name);
     static string GetAgentIdByName(string name);
     static string GetHostnameByIP(string ip);
+    static string GetHostnameByAgentname(string agent);
             
     int GetStatus() { return status; }
 };

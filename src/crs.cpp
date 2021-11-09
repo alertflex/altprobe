@@ -567,8 +567,8 @@ void Crs::SendAlert(int s, GrayList*  gl) {
     
     sk.alert.src_ip = rec.fields.fd_cip;
     sk.alert.dst_ip = rec.fields.fd_sip;
-    sk.alert.src_hostname = rec.fields.fd_cip_name;
-    sk.alert.dst_hostname = rec.fields.fd_sip_name;
+    sk.alert.src_hostname = GetHostname(rec.fields.fd_cip);
+    sk.alert.dst_hostname = GetHostname(rec.fields.fd_sip);
     sk.alert.src_port = rec.fields.fd_cport;
     sk.alert.dst_port = rec.fields.fd_sport;
     

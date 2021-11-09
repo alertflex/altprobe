@@ -406,7 +406,9 @@ void AwsWaf::SendAlert(int s, GrayList*  gl) {
     sk.alert.info = "httpMethod: " + rec.httpMethod + ", uri: " + rec.uri;
     sk.alert.status = "processed";
     sk.alert.user_name = "indef";
+    
     sk.alert.agent_name = rec.httpSourceName;
+    
     sk.alert.filter = fs.filter.name;
     sk.alert.action = rec.action;
    
@@ -460,8 +462,9 @@ void AwsWaf::SendAlert(int s, GrayList*  gl) {
     sk.alert.src_ip = rec.clientIp;
     sk.alert.dst_port = 0;
     sk.alert.src_port = 0;
-    sk.alert.dst_hostname = rec.host;
-    sk.alert.src_hostname = "indef";
+    
+    sk.alert.dst_hostname = GetHostname(rec.host);
+    sk.alert.src_hostname = GetHostname(rec.clientIp);
         
     sk.alert.reg_value = "indef";
     sk.alert.file_name = "indef";

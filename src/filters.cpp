@@ -311,4 +311,22 @@ string FiltersSingleton::GetHostnameByIP(string ip) {
 }
 
 
+string FiltersSingleton::GetHostnameByAgentname(string agent) {
+    
+    if (agent.compare("") == 0) return "indef";
+    
+    if (agent.compare("indef") == 0) return "indef";
+    
+    std::vector<Host>::iterator i_h, end_h;
+    
+    for(i_h = hosts_list.begin(), end_h = hosts_list.end(); i_h != end_h; ++i_h) {
+        
+        if (i_h->agent.compare(agent) == 0) {
+            return i_h->name;
+        }
+    }
+    
+    return "indef";
+}
+
 

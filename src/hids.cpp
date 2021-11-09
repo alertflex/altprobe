@@ -695,8 +695,8 @@ void Hids::SendAlert(int s, GrayList*  gl) {
         
     sk.alert.src_ip = rec.srcip;
     sk.alert.dst_ip = rec.dstip;
-    sk.alert.src_hostname = "indef";
-    sk.alert.dst_hostname = "indef";
+    sk.alert.src_hostname = GetHostname(rec.srcip);
+    sk.alert.dst_hostname = fs.GetHostnameByAgentname(rec.agent);
     sk.alert.src_port = rec.srcport;
     sk.alert.dst_port = rec.dstport;
         
