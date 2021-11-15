@@ -328,10 +328,6 @@ void Collector::UpdateAgents(void) {
             
             for (i = fs.agents_list.begin(), end = fs.agents_list.end(); i != end; ++i) {
                 
-                GetAgents("/syscollector/" + i->id + "/packages");
-                if (!agents_payload.empty()) PushAgents("packages_list", i->id);
-                
-                
                 GetAgents("/sca/" + i->id);
                 if (!agents_payload.empty()) {
                     
