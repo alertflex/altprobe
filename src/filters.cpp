@@ -23,6 +23,7 @@ int FiltersSingleton::status = 0;
 
 Filters FiltersSingleton::filter;
 std::vector<Agent> FiltersSingleton::agents_list;
+std::vector<Group> FiltersSingleton::groups_list;
 std::vector<Host> FiltersSingleton::hosts_list;
 
 int FiltersSingleton::GetFiltersConfig() {
@@ -90,7 +91,18 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             string ip = a_list.second.get<string>("ip");
             string name = a_list.second.get<string>("name");
             
-            UpdateAgentsList(id, ip, name, "indef", "indef", "indef", "indef", "indef", "indef", "indef");
+            UpdateAgentsList(id, ip, name);
+            
+        }
+        
+        
+        bpt::ptree groups = pt.get_child("groups");
+        BOOST_FOREACH(bpt::ptree::value_type &g_list, groups) {
+        
+            string name = g_list.second.get<string>("name");
+            string ref = g_list.second.get<string>("ref");
+                        
+            UpdateGroupsListRef(name, ref);
             
         }
         
@@ -251,7 +263,7 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
 boost::shared_mutex FiltersSingleton::agents_update;
 
 void FiltersSingleton::UpdateAgentsList(string id, string ip, string name, string status, 
-    string date, string version, string manager, string os_platf, string os_ver, string os_name) {
+    string date, string version, string manager, string os_platf, string os_ver, string os_name, string group) {
     
     boost::unique_lock<boost::shared_mutex> lock(agents_update);
     
@@ -274,11 +286,72 @@ void FiltersSingleton::UpdateAgentsList(string id, string ip, string name, strin
             i->os_version = os_ver;
             i->version = version;
             i->status = status;
+            i->group = group;
             return;
         }
     }
     
-    agents_list.push_back(Agent(id, ip, name, status, date, version, manager, os_platf, os_ver, os_name));
+    agents_list.push_back(Agent(id, ip, name, status, date, version, manager, os_platf, os_ver, os_name, group));
+    
+}
+
+void FiltersSingleton::UpdateAgentsList(string id, string ip, string name) {
+    
+    boost::unique_lock<boost::shared_mutex> lock(agents_update);
+    
+    std::vector<Agent>::iterator i, end;   
+    
+    string real_ip = "";
+    
+    if (IsValidIp(ip) == -1 || ip.compare("127.0.0.1") == 0) real_ip = "indef";
+    else real_ip = ip;
+    
+    
+    for (i = agents_list.begin(), end = agents_list.end(); i != end; ++i) {
+        if (i->name.compare(name) == 0) {
+            i->id = id;
+            i->ip = real_ip;
+            return;
+        }
+    }
+    
+    agents_list.push_back(Agent(id, real_ip, name, "indef", "indef", "indef", "indef", "indef", "indef", "indef", "indef"));
+    
+}
+
+boost::shared_mutex FiltersSingleton::groups_update;
+
+void FiltersSingleton::UpdateGroupsListCount(string name, int count) {
+    
+    boost::unique_lock<boost::shared_mutex> lock(groups_update);
+    
+    std::vector<Group>::iterator i, end;   
+    
+    for (i = groups_list.begin(), end = groups_list.end(); i != end; ++i) {
+        if (i->name.compare(name) == 0) {
+            i->count = count;
+            return;
+        }
+    }
+    
+    groups_list.push_back(Group(name, count, "indef"));
+    
+}
+
+void FiltersSingleton::UpdateGroupsListRef(string name, string ref) {
+    
+    boost::unique_lock<boost::shared_mutex> lock(groups_update);
+    
+    std::vector<Group>::iterator i, end;   
+    
+    for (i = groups_list.begin(), end = groups_list.end(); i != end; ++i) {
+        if (i->name.compare(name) == 0) {
+            i->ref = ref;
+            return;
+        }
+    }
+    
+    groups_list.push_back(Group(name, 0, ref));
     
 }
 
@@ -289,6 +362,19 @@ string FiltersSingleton::GetAgentIdByName(string name) {
     for(i_ag = agents_list.begin(), end_ag = agents_list.end(); i_ag != end_ag; ++i_ag) {
         if (i_ag->name.compare(name) == 0) {
             return i_ag->id;
+        }
+    }
+    
+    return "";
+}
+
+string FiltersSingleton::GetNameByAgentId(string id) {
+    
+    std::vector<Agent>::iterator i_ag, end_ag;
+    
+    for(i_ag = agents_list.begin(), end_ag = agents_list.end(); i_ag != end_ag; ++i_ag) {
+        if (i_ag->id.compare(id) == 0) {
+            return i_ag->name;
         }
     }
     
@@ -323,6 +409,34 @@ string FiltersSingleton::GetHostnameByAgentname(string agent) {
         
         if (i_h->agent.compare(agent) == 0) {
             return i_h->name;
+        }
+    }
+    
+    return "indef";
+}
+
+string FiltersSingleton::GetRefByGroupName(string name) {
+    
+    std::vector<Group>::iterator i_g, end_g;
+    
+    for(i_g = groups_list.begin(), end_g = groups_list.end(); i_g != end_g; ++i_g) {
+        if (i_g->name.compare(name) == 0) {
+            
+            return i_g->ref;
+        }
+    }
+    
+    return "indef";
+}
+
+string FiltersSingleton::GetRefByAgentName(string name) {
+    
+    std::vector<Agent>::iterator i_a, end_a;
+        
+    for(i_a = agents_list.begin(), end_a = agents_list.end(); i_a != end_a; ++i_a) {
+        if (i_a->name.compare(name) == 0) {
+            
+            return GetRefByGroupName(i_a->group);
         }
     }
     

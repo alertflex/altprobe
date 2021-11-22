@@ -111,11 +111,6 @@ public:
     
     void StatJob();
     
-    void UpdateRulesConfigs();
-    void UpdateFalcoConfig();
-    void UpdateSuriConfig();
-    void UpdateOssecConfig();
-    void UpdateModsecConfig();
     void UpdateFalcoRules();
     void UpdateSuriRules();
     void UpdateOssecRules();
@@ -124,6 +119,7 @@ public:
     bool GetToken();
     void GetAgents(const string& url_request);
     void ParsAgents();
+    void ParsGroups ();
     void UpdateAgents();
     void PushAgents(const string& type, const string& agent);
     

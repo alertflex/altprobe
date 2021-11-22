@@ -129,7 +129,7 @@ public:
     
     //OSSEC record
     OssecRecord rec;
-    
+        
     bpt::ptree pt, pt1, groups_cats, pcidss_cats, gdpr_cats, hipaa_cats, nist_cats, mitre_cats, vul_ref;
     stringstream ss, ss1;
     
@@ -172,7 +172,7 @@ public:
     int PushRecord(GrayList* gl);
         
     void ClearRecords() {
-	rec.Reset();
+        rec.Reset();
         jsonPayload.clear();
         ResetJsontree();
     }

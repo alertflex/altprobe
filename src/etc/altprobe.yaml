@@ -5,8 +5,7 @@
 # Collector version 0.9
 collector:
   node: "_node_id"
-  # use hostname for probe
-  probe: "_probe_id"
+  host: "_host_id"
   
   # Time difference between collector and controller's (hours)
   time_delta: 0
@@ -88,31 +87,27 @@ sensors:
   # If xxx_log is "indef" redis interface will be used. In case xxx_redis is "indef", module is not in use
   falco_log: "_falco_log"
   falco_redis: "altprobe_crs" 
-  falco_conf: "/etc/falco/"
   falco_rules: "/etc/falco/rules.d/"
   falco_local: "/etc/falco/rules.available/"
   
   modsec_log: "_modsec_log"
   modsec_redis: "altprobe_waf" 
-  modsec_conf: "/etc/nginx/modsec/"
   modsec_rules: "/usr/local/owasp-modsecurity-crs-3.0.2/"
   modsec_local: "/etc/nginx/modsec/rules/"
   
   suri_log: "_suri_log"
   suri_redis: "altprobe_nids" 
-  suri_conf: "/etc/suricata/"
   suri_rules: "/var/lib/suricata/rules/"
   suri_local: "/etc/suricata/rules/"
   
   wazuh_log: "_wazuh_log"
   wazuh_redis: "altprobe_hids" 
-  wazuh_conf: "/var/ossec/etc/"
   wazuh_rules: "/var/ossec/ruleset/"
   wazuh_local: "/var/ossec/etc/"
   
-  # For reading events from AWS WAF
-  aws_redis: "altprobe_aws"
-  
-  # you can send events with type "MISC" to altprobe via Redis interface, 
-  # it can be useful for implementation new events sources and testing
+  # For reading events from altprobe's custom sources only Redis interface can be used. 
+  # in case value "indef", module is not in use
   misc_redis: "altprobe_misc"
+
+  # For reading events from AWS WAF
+  awswaf_redis: "altprobe_awswaf"

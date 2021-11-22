@@ -80,7 +80,7 @@ void * thread_misc(void *arg) {
     pthread_exit(0);
 }
 
-AwsWaf aws("aws_redis");
+AwsWaf aws("awswaf_redis");
 pthread_t pthread_aws;
 
 void* exit_thread_aws_arg;

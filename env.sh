@@ -9,8 +9,7 @@
 export INSTALL_PATH=/home/xxxxx/altprobe
 export PROJECT_ID=xxxxx
 export NODE_ID=xxxxx
-# use hostname for probe
-export PROBE_ID=xxxxx
+export HOST_ID=xxxxx
 
 # controller
 # url: "ssl://host:61617" or "tcp://host:61616"

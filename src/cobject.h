@@ -67,25 +67,21 @@ public:
     
     static char falco_log[OS_BUFFER_SIZE]; 
     static int falcolog_status;
-    static char falco_conf[OS_BUFFER_SIZE]; 
     static char falco_local[OS_BUFFER_SIZE];
     static char falco_rules[OS_BUFFER_SIZE];
     
     static char modsec_log[OS_BUFFER_SIZE];
     static int modseclog_status;
-    static char modsec_conf[OS_BUFFER_SIZE];
     static char modsec_local[OS_BUFFER_SIZE];
     static char modsec_rules[OS_BUFFER_SIZE];
     
     static char suri_log[OS_BUFFER_SIZE]; 
     static int surilog_status;
-    static char suri_conf[OS_BUFFER_SIZE]; 
     static char suri_local[OS_BUFFER_SIZE];
     static char suri_rules[OS_BUFFER_SIZE];
     
     static char wazuh_log[OS_BUFFER_SIZE];
     static int wazuhlog_status;
-    static char wazuh_conf[OS_BUFFER_SIZE];
     static char wazuh_local[OS_BUFFER_SIZE];
     static char wazuh_rules[OS_BUFFER_SIZE];
     

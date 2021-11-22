@@ -46,8 +46,9 @@ public:
     string os_platform;
     string os_version;
     string os_name;
+    string group;
     
-    Agent(string i, string a, string n, string s, string d, string v, string m, string op, string ov, string on) {
+    Agent(string i, string a, string n, string s, string d, string v, string m, string op, string ov, string on, string gr) {
         id = i;
         ip = a;
         name = n;
@@ -58,6 +59,22 @@ public:
         os_platform = op;
         os_version = ov;
         os_name = on;
+        group = gr;
+    }
+};
+
+class Group {
+    
+public:
+    string name;
+    int count;
+    string ref;
+    
+            
+    Group(string n, int c, string r) {
+        name = n;
+        count = c;
+        ref = r;
     }
 };
 
@@ -250,11 +267,14 @@ public:
     // FS states
     static int status;
     static boost::shared_mutex agents_update;
+    static boost::shared_mutex groups_update;
     static boost::shared_mutex filters_update;
     
     static Filters filter;
     
     static std::vector<Agent> agents_list;
+    
+    static std::vector<Group> groups_list;
     
     static std::vector<Host> hosts_list;
         
@@ -262,10 +282,16 @@ public:
     static int ParsFiltersConfig(string f);
     
     static void UpdateAgentsList(string id, string ip, string name, string status, 
-        string date, string version, string manager, string os_platf, string os_ver, string os_name);
+        string date, string version, string manager, string os_platf, string os_ver, string os_name, string group);
+    static void UpdateAgentsList(string id, string ip, string name);
+    static void UpdateGroupsListCount(string name, int count);
+    static void UpdateGroupsListRef(string name, string ref);
     static string GetAgentIdByName(string name);
+    static string GetNameByAgentId(string id);
     static string GetHostnameByIP(string ip);
     static string GetHostnameByAgentname(string agent);
+    static string GetRefByAgentName(string name);
+    static string GetRefByGroupName(string name);
             
     int GetStatus() { return status; }
 };

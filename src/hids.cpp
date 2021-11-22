@@ -297,18 +297,25 @@ int Hids::ParsJson() {
     } 
     
     rec.sensor = probe_id + ".hids";
-    
+    rec.ref_id = fs.filter.ref_id;
+    rec.agent = pt.get<string>("agent.name","indef");
+            
+    if (rec.agent.compare("indef") != 0) {
+        string tmp_ref = fs.GetRefByAgentName(rec.agent);
+        if (tmp_ref.compare("indef") != 0) rec.ref_id = tmp_ref;
+    }
+        
     string loc = pt.get<string>("location","");
     
     if (loc.compare("vulnerability-detector") == 0 ) {
-    
+        
         report = "{ \"type\": \"vulnerability\", \"data\": ";
         
         report += "{ \"ref_id\": \"";
-        report += fs.filter.ref_id;
+        report += rec.ref_id;
             
         report += "\", \"agent\": \"";
-        report += pt.get<string>("agent.id","");
+        report += rec.agent;
         
         report += "\", \"cve\": \"";
         report += pt.get<string>("data.vulnerability.cve","indef");
@@ -357,8 +364,6 @@ int Hids::ParsJson() {
         ResetStreams();
         return 0;
     }
-    
-    rec.agent = pt.get<string>("agent.name","indef");
     
     rec.timestamp = pt.get<string>("timestamp","indef");
     
@@ -511,9 +516,6 @@ int Hids::ParsJson() {
 
 void Hids::CreateLog() {
     
-    
-       
-    
     report = "{\"version\": \"1.1\",\"node\":\"";
     report += node_id;
     
@@ -539,7 +541,7 @@ void Hids::CreateLog() {
     report += rec.sensor;
     
     report +=  "\",\"project_id\":\"";
-    report +=  fs.filter.ref_id;
+    report +=  rec.ref_id;
 			
     report +=  "\",\"event_time\":\"";
     report +=  rec.timestamp;
@@ -601,8 +603,8 @@ int Hids::PushRecord(GrayList* gl) {
     
     // create new IDS record
     IdsRecord ids_rec;
-            
-    ids_rec.ref_id = fs.filter.ref_id;
+    
+    ids_rec.ref_id = rec.ref_id;
     
     ids_rec.event = std::to_string(rec.rule.id);
             
@@ -669,7 +671,7 @@ int Hids::PushRecord(GrayList* gl) {
 
 void Hids::SendAlert(int s, GrayList*  gl) {
     
-    sk.alert.ref_id =  fs.filter.ref_id;
+    sk.alert.ref_id = rec.ref_id;
     sk.alert.sensor_id = rec.sensor;
     
     sk.alert.alert_severity = s;

@@ -497,7 +497,7 @@ string Scanners::ScanDependencyCheck(string target, string container, int delay)
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 5;
+        bd.event_type = 4;
         bd.target = target;
         SendMessage(&bd);
                 
@@ -559,7 +559,7 @@ string Scanners::ScanDockerBench(string container, int delay) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 6;
+        bd.event_type = 5;
         SendMessage(&bd);
                 
         docker_report.close();
@@ -617,7 +617,7 @@ string Scanners::ScanKubeBench(string container, int delay) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 7;
+        bd.event_type = 6;
         SendMessage(&bd);
                 
         kubebench_report.close();
@@ -675,7 +675,7 @@ string Scanners::ScanKubeHunter(string target, string container, int delay) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 8;
+        bd.event_type = 7;
         bd.target = target;
         SendMessage(&bd);
                 
@@ -734,7 +734,7 @@ string Scanners::ScanNmap(string target, string container, int delay) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 9;
+        bd.event_type = 8;
         bd.target = target;
         SendMessage(&bd);
                         
@@ -793,7 +793,7 @@ string Scanners::ScanSnyk(string target, string container, int delay) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 10;
+        bd.event_type = 9;
         bd.target = target;
         SendMessage(&bd);
         
@@ -891,7 +891,7 @@ string Scanners::ScanTrivy(string target, string container, int delay) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 11;
+        bd.event_type = 10;
         bd.target = target;
         SendMessage(&bd);
                 
@@ -950,7 +950,7 @@ string Scanners::ScanZap(string target, string container, int delay) {
         
         bd.data = comp.str();
         bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 12;
+        bd.event_type = 11;
         bd.target = target;
         SendMessage(&bd);
                 

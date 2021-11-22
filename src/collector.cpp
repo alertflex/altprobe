@@ -184,14 +184,6 @@ int Collector::Go(void) {
                     }
                 }
                 
-                UpdateFalcoConfig();
-                
-                UpdateModsecConfig();
-                
-                UpdateSuriConfig();
-                
-                UpdateOssecConfig();
-                
                 UpdateFalcoRules();
                 
                 UpdateModsecRules();
@@ -312,6 +304,9 @@ void Collector::UpdateAgents(void) {
                 report += "\", \"os_name\": \"";
                 report += i->os_name;
                 
+                report += "\", \"group\": \"";
+                report += i->group;
+                
                 report += "\", \"time_of_survey\": \"";
                 report +=  GetNodeTime();
                 
@@ -358,7 +353,7 @@ void Collector::UpdateAgents(void) {
                                 url += "?result=failed";
             
                                 GetAgents(url);
-                                if (!agents_payload.empty()) PushAgents("sca",i->id);
+                                if (!agents_payload.empty()) PushAgents("sca", i->name);
                             }
                         }
                     } catch (const std::exception & ex) {
@@ -369,6 +364,46 @@ void Collector::UpdateAgents(void) {
                     pt.clear();
                 }
             }
+        }
+    }
+    
+    agents_payload.clear();
+    
+    GetAgents("/groups");
+    
+    if (!agents_payload.empty()) {
+        
+        ParsGroups();
+        
+        if (fs.groups_list.size() != 0) {
+    
+            std::vector<Group>::iterator i, end;
+            int j = 0;
+            
+            string report = "{ \"type\": \"groups_list\", \"data\" : [ ";
+            
+            for (i = fs.groups_list.begin(), end = fs.groups_list.end(); i != end; ++i) {
+                
+                report += "{ \"name\": \"";
+                report += i->name;
+        
+                report += "\", \"count\": ";
+                report += std::to_string(i->count);
+                
+                report += ", \"time_of_survey\": \"";
+                report +=  GetNodeTime();
+                
+                report += "\" }";
+        
+                if ( j < fs.groups_list.size() - 1) {
+                    report += ", "; 
+                    j++;
+                }
+            }
+            
+            report += " ] }";
+            
+            q_stats_collr.push(report);
         }
     }
 }
@@ -492,8 +527,20 @@ void Collector::ParsAgents () {
                 string os_platform = agents.second.get<string>("os.platform", "indef");
                 string os_version = agents.second.get<string>("os.version", "indef");
                 string os_name = agents.second.get<string>("os.name", "indef"); 
-        
-                fs.UpdateAgentsList(id, ip, name, status, dateAdd, version, manager_host, os_platform, os_version, os_name);
+                
+                string group = "indef";
+                
+                if(agents.second.get_child_optional("group") != boost::none) {
+
+                    bpt::ptree pt_group = agents.second.get_child("group");
+                    
+                    BOOST_FOREACH(bpt::ptree::value_type &g, pt_group) {
+                        assert(g.first.empty()); // array elements have no names
+                        if (g.second.data().compare("default") != 0) group = g.second.data();
+                    }
+                }
+                
+                fs.UpdateAgentsList(id, ip, name, status, dateAdd, version, manager_host, os_platform, os_version, os_name, group);
             }
         }
         
@@ -502,6 +549,41 @@ void Collector::ParsAgents () {
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
         SysLog("Collector::ParsAgents");
+    } 
+}
+
+void Collector::ParsGroups () {
+    
+    stringstream ss(agents_payload);
+    
+    try {
+    
+        bpt::ptree pt;
+        bpt::read_json(ss, pt);
+        
+        int err =  pt.get<int>("error");
+        
+        if(err == 0) {
+    
+            int totalItems =  pt.get<int>("data.total_affected_items");
+    
+            bpt::ptree groups_ptree = pt.get_child("data.affected_items");
+    
+            BOOST_FOREACH(bpt::ptree::value_type &groups, groups_ptree) {
+            
+                string name = groups.second.get<string>("name");
+                
+                int count = groups.second.get<int>("count");
+                                               
+                fs.UpdateGroupsListCount(name, count);
+            }
+        }
+        
+        pt.clear();
+    
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        SysLog("Collector::ParsGroups");
     } 
 }
 
@@ -731,175 +813,6 @@ void Collector::ParsContainers() {
     containers_payload.clear();
 }
 
-void Collector::UpdateFalcoConfig() {
-    
-    if (!strcmp (falco_conf, "indef")) return; 
-    
-    try {
-        
-        std::ifstream falco_config;
-        string dir_path(falco_conf);
-        string file_name(FALCO_CONFIG);
-        string file_path = dir_path + file_name;
-        //SysLog((char*) file_path.c_str());
-        falco_config.open(file_path,ios::binary);
-        strStream << falco_config.rdbuf();
-        
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
-        
-        //string s = std::to_string(rep_size);
-        //string output = "logs compressed = " + s;
-        // SysLog((char*) strStream.str().c_str());
-        
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.sensor_type = 0;
-        bd.event_type = 3;
-        sk.SendMessage(&bd);
-        
-        falco_config.close();
-        boost::iostreams::close(in);
-        ResetStreams();
-        
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-        SysLog("Collector::UpdateFalcoConfig");
-    } 
-    
-    return;
-    
-}
-
-void Collector::UpdateModsecConfig() {
-    
-    if (modseclog_status == 0) return;
-    
-    if (!strcmp (modsec_conf, "indef")) return; 
-    
-    try {
-        
-        std::ifstream modsec_config;
-        string dir_path(modsec_conf);
-        string file_name(MODSEC_CONFIG);
-        string file_path = dir_path + file_name;
-        //SysLog((char*) file_path.c_str());
-        modsec_config.open(file_path,ios::binary);
-        strStream << modsec_config.rdbuf();
-        
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
-        
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.sensor_type = 1;
-        bd.event_type = 3;
-        sk.SendMessage(&bd);
-        
-        modsec_config.close();
-        boost::iostreams::close(in);
-        ResetStreams();
-        
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-        SysLog("Collector::UpdateModsecConfig");
-    } 
-    
-    return;
-}
-
-void Collector::UpdateSuriConfig() {
-    
-    if (surilog_status == 0) return;
-    
-    if (!strcmp (suri_conf, "indef")) return; 
-    
-    try {
-        
-        std::ifstream suri_config;
-        string dir_path(suri_conf);
-        string file_name(SURI_CONFIG);
-        string file_path = dir_path + file_name;
-        //SysLog((char*) file_path.c_str());
-        suri_config.open(file_path,ios::binary);
-        strStream << suri_config.rdbuf();
-        
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
-        
-        //string s = std::to_string(rep_size);
-        //string output = "logs compressed = " + s;
-        // SysLog((char*) strStream.str().c_str());
-        
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.sensor_type = 2;
-        bd.event_type = 3;
-        sk.SendMessage(&bd);
-        
-        suri_config.close();
-        boost::iostreams::close(in);
-        ResetStreams();
-        
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-        SysLog("Collector::UpdateSuriConfig");
-    } 
-    
-    return;
-}
-
-void Collector::UpdateOssecConfig() {
-    
-    if (wazuhlog_status == 0) return;
-    
-    if (!strcmp (wazuh_conf, "indef")) return; 
-    
-    try {
-        
-        std::ifstream ossec_config;
-        string dir_path(wazuh_conf);
-        string file_name(OSSEC_CONFIG);
-        string file_path = dir_path + file_name;
-        
-        ossec_config.open(file_path,ios::binary);
-        strStream << ossec_config.rdbuf();
-            
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
-        boost::iostreams::close(in);
-
-        //string s = std::to_string(rep_size);
-        //string output = "logs compressed = " + s;
-        // SysLog((char*) strStream.str().c_str());
-        
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.sensor_type = 3;
-        bd.event_type = 3;
-        sk.SendMessage(&bd);
-        
-        ossec_config.close();
-        boost::iostreams::close(in);
-        ResetStreams();
-        
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-        SysLog("Collector::UpdateOssecConfig");
-    } 
-    
-    return;
-}
-
-
 void Collector::UpdateFalcoRules() {
     
     if (falcolog_status == 0) return;
@@ -934,7 +847,7 @@ void Collector::UpdateFalcoRules() {
                 rd.name_rule = fileName;
                 rd.ref_id = fs.filter.ref_id;
                 rd.sensor_type = 0;
-                rd.event_type = 4;
+                rd.event_type = 3;
                 sk.SendMessage(&rd);
         
                 falco_rules.close();
@@ -988,7 +901,7 @@ void Collector::UpdateModsecRules() {
                 rd.name_rule = fileName;
                 rd.ref_id = fs.filter.ref_id;
                 rd.sensor_type = 1;
-                rd.event_type = 4;
+                rd.event_type = 3;
                 sk.SendMessage(&rd);
         
                 modsec_rules.close();
@@ -1039,7 +952,7 @@ void Collector::UpdateSuriRules() {
                 rd.name_rule = fileName;
                 rd.ref_id = fs.filter.ref_id;
                 rd.sensor_type = 2;
-                rd.event_type = 4;
+                rd.event_type = 3;
                 sk.SendMessage(&rd);
         
                 suri_rules.close();
@@ -1093,7 +1006,7 @@ void Collector::UpdateOssecRules() {
                 rd.name_rule = fileName;
                 rd.ref_id = fs.filter.ref_id;
                 rd.sensor_type = 3;
-                rd.event_type = 4;
+                rd.event_type = 3;
                 sk.SendMessage(&rd);
         
                 ossec_rules.close();

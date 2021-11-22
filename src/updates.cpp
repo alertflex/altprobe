@@ -258,65 +258,6 @@ string Updates::onBytesMessage(const Message* message) {
         return "\"status\": 200 }"; 
     }
     
-    if (!content_type.compare("config") && ruStatus) {
-        
-        try { 
-        
-            int sensor_type = message->getIntProperty("sensor_type");
-            bool sensor_restart = message->getBooleanProperty("sensor_restart");
-            
-            switch (sensor_type) {
-                case 0 : {
-                    string dir_path(falco_conf);
-                    string file_name(FALCO_CONFIG);
-                    string file_path = dir_path + file_name;
-                    ostream.open(file_path, ios_base::trunc);
-                    cmd = "/etc/altprobe/scripts/restart-falco.sh";
-                    }
-                    break;
-                case 1 : {
-                    string dir_path(modsec_conf);
-                    string file_name(MODSEC_CONFIG);
-                    string file_path = dir_path + file_name;
-                    ostream.open(file_path, ios_base::trunc);
-                    cmd = "/etc/altprobe/scripts/restart-modsec.sh";
-                    }
-                    break;
-                case 2 : {
-                    string dir_path(suri_conf);
-                    string file_name(SURI_CONFIG);
-                    string file_path = dir_path + file_name;
-                    ostream.open(file_path, ios_base::trunc);
-                    cmd = "/etc/altprobe/scripts/restart-suri.sh";
-                    }
-                    break;
-                case 3 : {
-                    string dir_path(wazuh_conf);
-                    string file_name(OSSEC_CONFIG);
-                    string file_path = dir_path + file_name;
-                    ostream.open(file_path, ios_base::trunc);
-                    cmd = "/etc/altprobe/scripts/restart-wazuh.sh";
-                    }
-                    break;
-                
-                
-                default:
-                    return "\"status\": 400 }";
-            }
-                
-            ostream << decomp.str();
-            ostream.close();
-            
-            if (rcStatus && sensor_restart) system(cmd.c_str());
-        
-        } catch (std::ostream::failure e) {
-            SysLog("Exception for local filters file.");
-            return "\"status\": 400 }"; 
-        }
-        
-        return "\"status\": 200 }";
-    }
-    
     if (!content_type.compare("rules") && ruStatus) {
         
         try { 

@@ -64,25 +64,21 @@ char CollectorObject::zap_result[OS_BUFFER_SIZE];
 // sensors
 char CollectorObject::falco_log[OS_BUFFER_SIZE]; 
 int CollectorObject::falcolog_status = 1;
-char CollectorObject::falco_conf[OS_BUFFER_SIZE];
 char CollectorObject::falco_local[OS_BUFFER_SIZE];
 char CollectorObject::falco_rules[OS_BUFFER_SIZE];
 
 char CollectorObject::modsec_log[OS_BUFFER_SIZE];
 int CollectorObject::modseclog_status = 1;
-char CollectorObject::modsec_conf[OS_BUFFER_SIZE];
 char CollectorObject::modsec_local[OS_BUFFER_SIZE];
 char CollectorObject::modsec_rules[OS_BUFFER_SIZE];
 
 char CollectorObject::suri_log[OS_BUFFER_SIZE]; 
 int CollectorObject::surilog_status = 1;
-char CollectorObject::suri_conf[OS_BUFFER_SIZE];
 char CollectorObject::suri_local[OS_BUFFER_SIZE];
 char CollectorObject::suri_rules[OS_BUFFER_SIZE];
 
 char CollectorObject::wazuh_log[OS_BUFFER_SIZE];
 int CollectorObject::wazuhlog_status = 1;
-char CollectorObject::wazuh_conf[OS_BUFFER_SIZE];
 char CollectorObject::wazuh_local[OS_BUFFER_SIZE];
 char CollectorObject::wazuh_rules[OS_BUFFER_SIZE];
 
@@ -104,7 +100,7 @@ int CollectorObject::GetConfig() {
     ConfigYaml* cy = new ConfigYaml( "collector");
     
     cy->addKey("node");
-    cy->addKey("probe");
+    cy->addKey("host");
     
     cy->addKey("geo_db");
     
@@ -136,10 +132,10 @@ int CollectorObject::GetConfig() {
         return 0;
     }
     
-    probe_id = cy->getParameter("probe");
+    probe_id = cy->getParameter("host");
     
     if (!probe_id.compare("")) {
-        SysLog("config file error: parameter probe id");
+        SysLog("config file error: parameter host");
         return 0;
     }
     
@@ -287,11 +283,6 @@ int CollectorObject::GetConfig() {
     
     if (ruStatus) {
         
-        strncpy(falco_conf, (char*) cy->getParameter("falco_conf").c_str(), sizeof(falco_conf));
-        if (!strcmp (falco_conf, "indef")) { 
-            SysLog("config file notification: falco_conf update disabled");
-        }
-    
         strncpy(falco_local, (char*) cy->getParameter("falco_local").c_str(), sizeof(falco_local));
         if (!strcmp (falco_local, "indef")) { 
             SysLog("config file notification: falco_local update disabled");
@@ -302,11 +293,6 @@ int CollectorObject::GetConfig() {
             SysLog("config file notification: falco_rules update disabled");
         }
          
-        strncpy(modsec_conf, (char*) cy->getParameter("modsec_conf").c_str(), sizeof(modsec_conf));
-        if (!strcmp (modsec_conf, "indef")) { 
-            SysLog("config file notification: modsec_conf update disabled");
-        }
-    
         strncpy(modsec_local, (char*) cy->getParameter("modsec_local").c_str(), sizeof(modsec_local));
         if (!strcmp (modsec_local, "indef")) { 
             SysLog("config file notification:  modsec_local update disabled");
@@ -317,24 +303,14 @@ int CollectorObject::GetConfig() {
             SysLog("config file notification: modsec_rules disabled");
         }
     
-        strncpy(suri_conf, (char*) cy->getParameter("suri_conf").c_str(), sizeof(suri_conf));
-        if (!strcmp (suri_conf, "indef")) { 
-            SysLog("config file notification: suri_conf update disabled");
-        }
-    
         strncpy(suri_local, (char*) cy->getParameter("suri_local").c_str(), sizeof(suri_local));
         if (!strcmp (suri_local, "indef")) { 
             SysLog("config file notification: suri_local update disabled");
         }
         
-         strncpy(suri_rules, (char*) cy->getParameter("suri_rules").c_str(), sizeof(suri_rules));
+        strncpy(suri_rules, (char*) cy->getParameter("suri_rules").c_str(), sizeof(suri_rules));
         if (!strcmp (suri_rules, "indef")) { 
             SysLog("config file notification: suri_rules update disabled");
-        }
-    
-        strncpy(wazuh_conf, (char*) cy->getParameter("wazuh_conf").c_str(), sizeof(wazuh_conf));
-        if (!strcmp (wazuh_conf, "indef")) { 
-            SysLog("config file notification: wazuh_conf update disabled");
         }
     
         strncpy(wazuh_local, (char*) cy->getParameter("wazuh_local").c_str(), sizeof(wazuh_local));
