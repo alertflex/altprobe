@@ -1,8 +1,8 @@
-The repository includes Alertflex collector and installation scripts for security sensors (Suricata NIDS, Wazuh HIDS, Falco CRS). 
+The functionality of the Alertflex project is close to Gartner's definition of Cloud Workload Protection Platform (CWPP), although it can be considered as XDR, SOAR, or maybe as a security posture service. Alertflex integrates mostly AWS cybersecurity services and free open source projects, more than 30 at this moment.
 
-Alertflex is a SecOps ( IT Security Operations) solution that helps assemble processes and technology to deal with modern IT security risks and threats.
+The project was tested for small size organizations and can keep a stream of security events 50 EPS and high (required 8 Gb minimum memory for central node). If you want to try Alertflex for a large organization with a high load of events and many running automation playbooks, it should be possible as well, due to Alertflex software components can be split into microservices.
 
-The solution works as a Security Event Manager and Orchestrator for a distributed grid of security sensors and scanners in Hybrid IT infrastructure (on-premises and cloud-based). Alertflex can monitor different types of platforms Windows, Linux, Docker, AWS and provides a single user interface for more than 30 products. Integrated products are mostly free open-source software in the areas of IDS and DevSecOps, that can be unified by Alertflex into one or several projects.
+This repository includes Alertflex collector source code and installation script for collector and security sensors (Falco CRS, Suricata NIDS, Wazuh HIDS). 
 
 ![](https://github.com/alertflex/altprobe/blob/master/img/hld-arch.png)
 
