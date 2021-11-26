@@ -2,9 +2,9 @@ The functionality of the Alertflex project is close to Gartner's definition of C
 
 The project was tested for small size organizations and can keep a stream of security events 50 EPS and high (required 8 Gb minimum memory for central node). If you want to try Alertflex for a large organization with a high load of events and many running automation playbooks, it should be possible as well, due to Alertflex software components can be split into microservices.
 
-This repository includes Alertflex collector source code and installation script for collector and security sensors (Falco CRS, Suricata NIDS, Wazuh HIDS). 
-
 ![](https://github.com/alertflex/altprobe/blob/master/img/hld-arch.png)
+
+This repository includes Alertflex collector source code and installation script for collector and security sensors (Falco CRS, Suricata NIDS, Wazuh HIDS).
 
 For more information, please see [solution description](https://alertflex.github.io/solution.html) and [project documentation](https://alertflex.github.io/doc/index.html)
 
