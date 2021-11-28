@@ -2,9 +2,9 @@ The functionality of the Alertflex project can be considered as XDR, also it is 
 
 ![](https://github.com/alertflex/cnode/blob/master/img/hld-arch.png)
 
-The project was tested for small size organizations and can keep a stream of security events 50 EPS and high (required 8 Gb minimum memory for central node). If you want to try Alertflex for a large organization with a high load of events and many running automation playbooks, it should be possible as well, due to Alertflex software components can be split into microservices.
-
 ![](https://github.com/alertflex/cnode/blob/master/img/slides.gif)
+
+The project was tested for small size organizations and can keep a stream of security events 50 EPS and high (required 8 Gb minimum memory for central node). If you want to try Alertflex for a large organization with a high load of events and many running automation playbooks, it should be possible as well, due to Alertflex software components can be split into microservices.
 
 This repository includes Alertflex collector source code and installation script for collector and security sensors (Falco CRS, Suricata NIDS, Wazuh HIDS).
 
