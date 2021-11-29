@@ -1,6 +1,6 @@
 The functionality of the Alertflex project can be considered as XDR, also it is close to the definitions of Cloud Workload Protection Platform (CWPP), Cloud Security Posture Management (CSPM), and SOAR. Alertflex integrates mostly free open source projects (more than 30 at this moment) and AWS cloud cybersecurity services.
 
-![](https://github.com/alertflex/cnode/blob/master/img/hld-arch.png)
+![](https://github.com/alertflex/cnode/blob/master/img/hld-arch.jpg)
 
 ![](https://github.com/alertflex/cnode/blob/master/img/slides.gif)
 
