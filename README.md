@@ -1,8 +1,8 @@
 The functionality of the Alertflex project can be considered as XDR, also it is close to the definitions of Cloud Workload Protection Platform (CWPP), Cloud Security Posture Management (CSPM), and SOAR. Alertflex integrates mostly free open source projects (more than 30 at this moment) and AWS cloud cybersecurity services.
 
-![](https://github.com/alertflex/cnode/blob/master/img/hld-arch.jpg)
+![](https://github.com/alertflex/altprobe/blob/master/img/hld-arch.jpg)
 
-![](https://github.com/alertflex/cnode/blob/master/img/slides.gif)
+![](https://github.com/alertflex/altprobe/blob/master/img/slides.gif)
 
 The project was tested for small size organizations and can keep a stream of security events 50 EPS and high (required 8 Gb minimum memory for central node). If you want to try Alertflex for a large organization with a high load of events and many running automation playbooks, it should be possible as well, due to Alertflex software components can be split into microservices.
 
