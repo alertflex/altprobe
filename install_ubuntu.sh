@@ -19,7 +19,7 @@ make autoconf autoconf-archive m4 pkg-config git libssl-dev apt-transport-https 
 sudo ldconfig
 
 echo "*** installation hiredis***"
-git clone git://github.com/redis/hiredis.git
+git clone https://github.com/redis/hiredis.git
 cd hiredis
 sudo make
 sudo make install
