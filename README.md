@@ -4,4 +4,3 @@ For more information, please see [project documentation](https://alertflex.githu
 
 Please [open an issue on GitHub](https://github.com/alertflex/altprobe/issues), if you'd like to report a bug or request a feature. 
 Have a question or need tech support, please send an email to address: info@alertflex.org
-and join the community via [Alertflex Discord server](https://discord.gg/wDSz7rDMWv)
