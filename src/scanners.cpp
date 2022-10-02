@@ -103,7 +103,7 @@ int Scanners::Open(int mode, pid_t pid) {
             }
             
             // Create the MessageConsumer
-            string strConsumer("jms/altprobe/" + ref_id + "/" + node_id + "/" + probe_id + "/scanners");
+            string strConsumer("jms/altprobe/" + node_id + "/" + host_name + "/scanners");
             
             Destination* consumerCommand = session->createQueue(strConsumer);
             
@@ -220,9 +220,14 @@ void Scanners::Close() {
 
 string Scanners::onTextMessage(const Message* message) {
     
+    if(!rcStatus) return "\"status\": 400, \"status_text\": \"remote control function is disabled\" }";
+    
     const TextMessage* textMessage = dynamic_cast<const TextMessage*> (message);
                 
     string c2json = textMessage->getText();
+    
+    //************************************************************************************************************************
+    SysLog((char*) c2json.c_str());
     
     stringstream c2json_ss(c2json);
     bpt::ptree pt;
@@ -230,7 +235,7 @@ string Scanners::onTextMessage(const Message* message) {
     
     string ref_id =  pt.get<string>("actuator.x-alertflex.tenant","indef");
     
-    if(ref_id.compare(fs.filter.ref_id) || !ref_id.compare("indef") || !rcStatus) {
+    if(ref_id.compare(fs.filter.ref_id) && ref_id.compare(project_id)) {
         
         return "\"status\": 400, \"status_text\": \"wrong tenant\" }"; 
     }
@@ -356,30 +361,6 @@ string Scanners::onTextMessage(const Message* message) {
         } 
     }
     
-    if(!actuator_profile.compare("snyk")) {
-        
-        if(!action.compare("scan")) {
-                    
-            try {
-                
-                string target = pt.get<string>("target.device.device_id","indef");
-                        
-                if(!target.compare("indef") && !container.compare("indef")) {
-    
-                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
-                } 
-            
-                string res =  ScanSnyk(target, container, delay);
-                
-                return res;
-            
-            } catch (const std::exception & ex) {
-                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
-            }
-                
-        } 
-    }
-    
     if(!actuator_profile.compare("sonarqube")) {
         
         if(!action.compare("scan")) {
@@ -395,6 +376,30 @@ string Scanners::onTextMessage(const Message* message) {
             
                 string res =  ScanSonarQube(target, container, delay);
                         
+                return res;
+            
+            } catch (const std::exception & ex) {
+                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+            }
+                
+        } 
+    }
+    
+    if(!actuator_profile.compare("tfsec")) {
+        
+        if(!action.compare("scan")) {
+                    
+            try {
+                
+                string target = pt.get<string>("target.device.device_id","indef");
+                        
+                if(!target.compare("indef") && !container.compare("indef")) {
+    
+                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
+                } 
+            
+                string res =  ScanTfsec(target, container, delay);
+                
                 return res;
             
             } catch (const std::exception & ex) {
@@ -751,66 +756,6 @@ string Scanners::ScanNmap(string target, string container, int delay) {
     
 }
 
-string Scanners::ScanSnyk(string target, string container, int delay) {
-    
-    try {
-        
-        std::remove(snyk_result);
-        
-        if(!container.compare("indef")) {
-        
-            string cmd = "/etc/altprobe/scripts/snyk.sh " + target;
-        
-            system(cmd.c_str());
-        
-        } else {
-             
-            string res = DockerCommand(container, "start");
-        
-            if (res.compare("ok")) {
-                return "snyk container: error";
-            }
-            
-            int res_wait = 0;
-            int i = 0;
-            for (; i < delay && res_wait == 0; i++) {
-                sleep(1);
-                res_wait = DockerWait(container);
-            }
-            
-            if(res_wait == 0) return "snyk container: error";
-        }
-        
-        std::ifstream snyk_report;
-        
-        snyk_report.open(snyk_result,ios::binary);
-        strStream << snyk_report.rdbuf();
-        
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
-        
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 9;
-        bd.target = target;
-        SendMessage(&bd);
-        
-        snyk_report.close();
-        boost::iostreams::close(in);
-        ResetStreams();
-        
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-        return "snyk: error";
-    } 
-    
-    return "\"status\": 200 }";
-    
-}
-
-
 string Scanners::ScanSonarQube(string target, string container, int delay) {
     
     try {
@@ -842,6 +787,65 @@ string Scanners::ScanSonarQube(string target, string container, int delay) {
     } catch (const std::exception & ex) {
         SysLog((char*) ex.what());
         return "sonarqube: error";
+    } 
+    
+    return "\"status\": 200 }";
+    
+}
+
+string Scanners::ScanTfsec(string target, string container, int delay) {
+    
+    try {
+        
+        std::remove(tfsec_result);
+        
+        if(!container.compare("indef")) {
+        
+            string cmd = "/etc/altprobe/scripts/tfsec.sh " + target;
+        
+            system(cmd.c_str());
+        
+        } else {
+             
+            string res = DockerCommand(container, "start");
+        
+            if (res.compare("ok")) {
+                return "tfsec container: error";
+            }
+            
+            int res_wait = 0;
+            int i = 0;
+            for (; i < delay && res_wait == 0; i++) {
+                sleep(1);
+                res_wait = DockerWait(container);
+            }
+            
+            if(res_wait == 0) return "tfsec container: error";
+        }
+        
+        std::ifstream tfsec_report;
+        
+        tfsec_report.open(tfsec_result,ios::binary);
+        strStream << tfsec_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        bd.data = comp.str();
+        bd.ref_id = fs.filter.ref_id;
+        bd.event_type = 9;
+        bd.target = target;
+        SendMessage(&bd);
+        
+        tfsec_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "tfsec: error";
     } 
     
     return "\"status\": 200 }";

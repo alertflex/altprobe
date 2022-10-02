@@ -21,7 +21,7 @@
 
 #include "aggalerts.h"
 #include "aggnet.h"
-#include "aws.h"
+#include "awswaf.h"
 #include "hids.h"
 #include "crs.h"
 #include "misc.h"
@@ -29,7 +29,7 @@
 #include "collector.h"
 #include "remlog.h"
 #include "remstat.h"
-#include "updates.h"
+#include "sensors.h"
 #include "scanners.h"
 
 AggAlerts aggalerts;
@@ -80,17 +80,17 @@ void * thread_misc(void *arg) {
     pthread_exit(0);
 }
 
-AwsWaf aws("awswaf_redis");
-pthread_t pthread_aws;
+AwsWaf awswaf("awswaf_redis");
+pthread_t pthread_awswaf;
 
-void* exit_thread_aws_arg;
-void exit_thread_aws(void* arg) { aws.Close(); }
+void* exit_thread_awswaf_arg;
+void exit_thread_awswaf(void* arg) { awswaf.Close(); }
 
-void * thread_aws(void *arg) {
+void * thread_awswaf(void *arg) {
     
-    pthread_cleanup_push(exit_thread_aws, exit_thread_aws_arg);
+    pthread_cleanup_push(exit_thread_awswaf, exit_thread_awswaf_arg);
     
-    while (aws.Go()) { }
+    while (awswaf.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
@@ -192,17 +192,17 @@ void * thread_remstat(void *arg) {
     pthread_exit(0);
 }
 
-Updates updates;
-pthread_t pthread_updates;
+Sensors sensors;
+pthread_t pthread_sensors;
 
-void* exit_thread_updates_arg;
-void exit_thread_updates(void* arg) { updates.Close(); }
+void* exit_thread_sensors_arg;
+void exit_thread_sensors(void* arg) { sensors.Close(); }
 
-void * thread_updates(void *arg) {
+void * thread_sensors(void *arg) {
     
-    pthread_cleanup_push(exit_thread_updates, exit_thread_updates_arg);
+    pthread_cleanup_push(exit_thread_sensors, exit_thread_sensors_arg);
     
-    while (updates.Go()) { }
+    while (sensors.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
@@ -225,7 +225,7 @@ void * thread_scanners(void *arg) {
 }
 
 
-Collector collr(&aws, &crs, &hids, &nids, &waf, &remlog, &remstat);
+Collector collr(&awswaf, &crs, &hids, &nids, &waf, &remlog, &remstat);
 pthread_t pthread_collr;
 
 void* exit_thread_collr_arg;
@@ -252,8 +252,8 @@ int LoadConfig(void)
     //misc
     if (!misc.GetConfig()) return 0;
     
-    //aws
-    if (!aws.GetConfig()) return 0;
+    //awswaf
+    if (!awswaf.GetConfig()) return 0;
     
     //hids
     if (!hids.GetConfig()) return 0;
@@ -273,8 +273,8 @@ int LoadConfig(void)
     //remstat
     if (!remstat.GetConfig()) return 0;
     
-    // updates
-    if (!updates.GetConfig()) return 0;
+    // sensors
+    if (!sensors.GetConfig()) return 0;
     
     // scanners
     if (!scanners.GetConfig()) return 0;
@@ -332,17 +332,17 @@ int InitThreads(int mode, pid_t pid)
             
     }
     
-     //aws
-    if (aws.GetStatus() > 0) {
+     //awswaf
+    if (awswaf.GetStatus() > 0) {
         
-        if (aws.Open() > 0) {
+        if (awswaf.Open() > 0) {
             
-            if (pthread_create(&pthread_aws, NULL, thread_aws, &arg)) {
-                daemon_log(LOG_ERR,"error creating thread for AWS module");
+            if (pthread_create(&pthread_awswaf, NULL, thread_awswaf, &arg)) {
+                daemon_log(LOG_ERR,"error creating thread for AWS-WAF module");
                 return 0;
             }
             
-        } else daemon_log(LOG_ERR,"AWS source is disabled");
+        } else daemon_log(LOG_ERR,"AWS-WAF source is disabled");
             
     }
     
@@ -426,16 +426,16 @@ int InitThreads(int mode, pid_t pid)
         } 
     }
     
-    // updates
-    if (updates.GetStatus() > 0) {
+    // sensors
+    if (sensors.GetStatus() > 0) {
         
-        if (!updates.Open(mode,pid)) {
-            daemon_log(LOG_ERR,"cannot open Update module");
+        if (!sensors.Open(mode,pid)) {
+            daemon_log(LOG_ERR,"cannot open Sensors module");
             return 0;
         }
         
-        if (pthread_create(&pthread_updates, NULL, thread_updates, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for Update module");
+        if (pthread_create(&pthread_sensors, NULL, thread_sensors, &arg)) {
+            daemon_log(LOG_ERR,"error creating thread for Sensors module");
             return 0;
         } 
     }
@@ -491,10 +491,10 @@ void KillsThreads(void)
         pthread_join(pthread_misc, NULL);
     }
     
-    //aws
-    if (aws.GetStatus()) {
-        pthread_cancel(pthread_aws);
-        pthread_join(pthread_aws, NULL);
+    //awswaf
+    if (awswaf.GetStatus()) {
+        pthread_cancel(pthread_awswaf);
+        pthread_join(pthread_awswaf, NULL);
     }
     
     //hids
@@ -533,10 +533,10 @@ void KillsThreads(void)
         pthread_join(pthread_remstat, NULL); 
     }
     
-    // updates
-    if (updates.GetStatus()) {
-        pthread_cancel(pthread_updates);
-        pthread_join(pthread_updates, NULL); 
+    // sensors
+    if (sensors.GetStatus()) {
+        pthread_cancel(pthread_sensors);
+        pthread_join(pthread_sensors, NULL); 
     }
     
     // scanners

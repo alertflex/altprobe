@@ -60,8 +60,8 @@ public:
     string ScanKubeBench(string container, int delay);
     string ScanKubeHunter(string target, string container, int delay);
     string ScanNmap(string target, string container, int delay);
-    string ScanSnyk(string target, string container, int delay);
     string ScanSonarQube(string target, string container, int delay);
+    string ScanTfsec(string target, string container, int delay);
     string ScanTrivy(string target, string container, int delay);
     string ScanZap(string target, string container, int delay);
         

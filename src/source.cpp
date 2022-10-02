@@ -70,7 +70,7 @@ void Source::IncrementEventsCounter() {
 void Source::SendAlertMultiple(int type) {
     
     sk.alert.ref_id  = fs.filter.ref_id;
-    sk.alert.sensor_id = probe_id;
+    sk.alert.sensor_id = host_name;
                 
     sk.alert.alert_severity = 3;
     switch (type) {
@@ -158,7 +158,6 @@ string Source::GetHostname(string ip) {
     
     return hostname;
 }
-
 
 bool Source::SuppressAlert(string ip) {
     

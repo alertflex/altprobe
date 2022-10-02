@@ -296,7 +296,7 @@ int Hids::ParsJson() {
         return 0;
     } 
     
-    rec.sensor = probe_id + ".hids";
+    rec.sensor = host_name + ".hids";
     rec.ref_id = fs.filter.ref_id;
     rec.agent = pt.get<string>("agent.name","indef");
             
@@ -508,9 +508,6 @@ int Hids::ParsJson() {
     
     ResetStreams();
     
-    if(SuppressAlert(rec.srcip)) return 0;
-    if(SuppressAlert(rec.dstip)) return 0;
-    
     return 1;
 }
 
@@ -671,6 +668,8 @@ int Hids::PushRecord(GrayList* gl) {
 
 void Hids::SendAlert(int s, GrayList*  gl) {
     
+    if(SuppressAlert(rec.srcip)) return;
+        
     sk.alert.ref_id = rec.ref_id;
     sk.alert.sensor_id = rec.sensor;
     
@@ -720,8 +719,8 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     sk.alert.container_id = "indef";
     sk.alert.container_name = "indef";
     
-    sk.alert.cloud_instance = "indef";
-        
+    sk.alert.cloud_instance = fs.GetCloudInstanceByAgentname(rec.agent);
+            
     if (rec.file.file_path.compare("indef") != 0) {
             
         sk.alert.alert_type = "FILE";
@@ -772,6 +771,8 @@ void Hids::SendAlert(int s, GrayList*  gl) {
         }   
         
     }
+    
+    if (fs.filter.hids.log ) sk.alert.log = true;
     
     sk.SendAlert();
     

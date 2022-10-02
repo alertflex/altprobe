@@ -51,38 +51,6 @@ public:
     
 };
 
-class TopTalker : public Counters {
-public:  
-    
-    string src_ip;
-    string dst_ip;
-    string src_country;
-    string dst_country;
-    string src_hostname;
-    string dst_hostname;
-        
-                
-    void Reset() {
-        src_ip.clear();
-        dst_ip.clear();
-        src_country.clear();
-        dst_country.clear();
-        src_hostname.clear();
-        dst_hostname.clear();
-        ResetCounters();
-    }
-        
-    TopTalker (string ref, string sen, int t, unsigned long b, unsigned long ses, string srcip, string dstip, string scc, string dcc, string sh, string dh) 
-        : Counters(ref, sen, t, b, ses) {
-        src_ip = srcip;
-        dst_ip = dstip;
-        src_country = scc;
-        dst_country = dcc;
-        src_hostname = sh;
-        dst_hostname = dh;
-    }
-};
-
 class Country : public Counters {
 public:  
     
@@ -98,20 +66,6 @@ public:
     }
 };
 
-class TrafficThresholds : public Counters {
-public:
-    string ip;
-                    
-    void Reset() {
-        ip.clear();
-        ResetCounters();
-    }
-        
-    TrafficThresholds (string ref, string sen, int t, unsigned long b, unsigned long ses, string i) : Counters(ref, sen, t, b, ses) {
-        ip = i;
-    }
-};
-
 class AggNet : public Source {
 public: 
     
@@ -119,17 +73,12 @@ public:
     Netflow netflow_rec;
     
     int counter;
-        
+    
     //Statistics data
     std::vector<Netstat> netstat_list;
     
-    std::vector<TopTalker> top_talkers;
-    
     std::vector<Country> countries;
-    
-    //TrafficThresholds data
-    std::vector<TrafficThresholds> traf_thres;
-            
+        
     virtual int GetConfig();
     
     virtual int Open();
@@ -142,18 +91,9 @@ public:
     bool UpdateNetstat(Netstat ns);
     void FlushNetStat();
     
-    void UpdateTrafficThresholds(Netflow nf);
-    void FlushTrafficThresholds();
-    
-    void UpdateTopTalkers(Netflow nf);
-    void FlushTopTalkers();
-    
     void UpdateCountries(Netflow nf);
     void FlushCountries();
     
-    void SendAlertFlood(std::vector<TrafficThresholds>::iterator r);
-    void SendAlertTraffic(std::vector<TrafficThresholds>::iterator r);
-            
 };
 
 extern boost::lockfree::spsc_queue<string> q_agg_net;

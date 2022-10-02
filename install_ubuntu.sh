@@ -43,8 +43,8 @@ sudo make
 sudo make install
 
 sudo sed -i "s/_project_id/$PROJECT_ID/g" /etc/altprobe/filters.json
-sudo sed -i "s/_node_id/$NODE_ID/g" /etc/altprobe/altprobe.yaml
-sudo sed -i "s/_host_id/$HOST_ID/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_node_name/$NODE_NAME/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_host_name/$HOST_NAME/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_redis_host/$REDIS_HOST/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_host/$WAZUH_HOST/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml

@@ -17,6 +17,7 @@
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <stdio.h>
 
 #include "collector.h"
 
@@ -32,7 +33,6 @@ int Collector::GetConfig() {
     return 1;
     
 }
-
 
 int  Collector::Open() {
     
@@ -174,7 +174,7 @@ int Collector::Go(void) {
         
         if (sk.GetUpdatePeriod() >= counter_reports && sk.GetUpdatePeriod() != 0) {
             
-            if (ruStatus) {
+            if (rcStatus) {
                 
                 if (wazuhServerStatus) {
                     if (GetToken()) {
@@ -182,6 +182,13 @@ int Collector::Go(void) {
                     } else {
                         SysLog("connection with Wazuh server is lost");
                     }
+                }
+                
+                if (dockerSocketStatus) {
+                    SysLog("connection with Docker");
+                    UpdateContainers();
+                } else {
+                    SysLog("no connection with Docker");
                 }
                 
                 UpdateFalcoRules();
@@ -192,8 +199,6 @@ int Collector::Go(void) {
                
                 UpdateOssecRules();
                
-                UpdateContainers();
-                
                 SysLog("update has been done");
             }
         
@@ -523,7 +528,7 @@ void Collector::ParsAgents () {
                 string status = agents.second.get<string>("status");
                 string dateAdd = agents.second.get<string>("dateAdd");
                 string version = "wazuh"; //agents.second.get<string>("version");
-                string manager_host = probe_id + ".hids"; //agents.second.get<string>("manager");
+                string manager_host = host_name + ".hids"; //agents.second.get<string>("manager");
                 string os_platform = agents.second.get<string>("os.platform", "indef");
                 string os_version = agents.second.get<string>("os.version", "indef");
                 string os_name = agents.second.get<string>("os.name", "indef"); 
@@ -623,7 +628,9 @@ void Collector::UpdateContainers(void) {
     
     containers_payload.clear();
     
-    if (dockerSocketStatus) {
+    if (falcolog_status == 1) {
+        
+        SysLog("Falco exists");
     
         try {
     
@@ -636,7 +643,7 @@ void Collector::UpdateContainers(void) {
                 if (!containers_payload.empty()) {
         
                     string report = "{ \"type\": \"containers_list\",\"probe\": \"";
-                    report += probe_id;
+                    report += host_name;
                     report += "\", \"data\" : ";
                     report += containers_payload;
                     report += " }";

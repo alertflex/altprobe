@@ -26,18 +26,15 @@ public:
     
     //
     static string node_id;
-    static string probe_id;
+    static string host_name;
     static string project_id;
     
     static char maxmind_path[OS_BUFFER_SIZE]; 
     static bool maxmind_status;
     
     static char remote_control[OS_HEADER_SIZE];
-    static char remote_update[OS_HEADER_SIZE];
-    
     static bool rcStatus;
-    static bool ruStatus;
-    
+        
     static int time_delta;
     static int log_size;
     static char log_path[OS_BUFFER_SIZE]; 
@@ -49,17 +46,17 @@ public:
     static char suri_socket[OS_BUFFER_SIZE];
     // Docker socket parameters
     static char docker_socket[OS_BUFFER_SIZE];
-        
+            
     static bool suriSocketStatus;
     static bool dockerSocketStatus;
-    
+        
     // scanners
     static char dependencycheck_result[OS_BUFFER_SIZE]; 
     static char dockerbench_result[OS_BUFFER_SIZE]; 
     static char kubebench_result[OS_BUFFER_SIZE]; 
     static char kubehunter_result[OS_BUFFER_SIZE]; 
     static char nmap_result[OS_BUFFER_SIZE]; 
-    static char snyk_result[OS_BUFFER_SIZE]; 
+    static char tfsec_result[OS_BUFFER_SIZE]; 
     static char trivy_result[OS_BUFFER_SIZE];
     static char zap_result[OS_BUFFER_SIZE]; 
         
@@ -99,13 +96,12 @@ public:
     
     CollectorObject () {
         node_id.clear();
-        probe_id.clear();
+        host_name.clear();
         suriSocketStatus = true;
         dockerSocketStatus = true;
         wazuhServerStatus = true;
         maxmind_status = true;
         rcStatus = false;
-        ruStatus = true;
         time_delta = 0;
         log_size = 0;
         startup_timer = 0;
@@ -231,6 +227,8 @@ public:
     
     string cloud_instance;
     
+    bool log;
+    
     void Reset() {
         
         Event::Reset();
@@ -284,6 +282,8 @@ public:
 	event_time.clear();
         
         list_cats.clear();
+        
+        log = false;
     }
     
     void CreateAlertUUID(void);

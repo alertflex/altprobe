@@ -44,10 +44,10 @@ install -m 0755 $RPM_SOURCE_DIR/scripts/docker-bench.sh $RPM_BUILD_ROOT/etc/altp
 install -m 0755 $RPM_SOURCE_DIR/scripts/kube-bench.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/kube-bench.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/kube-hunter.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/kube-hunter.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/sonarqube.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/sonarqube.sh
+install -m 0755 $RPM_SOURCE_DIR/scripts/tfsec.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/tfsec.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/trivy.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/trivy.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/zap.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/zap.sh
 install -m 0755 $RPM_SOURCE_DIR/scripts/nmap.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/nmap.sh
-install -m 0755 $RPM_SOURCE_DIR/scripts/snyk.sh $RPM_BUILD_ROOT/etc/altprobe/scripts/snyk.sh
 install -d -m 0755 $RPM_BUILD_ROOT/usr/sbin
 install -m 0755 $RPM_SOURCE_DIR/altprobe $RPM_BUILD_ROOT/usr/sbin/altprobe
 install -m 0755 $RPM_SOURCE_DIR/scripts/altprobe-restart $RPM_BUILD_ROOT/usr/sbin/altprobe-restart
@@ -77,10 +77,10 @@ install -m 0755 $RPM_SOURCE_DIR/libactivemq-cpp.so.20 $RPM_BUILD_ROOT/usr/lib/li
 /etc/altprobe/scripts/kube-bench.sh
 /etc/altprobe/scripts/kube-hunter.sh
 /etc/altprobe/scripts/sonarqube.sh
+/etc/altprobe/scripts/tfsec.sh
 /etc/altprobe/scripts/trivy.sh
 /etc/altprobe/scripts/zap.sh
 /etc/altprobe/scripts/nmap.sh
-/etc/altprobe/scripts/snyk.sh
 /usr/sbin/altprobe
 /usr/sbin/altprobe-restart
 /usr/sbin/altprobe-start

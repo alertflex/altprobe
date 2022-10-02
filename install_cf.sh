@@ -4,8 +4,8 @@
 source ./env_cf.sh
 
 export INSTALL_PATH=/home/ubuntu/altprobe
-export NODE_ID=node01
-export HOST_ID=probe01
+export NODE_NAME=node01
+export HOST_NAME=probe01
 export AMQ_URL='tcp:\/\/127.0.0.1:61616'
 export AMQ_USER=admin
 export AMQ_CERT=indef
@@ -52,8 +52,8 @@ sudo unxz /etc/altprobe/GeoLiteCity.dat.xz
 sudo ldconfig
 
 sudo sed -i "s/_project_id/$PROJECT_ID/g" /etc/altprobe/filters.json
-sudo sed -i "s/_node_id/$NODE_ID/g" /etc/altprobe/altprobe.yaml
-sudo sed -i "s/_host_id/$HOST_ID/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_node_name/$NODE_NAME/g" /etc/altprobe/altprobe.yaml
+sudo sed -i "s/_host_name/$HOST_NAME/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_host/$WAZUH_HOST/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_user/$WAZUH_USER/g" /etc/altprobe/altprobe.yaml
 sudo sed -i "s/_wazuh_pwd/$WAZUH_PWD/g" /etc/altprobe/altprobe.yaml

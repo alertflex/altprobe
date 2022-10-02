@@ -30,7 +30,7 @@
 #include "nids.h"
 #include "waf.h"
 #include "crs.h"
-#include "aws.h"
+#include "awswaf.h"
 #include "remlog.h"
 #include "remstat.h"
 #include "filters.h"
@@ -69,6 +69,8 @@ public:
     string agents_payload;
     
     string containers_payload;
+    
+    string pods_payload;
     
     std::vector<Container> containers_list;
         
@@ -126,7 +128,7 @@ public:
     void GetContainers();  
     void ParsContainers();
     void UpdateContainers();
-        
+    
     void ResetStreams() {
         
         filePath.clear();

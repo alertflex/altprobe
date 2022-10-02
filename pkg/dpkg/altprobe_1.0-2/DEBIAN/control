@@ -4,5 +4,5 @@ Section: base
 Priority: optional
 Architecture: amd64
 Depends: libyaml-0-2, libyaml-dev, libdaemon-dev, libboost-all-dev, libapr1-dev, libssl-dev
-Maintainer: Oleg Zharkov <info@alertflex.org>
+Maintainer: Oleg Zharkov <olegzhr@gmail.com>
 Description: Alertflex collector

@@ -8,14 +8,14 @@
 # work directory and node id and probe id
 export INSTALL_PATH=/home/alertflex/altprobe
 export PROJECT_ID=0ca7e3b3-1a0c-407a-957d-aab039165217
-export NODE_ID=node01
-export HOST_ID=collr01
+export NODE_NAME=node01
+export HOST_NAME=collr01
 
 # controller
 # url: "ssl://host:61617" or "tcp://host:61616"
 export AMQ_URL='ssl:\/\/af-ctrl:61617'
 export AMQ_USER=admin
-export AMQ_PWD=Password1234
+export AMQ_PWD=Pwd12345
 export AMQ_CERT='\/etc\/altprobe\/Broker.pem'
 export CERT_VERIFY=true
 export AMQ_KEY=indef

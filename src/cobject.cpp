@@ -27,17 +27,14 @@
 #include "cobject.h"
 
 string CollectorObject::node_id;
-string CollectorObject::probe_id;
+string CollectorObject::host_name;
 string CollectorObject::project_id;
 
 char CollectorObject::maxmind_path[OS_BUFFER_SIZE]; 
 bool CollectorObject::maxmind_status;
 
 char CollectorObject::remote_control[OS_HEADER_SIZE];
-char CollectorObject::remote_update[OS_HEADER_SIZE];
-
 bool CollectorObject::rcStatus;
-bool CollectorObject::ruStatus;
 
 int CollectorObject::time_delta;
 char CollectorObject::log_path[OS_BUFFER_SIZE]; 
@@ -57,7 +54,7 @@ char CollectorObject::dockerbench_result[OS_BUFFER_SIZE];
 char CollectorObject::kubebench_result[OS_BUFFER_SIZE]; 
 char CollectorObject::kubehunter_result[OS_BUFFER_SIZE]; 
 char CollectorObject::nmap_result[OS_BUFFER_SIZE]; 
-char CollectorObject::snyk_result[OS_BUFFER_SIZE]; 
+char CollectorObject::tfsec_result[OS_BUFFER_SIZE]; 
 char CollectorObject::trivy_result[OS_BUFFER_SIZE]; 
 char CollectorObject::zap_result[OS_BUFFER_SIZE]; 
 
@@ -105,8 +102,7 @@ int CollectorObject::GetConfig() {
     cy->addKey("geo_db");
     
     cy->addKey("remote_control");
-    cy->addKey("remote_update");
-    
+            
     cy->addKey("time_delta");
     
     cy->addKey("log_path");
@@ -132,9 +128,9 @@ int CollectorObject::GetConfig() {
         return 0;
     }
     
-    probe_id = cy->getParameter("host");
+    host_name = cy->getParameter("host");
     
-    if (!probe_id.compare("")) {
+    if (!host_name.compare("")) {
         SysLog("config file error: parameter host");
         return 0;
     }
@@ -231,12 +227,6 @@ int CollectorObject::GetConfig() {
         SysLog("config file notification: remote_control is enabled");
     }
     
-    strncpy(remote_update, (char*) cy->getParameter("remote_update").c_str(), sizeof(remote_update));
-    if (!strcmp (remote_update, "false")) { 
-        ruStatus = false;
-        SysLog("config file notification: remote_update disabled");
-    }
-    
     cy = new ConfigYaml("sensors");
     
     cy->addKey("falco_log");
@@ -281,7 +271,7 @@ int CollectorObject::GetConfig() {
         wazuhlog_status = 0;
     } 
     
-    if (ruStatus) {
+    if (rcStatus) {
         
         strncpy(falco_local, (char*) cy->getParameter("falco_local").c_str(), sizeof(falco_local));
         if (!strcmp (falco_local, "indef")) { 
@@ -340,7 +330,7 @@ int CollectorObject::GetConfig() {
     
     cy->addKey("nmap_result");
      
-    cy->addKey("snyk_result");
+    cy->addKey("tfsec_result");
     
     cy->addKey("project_id");
     
@@ -360,7 +350,7 @@ int CollectorObject::GetConfig() {
     
     strncpy(nmap_result, (char*) cy->getParameter("nmap_result").c_str(), sizeof(nmap_result));
     
-    strncpy(snyk_result, (char*) cy->getParameter("snyk_result").c_str(), sizeof(snyk_result));
+    strncpy(tfsec_result, (char*) cy->getParameter("tfsec_result").c_str(), sizeof(tfsec_result));
     
     project_id = cy->getParameter("project_id");
     

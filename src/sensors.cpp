@@ -26,19 +26,19 @@
 #include <boost/iostreams/filter/gzip.hpp>
 #include <iostream>
 
-#include "updates.h"
+#include "sensors.h"
 
 #define SOCKET_BUFFER_SIZE 2048
 
 namespace bpt = boost::property_tree;
 
-int Updates::GetConfig() {
+int Sensors::GetConfig() {
        
     update_status = 1;
     return update_status;
 }
 
-int Updates::Open(int mode, pid_t pid) {
+int Sensors::Open(int mode, pid_t pid) {
     
     bool amq_conn = false;
     int conn_attempts = 0;
@@ -95,7 +95,7 @@ int Updates::Open(int mode, pid_t pid) {
             }
             
             // Create the MessageConsumer
-            string strConsumer("jms/altprobe/" + fs.filter.ref_id + "/" + node_id + "/" + probe_id + "/sensors");
+            string strConsumer("jms/altprobe/" + node_id + "/" + host_name + "/sensors");
             
             Destination* consumerCommand = session->createQueue(strConsumer);
             
@@ -129,7 +129,7 @@ int Updates::Open(int mode, pid_t pid) {
     return 1;
 }
 
-int Updates::Go(void) {
+int Sensors::Go(void) {
     
     sleep(1);
         
@@ -137,7 +137,7 @@ int Updates::Go(void) {
 }
 
 // Called from the consumer since this class is a registered MessageListener.
-void Updates::onMessage(const Message* message) {
+void Sensors::onMessage(const Message* message) {
     
     try {
         
@@ -181,12 +181,12 @@ void Updates::onMessage(const Message* message) {
  
 // If something bad happens you see it here as this class is also been
 // registered as an ExceptionListener with the connection.
-void Updates::onException(const CMSException& ex AMQCPP_UNUSED) {
+void Sensors::onException(const CMSException& ex AMQCPP_UNUSED) {
     SysLog("ActiveMQ CMS Exception occurred: update module");
     CheckStatus();
 }
 
-void Updates::Close() {
+void Sensors::Close() {
     
     // Destroy resources.
     try {
@@ -213,10 +213,46 @@ void Updates::Close() {
     }
 }
 
-string Updates::onBytesMessage(const Message* message) {
+string Sensors::onBytesMessage(const Message* message) {
+    
+    if(!rcStatus) return "\"status\": 400, \"status_text\": \"remote control function is disabled\" }";
     
     string ref_id = message->getStringProperty("ref_id");
-    if(ref_id.compare(fs.filter.ref_id)) return "\"status\": 400 }";
+    
+    if(ref_id.compare(fs.filter.ref_id)) return "\"status\": 400, \"status_text\": \"wrong tenant\" }"; 
+    
+    string content_type = message->getStringProperty("content_type");
+    string cmd;
+    
+    if (!content_type.compare("restart")) {
+        
+        try { 
+            
+            int sensor_type = message->getIntProperty("sensor_type");
+        
+            switch (sensor_type) {
+                case 0 : cmd = "/etc/altprobe/scripts/restart-falco.sh";
+                    break;
+                case 1 : cmd = "/etc/altprobe/scripts/restart-modsec.sh";
+                    break;
+                case 2 : cmd = "/etc/altprobe/scripts/restart-suri.sh";
+                    break;
+                case 3 : cmd = "/etc/altprobe/scripts/restart-wazuh.sh";
+                    break;
+                default:
+                    return "\"status\": 400 }";
+            }
+            
+            system(cmd.c_str());
+        
+        } catch (std::ostream::failure e) {
+            SysLog("Exception for restart sensor.");
+            return "\"status\": 400 }";    
+        }
+        
+        SysLog("Sensor restart has been done.");
+        return "\"status\": 200 }";  
+    }
     
     const BytesMessage* bytesMessage = dynamic_cast<const BytesMessage*> (message);
     
@@ -234,11 +270,8 @@ string Updates::onBytesMessage(const Message* message) {
     boost::iostreams::close(inbuf);
     
     ofstream ostream;
-    string cmd;
-    
-    string content_type = message->getStringProperty("content_type");
-    
-    if (!content_type.compare("filters") && ruStatus) {
+        
+    if (!content_type.compare("filters")) {
         
         fs.ParsFiltersConfig(decomp.str());
         
@@ -258,14 +291,13 @@ string Updates::onBytesMessage(const Message* message) {
         return "\"status\": 200 }"; 
     }
     
-    if (!content_type.compare("rules") && ruStatus) {
+    if (!content_type.compare("rules")) {
         
         try { 
         
             int rules_type = message->getIntProperty("rules_type");
             string rule_name = message->getStringProperty("rule_name");
-            bool rule_reload = message->getBooleanProperty("rule_reload");
-        
+                    
             switch (rules_type) {
                 case 0 : {
                     string rules_path(falco_local);
@@ -312,7 +344,7 @@ string Updates::onBytesMessage(const Message* message) {
             ostream << decomp.str();
             ostream.close();
             
-            if (rcStatus && rule_reload) system(cmd.c_str());
+            system(cmd.c_str());
         
         } catch (std::ostream::failure e) {
             SysLog("Exception for local filters file.");
@@ -323,16 +355,66 @@ string Updates::onBytesMessage(const Message* message) {
     }
     
     
+    if (!content_type.compare("policy")) {
+        
+        try { 
+        
+            int policy_type = message->getIntProperty("policy_type"); // calico_allow, calico_deny, k8s_allow, k8s_deny
+            string policy_path = "/etc/altprobe/scripts/calico-policy.yaml";
+                                
+            switch (policy_type) {
+                // calico allow
+                case 0 : {
+                        ostream.open(policy_path, ios_base::trunc);
+                        cmd = "calicoctl create --filename calico-policy.yaml";
+                    }
+                    break;
+                // k8s allow
+                case 1 : {
+                        
+                    }
+                    break;
+                // calico deny
+                case 2 : {
+                        string name_policy = message->getStringProperty("name_policy");
+                        string name_space = message->getStringProperty("name_space");
+                        cmd = "calicoctl delete policy " + name_policy + " -n " + name_space;
+                    }
+                    break;
+                    
+                // k8s deny
+                case 3 : {
+                        
+                    }
+                    
+                default:
+                    return "\"status\": 400 }";
+            }
+            
+            ostream << decomp.str();
+            ostream.close();
+            
+            system(cmd.c_str());
+        
+        } catch (std::ostream::failure e) {
+            SysLog("Exception for policy file.");
+            return "\"status\": 400 }";    
+        }
+        
+        return "\"status\": 200 }"; 
+    }
+    
+    
     return "\"status\": 400 }";
 }
 
-string Updates::onTextMessage(const Message* message) {
+string Sensors::onTextMessage(const Message* message) {
     
     const TextMessage* textMessage = dynamic_cast<const TextMessage*> (message);
                 
     string c2json = textMessage->getText();
     
-    //************************************************************************************************************************
+    //**************************************************************************
     SysLog((char*) c2json.c_str());
     
     stringstream c2json_ss(c2json);
@@ -483,7 +565,7 @@ string Updates::onTextMessage(const Message* message) {
 }
 
 
-string Updates::SendArToWazuh(string agent, string json) {
+string Sensors::SendArToWazuh(string agent, string json) {
     
     try {
         boost::asio::io_service io_service;
@@ -577,7 +659,7 @@ string Updates::SendArToWazuh(string agent, string json) {
     return "\"status\": 400, \"status_text\": \"error start command\" }";
 }
 
-string Updates::CreateAgentWazuh(string json) {
+string Sensors::CreateAgentWazuh(string json) {
     
     try {
         
@@ -679,7 +761,7 @@ string Updates::CreateAgentWazuh(string json) {
     return "\"status\": 400, \"status_text\": \"wazuh api exception\" }";
 }
 
-string Updates::DeleteAgentWazuh(string agent) {
+string Sensors::DeleteAgentWazuh(string agent) {
     
     try {
         
@@ -779,7 +861,7 @@ string Updates::DeleteAgentWazuh(string agent) {
     return "\"status\": 400, \"status_text\": \"wazuh api exception\" }";
 }
 
-string Updates::SendArToSuricata(string json) {
+string Sensors::SendArToSuricata(string json) {
     
     int sck;
     struct sockaddr_un addr;
@@ -856,7 +938,7 @@ string Updates::SendArToSuricata(string json) {
     return "suricata_unixsocket: error";
 }
 
-string Updates::DockerContainer(string id, string cmd) {
+string Sensors::DockerContainer(string id, string cmd) {
     
     int sck;
     struct sockaddr_un addr;
@@ -925,7 +1007,7 @@ string Updates::DockerContainer(string id, string cmd) {
     return "docker_unixsocket: error";
 }
 
-int Updates::IsHomeNetwork(string ip) {
+int Sensors::IsHomeNetwork(string ip) {
     
     if (ip.compare("") == 0) return 0;
     
@@ -944,6 +1026,8 @@ int Updates::IsHomeNetwork(string ip) {
     
     return 0;
 }
+
+
 
 
 

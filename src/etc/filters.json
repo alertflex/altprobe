@@ -58,17 +58,6 @@
             },
             "gray_list": [ 
             ]
-        },
-		"netflow": {
-			"log": true,
-            "flood": {
-                "max_requests": 0,
-				"severity": 1
-            },
-            "traffic": {
-                "max_volume": 0,
-                "severity": 1
-            }
         }
     }
 }

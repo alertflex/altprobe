@@ -22,7 +22,7 @@
 #include "nids.h"
 #include "crs.h"
 #include "waf.h"
-#include "aws.h"
+#include "awswaf.h"
 
 using namespace std;
 

@@ -46,8 +46,6 @@ Destination* Controller::destAlerts;
 MessageProducer* Controller::producerAlerts;
 Destination* Controller::destInfo;
 MessageProducer* Controller::producerInfo;
-Destination* Controller::destResponse;
-MessageProducer* Controller::producerResponse;
 bool Controller::sessionTransacted = false;
 
 int Controller::connection_error = 0;
@@ -242,19 +240,6 @@ int Controller::Open() {
                 producerInfo->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
             }
             
-            if (producerResponse == NULL) {
-            
-                // Create the destination for statistics(Queue)
-                string strResponse("jms/altprobe/" + node_id + "/" + probe_id + "/response");
-            
-                destResponse = session->createTopic(strResponse);
-                        
-                // Create a MessageProducer from the Session to Queue
-                producerResponse = session->createProducer(destResponse);
-       
-                producerResponse->setDeliveryMode(DeliveryMode::NON_PERSISTENT);
-            }
-        
             mq_counter++;
         
             amq_conn = true;
@@ -416,6 +401,8 @@ int Controller::SendMessage(Event* e) {
             string strCloudInstance(((Alert*) e)->cloud_instance);
             message->setStringProperty("cloud_instance", strCloudInstance);
             
+            message->setBooleanProperty("log_alert", ((Alert*) e)->log);
+            
             producerAlerts->send(message.get());
             
                     
@@ -426,15 +413,15 @@ int Controller::SendMessage(Event* e) {
             byte_message->setIntProperty("msg_type", msg_type);
             byte_message->setStringProperty("ref_id", e->ref_id);
             byte_message->setStringProperty("node_id", node_id);
-            byte_message->setStringProperty("probe_id", probe_id);
+            byte_message->setStringProperty("host_name", host_name);
             
             switch (msg_type) {
                 case 3 :
                     byte_message->setIntProperty("sensor", ((BinData*) e)->sensor_type);
+                    byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
                     break;
                 case 4 :
-                    byte_message->setIntProperty("sensor", ((BinData*) e)->sensor_type);
-                    byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
                     break;
                 case 5 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
@@ -499,18 +486,6 @@ int Controller::SendAgentInfo(string ref, string node, string agent, string json
     return 1;
 }
 
-int Controller::SendResponse( ) {
-    
-    try {
-        
-    } catch (CMSException& e) {
-        
-        return 0;
-    }
-        
-    return 1;
-}
-
 void Controller::Close() {
  
     if (connection != NULL) {
@@ -538,14 +513,6 @@ void Controller::Close() {
         if (producerInfo) {
             delete producerInfo;
             producerInfo = NULL;
-        }
-        
-        delete destResponse;
-        destResponse = NULL;
-        
-        if (producerResponse) {
-            delete producerResponse;
-            producerResponse = NULL;
         }
         
         delete session;

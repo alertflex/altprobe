@@ -13,8 +13,8 @@
  *   permissions and limitations under the License.
  */
 
-#ifndef UPDATES_H
-#define	UPDATES_H
+#ifndef SENSORS_H
+#define	SENSORS_H
 
 #include <boost/asio.hpp>
 #include "base64.h"
@@ -24,7 +24,7 @@
 using boost::asio::ip::tcp;
 using namespace std;
 
-class Updates : public Controller,
+class Sensors : public Controller,
         public ExceptionListener,
         public MessageListener {
 public: 
@@ -38,7 +38,7 @@ public:
     
     FiltersSingleton fs;
         
-    Updates() {
+    Sensors() {
         consumer = NULL;
         update_status = 0;
     }
@@ -70,7 +70,8 @@ public:
     
     
     int IsHomeNetwork(string ip);
+    
 };
 
-#endif	/* UPDATES_H */
+#endif	/* SENSORS_H */
 

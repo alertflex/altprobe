@@ -67,8 +67,6 @@ public:
     static MessageProducer* producerAlerts;
     static Destination* destInfo;
     static MessageProducer* producerInfo;
-    static Destination* destResponse;
-    static MessageProducer* producerResponse;
     static bool sessionTransacted;
     
     static int connection_error;
@@ -89,15 +87,13 @@ public:
         producerAlerts = NULL;
         destInfo = NULL;
         producerInfo = NULL;
-        destResponse = NULL;
-        producerResponse = NULL;
+    
     }
      
     virtual int Open();
     virtual int GetConfig();
     void CheckStatus();
     int SendMessage(Event* e);
-    int SendResponse();
     int SendAgentInfo(string ref, string node, string agent, string json);
     virtual void Close();
     

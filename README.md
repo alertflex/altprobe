@@ -1,1 +1,1 @@
-This repository includes Alertflex collector source code and installation script for collector and security sensors.
+The repository includes the Collector source code and installation scripts for collector and security sensors.

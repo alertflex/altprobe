@@ -37,7 +37,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/aggalerts.o \
 	${OBJECTDIR}/aggnet.o \
-	${OBJECTDIR}/aws.o \
+	${OBJECTDIR}/awswaf.o \
 	${OBJECTDIR}/cobject.o \
 	${OBJECTDIR}/collector.o \
 	${OBJECTDIR}/config.o \
@@ -54,9 +54,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/remlog.o \
 	${OBJECTDIR}/remstat.o \
 	${OBJECTDIR}/scanners.o \
+	${OBJECTDIR}/sensors.o \
 	${OBJECTDIR}/sinks.o \
 	${OBJECTDIR}/source.o \
-	${OBJECTDIR}/updates.o \
 	${OBJECTDIR}/waf.o
 
 
@@ -94,10 +94,10 @@ ${OBJECTDIR}/aggnet.o: aggnet.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/aggnet.o aggnet.cpp
 	
-${OBJECTDIR}/aws.o: aws.cpp
+${OBJECTDIR}/awswaf.o: awswaf.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/aws.o aws.cpp
+	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/awswaf.o awswaf.cpp
 
 ${OBJECTDIR}/cobject.o: cobject.cpp
 	${MKDIR} -p ${OBJECTDIR}
@@ -178,6 +178,11 @@ ${OBJECTDIR}/scanners.o: scanners.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/scanners.o scanners.cpp
+	
+${OBJECTDIR}/sensors.o: sensors.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/sensors.o sensors.cpp
 
 ${OBJECTDIR}/sinks.o: sinks.cpp
 	${MKDIR} -p ${OBJECTDIR}
@@ -189,11 +194,6 @@ ${OBJECTDIR}/source.o: source.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/source.o source.cpp
 
-${OBJECTDIR}/updates.o: updates.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/updates.o updates.cpp
-	
 ${OBJECTDIR}/waf.o: waf.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"

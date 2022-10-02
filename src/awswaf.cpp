@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "aws.h"
+#include "awswaf.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/range/iterator_range.hpp>
@@ -247,22 +247,18 @@ int AwsWaf::ParsJson() {
             } 
         } 
         
-        if (fs.filter.netflow.log) {
-            
-            net_flow.ref_id = fs.filter.ref_id;
-            net_flow.sensor = rec.httpSourceId;
-            net_flow.dst_ip = rec.host;
-            net_flow.dst_country = "indef";
-            net_flow.dst_hostname = rec.host;
-            net_flow.src_ip = rec.clientIp;
-            net_flow.src_country = src_cc;
-            net_flow.src_hostname = "indef";
-            net_flow.bytes = 0;
-            net_flow.sessions = 1;
-            net_flow.type = 3;
-            
-            q_netflow.push(net_flow);
-        }
+        net_flow.ref_id = fs.filter.ref_id;
+        net_flow.sensor = rec.httpSourceId;
+        net_flow.dst_ip = rec.host;
+        net_flow.dst_country = "indef";
+        net_flow.dst_hostname = rec.host;
+        net_flow.src_ip = rec.clientIp;
+        net_flow.src_country = src_cc;
+        net_flow.src_hostname = "indef";
+        net_flow.bytes = 0;
+        net_flow.sessions = 1;
+        net_flow.type = 3;
+        q_netflow.push(net_flow);
         
         ResetStreams();
         
@@ -356,7 +352,7 @@ int AwsWaf::PushRecord(GrayList* gl) {
     ids_rec.dst_ip = rec.host;
     
     ids_rec.agent = "indef";
-    ids_rec.ids = probe_id + "." + rec.httpSourceId;
+    ids_rec.ids = host_name + "." + rec.httpSourceId;
     ids_rec.action = "indef";
                 
     ids_rec.location = rec.uri;
@@ -393,8 +389,10 @@ int AwsWaf::PushRecord(GrayList* gl) {
 
 void AwsWaf::SendAlert(int s, GrayList*  gl) {
     
+    if(SuppressAlert(rec.clientIp)) return;
+    
     sk.alert.ref_id =  fs.filter.ref_id;
-    sk.alert.sensor_id = probe_id + "." + rec.httpSourceId;
+    sk.alert.sensor_id = host_name + "." + rec.httpSourceId;
     sk.alert.alert_severity = s;
     sk.alert.alert_source = "AwsWaf";
     sk.alert.alert_type = "NET";
@@ -485,6 +483,8 @@ void AwsWaf::SendAlert(int s, GrayList*  gl) {
     sk.alert.container_name = "indef";
     
     sk.alert.cloud_instance = "indef";
+    
+    if (fs.filter.waf.log ) sk.alert.log = true;
     
     sk.SendAlert();
         

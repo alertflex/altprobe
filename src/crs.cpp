@@ -270,7 +270,7 @@ int Crs::ParsJson() {
             jsonPayload.assign(file_payload, GetBufferSize(file_payload));
             ss << jsonPayload;
             
-            rec.sensor = probe_id + ".crs";
+            rec.sensor = host_name + ".crs";
         
         }  else {
             
@@ -500,6 +500,8 @@ int Crs::PushRecord(GrayList* gl) {
 
 void Crs::SendAlert(int s, GrayList*  gl) {
     
+    if(SuppressAlert(rec.fields.fd_cip)) return;
+        
     sk.alert.ref_id =  fs.filter.ref_id;
     sk.alert.sensor_id = rec.sensor;
     
@@ -514,7 +516,7 @@ void Crs::SendAlert(int s, GrayList*  gl) {
     sk.alert.info = "indef";
     sk.alert.status = "processed";
     sk.alert.user_name = rec.fields.user_name;
-    sk.alert.agent_name = probe_id;
+    sk.alert.agent_name = host_name;
     sk.alert.filter = fs.filter.name;
     
     sk.alert.list_cats.push_back("falco");
@@ -591,6 +593,8 @@ void Crs::SendAlert(int s, GrayList*  gl) {
     sk.alert.container_name = rec.fields.container_name;
     
     sk.alert.cloud_instance = rec.fields.cloud_instance;
+    
+    if (fs.filter.crs.log ) sk.alert.log = true;
     
     sk.SendAlert();
     

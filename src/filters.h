@@ -78,12 +78,36 @@ public:
     }
 };
 
+
+
+class Host {
+public:
+    string name;
+    string ip;
+    string agent;
+    string cloud_instance;
+        
+    void Reset() {
+        name.clear();
+        ip.clear();
+        agent.clear();
+        cloud_instance.clear();
+    }
+    
+    Host (string n, string i, string a, string e) {
+        name = n;
+        ip = i;
+        agent = a;
+        cloud_instance = e;
+    }
+};
+
 class Network {
 public:
-    string network;
+    string network; // home network
     string netmask;
     string node;
-    bool alert_suppress;
+    bool alert_suppress; // manageable network
         
     void Reset() {
         network.clear();
@@ -93,49 +117,6 @@ public:
     }
     
     Network () {
-        Reset();
-    }
-};
-
-class Host {
-public:
-    string name;
-    string ip;
-    string agent;
-    string ec2;
-        
-    void Reset() {
-        name.clear();
-        ip.clear();
-        agent.clear();
-        ec2.clear();
-    }
-    
-    Host (string n, string i, string a, string e) {
-        name = n;
-        ip = i;
-        agent = a;
-        ec2 = e;
-    }
-};
-
-class NetflowPolicy {
-public:
-    int floodMaxRequests;
-    int trafficMaxVolume;
-    int floodSeverity;
-    int trafficSeverity;
-    bool log;
-        
-    void Reset() {
-        floodMaxRequests = 0;
-        trafficMaxVolume = 0;
-        floodSeverity = 0;
-        trafficSeverity = 0;
-        log = false;
-    }
-    
-    NetflowPolicy () {
         Reset();
     }
 };
@@ -227,7 +208,7 @@ public:
     void Reset() {
         gl.clear();
         severity.Reset();
-        log = false;
+        log = true;
     }
 };
 
@@ -236,9 +217,9 @@ class Filters {
 public:
     string ref_id;
     string name;
-    	
+    
     std::vector<Network*> home_nets;
-        
+    	
     IdsPolicy crs;
            
     IdsPolicy nids;
@@ -246,8 +227,6 @@ public:
     IdsPolicy hids;
     
     IdsPolicy waf;
-    
-    NetflowPolicy netflow;
     
     void Reset() {
         ref_id.clear();
@@ -257,7 +236,6 @@ public:
         nids.Reset();
         hids.Reset();
         waf.Reset();
-        netflow.Reset();
     }
 };
 
@@ -290,6 +268,7 @@ public:
     static string GetNameByAgentId(string id);
     static string GetHostnameByIP(string ip);
     static string GetHostnameByAgentname(string agent);
+    static string GetCloudInstanceByAgentname(string agent);
     static string GetRefByAgentName(string name);
     static string GetRefByGroupName(string name);
             

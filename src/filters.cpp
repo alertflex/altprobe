@@ -68,7 +68,6 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
         filter.ref_id =  pt.get<string>("ref_id");
         filter.name =  pt.get<string>("filter_name");
         
-        
         filter.home_nets.clear();
         bpt::ptree home_networks = pt.get_child("home_net");
         BOOST_FOREACH(bpt::ptree::value_type &h_nets, home_networks) {
@@ -114,20 +113,13 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             string name = h_list.second.get<string>("name");
             string ip = h_list.second.get<string>("ip");
             string agent = h_list.second.get<string>("agent");
-            string ec2 = h_list.second.get<string>("ec2");
+            string cloud_instance = h_list.second.get<string>("cloud_instance");
             
-            hosts_list.push_back(Host(name, ip, agent, ec2));
+            hosts_list.push_back(Host(name, ip, agent, cloud_instance));
         }
         
         
         bpt::ptree filters = pt.get_child("sources");
-        
-        // Netflow
-        filter.netflow.log = filters.get<bool>("netflow.log");
-        filter.netflow.floodMaxRequests = filters.get<int>("netflow.flood.max_requests");
-        filter.netflow.floodSeverity = filters.get<int>("netflow.flood.severity");
-        filter.netflow.trafficMaxVolume = filters.get<int>("netflow.traffic.max_volume");
-        filter.netflow.trafficSeverity = filters.get<int>("netflow.traffic.severity");
         
         // CRS
         filter.crs.log = filters.get<bool>("crs.log");
@@ -409,6 +401,24 @@ string FiltersSingleton::GetHostnameByAgentname(string agent) {
         
         if (i_h->agent.compare(agent) == 0) {
             return i_h->name;
+        }
+    }
+    
+    return "indef";
+}
+
+string FiltersSingleton::GetCloudInstanceByAgentname(string agent)  {
+    
+    if (agent.compare("") == 0) return "indef";
+    
+    if (agent.compare("indef") == 0) return "indef";
+    
+    std::vector<Host>::iterator i_h, end_h;
+    
+    for(i_h = hosts_list.begin(), end_h = hosts_list.end(); i_h != end_h; ++i_h) {
+        
+        if (i_h->agent.compare(agent) == 0) {
+            return i_h->cloud_instance;
         }
     }
     

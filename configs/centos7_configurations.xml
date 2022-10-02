@@ -6,7 +6,7 @@
                    projectFiles="true">
       <itemPath>aggalerts.h</itemPath>
       <itemPath>aggnet.h</itemPath>
-	  <itemPath>aws.h</itemPath>
+	  <itemPath>awswaf.h</itemPath>
       <itemPath>base64.h</itemPath>
       <itemPath>cobject.h</itemPath>
       <itemPath>collector.h</itemPath>
@@ -24,10 +24,10 @@
       <itemPath>remlog.h</itemPath>
       <itemPath>remstat.h</itemPath>
 	  <itemPath>scanners.h</itemPath>
+	  <itemPath>sensors.h</itemPath>
       <itemPath>sinks.h</itemPath>
       <itemPath>source.h</itemPath>
-      <itemPath>updates.h</itemPath>
-	  <itemPath>waf.h</itemPath>
+      <itemPath>waf.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -38,7 +38,7 @@
                    projectFiles="true">
       <itemPath>aggalerts.cpp</itemPath>
       <itemPath>aggnet.cpp</itemPath>
-	  <itemPath>aws.cpp</itemPath>
+	  <itemPath>awswaf.cpp</itemPath>
       <itemPath>cobject.cpp</itemPath>
       <itemPath>collector.cpp</itemPath>
       <itemPath>config.cpp</itemPath>
@@ -55,10 +55,10 @@
       <itemPath>remlog.cpp</itemPath>
       <itemPath>remstat.cpp</itemPath>
 	  <itemPath>scanners.cpp</itemPath>
+	  <itemPath>sensors.cpp</itemPath>
       <itemPath>sinks.cpp</itemPath>
       <itemPath>source.cpp</itemPath>
-      <itemPath>updates.cpp</itemPath>
-	  <itemPath>waf.cpp</itemPath>
+      <itemPath>waf.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -99,9 +99,9 @@
       </item>
       <item path="aggnet.h" ex="false" tool="3" flavor2="0">
       </item>
-	  <item path="aws.cpp" ex="false" tool="1" flavor2="0">
+	  <item path="awswaf.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="aws.h" ex="false" tool="3" flavor2="0">
+      <item path="awswaf.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="base64.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -169,6 +169,10 @@
       </item>
       <item path="scanners.h" ex="false" tool="3" flavor2="0">
       </item>
+	  <item path="sensors.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="sensors.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="sinks.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="sinks.h" ex="false" tool="3" flavor2="0">
@@ -177,11 +181,7 @@
       </item>
       <item path="source.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="updates.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="updates.h" ex="false" tool="3" flavor2="0">
-      </item>
-	  <item path="waf.cpp" ex="false" tool="1" flavor2="0">
+      <item path="waf.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="waf.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -214,9 +214,9 @@
       </item>
       <item path="aggnet.h" ex="false" tool="3" flavor2="0">
       </item>
-	  <item path="aws.cpp" ex="false" tool="1" flavor2="0">
+	  <item path="awswaf.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="aws.h" ex="false" tool="3" flavor2="0">
+      <item path="awswaf.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="base64.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -284,6 +284,10 @@
       </item>
       <item path="scanners.h" ex="false" tool="3" flavor2="0">
       </item>
+	  <item path="sensors.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="sensors.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="sinks.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="sinks.h" ex="false" tool="3" flavor2="0">
@@ -292,11 +296,7 @@
       </item>
       <item path="source.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="updates.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="updates.h" ex="false" tool="3" flavor2="0">
-      </item>
-	  <item path="waf.cpp" ex="false" tool="1" flavor2="0">
+      <item path="waf.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="waf.h" ex="false" tool="3" flavor2="0">
       </item>
