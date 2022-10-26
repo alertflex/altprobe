@@ -31,11 +31,14 @@ collector:
   # it is calculated by next fomula: timer_update*timer_report  (default value 12 - 60 min)
   timer_update: 12
   
-  # Allow remote management of collector from controller
-  remote_control: "true"
-    
   # Path to MaxMind Geo DB
   geo_db: "/etc/altprobe/GeoLiteCity.dat"
+  
+  # Allow remote management of collector from controller
+  remote_control: "true"
+  
+  # Allow kubernetes management and set monitoring for defined namespace
+  k8s_namespace: "indef"
   
   # Docker unix socket filename for active response - /var/run/docker.sock , if value is indef interface to socket disabled
   socket_docker: "indef"

@@ -17,7 +17,13 @@
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+extern "C" {
+    #include <config/kube_config.h>
+    #include <api/CoreV1API.h>
+}
 #include <stdio.h>
+#include <kubernetes/model/v1_object_meta.h>
+#include <kubernetes/model/v1_pod_spec.h>
 
 #include "collector.h"
 
@@ -180,15 +186,22 @@ int Collector::Go(void) {
                     if (GetToken()) {
                         UpdateAgents();
                     } else {
-                        SysLog("connection with Wazuh server is lost");
+                        SysLog("connection to Wazuh server is lost");
                     }
                 }
                 
                 if (dockerSocketStatus) {
-                    SysLog("connection with Docker");
+                    SysLog("connection to Docker");
                     UpdateContainers();
                 } else {
-                    SysLog("no connection with Docker");
+                    SysLog("no connection to Docker");
+                }
+                
+                if (k8sStatus) {
+                    SysLog("connection to K8s");
+                    UpdatePods();
+                } else {
+                    SysLog("no connection to K8s");
                 }
                 
                 UpdateFalcoRules();
@@ -630,8 +643,6 @@ void Collector::UpdateContainers(void) {
     
     if (falcolog_status == 1) {
         
-        SysLog("Falco exists");
-    
         try {
     
             GetContainers();
@@ -818,6 +829,136 @@ void Collector::ParsContainers() {
     } 
     
     containers_payload.clear();
+}
+
+bool Collector::GetPods() {
+    
+    char* basePath = NULL;
+    sslConfig_t* sslConfig = NULL;
+    list_t* apiKeys = NULL;
+    
+    int rc = load_kube_config(&basePath, &sslConfig, &apiKeys, NULL);   /* NULL means loading configuration from $HOME/.kube/config */
+    if (rc != 0) {
+        SysLog("Cannot load kubernetes configuration.\n");
+        return false;
+    }
+    
+    apiClient_t* apiClient = apiClient_create_with_base_path(basePath, sslConfig, apiKeys);
+    if (!apiClient) {
+        SysLog("Cannot create a kubernetes client.\n");
+        return false;
+    }
+    
+    v1_pod_list_t* pod_list = NULL;
+    pod_list = CoreV1API_listNamespacedPod(apiClient, k8s_namespace,   
+                                           NULL,    /* pretty */
+                                           0,   /* allowWatchBookmarks */
+                                           NULL,    /* continue */
+                                           NULL,    /* fieldSelector */
+                                           NULL,    /* labelSelector */
+                                           0,   /* limit */
+                                           NULL,    /* resourceVersion */
+                                           NULL,    /* resourceVersionMatch */
+                                           0,   /* timeoutSeconds */
+                                           0    /* watch */
+    );
+    
+    // printf("The return code of HTTP request=%ld\n", apiClient->response_code);
+    
+    if (pod_list) {
+        
+        listEntry_t *listEntry = NULL;
+        
+        v1_pod_t* pod = NULL;
+        
+        pods_payload = "[";
+        
+        list_ForEach(listEntry, pod_list->items) {
+            
+            pod = (v1_pod_t *) listEntry->data;
+            
+            pods_payload += "{ \"name\": \"";
+            string k8s(pod->metadata->name);
+            pods_payload += k8s;
+            
+            pods_payload += "\", \"name_space\": \"";
+            string name_space(pod->metadata->_namespace);
+            pods_payload += name_space;
+            
+            pods_payload += "\", \"creation_timestamp\": \"";
+            string creation_timestamp(pod->metadata->creation_timestamp);
+            pods_payload += creation_timestamp;
+            
+            pods_payload += "\", \"uid\": \"";
+            string uid(pod->metadata->uid);
+            pods_payload += uid;
+            
+            pods_payload += "\", \"host_ip\": \"";
+            string host_ip(pod->status->host_ip);
+            pods_payload += host_ip;
+            
+            pods_payload += "\", \"pod_ip\": \"";
+            string pod_ip(pod->status->pod_ip);
+            pods_payload += pod_ip;
+            
+            pods_payload += "\", \"phase\": \"";
+            string phase(pod->status->phase);
+            pods_payload += phase;
+            
+            pods_payload += "\", \"node_name\": \"";
+            string node_name(pod->spec->node_name);
+            pods_payload += node_name;
+            
+            pods_payload += "\"} ,";
+            
+        }
+        
+        pods_payload.resize(pods_payload.size() - 1);
+        pods_payload.append("]");
+        
+        v1_pod_list_free(pod_list);
+        
+        pod_list = NULL;
+        
+    } else {
+        pods_payload = "[ ]";
+    }
+    
+    apiClient_free(apiClient);
+    apiClient = NULL;
+    free_client_config(basePath, sslConfig, apiKeys);
+    basePath = NULL;
+    sslConfig = NULL;
+    apiKeys = NULL;
+    apiClient_unsetupGlobalEnv();
+    
+    return true;
+}
+
+void Collector::UpdatePods(void) {
+    
+    pods_payload.clear();
+    
+    if (falcolog_status == 1) {
+        
+        try {
+    
+            if (GetPods()) {
+            
+                string report = "{ \"type\": \"pods_list\",\"probe\": \"";
+                report += host_name;
+                report += "\", \"data\" : ";
+                report += pods_payload;
+                report += " }";
+                
+                q_stats_collr.push(report);
+            }
+    
+        } catch (const std::exception & ex) {
+            SysLog((char*) ex.what());
+            SysLog("Collector::UpdatePods");
+        } 
+    } 
 }
 
 void Collector::UpdateFalcoRules() {

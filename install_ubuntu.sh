@@ -14,11 +14,47 @@ echo "*** Installation alertflex collector started***"
 sudo add-apt-repository ppa:maxmind/ppa -y
 sudo apt-get update
 sudo apt-get -y install libpcre3 libpcre3-dbg libpcre3-dev  libnss3-dev libc6-dev libnspr4-dev build-essential autoconf automake libtool libpcap-dev libnet1-dev \
-libyaml-0-2 libyaml-dev zlib1g zlib1g-dev libcap-ng-dev libcap-ng0 libmagic-dev libjansson-dev libjansson4 libdaemon-dev libboost-all-dev \
+libcurl4-openssl-dev uncrustify cmake zlib1g zlib1g-dev libcap-ng-dev libcap-ng0 libmagic-dev libjansson-dev libjansson4 libdaemon-dev libboost-all-dev \
 make autoconf autoconf-archive m4 pkg-config git libssl-dev apt-transport-https curl python-simplejson xz-utils libgeoip1 libgeoip-dev geoip-bin
+
 sudo ldconfig
 
-echo "*** installation hiredis***"
+echo "*** installation libwebsockets ***"
+git clone https://libwebsockets.org/repo/libwebsockets --depth 1 --branch v4.2-stable
+cd libwebsockets
+mkdir build
+cd build
+cmake -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_TEST_SERVER=ON-DLWS_WITHOUT_TEST_SERVER_EXTPOLL=ON \
+      -DLWS_WITHOUT_TEST_PING=ON -DLWS_WITHOUT_TEST_CLIENT=ON -DCMAKE_C_FLAGS="-fpic" -DCMAKE_INSTALL_PREFIX=/usr/local ..
+make
+sudo make install
+cd $INSTALL_PATH
+
+echo "*** installation libyaml  ***"
+git clone https://github.com/yaml/libyaml --depth 1 --branch release/0.2.5
+cd libyaml
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_TESTING=OFF  -DBUILD_SHARED_LIBS=ON ..
+make
+sudo make install
+cd $INSTALL_PATH
+
+echo "*** installation kubernetes-client/c  ***"
+git clone https://github.com/kubernetes-client/c
+cd c/kubernetes
+# Build
+mkdir build
+cd build
+# If you don't need to debug the C client library:
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local ..
+# If you want to use `gdb` to debug the C client library, add `-DCMAKE_BUILD_TYPE=Debug` to the cmake command line, e.g.
+# cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local ..
+make
+sudo make install
+cd $INSTALL_PATH
+
+echo "*** installation hiredis ***"
 git clone https://github.com/redis/hiredis.git
 cd hiredis
 sudo make

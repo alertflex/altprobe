@@ -64,8 +64,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/local/include/hiredis -I/usr/local/include/activemq-cpp-3.9.5/ -I/usr/include/apr-1.0/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11 -Wno-deprecated
-CXXFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/local/include/hiredis -I/usr/local/include/activemq-cpp-3.9.5/ -I/usr/include/apr-1.0/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11 -Wno-deprecated
+CCFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/local/include/hiredis -I/usr/local/include/kubernetes -I/usr/local/include/activemq-cpp-3.9.5/ -I/usr/include/apr-1.0/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11 -Wno-deprecated
+CXXFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/local/include/hiredis -I/usr/local/include/kubernetes -I/usr/local/include/activemq-cpp-3.9.5/ -I/usr/include/apr-1.0/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11 -Wno-deprecated
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -82,7 +82,7 @@ LDLIBSOPTIONS=-L/usr/local/lib
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/collector: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/collector ${OBJECTFILES} ${LDLIBSOPTIONS} -L/usr/lib -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -lz -lm -lrt -ldl -lpthread -lyaml -ldaemon -lactivemq-cpp -lboost_system -lboost_thread -lboost_iostreams -lhiredis -lGeoIP -lboost_filesystem -lboost_regex
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/collector ${OBJECTFILES} ${LDLIBSOPTIONS} -L/usr/lib -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -lz -lm -lrt -ldl -lpthread -lyaml -ldaemon -lactivemq-cpp -lboost_system -lboost_thread -lboost_iostreams -lhiredis -lGeoIP -lboost_filesystem -lboost_regex -lkubernetes -lwebsockets
 
 ${OBJECTDIR}/aggalerts.o: aggalerts.cpp
 	${MKDIR} -p ${OBJECTDIR}

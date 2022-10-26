@@ -62,7 +62,6 @@ public:
     }
 };
 
-
 class Collector : public Source {
 public: 
     
@@ -73,7 +72,7 @@ public:
     string pods_payload;
     
     std::vector<Container> containers_list;
-        
+            
     Hids* hids;
     Nids* nids; 
     Waf* waf; 
@@ -128,6 +127,9 @@ public:
     void GetContainers();  
     void ParsContainers();
     void UpdateContainers();
+    
+    bool GetPods();
+    void UpdatePods();
     
     void ResetStreams() {
         

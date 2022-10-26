@@ -47,6 +47,8 @@ char CollectorObject::suri_socket[OS_BUFFER_SIZE];
 bool CollectorObject::suriSocketStatus;
 char CollectorObject::docker_socket[OS_BUFFER_SIZE];
 bool CollectorObject::dockerSocketStatus;
+char CollectorObject::k8s_namespace[OS_BUFFER_SIZE];
+bool CollectorObject::k8sStatus;
 
 // scanners
 char CollectorObject::dependencycheck_result[OS_BUFFER_SIZE];
@@ -113,6 +115,7 @@ int CollectorObject::GetConfig() {
         
     cy->addKey("socket_suricata");
     cy->addKey("socket_docker");
+    cy->addKey("k8s_namespace");
         
     cy->addKey("wazuhapi_host");
     cy->addKey("wazuhapi_port");
@@ -180,6 +183,12 @@ int CollectorObject::GetConfig() {
     if (!strcmp (docker_socket, "indef")) { 
         dockerSocketStatus =false;
         SysLog("config file notification: interface to Docker socket is disabled");
+    }
+    
+    strncpy(k8s_namespace, (char*) cy->getParameter("k8s_namespace").c_str(), sizeof(k8s_namespace));
+    if (!strcmp (k8s_namespace, "indef")) { 
+        k8sStatus =false;
+        SysLog("config file notification: management K8s is disabled");
     }
     
     strncpy(wazuh_host, (char*) cy->getParameter("wazuhapi_host").c_str(), sizeof(wazuh_host));

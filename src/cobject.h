@@ -46,9 +46,12 @@ public:
     static char suri_socket[OS_BUFFER_SIZE];
     // Docker socket parameters
     static char docker_socket[OS_BUFFER_SIZE];
+    // K8s namespace
+    static char k8s_namespace[OS_BUFFER_SIZE];
             
     static bool suriSocketStatus;
     static bool dockerSocketStatus;
+    static bool k8sStatus;
         
     // scanners
     static char dependencycheck_result[OS_BUFFER_SIZE]; 
@@ -99,6 +102,7 @@ public:
         host_name.clear();
         suriSocketStatus = true;
         dockerSocketStatus = true;
+        k8sStatus = true;
         wazuhServerStatus = true;
         maxmind_status = true;
         rcStatus = false;
