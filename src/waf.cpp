@@ -299,7 +299,10 @@ int Waf::ReadFile() {
             ferror_counter = 0;
             return 1;
                     
-        } else ferror_counter++;
+        } else {
+            ferror_counter++;
+            clearerr(fp);
+        }
             
         if(ferror_counter > EOF_COUNTER) {
             
@@ -469,19 +472,6 @@ int Waf::ParsJson() {
             
             if (SuppressAlert(rec.ma.hostname)) return 0;
             
-            net_flow.ref_id = fs.filter.ref_id;
-            net_flow.sensor = rec.sensor;
-            net_flow.dst_hostname = rec.ma.hostname;
-            net_flow.dst_ip = rec.ma.hostname;
-            net_flow.dst_country = "indef";
-            net_flow.src_ip = rec.ma.client;
-            net_flow.src_hostname = "indef";
-            net_flow.src_country = src_cc;
-            net_flow.bytes = 0;
-            net_flow.sessions = 1;
-            net_flow.type = 2;
-            q_netflow.push(net_flow);
-                                    
             return 1;
         }
         
@@ -517,8 +507,8 @@ void Waf::CreateLog() {
     report += "\",\"description\":\"";
     report += rec.ma.msg;
     
-    report += "\", \"sensor\":\"";
-    report += rec.sensor;
+    report += "\", \"probe\":\"";
+    report += host_name + ".hids";
     
     report += "\",\"severity\":";
     report += std::to_string(rec.ma.severity);
@@ -625,7 +615,7 @@ void Waf::SendAlert(int s, GrayList*  gl) {
     if(SuppressAlert(rec.ma.client)) return;
     
     sk.alert.ref_id =  fs.filter.ref_id;
-    sk.alert.sensor_id = rec.sensor;
+    sk.alert.probe = host_name + ".waf";
     sk.alert.alert_severity = s;
     sk.alert.alert_source = "ModSecurity";
     sk.alert.alert_type = "NET";

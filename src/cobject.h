@@ -47,44 +47,32 @@ public:
     // Docker socket parameters
     static char docker_socket[OS_BUFFER_SIZE];
     // K8s namespace
-    static char k8s_namespace[OS_BUFFER_SIZE];
+    static char k8s_control[OS_BUFFER_SIZE];
             
     static bool suriSocketStatus;
     static bool dockerSocketStatus;
     static bool k8sStatus;
         
-    // scanners
-    static char dependencycheck_result[OS_BUFFER_SIZE]; 
-    static char dockerbench_result[OS_BUFFER_SIZE]; 
-    static char kubebench_result[OS_BUFFER_SIZE]; 
-    static char kubehunter_result[OS_BUFFER_SIZE]; 
-    static char nmap_result[OS_BUFFER_SIZE]; 
-    static char tfsec_result[OS_BUFFER_SIZE]; 
-    static char trivy_result[OS_BUFFER_SIZE];
-    static char zap_result[OS_BUFFER_SIZE]; 
-        
+    // path to scanners results
+    static char result_path[OS_BUFFER_SIZE]; 
+    static char trivy_path[OS_BUFFER_SIZE];
+    static char kubehunter_script[OS_BUFFER_SIZE];
+    static char zap_script[OS_BUFFER_SIZE];
+    
     // sensors
     
     static char falco_log[OS_BUFFER_SIZE]; 
     static int falcolog_status;
-    static char falco_local[OS_BUFFER_SIZE];
-    static char falco_rules[OS_BUFFER_SIZE];
-    
+        
     static char modsec_log[OS_BUFFER_SIZE];
     static int modseclog_status;
-    static char modsec_local[OS_BUFFER_SIZE];
-    static char modsec_rules[OS_BUFFER_SIZE];
-    
+        
     static char suri_log[OS_BUFFER_SIZE]; 
     static int surilog_status;
-    static char suri_local[OS_BUFFER_SIZE];
-    static char suri_rules[OS_BUFFER_SIZE];
     
     static char wazuh_log[OS_BUFFER_SIZE];
     static int wazuhlog_status;
-    static char wazuh_local[OS_BUFFER_SIZE];
-    static char wazuh_rules[OS_BUFFER_SIZE];
-    
+        
     static char wazuh_host[OS_HEADER_SIZE];
     static int wazuh_port;
     static char wazuh_user[OS_HEADER_SIZE];
@@ -102,7 +90,7 @@ public:
         host_name.clear();
         suriSocketStatus = true;
         dockerSocketStatus = true;
-        k8sStatus = true;
+        k8sStatus = false;
         wazuhServerStatus = true;
         maxmind_status = true;
         rcStatus = false;
@@ -164,19 +152,19 @@ public:
     }
 };
 
-class Rule : public BinData {
+class Posture : public BinData {
 public:   
-    string name_rule;
+    string uuid;
         
     void Reset() {
         BinData::Reset();
-        name_rule.clear();
+        uuid.clear();
     }
     
-    Rule () {
+    Posture () {
         data.clear();
-        name_rule.clear();
-        event_type = 5;
+        uuid.clear();
+        event_type = 6;
     }
 };
 
@@ -186,7 +174,7 @@ public:
     string alert_uuid;
     string alert_source;
     string alert_type;
-    string sensor_id;
+    string probe;
     int alert_severity;
     string description;
     string event_id;
@@ -241,7 +229,7 @@ public:
         alert_uuid.clear();
         alert_source.clear();
 	alert_type.clear();
-	sensor_id.clear();
+	probe.clear();
 	alert_severity = 0;
 	description.clear();
 	

@@ -1,0 +1,96 @@
+%YAML 1.1
+---
+# Altprobe collector configuration file.
+# version 1.0.3
+collector:
+  # The node is a virtual endpoint that allows implement the same policies for all collectors in certain network/security segment. 
+  vrn: "_vrn_id"
+  # name of host (see /etc/hosts or dns name of compute) where Alertflex collector is installed
+  host: "_host_name"
+  
+  # Alerts threshold (in case of alerts overloading in Redis).
+  # If the threshold is exceeded, the collector omits next alerts until Redis list is not empty,
+  # also special alert about multiple security events will be arised 
+  alerts_threshold: 100
+  # Keep events/logs in local folder - /var/log/altprobe, if connection to controller is lost
+  log_path: "/var/log/altprobe/"
+  # max size (MB) of local log file, if size more, collector rotates to the next log file
+  log_size: 100
+  
+  # Time difference between collector and controller's (hours)
+  time_delta: 0
+  # delay on collector start in sec (internal, don't change, default 30)
+  timer_start: 30  
+  # sleep delay in milisecond (internal, don't change, default 1000)
+  timer_sleep:   1000  
+  # timer in sec, collector stat reports generation 
+  # if 0 then the functionality is off (default 300 - 5 min)
+  timer_report: 300  
+    
+  # Path to MaxMind Geo DB
+  geo_db: "/etc/altprobe/GeoLiteCity.dat"
+  
+  # Allow remote management of collector from controller
+  remote_control: "true"
+  # Allow kubernetes management via api
+  k8s_api: "false"
+  # Docker unix socket filename for active response - /var/run/docker.sock , if value is indef interface to socket disabled
+  socket_docker: "indef"
+  # Suricata unix socket filename for active response - /run/suricata/suricata-command.socket , if value is indef interface to socket disabled
+  socket_suricata: "indef"
+  
+  # Altprobe can read an agents status via Wazuh API  (report_timer is used as a period of reading)
+  wazuhapi_host: "127.0.0.1"
+  wazuhapi_port: 55000  
+  wazuhapi_user: "_wazuh_user"
+  wazuhapi_pwd: "_wazuh_pwd"
+    
+  # Altprobe can read security events from Redis list by pop API call
+  redis_host: "127.0.0.1"
+  redis_port: 6379 
+  
+controller:
+  # ActiveMQ interface for communication with Cnode
+  url: "_amq_url"
+  user: "_amq_user"
+  pwd: "_amq_pwd"
+  cert: "_amq_cert"
+  cert_verify: "_cert_verify"
+  key: "_amq_key"
+  key_pwd: "_key_pwd"
+  
+scanners:
+  # second project id only for posture tasks
+  project_id: "indef"
+  # Path to scanner result file
+  result_path: "_result_path"
+  # Path to trivy scanner executable file, if value is indef trivy scan disabled
+  trivy_path: "_trivy_path"
+  # Path to kube-hunter scanner script, if value is indef kube-hunter scan disabled
+  kubehunter_script: "indef"
+  # Path to zap scanner script, if value is indef zap scan disabled
+  zap_script: "indef"
+
+sensors:
+  # Altprobe can read falco, suricata, wazuh events directly from log files.
+  # If xxx_log is "indef" redis interface is used. In case xxx_redis is "indef", module is not in use
+  falco_log: "_falco_log"
+  falco_redis: "altprobe_crs" 
+    
+  modsec_log: "_modsec_log"
+  modsec_redis: "altprobe_waf" 
+    
+  suri_log: "_suri_log"
+  suri_redis: "altprobe_nids" 
+    
+  wazuh_log: "_wazuh_log"
+  wazuh_redis: "altprobe_hids" 
+    
+  # For reading events from AWS WAF (only Redis interface)
+  # in case value "indef", module is not in use
+  awswaf_redis: "altprobe_awswaf"
+  
+  # For reading events from altprobe's custom sources (only Redis interface) 
+  # in case value "indef", module is not in use
+  misc_redis: "altprobe_misc"
+  

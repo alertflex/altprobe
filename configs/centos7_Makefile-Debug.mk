@@ -36,7 +36,6 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/aggalerts.o \
-	${OBJECTDIR}/aggnet.o \
 	${OBJECTDIR}/awswaf.o \
 	${OBJECTDIR}/cobject.o \
 	${OBJECTDIR}/collector.o \
@@ -49,7 +48,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/loclog.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/misc.o \
-	${OBJECTDIR}/netstat.o \
 	${OBJECTDIR}/nids.o \
 	${OBJECTDIR}/remlog.o \
 	${OBJECTDIR}/remstat.o \
@@ -64,8 +62,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/include/hiredis -I/usr/include/activemq-cpp-3.9.3/ -I/usr/include/apr-1/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11
-CXXFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/include/hiredis -I/usr/include/activemq-cpp-3.9.3/ -I/usr/include/apr-1/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11
+CCFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/include/hiredis -I/usr/local/include/kubernetes -I/usr/include/activemq-cpp-3.9.3/ -I/usr/include/apr-1/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11
+CXXFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/include/hiredis -I/usr/local/include/kubernetes -I/usr/include/activemq-cpp-3.9.3/ -I/usr/include/apr-1/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -82,22 +80,17 @@ LDLIBSOPTIONS=-L/usr/local/lib
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/collector: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/collector ${OBJECTFILES} ${LDLIBSOPTIONS} -L/usr/lib -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -lz -lm -lrt -ldl -lpthread -lyaml -ldaemon -lactivemq-cpp -lboost_system -lboost_thread -lboost_iostreams -lhiredis -lGeoIP -lboost_filesystem -lboost_regex
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/collector ${OBJECTFILES} ${LDLIBSOPTIONS} -L/usr/lib -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -lz -lm -lrt -ldl -lpthread -lyaml -ldaemon -lactivemq-cpp -lboost_system -lboost_thread -lboost_iostreams -lhiredis -lGeoIP -lboost_filesystem -lboost_regex -lkubernetes -lwebsockets
 
 ${OBJECTDIR}/aggalerts.o: aggalerts.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/aggalerts.o aggalerts.cpp
 
-${OBJECTDIR}/aggnet.o: aggnet.cpp
+${OBJECTDIR}/awswaf.o: awswaf.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/aggnet.o aggnet.cpp
-	
-${OBJECTDIR}/aws.o: aws.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/aws.o aws.cpp
+	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/awswaf.o awswaf.cpp
 
 ${OBJECTDIR}/cobject.o: cobject.cpp
 	${MKDIR} -p ${OBJECTDIR}
@@ -153,11 +146,6 @@ ${OBJECTDIR}/misc.o: misc.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/misc.o misc.cpp
-
-${OBJECTDIR}/netstat.o: netstat.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/netstat.o netstat.cpp
 
 ${OBJECTDIR}/nids.o: nids.cpp
 	${MKDIR} -p ${OBJECTDIR}

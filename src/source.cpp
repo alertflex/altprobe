@@ -70,29 +70,38 @@ void Source::IncrementEventsCounter() {
 void Source::SendAlertMultiple(int type) {
     
     sk.alert.ref_id  = fs.filter.ref_id;
-    sk.alert.sensor_id = host_name;
-                
+                    
     sk.alert.alert_severity = 3;
     switch (type) {
         case 0:
             sk.alert.alert_type = "HOST";
             sk.alert.alert_source = "Falco";
+            sk.alert.probe = host_name + ".crs";
             break;
         case 1:
             sk.alert.alert_type = "HOST";
             sk.alert.alert_source = "Wazuh";
+            sk.alert.probe = host_name + ".hids";
             break;
         case 2:
             sk.alert.alert_type = "NET";
             sk.alert.alert_source = "Suricata";
+            sk.alert.probe = host_name + ".nids";
             break;
         case 3:
             sk.alert.alert_type = "NET";
             sk.alert.alert_source = "ModSecurity";
+            sk.alert.probe = host_name + ".waf";
+            break;
+        case 4:
+            sk.alert.alert_type = "NET";
+            sk.alert.alert_source = "AwsWaf";
+            sk.alert.probe = host_name + ".aws-waf";
             break;
         default:
             sk.alert.alert_type = "MISC";
             sk.alert.alert_source = "Alertflex";
+            sk.alert.probe = host_name + ".altprobe";
             break;
     }
     

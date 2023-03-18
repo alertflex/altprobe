@@ -154,7 +154,7 @@ void Scanners::onMessage(const Message* message) {
         string bodyJson = "\"status\": 400 }";        
         
         if (dynamic_cast<const TextMessage*> (message)) {
-            bodyJson = onTextMessage(message);
+            bodyJson = onTextMessage(message, corr_id);
         } else {
             SysLog("ActiveMQ CMS Exception occurred: scanners module");
             CheckStatus();
@@ -218,7 +218,7 @@ void Scanners::Close() {
     }
 }
 
-string Scanners::onTextMessage(const Message* message) {
+string Scanners::onTextMessage(const Message* message, string corr_id) {
     
     if(!rcStatus) return "\"status\": 400, \"status_text\": \"remote control function is disabled\" }";
     
@@ -233,655 +233,144 @@ string Scanners::onTextMessage(const Message* message) {
     bpt::ptree pt;
     bpt::read_json(c2json_ss, pt);
     
-    string ref_id =  pt.get<string>("actuator.x-alertflex.tenant","indef");
+    string project =  pt.get<string>("actuator.x-alertflex.project","indef");
     
-    if(ref_id.compare(fs.filter.ref_id) && ref_id.compare(project_id)) {
+    if(project.compare(fs.filter.ref_id) && project.compare(project_id)) {
         
-        return "\"status\": 400, \"status_text\": \"wrong tenant\" }"; 
+        return "\"status\": 400, \"status_text\": \"wrong project\" }"; 
     }
     
+    string target = pt.get<string>("target.device.device_id","indef");
+    
+    if(!target.compare("indef")) {
+    
+        return "\"status\": 400, \"status_text\": \"wrong target\" }"; 
+    } 
     
     string action =  pt.get<string>("action","indef");
     
-    string actuator_profile =  pt.get<string>("actuator.x-alertflex.profile","indef");
-    
-    string container =  pt.get<string>("actuator.x-alertflex.container","indef");
+    if(action.compare("scan")) { 
+        
+        return "\"status\": 400, \"status_text\": \"wrong action\" }";
+    }
     
     int delay = pt.get<int>("args.delay",0);
-        
     
-    if(!actuator_profile.compare("indef") || !action.compare("indef")) {
+    int posture_type =  pt.get<int>("args.posture_type",0);
     
-        return "\"status\": 400, \"status_text\": \"wrong actuator or action\" }"; 
-    } 
-    
-    if(!actuator_profile.compare("dependency_check")) {
-        
-        if(!action.compare("scan")) {
+    // run trivy    
+    if(posture_type > 3 && posture_type < 14) {
                     
-            try {
+        try {
                 
-                string target = pt.get<string>("target.device.device_id","indef");
+            string res =  ScanTrivy(project, target, delay, posture_type, corr_id);
                         
-                if(!target.compare("indef") && !container.compare("indef")) {
-    
-                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
-                } 
+            return res;
             
-                string res =  ScanDependencyCheck(target, container, delay);
-                        
-                return res;
+        } catch (const std::exception & ex) {
             
-            } catch (const std::exception & ex) {
-                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
-            }
-                
-        } 
+            return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+        }
     }
     
-    if(!actuator_profile.compare("docker_bench")) {
+    
+    if(posture_type == 14) {
         
-        if(!action.compare("scan")) {
-                    
-            try {
+        try {
                 
-                string res =  ScanDockerBench(container, delay);
+            string res =  ScanKubeHunter(project, target, delay, corr_id);
                         
-                return res;
+            return res;
             
-            } catch (const std::exception & ex) {
-                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
-            }
-                
-        } 
+        } catch (const std::exception & ex) {
+            return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+        }
     }
     
-    if(!actuator_profile.compare("kube_bench")) {
+    if(posture_type == 15) {
         
-        if(!action.compare("scan")) {
-                    
-            try {
-            
-                string res =  ScanKubeBench(container, delay);
+        try {
+                
+            string res =  ScanZap(project, target, delay, corr_id);
                         
-                return res;
+            return res;
             
-            } catch (const std::exception & ex) {
-                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
-            }
-                
-        } 
-    }
-    
-    if(!actuator_profile.compare("kube_hunter")) {
-        
-        if(!action.compare("scan")) {
-                    
-            try {
-                
-                string target = pt.get<string>("target.device.device_id","indef");
-                        
-                if(!target.compare("indef") && !container.compare("indef")) {
-    
-                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
-                } 
-            
-                string res =  ScanKubeHunter(target, container, delay);
-                        
-                return res;
-            
-            } catch (const std::exception & ex) {
-                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
-            }
-                
-        } 
-    }
-    
-    if(!actuator_profile.compare("nmap")) {
-        
-        if(!action.compare("scan")) {
-                    
-            try {
-                
-                string target = pt.get<string>("target.device.device_id","indef");
-                        
-                if(!target.compare("indef") && !container.compare("indef")) {
-    
-                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
-                } 
-            
-                string res =  ScanNmap(target, container, delay);
-                        
-                return res;
-            
-            } catch (const std::exception & ex) {
-                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
-            }
-                
-        } 
-    }
-    
-    if(!actuator_profile.compare("sonarqube")) {
-        
-        if(!action.compare("scan")) {
-                    
-            try {
-                
-                string target = pt.get<string>("target.device.device_id","indef");
-                        
-                if(!target.compare("indef") && !container.compare("indef")) {
-    
-                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
-                } 
-            
-                string res =  ScanSonarQube(target, container, delay);
-                        
-                return res;
-            
-            } catch (const std::exception & ex) {
-                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
-            }
-                
-        } 
-    }
-    
-    if(!actuator_profile.compare("tfsec")) {
-        
-        if(!action.compare("scan")) {
-                    
-            try {
-                
-                string target = pt.get<string>("target.device.device_id","indef");
-                        
-                if(!target.compare("indef") && !container.compare("indef")) {
-    
-                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
-                } 
-            
-                string res =  ScanTfsec(target, container, delay);
-                
-                return res;
-            
-            } catch (const std::exception & ex) {
-                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
-            }
-                
-        } 
-    }
-    
-    if(!actuator_profile.compare("trivy")) {
-        
-        if(!action.compare("scan")) {
-                    
-            try {
-                
-                string target = pt.get<string>("target.device.device_id","indef");
-                
-                if(!target.compare("indef") && !container.compare("indef")) {
-    
-                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
-                } 
-            
-                string res =  ScanTrivy(target, container, delay);
-                        
-                return res;
-            
-            } catch (const std::exception & ex) {
-                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
-            }
-                
-        } 
-    }
-    
-    if(!actuator_profile.compare("zap")) {
-        
-        if(!action.compare("scan")) {
-                    
-            try {
-                
-                string target = pt.get<string>("target.device.device_id","indef");
-                
-                if(!target.compare("indef") && !container.compare("indef")) {
-    
-                    return "\"status\": 400, \"status_text\": \"wrong target or container\" }"; 
-                } 
-            
-                string res =  ScanZap(target, container, delay);
-                        
-                return res;
-            
-            } catch (const std::exception & ex) {
-                return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
-            }
-                
-        } 
+        } catch (const std::exception & ex) {
+            return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+        }
     }
     
     return "\"status\": 400, \"status_text\": \"wrong actuator or action\" }";
 }
 
-string Scanners::ScanDependencyCheck(string target, string container, int delay) {
+
+string Scanners::ScanTrivy(string project, string target, int delay, int param, string corr_id) {
     
     try {
         
-        std::remove(dependencycheck_result);
+        string trivy_path_str(trivy_path);
+        string result_path_str(result_path);
+        string trivy_result = result_path_str + "trivy.json";
         
-        if(!container.compare("indef")) {
+        string cmd;
         
-            string cmd = "/etc/altprobe/scripts/dependency-check.sh " + target;
-        
-            system(cmd.c_str());
-        
-        } else {
+        switch (param) {
             
-            string res = DockerCommand(container, "start");
-        
-            if (res.compare("ok")) {
-                return "dependency-check container: error";
-            }
+            case 4: // appSecret
+                cmd = trivy_path_str + "trivy fs --security-checks secret -f json -o " + trivy_result + " " + target;
+                SysLog((char*) cmd.c_str());
+                break;
             
-            int res_wait = 0;
-            int i = 0;
-            for (; i < delay && res_wait == 0; i++) {
-                sleep(1);
-                res_wait = DockerWait(container);
-            }
-            
-            if(res_wait == 0) return "dependency-check container: error";
-        }
-        
-        std::ifstream dependencycheck_report;
-        
-        dependencycheck_report.open(dependencycheck_result,ios::binary);
-        strStream << dependencycheck_report.rdbuf();
-        
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
-        
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 4;
-        bd.target = target;
-        SendMessage(&bd);
+            case 5: // dockerConfig
+                cmd = trivy_path_str + "trivy fs --security-checks config -f json -o " + trivy_result + " " + target;
+                SysLog((char*) cmd.c_str());
+                break;
                 
-        dependencycheck_report.close();
-        boost::iostreams::close(in);
-        ResetStreams();
-        
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-        return "dependency-check: error";
-    } 
-    
-    return "\"status\": 200 }";
-    
-}
-
-string Scanners::ScanDockerBench(string container, int delay) {
-    
-    try {
-        
-         std::remove(dockerbench_result);
-        
-        // command example - cd /root/docker-bench-security && sh docker-bench-security.sh -l report
-        
-        if(!container.compare("indef")) {
-        
-            string cmd = "/etc/altprobe/scripts/docker-bench.sh";
-        
-            system(cmd.c_str());
-        
-        } else {
-             
-            string res = DockerCommand(container, "start");
-        
-            if (res.compare("ok")) {
-                return "docker-bench container: error";
-            }
-            
-            int res_wait = 0;
-            int i = 0;
-            for (; i < delay && res_wait == 0; i++) {
-                sleep(1);
-                res_wait = DockerWait(container);
-            }
-            
-            if(res_wait == 0) return "docker-bench container: error";
-        }
-        
-        std::ifstream docker_report;
-        
-        // dockerbench_result is a path to result.json for example - /root/docker-bench-security/report.json
-        docker_report.open(dockerbench_result,ios::binary);
-        strStream << docker_report.rdbuf();
-        
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
-        
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 5;
-        SendMessage(&bd);
+            case 6: // k8sConfig
+                cmd = trivy_path_str + "trivy k8s --security-checks config -f json -o " + trivy_result + " cluster";
+                SysLog((char*) cmd.c_str());
+                break;
                 
-        docker_report.close();
-        boost::iostreams::close(in);
-        ResetStreams();
-       
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-        return "docker_bench: error";
-    } 
-    
-    return "\"status\": 200 }";
-    
-}
-
-string Scanners::ScanKubeBench(string container, int delay) {
-    
-    try {
-        
-        std::remove(kubebench_result);
-        
-        if(!container.compare("indef")) {
-        
-            string cmd = "/etc/altprobe/scripts/kube-bench.sh";
-        
-            system(cmd.c_str());
-        
-        } else {
-             
-            string res = DockerCommand(container, "start");
-        
-            if (res.compare("ok")) {
-                return "kube-bench container: error";
-            }
-            
-            int res_wait = 0;
-            int i = 0;
-            for (; i < delay && res_wait == 0; i++) {
-                sleep(1);
-                res_wait = DockerWait(container);
-            }
-            
-            if(res_wait == 0) return "kube-bench container: error";
-        }
-        
-        std::ifstream kubebench_report;
-        
-        kubebench_report.open(kubebench_result,ios::binary);
-        strStream << kubebench_report.rdbuf();
-        
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
-        
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 6;
-        SendMessage(&bd);
+            case 7: // appVuln
+                cmd = trivy_path_str + "trivy fs --security-checks vuln -f json -o " + trivy_result + " " + target;
+                SysLog((char*) cmd.c_str());
+                break;
                 
-        kubebench_report.close();
-        boost::iostreams::close(in);
-        ResetStreams();
-        
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-        return "kube_bench: error";
-    } 
-    
-    return "\"status\": 200 }";
-    
-}
-
-string Scanners::ScanKubeHunter(string target, string container, int delay) {
-    
-    try {
-        
-        std::remove(kubehunter_result);
-        
-        if(!container.compare("indef")) {
-        
-            string cmd = "/etc/altprobe/scripts/kube-hunter.sh " + target;
-        
-            system(cmd.c_str());
-        
-        } else {
-             
-            string res = DockerCommand(container, "start");
-        
-            if (res.compare("ok")) {
-                return "kube-hunter container: error";
-            }
-            
-            int res_wait = 0;
-            int i = 0;
-            for (; i < delay && res_wait == 0; i++) {
-                sleep(1);
-                res_wait = DockerWait(container);
-            }
-            
-            if(res_wait == 0) return "kube-hunter container: error";
-        }
-        
-        std::ifstream kubehunter_report;
-        
-        kubehunter_report.open(kubehunter_result,ios::binary);
-        strStream << kubehunter_report.rdbuf();
-        
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
-        
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 7;
-        bd.target = target;
-        SendMessage(&bd);
+            case 8: // dockerVuln
+                cmd = trivy_path_str + "trivy image --security-checks vuln -f json -o " + trivy_result + " " + target;
+                SysLog((char*) cmd.c_str());
+                break;
                 
-        kubehunter_report.close();
-        boost::iostreams::close(in);
-        ResetStreams();
-        
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-        return "kube_hunter: error";
-    } 
-    
-    return "\"status\": 200 }";
-    
-}
-
-string Scanners::ScanNmap(string target, string container, int delay) {
-    
-    try {
-        
-        std::remove(nmap_result);
-        
-        if(!container.compare("indef")) {
-        
-            string cmd = "/etc/altprobe/scripts/nmap.sh " + target;
-        
-            system(cmd.c_str());
-        
-        } else {
-             
-            string res = DockerCommand(container, "start");
-        
-            if (res.compare("ok")) {
-                return "nmap container: error";
-            }
-            
-            int res_wait = 0;
-            int i = 0;
-            for (; i < delay && res_wait == 0; i++) {
-                sleep(1);
-                res_wait = DockerWait(container);
-            }
-            
-            if(res_wait == 0) return "nmap container: error";
+            case 9: // k8sVuln
+                cmd = trivy_path_str + "trivy k8s --security-checks vuln -f json -o " + trivy_result + " cluster";
+                SysLog((char*) cmd.c_str());
+                break;
+                
+            case 10: // appSbom
+                cmd = trivy_path_str + "trivy fs --format cyclonedx --output " + trivy_result + " " + target;
+                SysLog((char*) cmd.c_str());
+                break;
+                
+            case 11: // dockerSbom
+                cmd = trivy_path_str + "trivy image --format cyclonedx --output " + trivy_result + " " + target;
+                SysLog((char*) cmd.c_str());
+                break;
+                
+            case 12: // cloudFormation
+                cmd = trivy_path_str + "trivy fs --security-checks config -f json -o " + trivy_result + " " + target;
+                SysLog((char*) cmd.c_str());
+                break;
+                
+            case 13: // terraform
+                cmd = trivy_path_str + "trivy fs --security-checks config -f json -o " + trivy_result + " " + target;
+                SysLog((char*) cmd.c_str());
+                break;
+                
+            default:
+                return "trivy: error";
         }
         
-        std::ifstream nmap_report;
-        
-        nmap_report.open(nmap_result,ios::binary);
-        strStream << nmap_report.rdbuf();
-        
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
-        
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 8;
-        bd.target = target;
-        SendMessage(&bd);
-                        
-        nmap_report.close();
-        boost::iostreams::close(in);
-        ResetStreams();
-        
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-        return "nmap: error";
-    } 
-    
-    return "\"status\": 200 }";
-    
-}
-
-string Scanners::ScanSonarQube(string target, string container, int delay) {
-    
-    try {
-        
-        if(!container.compare("indef")) {
-        
-            string cmd = "/etc/altprobe/scripts/sonarqube.sh " + target;
-        
-            system(cmd.c_str());
-        
-        } else {
-             
-            string res = DockerCommand(container, "start");
-        
-            if (res.compare("ok")) {
-                return "sonarqube container: error";
-            }
-            
-            int res_wait = 0;
-            int i = 0;
-            for (; i < delay && res_wait == 0; i++) {
-                sleep(1);
-                res_wait = DockerWait(container);
-            }
-            
-            if(res_wait == 0) return "sonarqube container: error";
-        }
-        
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-        return "sonarqube: error";
-    } 
-    
-    return "\"status\": 200 }";
-    
-}
-
-string Scanners::ScanTfsec(string target, string container, int delay) {
-    
-    try {
-        
-        std::remove(tfsec_result);
-        
-        if(!container.compare("indef")) {
-        
-            string cmd = "/etc/altprobe/scripts/tfsec.sh " + target;
-        
-            system(cmd.c_str());
-        
-        } else {
-             
-            string res = DockerCommand(container, "start");
-        
-            if (res.compare("ok")) {
-                return "tfsec container: error";
-            }
-            
-            int res_wait = 0;
-            int i = 0;
-            for (; i < delay && res_wait == 0; i++) {
-                sleep(1);
-                res_wait = DockerWait(container);
-            }
-            
-            if(res_wait == 0) return "tfsec container: error";
-        }
-        
-        std::ifstream tfsec_report;
-        
-        tfsec_report.open(tfsec_result,ios::binary);
-        strStream << tfsec_report.rdbuf();
-        
-        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
-        in.push(boost::iostreams::gzip_compressor());
-        in.push(strStream);
-        boost::iostreams::copy(in, comp);
-        
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 9;
-        bd.target = target;
-        SendMessage(&bd);
-        
-        tfsec_report.close();
-        boost::iostreams::close(in);
-        ResetStreams();
-        
-    } catch (const std::exception & ex) {
-        SysLog((char*) ex.what());
-        return "tfsec: error";
-    } 
-    
-    return "\"status\": 200 }";
-    
-}
-
-
-string Scanners::ScanTrivy(string target, string container, int delay) {
-    
-    try {
-        
-        std::remove(trivy_result);
-        
-        if(!container.compare("indef")) {
-        
-            string cmd = "/etc/altprobe/scripts/trivy.sh " + target;
-        
-            system(cmd.c_str());
-        
-        } else {
-             
-            string res = DockerCommand(container, "start");
-        
-            if (res.compare("ok")) {
-                return "trivy container: error";
-            }
-            
-            int res_wait = 0;
-            int i = 0;
-            for (; i < delay && res_wait == 0; i++) {
-                sleep(1);
-                res_wait = DockerWait(container);
-            }
-            
-            if(res_wait == 0) return "trivy container: error";
-        }
+        system(cmd.c_str());
         
         std::ifstream trivy_report;
         
@@ -893,11 +382,12 @@ string Scanners::ScanTrivy(string target, string container, int delay) {
         in.push(strStream);
         boost::iostreams::copy(in, comp);
         
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 10;
-        bd.target = target;
-        SendMessage(&bd);
+        posture.event_type = param;
+        posture.data = comp.str();
+        posture.ref_id = project;
+        posture.target = target;
+        posture.uuid = corr_id;
+        SendMessage(&posture);
                 
         trivy_report.close();
         boost::iostreams::close(in);
@@ -912,35 +402,59 @@ string Scanners::ScanTrivy(string target, string container, int delay) {
     
 }
 
-string Scanners::ScanZap(string target, string container, int delay) {
+string Scanners::ScanKubeHunter(string project, string target, int delay, string corr_id) {
     
     try {
         
-        std::remove(zap_result);
+        string kubehunter_script_str(kubehunter_script);
+        string result_path_str(result_path);
+        string kubehunter_result = result_path_str + "kube-hunter.json";
+                
+        string cmd = kubehunter_script_str + " " + "/etc/altprobe/scripts/kube-hunter.sh " + kubehunter_result + " " + target;
+        SysLog((char*) cmd.c_str());
+        system(cmd.c_str());
         
-        if(!container.compare("indef")) {
+        std::ifstream kubehunter_report;
         
-            string cmd = "/etc/altprobe/scripts/zap.sh " + target;
+        kubehunter_report.open(kubehunter_result,ios::binary);
+        strStream << kubehunter_report.rdbuf();
         
-            system(cmd.c_str());
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
         
-        } else {
-             
-            string res = DockerCommand(container, "start");
+        posture.event_type = 14;
+        posture.data = comp.str();
+        posture.ref_id = project;
+        posture.target = target;
+        posture.uuid = corr_id;
+        SendMessage(&posture);
+                
+        kubehunter_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
         
-            if (res.compare("ok")) {
-                return "zap container: error";
-            }
-            
-            int res_wait = 0;
-            int i = 0;
-            for (; i < delay && res_wait == 0; i++) {
-                sleep(1);
-                res_wait = DockerWait(container);
-            }
-            
-            if(res_wait == 0) return "zap container: error";
-        }
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "kube-hunter: error";
+    } 
+    
+    return "\"status\": 200 }";
+    
+}
+
+string Scanners::ScanZap(string project, string target, int delay, string corr_id) {
+    
+    try {
+        
+        string zap_script_str(zap_script);
+        string result_path_str(result_path);
+        string zap_result = result_path_str + "zap.json";
+        
+        string cmd = zap_script_str + " " + zap_result + " " + target;
+        SysLog((char*) cmd.c_str());
+        system(cmd.c_str());
         
         std::ifstream zap_report;
         
@@ -952,11 +466,12 @@ string Scanners::ScanZap(string target, string container, int delay) {
         in.push(strStream);
         boost::iostreams::copy(in, comp);
         
-        bd.data = comp.str();
-        bd.ref_id = fs.filter.ref_id;
-        bd.event_type = 11;
-        bd.target = target;
-        SendMessage(&bd);
+        posture.event_type = 15;
+        posture.data = comp.str();
+        posture.ref_id = project;
+        posture.target = target;
+        posture.uuid = corr_id;
+        SendMessage(&posture);
                 
         zap_report.close();
         boost::iostreams::close(in);
@@ -970,170 +485,5 @@ string Scanners::ScanZap(string target, string container, int delay) {
     return "\"status\": 200 }";
     
 }
-
-string Scanners::DockerCommand(string id, string cmd) {
-    
-    int sck;
-    struct sockaddr_un addr;
-    int ret;
-    
-    if (dockerSocketStatus) {
-    
-        try {
-        
-            /* create socket */
-            sck = socket(AF_UNIX, SOCK_STREAM, 0);
-            if (sck == -1) {
-                close (sck);
-                return "can not create socket";
-            }
-            
-            /* set address */
-            addr.sun_family = AF_UNIX;
-            strncpy(addr.sun_path, docker_socket, sizeof(addr.sun_path));
-            addr.sun_path[sizeof(addr.sun_path) - 1] = 0;
-
-            /* Connect to unix socket */
-            ret = connect(sck, (struct sockaddr *) &addr, sizeof(addr));
-            if (ret == -1) {
-                close (sck);
-                return "can not connect to socket";
-            }
-        
-            std::string req = "POST /v1.40/containers/";
-            req += id;
-            req += "/";
-            req += cmd;
-            req += " HTTP/1.1\r\n";
-            req += "Host: localhost\r\n";
-            req += "Accept: */*\r\n\r\n";
-        
-            int siz = req.size();
-
-            ret = send(sck, req.c_str(), siz, 0);
-            if (ret == -1) {
-                close (sck);
-                return "can not send request";
-            } else if (ret < siz) {
-                close (sck);
-                return "unable send all size of message";
-            }
-        
-            char buffer[SOCKET_BUFFER_SIZE];
-            memset(buffer, 0, sizeof(buffer));
-        
-            ret = read(sck, buffer, SOCKET_BUFFER_SIZE);
-            if (ret == -1) {
-                close (sck);
-                return "can not read answer";
-            } 
-        
-            close (sck);
-            return "ok";
-        
-        } catch (std::exception& e) {
-            close (sck);
-            return "docker_unixsocket: exception";
-        }
-    }
-
-    return "docker_unixsocket: error";
-}
-
-int Scanners::DockerWait(string id) {
-    
-    int sck;
-    struct sockaddr_un addr;
-    int ret;
-    
-    char* buffer;
-    buffer = new char[SOCKET_BUFFER_SIZE];
-    
-    if (dockerSocketStatus) {
-    
-        try {
-            
-            /* create socket */
-            sck = socket(AF_UNIX, SOCK_STREAM, 0);
-            if (sck == -1) {
-                delete [] buffer;
-                close (sck);
-                return 0;
-            }
-            
-            /* set address */
-            addr.sun_family = AF_UNIX;
-            strncpy(addr.sun_path, docker_socket, sizeof(addr.sun_path));
-            addr.sun_path[sizeof(addr.sun_path) - 1] = 0;
-
-            /* Connect to unix socket */
-            ret = connect(sck, (struct sockaddr *) &addr, sizeof(addr));
-            if (ret == -1) {
-                delete [] buffer;
-                close (sck);
-                return 0;
-            }
-        
-            std::string req = "POST /v1.40/containers/";
-            req += id;
-            req += "/wait";
-            req += " HTTP/1.1\r\n";
-            req += "Host: localhost\r\n";
-            req += "Accept: */*\r\n\r\n";
-        
-            int siz = req.size();
-
-            ret = send(sck, req.c_str(), siz, 0);
-            if (ret == -1) {
-                delete [] buffer;
-                close (sck);
-                return 0;
-            } else if (ret < siz) {
-                delete [] buffer;
-                close (sck);
-                return 0;
-            }
-        
-            ret = read(sck, buffer, SOCKET_BUFFER_SIZE);
-            if (ret == -1) {
-                delete [] buffer;
-                close (sck);
-                return 0;
-            } 
-            
-            char res = ' ';
-            int j = 0;
-            
-            for (int i = 0; i < SOCKET_BUFFER_SIZE; i++) {
-            
-                char test = (char) buffer[i];
-            
-                if (j == 12) {
-                    
-                    res = test;
-                    
-                    if (res == '0') {
-                        delete [] buffer;
-                        close (sck);
-                        return 1;
-                    }
-                    
-                    break;
-                }
-            
-                if ( test == '\n') j++;
-            }
-        
-        } catch (std::exception& e) {
-            
-        }
-        
-        close (sck);
-    }
-
-    delete [] buffer;
-    return 0;
-}
-
 
 

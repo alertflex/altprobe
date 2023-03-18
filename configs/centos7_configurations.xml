@@ -5,8 +5,7 @@
                    displayName="Header Files"
                    projectFiles="true">
       <itemPath>aggalerts.h</itemPath>
-      <itemPath>aggnet.h</itemPath>
-	  <itemPath>awswaf.h</itemPath>
+      <itemPath>awswaf.h</itemPath>
       <itemPath>base64.h</itemPath>
       <itemPath>cobject.h</itemPath>
       <itemPath>collector.h</itemPath>
@@ -19,7 +18,6 @@
       <itemPath>loclog.h</itemPath>
       <itemPath>main.h</itemPath>
       <itemPath>misc.h</itemPath>
-      <itemPath>netstat.h</itemPath>
       <itemPath>nids.h</itemPath>
       <itemPath>remlog.h</itemPath>
       <itemPath>remstat.h</itemPath>
@@ -37,8 +35,7 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>aggalerts.cpp</itemPath>
-      <itemPath>aggnet.cpp</itemPath>
-	  <itemPath>awswaf.cpp</itemPath>
+      <itemPath>awswaf.cpp</itemPath>
       <itemPath>cobject.cpp</itemPath>
       <itemPath>collector.cpp</itemPath>
       <itemPath>config.cpp</itemPath>
@@ -50,7 +47,6 @@
       <itemPath>loclog.cpp</itemPath>
       <itemPath>main.cpp</itemPath>
       <itemPath>misc.cpp</itemPath>
-      <itemPath>netstat.cpp</itemPath>
       <itemPath>nids.cpp</itemPath>
       <itemPath>remlog.cpp</itemPath>
       <itemPath>remstat.cpp</itemPath>
@@ -82,24 +78,20 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <commandLine>-I/usr/include/ -I/usr/include/boost -I/usr/include/hiredis -I/usr/include/activemq-cpp-3.9.3/ -I/usr/include/apr-1/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11</commandLine>
+          <commandLine>-I/usr/include/ -I/usr/include/boost -I/usr/include/hiredis -I/usr/local/include/kubernetes -I/usr/include/activemq-cpp-3.9.3/ -I/usr/include/apr-1/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11</commandLine>
         </ccTool>
         <linkerTool>
           <linkerAddLib>
             <pElem>/usr/local/lib</pElem>
           </linkerAddLib>
-          <commandLine>-L/usr/lib -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -lz -lm -lrt -ldl -lpthread -lyaml -ldaemon -lactivemq-cpp -lboost_system -lboost_thread -lboost_iostreams -lhiredis -lGeoIP -lboost_filesystem -lboost_regex</commandLine>
+          <commandLine>-L/usr/lib -L/usr/local/lib -L/usr/lib/x86_64-linux-gnu -lz -lm -lrt -ldl -lpthread -lyaml -ldaemon -lactivemq-cpp -lboost_system -lboost_thread -lboost_iostreams -lhiredis -lGeoIP -lboost_filesystem -lboost_regex -lkubernetes -lwebsockets</commandLine>
         </linkerTool>
       </compileType>
       <item path="aggalerts.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="aggalerts.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="aggnet.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="aggnet.h" ex="false" tool="3" flavor2="0">
-      </item>
-	  <item path="awswaf.cpp" ex="false" tool="1" flavor2="0">
+      <item path="awswaf.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="awswaf.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -148,10 +140,6 @@
       <item path="misc.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="misc.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="netstat.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="netstat.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="nids.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -210,11 +198,7 @@
       </item>
       <item path="aggalerts.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="aggnet.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="aggnet.h" ex="false" tool="3" flavor2="0">
-      </item>
-	  <item path="awswaf.cpp" ex="false" tool="1" flavor2="0">
+      <item path="awswaf.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="awswaf.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -263,10 +247,6 @@
       <item path="misc.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="misc.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="netstat.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="netstat.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="nids.cpp" ex="false" tool="1" flavor2="0">
       </item>

@@ -26,7 +26,6 @@
 #include "filters.h"
 #include "config.h"
 #include "source.h"
-#include "netstat.h"
 
 using namespace std;
 
@@ -87,9 +86,6 @@ public:
     
     AwsWafRecord rec;
     
-    // create netflow record
-    Netflow net_flow;
-    
     bpt::ptree pt;
     stringstream ss;
     
@@ -119,7 +115,6 @@ public:
     }
         
     void ClearRecords() {
-        net_flow.Reset();
         rec.Reset();
         jsonPayload.clear();
         ResetJsontree();

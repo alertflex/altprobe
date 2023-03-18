@@ -33,7 +33,7 @@ public:
     MessageConsumer* consumer;
     int update_status;
         
-    BinData bd;
+    Posture posture;
     std::stringstream strStream, comp;
     
     FiltersSingleton fs;
@@ -53,21 +53,12 @@ public:
     int Go();
     void onMessage(const Message* message);
     void onException(const CMSException& ex AMQCPP_UNUSED);
-    string onTextMessage(const Message* message);
+    string onTextMessage(const Message* message, string corr_id);
    
-    string ScanDependencyCheck(string target, string container, int delay);
-    string ScanDockerBench(string container, int delay);
-    string ScanKubeBench(string container, int delay);
-    string ScanKubeHunter(string target, string container, int delay);
-    string ScanNmap(string target, string container, int delay);
-    string ScanSonarQube(string target, string container, int delay);
-    string ScanTfsec(string target, string container, int delay);
-    string ScanTrivy(string target, string container, int delay);
-    string ScanZap(string target, string container, int delay);
+    string ScanKubeHunter(string project, string target, int delay, string corr_id);
+    string ScanTrivy(string project, string target, int delay, int param, string corr_id);
+    string ScanZap(string project, string target, int delay, string corr_id);
         
-    string DockerCommand(string id, string cmd);
-    int DockerWait(string id);
-    
     void ResetStreams() {
         comp.str("");
         comp.clear();

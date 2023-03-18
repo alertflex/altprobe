@@ -25,8 +25,7 @@ public:
     static int config_flag;
     
     static int reports_period;
-    static int update_period;
-    
+        
     static int alerts_threshold;
     
     static int ctrl_error_counter;
@@ -54,10 +53,6 @@ public:
     
     int GetReportsPeriod() { 
         return reports_period; 
-    };
-    
-    int GetUpdatePeriod() { 
-        return update_period; 
     };
     
     int SendMessage(Event* e);

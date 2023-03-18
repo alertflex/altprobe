@@ -63,23 +63,6 @@ public:
     }
 };
 
-class Group {
-    
-public:
-    string name;
-    int count;
-    string ref;
-    
-            
-    Group(string n, int c, string r) {
-        name = n;
-        count = c;
-        ref = r;
-    }
-};
-
-
-
 class Host {
 public:
     string name;
@@ -118,6 +101,22 @@ public:
     
     Network () {
         Reset();
+    }
+};
+
+class Namespace {
+public:
+    string name; // home network
+    string desc;
+    
+    void Reset() {
+        name.clear();
+        desc.clear();
+    }
+    
+    Namespace (string n, string d) {
+        name = n;
+        desc = d;
     }
 };
 
@@ -219,7 +218,7 @@ public:
     string name;
     
     std::vector<Network*> home_nets;
-    	
+    
     IdsPolicy crs;
            
     IdsPolicy nids;
@@ -245,16 +244,15 @@ public:
     // FS states
     static int status;
     static boost::shared_mutex agents_update;
-    static boost::shared_mutex groups_update;
     static boost::shared_mutex filters_update;
     
     static Filters filter;
     
     static std::vector<Agent> agents_list;
     
-    static std::vector<Group> groups_list;
-    
     static std::vector<Host> hosts_list;
+    
+    static std::vector<Namespace> namespaces_list;
         
     static int GetFiltersConfig();
     static int ParsFiltersConfig(string f);
@@ -262,16 +260,12 @@ public:
     static void UpdateAgentsList(string id, string ip, string name, string status, 
         string date, string version, string manager, string os_platf, string os_ver, string os_name, string group);
     static void UpdateAgentsList(string id, string ip, string name);
-    static void UpdateGroupsListCount(string name, int count);
-    static void UpdateGroupsListRef(string name, string ref);
     static string GetAgentIdByName(string name);
     static string GetNameByAgentId(string id);
     static string GetHostnameByIP(string ip);
     static string GetHostnameByAgentname(string agent);
     static string GetCloudInstanceByAgentname(string agent);
-    static string GetRefByAgentName(string name);
-    static string GetRefByGroupName(string name);
-            
+                    
     int GetStatus() { return status; }
 };
 

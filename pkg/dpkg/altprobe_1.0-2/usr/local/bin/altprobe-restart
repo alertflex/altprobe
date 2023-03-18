@@ -1,2 +1,0 @@
-altprobe stop
-altprobe start

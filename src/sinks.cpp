@@ -27,8 +27,6 @@ int Sinks::alerts_threshold = 0;
 
 int Sinks::reports_period = 0;
 
-int Sinks::update_period = 0;
-
 LocLog Sinks::persist;
 
 int Sinks::GetConfig() {
@@ -46,7 +44,6 @@ int Sinks::GetConfig() {
         ConfigYaml* cy = new ConfigYaml( "collector");
     
         cy->addKey("timer_report");
-        cy->addKey("timer_update");
         cy->addKey("alerts_threshold");
         cy->addKey("redis_host");
         cy->addKey("redis_port");
@@ -56,11 +53,6 @@ int Sinks::GetConfig() {
         reports_period = stoi(cy->getParameter("timer_report"));
         if (!reports_period) {
             SysLog("config file: sending reports to controller disabled");
-        }
-        
-        update_period = stoi(cy->getParameter("timer_update"));
-        if (!update_period) {
-            SysLog("config file: update tasks are disabled");
         }
         
         alerts_threshold = stoi(cy->getParameter("alerts_threshold"));

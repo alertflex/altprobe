@@ -121,7 +121,10 @@ int Crs::ReadFile() {
             ferror_counter = 0;
             return 1;
                     
-        } else ferror_counter++;
+        } else {
+            ferror_counter++;
+            clearerr(fp);
+        }
             
         if(ferror_counter > EOF_COUNTER) {
             
@@ -388,8 +391,8 @@ void Crs::CreateLog() {
     report += "\",\"description\":\"";
     report += rec.output;
     
-    report += "\", \"sensor\":\"";
-    report += rec.sensor;
+    report += "\", \"probe\":\"";
+    report += host_name + ".hids";
     
     report += "\",\"user_name\":\"";
     report += rec.fields.user_name;
@@ -503,7 +506,7 @@ void Crs::SendAlert(int s, GrayList*  gl) {
     if(SuppressAlert(rec.fields.fd_cip)) return;
         
     sk.alert.ref_id =  fs.filter.ref_id;
-    sk.alert.sensor_id = rec.sensor;
+    sk.alert.probe = host_name + ".crs";
     
     sk.alert.alert_severity = s;
     sk.alert.alert_source = "Falco";

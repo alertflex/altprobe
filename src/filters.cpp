@@ -23,8 +23,8 @@ int FiltersSingleton::status = 0;
 
 Filters FiltersSingleton::filter;
 std::vector<Agent> FiltersSingleton::agents_list;
-std::vector<Group> FiltersSingleton::groups_list;
 std::vector<Host> FiltersSingleton::hosts_list;
+std::vector<Namespace> FiltersSingleton::namespaces_list;
 
 int FiltersSingleton::GetFiltersConfig() {
     
@@ -82,7 +82,6 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             filter.home_nets.push_back(net);
         }
         
-        
         bpt::ptree agents = pt.get_child("agents");
         BOOST_FOREACH(bpt::ptree::value_type &a_list, agents) {
         
@@ -93,18 +92,6 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             UpdateAgentsList(id, ip, name);
             
         }
-        
-        
-        bpt::ptree groups = pt.get_child("groups");
-        BOOST_FOREACH(bpt::ptree::value_type &g_list, groups) {
-        
-            string name = g_list.second.get<string>("name");
-            string ref = g_list.second.get<string>("ref");
-                        
-            UpdateGroupsListRef(name, ref);
-            
-        }
-        
         
         hosts_list.clear();
         bpt::ptree hosts = pt.get_child("hosts");
@@ -118,6 +105,15 @@ int FiltersSingleton::ParsFiltersConfig(string f) {
             hosts_list.push_back(Host(name, ip, agent, cloud_instance));
         }
         
+        namespaces_list.clear();
+        bpt::ptree name_spaces = pt.get_child("name_space");
+        BOOST_FOREACH(bpt::ptree::value_type &n_spaces, name_spaces) {
+            
+            string name = n_spaces.second.get<string>("name");
+            string desc = n_spaces.second.get<string>("desc");
+            
+            namespaces_list.push_back(Namespace(name, desc));
+        }
         
         bpt::ptree filters = pt.get_child("sources");
         
@@ -311,42 +307,6 @@ void FiltersSingleton::UpdateAgentsList(string id, string ip, string name) {
     
 }
 
-boost::shared_mutex FiltersSingleton::groups_update;
-
-void FiltersSingleton::UpdateGroupsListCount(string name, int count) {
-    
-    boost::unique_lock<boost::shared_mutex> lock(groups_update);
-    
-    std::vector<Group>::iterator i, end;   
-    
-    for (i = groups_list.begin(), end = groups_list.end(); i != end; ++i) {
-        if (i->name.compare(name) == 0) {
-            i->count = count;
-            return;
-        }
-    }
-    
-    groups_list.push_back(Group(name, count, "indef"));
-    
-}
-
-void FiltersSingleton::UpdateGroupsListRef(string name, string ref) {
-    
-    boost::unique_lock<boost::shared_mutex> lock(groups_update);
-    
-    std::vector<Group>::iterator i, end;   
-    
-    for (i = groups_list.begin(), end = groups_list.end(); i != end; ++i) {
-        if (i->name.compare(name) == 0) {
-            i->ref = ref;
-            return;
-        }
-    }
-    
-    groups_list.push_back(Group(name, 0, ref));
-    
-}
-
 string FiltersSingleton::GetAgentIdByName(string name) {
     
     std::vector<Agent>::iterator i_ag, end_ag;
@@ -419,34 +379,6 @@ string FiltersSingleton::GetCloudInstanceByAgentname(string agent)  {
         
         if (i_h->agent.compare(agent) == 0) {
             return i_h->cloud_instance;
-        }
-    }
-    
-    return "indef";
-}
-
-string FiltersSingleton::GetRefByGroupName(string name) {
-    
-    std::vector<Group>::iterator i_g, end_g;
-    
-    for(i_g = groups_list.begin(), end_g = groups_list.end(); i_g != end_g; ++i_g) {
-        if (i_g->name.compare(name) == 0) {
-            
-            return i_g->ref;
-        }
-    }
-    
-    return "indef";
-}
-
-string FiltersSingleton::GetRefByAgentName(string name) {
-    
-    std::vector<Agent>::iterator i_a, end_a;
-        
-    for(i_a = agents_list.begin(), end_a = agents_list.end(); i_a != end_a; ++i_a) {
-        if (i_a->name.compare(name) == 0) {
-            
-            return GetRefByGroupName(i_a->group);
         }
     }
     

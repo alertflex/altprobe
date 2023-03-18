@@ -55,6 +55,7 @@ int Hids::Open() {
                 SysLog(level);
                 status = 0;
             }
+            
         } else status = 0;
     }
     
@@ -122,7 +123,10 @@ int Hids::ReadFile() {
             ferror_counter = 0;
             return 1;
                     
-        } else ferror_counter++;
+        } else {
+            ferror_counter++;
+            clearerr(fp);
+        }
             
         if(ferror_counter > EOF_COUNTER) {
             
@@ -300,11 +304,6 @@ int Hids::ParsJson() {
     rec.ref_id = fs.filter.ref_id;
     rec.agent = pt.get<string>("agent.name","indef");
             
-    if (rec.agent.compare("indef") != 0) {
-        string tmp_ref = fs.GetRefByAgentName(rec.agent);
-        if (tmp_ref.compare("indef") != 0) rec.ref_id = tmp_ref;
-    }
-        
     string loc = pt.get<string>("location","");
     
     if (loc.compare("vulnerability-detector") == 0 ) {
@@ -534,8 +533,8 @@ void Hids::CreateLog() {
     report += ",\"agent\":\"";
     report += rec.agent;
     
-    report += "\", \"sensor\":\"";
-    report += rec.sensor;
+    report += "\", \"probe\":\"";
+    report += host_name + ".hids";
     
     report +=  "\",\"project_id\":\"";
     report +=  rec.ref_id;
@@ -671,7 +670,7 @@ void Hids::SendAlert(int s, GrayList*  gl) {
     if(SuppressAlert(rec.srcip)) return;
         
     sk.alert.ref_id = rec.ref_id;
-    sk.alert.sensor_id = rec.sensor;
+    sk.alert.probe = host_name + ".hids";
     
     sk.alert.alert_severity = s;
     sk.alert.alert_source = "Wazuh";

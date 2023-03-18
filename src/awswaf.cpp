@@ -124,7 +124,7 @@ int AwsWaf::Go(void) {
             
                         if (alerts_counter < sk.alerts_threshold) alerts_counter++;
                         else {
-                            SendAlertMultiple(3);
+                            SendAlertMultiple(4);
                             alerts_counter++;
                         }
                     }
@@ -247,19 +247,6 @@ int AwsWaf::ParsJson() {
             } 
         } 
         
-        net_flow.ref_id = fs.filter.ref_id;
-        net_flow.sensor = rec.httpSourceId;
-        net_flow.dst_ip = rec.host;
-        net_flow.dst_country = "indef";
-        net_flow.dst_hostname = rec.host;
-        net_flow.src_ip = rec.clientIp;
-        net_flow.src_country = src_cc;
-        net_flow.src_hostname = "indef";
-        net_flow.bytes = 0;
-        net_flow.sessions = 1;
-        net_flow.type = 3;
-        q_netflow.push(net_flow);
-        
         ResetStreams();
         
     } catch (const std::exception & ex) {
@@ -286,6 +273,9 @@ void AwsWaf::CreateLog() {
         
     report +=  ",\"project_id\":\"";
     report +=  fs.filter.ref_id;
+    
+    report += "\", \"probe\":\"";
+    report += host_name + ".aws-waf";
 			
     report += "\",\"collected_time\":\"";
     report += GetGraylogFormat();
@@ -392,7 +382,7 @@ void AwsWaf::SendAlert(int s, GrayList*  gl) {
     if(SuppressAlert(rec.clientIp)) return;
     
     sk.alert.ref_id =  fs.filter.ref_id;
-    sk.alert.sensor_id = host_name + "." + rec.httpSourceId;
+    sk.alert.probe = host_name + ".aws-waf";
     sk.alert.alert_severity = s;
     sk.alert.alert_source = "AwsWaf";
     sk.alert.alert_type = "NET";

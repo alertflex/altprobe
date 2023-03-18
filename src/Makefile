@@ -140,40 +140,10 @@ install:
 		mkdir /etc/altprobe/scripts;\
 	fi;
 	
-	chmod u+x ./scripts/rulesup-falco.sh
-	chmod u+x ./scripts/rulesup-modsec.sh
-	chmod u+x ./scripts/rulesup-wazuh.sh
-	chmod u+x ./scripts/rulesup-suri.sh
-	chmod u+x ./scripts/restart-falco.sh
-	chmod u+x ./scripts/restart-modsec.sh
-	chmod u+x ./scripts/restart-wazuh.sh
-	chmod u+x ./scripts/restart-suri.sh
-	chmod u+x ./scripts/dependency-check.sh
-	chmod u+x ./scripts/docker-bench.sh
-	chmod u+x ./scripts/kube-bench.sh
 	chmod u+x ./scripts/kube-hunter.sh
-	chmod u+x ./scripts/sonarqube.sh
-	chmod u+x ./scripts/tfsec.sh
-	chmod u+x ./scripts/trivy.sh
 	chmod u+x ./scripts/zap.sh
-	chmod u+x ./scripts/nmap.sh
-	cp ./scripts/rulesup-falco.sh /etc/altprobe/scripts/
-	cp ./scripts/rulesup-modsec.sh /etc/altprobe/scripts/
-	cp ./scripts/rulesup-wazuh.sh /etc/altprobe/scripts/
-	cp ./scripts/rulesup-suri.sh /etc/altprobe/scripts/
-	cp ./scripts/restart-falco.sh /etc/altprobe/scripts/
-	cp ./scripts/restart-modsec.sh /etc/altprobe/scripts/
-	cp ./scripts/restart-wazuh.sh /etc/altprobe/scripts/
-	cp ./scripts/restart-suri.sh /etc/altprobe/scripts/
-	cp ./scripts/dependency-check.sh /etc/altprobe/scripts/
-	cp ./scripts/docker-bench.sh /etc/altprobe/scripts/
-	cp ./scripts/kube-bench.sh /etc/altprobe/scripts/
 	cp ./scripts/kube-hunter.sh /etc/altprobe/scripts/
-	cp ./scripts/sonarqube.sh /etc/altprobe/scripts/
-	cp ./scripts/tfsec.sh /etc/altprobe/scripts/
-	cp ./scripts/trivy.sh /etc/altprobe/scripts/
 	cp ./scripts/zap.sh /etc/altprobe/scripts/
-	cp ./scripts/nmap.sh /etc/altprobe/scripts/
 			
 update:
 	cp ./dist/Debug/GNU-Linux/collector /usr/local/bin/altprobe

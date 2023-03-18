@@ -280,7 +280,7 @@ int Controller::SendMessage(Event* e) {
             message->setStringProperty("ref_id", strRefId);
             
             string strNodeId(node_id);
-            message->setStringProperty("node_id", strNodeId);
+            message->setStringProperty("node", strNodeId);
             
             string strAlertUuid(((Alert*) e)->alert_uuid);
             message->setStringProperty("alert_uuid", strAlertUuid);
@@ -291,8 +291,8 @@ int Controller::SendMessage(Event* e) {
             string strType(((Alert*) e)->alert_type);
             message->setStringProperty("alert_type", strType);
             
-            string strSensor(((Alert*) e)->sensor_id);
-            message->setStringProperty("sensor_id", strSensor);
+            string strProbe(((Alert*) e)->probe);
+            message->setStringProperty("probe", strProbe);
             
             message->setIntProperty("alert_severity", ((Alert*) e)->alert_severity);
             
@@ -416,32 +416,55 @@ int Controller::SendMessage(Event* e) {
             byte_message->setStringProperty("host_name", host_name);
             
             switch (msg_type) {
-                case 3 :
-                    byte_message->setIntProperty("sensor", ((BinData*) e)->sensor_type);
-                    byte_message->setStringProperty("rule", ((Rule*) e)->name_rule);
-                    break;
                 case 4 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
                     break;
                 case 5 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    break;
+                case 6 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    break;
+                case 7 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
                     break;
                 case 8 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
                     break;
                 case 9 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
                     break;
                 case 10 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
                     break;
                 case 11 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
                     break;
                 case 12 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
                     break;
-                
+                case 13 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    break;
+                case 14 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    break;
+                case 15 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    break;
+                 
                 default:
                     break;
             }

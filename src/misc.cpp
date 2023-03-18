@@ -105,14 +105,8 @@ int Misc::ParsJson(char* redis_payload) {
         ss << redis_payload;
         bpt::read_json(ss, pt);
         
-        // check is AWS WAF
-        
-        
-        
-        // check is alert
-        
         sk.alert.ref_id  = fs.filter.ref_id;
-        sk.alert.sensor_id = pt.get<string>("alert.sensor_id","indef");
+        sk.alert.probe = host_name + ".altprobe";
                 
         sk.alert.alert_severity = pt.get<int>("alert.alert_severity",0);
         sk.alert.alert_source = pt.get<string>("alert.alert_source","indef");

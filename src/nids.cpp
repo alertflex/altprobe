@@ -35,22 +35,7 @@ int Nids::Open() {
         fseek(fp,0,SEEK_END);
         stat(suri_log, &buf);    
         file_size = (unsigned long) buf.st_size;
-        
-        if (redis_status == 1) {
-            
-            c = redisConnect(sk.redis_host, sk.redis_port);
     
-            if (c != NULL && c->err) {
-                // handle error
-                sprintf(level, "failed open redis server interface: %s\n", c->errstr);
-                SysLog(level);
-                
-                redis_status = 0;
-                status = 1;
-            
-            } else status = 2;
-        }  
-        
     } else {
         
         if (redis_status == 1) {
@@ -142,7 +127,10 @@ int Nids::ReadFile() {
             ferror_counter = 0;
             return 1;
                     
-        } else ferror_counter++;
+        } else {
+            ferror_counter++;
+            clearerr(fp);
+        }
             
         if(ferror_counter > EOF_COUNTER) {
             
@@ -180,10 +168,8 @@ int Nids::Go(void) {
                 if (pars_res > 0) ProcessEvent(pars_res);
                     
             }
-        } 
+        } else {
         
-        if (redis_status == 1) {
-            
             if (read_res > 0) ClearRecords();
         
             // read Suricata data 
@@ -309,6 +295,7 @@ int Nids::ParsJson (int output_type) {
         return 0;
     } 
     
+    /*
     bool is_aws_firewall = false;
     string firewall_name = "indef";
     
@@ -329,7 +316,9 @@ int Nids::ParsJson (int output_type) {
         rec.sensor = host_name + "." + firewall_name;
     } else {
         rec.sensor = host_name + ".nids";
-    }
+    }*/
+    
+    rec.sensor = host_name + ".nids";
     
     string event_type = pt.get<string>("event_type","");
     
@@ -485,20 +474,6 @@ int Nids::ParsJson (int output_type) {
         rec.netflow.end = pt.get<string>("netflow.end","");
         rec.netflow.age = pt.get<int>("netflow.age",0);
         
-        net_flow.ref_id = rec.ref_id;
-        net_flow.sensor = rec.sensor;
-        net_flow.dst_ip = rec.dst_ip;
-        net_flow.src_ip = rec.src_ip;
-        net_flow.dst_country = dst_cc;
-        net_flow.src_country = src_cc;
-        net_flow.dst_hostname = rec.dst_hostname;
-        net_flow.src_hostname = rec.src_hostname;
-        net_flow.bytes = rec.netflow.bytes;
-        net_flow.sessions = 1;
-        if (is_aws_firewall) net_flow.type = 1;
-        else net_flow.type = 0;
-        q_netflow.push(net_flow);
-        
         ResetStream();
         return rec.event_type;
     } 
@@ -538,35 +513,6 @@ int Nids::ParsJson (int output_type) {
         return rec.event_type;
     } 
     
-    if (event_type.compare("stats") == 0) {
-        
-        net_stat.ids = rec.sensor;
-        
-        net_stat.ref_id = fs.filter.ref_id;
-        net_stat.invalid = pt.get<long>("stats.decoder.invalid",0);
-        net_stat.pkts = pt.get<long>("stats.decoder.pkts",0);
-        net_stat.bytes = pt.get<long>("stats.decoder.bytes",0);
-        net_stat.ipv4 = pt.get<long>("stats.decoder.ipv4",0);
-        net_stat.ipv6 = pt.get<long>("stats.decoder.ipv6",0);
-        net_stat.ethernet = pt.get<long>("stats.decoder.ethernet",0);
-        net_stat.tcp = pt.get<long>("stats.decoder.tcp",0);
-        net_stat.udp = pt.get<long>("stats.decoder.udp",0);
-        net_stat.sctp = pt.get<long>("stats.decoder.sctp",0);
-        net_stat.icmpv4 = pt.get<long>("stats.decoder.icmp4",0);
-        net_stat.icmpv6 = pt.get<long>("stats.decoder.icmp6",0);
-        net_stat.ppp = pt.get<long>("stats.decoder.ppp",0);
-        net_stat.pppoe = pt.get<long>("stats.decoder.pppoe",0);
-        net_stat.gre = pt.get<long>("stats.decoder.gre",0);
-        net_stat.vlan = pt.get<long>("stats.decoder.vlan",0);
-        net_stat.vlan_qinq = pt.get<long>("stats.decoder.vlan_qinq",0);
-        net_stat.teredo = pt.get<long>("stats.decoder.teredo",0);
-        net_stat.ipv4_in_ipv6 = pt.get<long>("stats.decoder.ipv4_in_ipv6",0);
-        net_stat.ipv6_in_ipv6 = pt.get<long>("stats.decoder.ipv6_in_ipv6",0);
-        net_stat.mpls = pt.get<long>("stats.decoder.mpls",0);
-        
-        q_netstat.push(net_stat);
-    } 
-    
     ResetStream();
     
     return 0;
@@ -589,8 +535,8 @@ void Nids::CreateLogPayload(int r) {
         report +=  ",\"project_id\":\"";
         report +=  fs.filter.ref_id;
         
-        report +=  "\",\"sensor\":\"";
-        report +=  rec.sensor;
+        report +=  "\",\"probe\":\"";
+        report +=  host_name + ".nids";
 			
         report +=  "\",\"event_time\":\"";
         report +=  rec.time_stamp;
@@ -670,8 +616,8 @@ void Nids::CreateLogPayload(int r) {
                     report +=  ",\"project_id\":\"";
                     report +=  fs.filter.ref_id;
             
-                    report +=  "\",\"sensor\":\"";
-                    report +=  rec.sensor;
+                    report +=  "\",\"probe\":\"";
+                    report +=  host_name + ".nids";
 			
                     report +=  "\",\"event_time\":\"";
                     report +=  rec.time_stamp;
@@ -762,8 +708,8 @@ void Nids::CreateLogPayload(int r) {
                     report +=  ",\"project_id\":\"";
                     report +=  fs.filter.ref_id;
             
-                    report +=  "\",\"sensor\":\"";
-                    report +=  rec.sensor;
+                    report +=  "\",\"probe\":\"";
+                    report +=  host_name + ".nids";
 			
                     report +=  "\",\"event_time\":\"";
                     report +=  rec.time_stamp;
@@ -833,8 +779,8 @@ void Nids::CreateLogPayload(int r) {
                     report +=  ",\"project_id\":\"";
                     report +=  fs.filter.ref_id;
             
-                    report +=  "\",\"sensor\":\"";
-                    report +=  rec.sensor;
+                    report +=  "\",\"probe\":\"";
+                    report +=  host_name + ".nids";
 			
                     report +=  "\",\"event_time\":\"";
                     report +=  rec.time_stamp;
@@ -901,8 +847,8 @@ void Nids::CreateLogPayload(int r) {
                     report +=  ",\"project_id\":\"";
                     report +=  fs.filter.ref_id;
             
-                    report +=  "\",\"sensor\":\"";
-                    report +=  rec.sensor;
+                    report +=  "\",\"probe\":\"";
+                    report +=  host_name + ".nids";
 			
                     report +=  "\",\"event_time\":\"";
                     report +=  rec.time_stamp;
@@ -974,7 +920,7 @@ void Nids::SendAlert(int s, GrayList* gl) {
     if(SuppressAlert(rec.src_ip)) return;
         
     sk.alert.ref_id =  fs.filter.ref_id;
-    sk.alert.sensor_id = rec.sensor;
+    sk.alert.probe = host_name + ".nids";
     
     sk.alert.alert_severity = s;
     sk.alert.alert_source = "Suricata";
@@ -984,7 +930,7 @@ void Nids::SendAlert(int s, GrayList* gl) {
     sk.alert.description = rec.alert.signature;
     sk.alert.action = "indef";     
     sk.alert.location = std::to_string(rec.flow_id);
-    sk.alert.info = "{\"artifacts\": [{\"dataType\": \"ip\",\"data\":\"";
+    sk.alert.info = "{\"observables\": [{\"dataType\": \"ip\",\"data\":\"";
     sk.alert.info += rec.src_ip;
     sk.alert.info += "\",\"message\":\"src ip\" }, {\"dataType\": \"ip\",\"data\":\"";
     sk.alert.info += rec.dst_ip;

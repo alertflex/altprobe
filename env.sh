@@ -8,7 +8,7 @@
 # work directory and node id and probe id
 export INSTALL_PATH=/home/xxxxx/altprobe
 export PROJECT_ID=xxxxx
-export NODE_NAME=xxxxx
+export VRN_ID=xxxxx
 export HOST_NAME=xxxxx
 
 # controller
@@ -21,8 +21,9 @@ export CERT_VERIFY=true
 export AMQ_KEY=indef
 export KEY_PWD=indef
 
-# sources
-# if *_LOG is "indef", redis connection will use
+# probes
+export RESULT_PATH='\/home\/xxxxx\/reports\/'
+export TRIVY_PATH=indef
 export FALCO_LOG=indef
 export MODSEC_LOG=indef
 export SURI_LOG=indef
@@ -31,6 +32,7 @@ export WAZUH_LOG=indef
 # install add-on packages
 export INSTALL_REDIS=no
 export REDIS_HOST=127.0.0.1
+export INSTALL_TRIVY=no
 export INSTALL_FALCO=no
 export INSTALL_SURICATA=no
 export SURICATA_INTERFACE=xxx

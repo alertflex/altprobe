@@ -25,6 +25,13 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <iostream>
+extern "C" {
+    #include <config/kube_config.h>
+    #include <api/CoreV1API.h>
+}
+#include <stdio.h>
+#include <kubernetes/model/v1_object_meta.h>
+#include <kubernetes/model/v1_pod_spec.h>
 
 #include "sensors.h"
 
@@ -222,37 +229,6 @@ string Sensors::onBytesMessage(const Message* message) {
     if(ref_id.compare(fs.filter.ref_id)) return "\"status\": 400, \"status_text\": \"wrong tenant\" }"; 
     
     string content_type = message->getStringProperty("content_type");
-    string cmd;
-    
-    if (!content_type.compare("restart")) {
-        
-        try { 
-            
-            int sensor_type = message->getIntProperty("sensor_type");
-        
-            switch (sensor_type) {
-                case 0 : cmd = "/etc/altprobe/scripts/restart-falco.sh";
-                    break;
-                case 1 : cmd = "/etc/altprobe/scripts/restart-modsec.sh";
-                    break;
-                case 2 : cmd = "/etc/altprobe/scripts/restart-suri.sh";
-                    break;
-                case 3 : cmd = "/etc/altprobe/scripts/restart-wazuh.sh";
-                    break;
-                default:
-                    return "\"status\": 400 }";
-            }
-            
-            system(cmd.c_str());
-        
-        } catch (std::ostream::failure e) {
-            SysLog("Exception for restart sensor.");
-            return "\"status\": 400 }";    
-        }
-        
-        SysLog("Sensor restart has been done.");
-        return "\"status\": 200 }";  
-    }
     
     const BytesMessage* bytesMessage = dynamic_cast<const BytesMessage*> (message);
     
@@ -291,71 +267,9 @@ string Sensors::onBytesMessage(const Message* message) {
         return "\"status\": 200 }"; 
     }
     
-    if (!content_type.compare("rules")) {
-        
-        try { 
-        
-            int rules_type = message->getIntProperty("rules_type");
-            string rule_name = message->getStringProperty("rule_name");
-                    
-            switch (rules_type) {
-                case 0 : {
-                    string rules_path(falco_local);
-                    string file_path = rules_path + rule_name;
-                    ostream.open(file_path, ios_base::trunc);
-                    cmd = "/etc/altprobe/scripts/rulesup-falco.sh";
-                    }
-                    break;
-                case 1 : {
-                    string rules_path(modsec_local);
-                    string file_path = rules_path + rule_name;
-                    ostream.open(file_path, ios_base::trunc);
-                    cmd = "/etc/altprobe/scripts/rulesup-modsec.sh";
-                    }
-                    break;
-                 case 2 : {
-                    string rules_path(suri_local);
-                    string file_path = rules_path + rule_name;
-                    ostream.open(file_path, ios_base::trunc);
-                    cmd = "/etc/altprobe/scripts/rulesup-suri.sh";
-                    }
-                    break;
-                case 3 : {
-                    string dir_path(wazuh_local);
-                    string rules_path(WAZUH_RULES);
-                    string file_path = dir_path + rules_path + rule_name;
-                    ostream.open(file_path, ios_base::trunc);
-                    cmd = "/etc/altprobe/scripts/rulesup-wazuh.sh";
-                    }
-                    break;
-                case 4 : {
-                    string dir_path(wazuh_local);
-                    string rules_path(WAZUH_DECODERS);
-                    string file_path = dir_path + rules_path + rule_name;
-                    ostream.open(file_path, ios_base::trunc);
-                    cmd = "/etc/altprobe/scripts/rulesup-wazuh.sh";
-                    }
-                    break;
-               
-                default:
-                    return "\"status\": 400 }";
-            }
-            
-            ostream << decomp.str();
-            ostream.close();
-            
-            system(cmd.c_str());
-        
-        } catch (std::ostream::failure e) {
-            SysLog("Exception for local filters file.");
-            return "\"status\": 400 }";    
-        }
-        
-        return "\"status\": 200 }"; 
-    }
-    
-    
     if (!content_type.compare("policy")) {
+        
+        String cmd;
         
         try { 
         
@@ -421,9 +335,9 @@ string Sensors::onTextMessage(const Message* message) {
     bpt::ptree pt;
     bpt::read_json(c2json_ss, pt);
     
-    string ref_id =  pt.get<string>("actuator.x-alertflex.tenant","indef");
+    string project =  pt.get<string>("actuator.x-alertflex.project","indef");
     
-    if(ref_id.compare(fs.filter.ref_id) || !ref_id.compare("indef") || !rcStatus) {
+    if(project.compare(fs.filter.ref_id) || !project.compare("indef") || !rcStatus) {
         
         return "\"status\": 400, \"status_text\": \"wrong tenant\" }"; 
     }
@@ -552,6 +466,32 @@ string Sensors::onTextMessage(const Message* message) {
         } 
                 
         string res = DockerContainer(id, action);
+        
+        if (res.compare("ok")) {
+            return "\"status\": 400, \"status_text\": \"" + res + "\" }";
+        }
+        
+        return "\"status\": 200 }";
+                
+    } 
+    
+    if(!actuator_profile.compare("pod_command") && !action.empty()) {
+            
+        string id = pt.get<string>("target.device.device_id","indef");
+        
+        if(!id.compare("indef")) {
+    
+            return "\"status\": 400, \"status_text\": \"wrong id for stop\" }"; 
+        } 
+        
+        string space = pt.get<string>("args.x-alertflex:pod.namespace","indef");
+        
+        if(!space.compare("indef")) {
+    
+            return "\"status\": 400, \"status_text\": \"wrong namespace\" }"; 
+        } 
+                
+        string res = K8sPod(id, space);
         
         if (res.compare("ok")) {
             return "\"status\": 400, \"status_text\": \"" + res + "\" }";
@@ -1025,6 +965,33 @@ int Sensors::IsHomeNetwork(string ip) {
     }
     
     return 0;
+}
+
+string Sensors::K8sPod(string id, string space) {
+    
+    char* basePath = NULL;
+    sslConfig_t* sslConfig = NULL;
+    list_t* apiKeys = NULL;
+    
+    int rc = load_kube_config(&basePath, &sslConfig, &apiKeys, NULL);   /* NULL means loading configuration from $HOME/.kube/config */
+    if (rc != 0) {
+        return "k8s client: error";
+    }
+    
+    apiClient_t* apiClient = apiClient_create_with_base_path(basePath, sslConfig, apiKeys);
+    if (!apiClient) {
+        return "k8s client: error";
+    }
+    
+    CoreV1API_deleteNamespacedPod(apiClient, (char*) id.c_str(), (char*) space.c_str(),
+        NULL, 
+        NULL,
+        0,
+        0,
+        NULL, 
+        NULL);
+
+    return "ok";
 }
 
 

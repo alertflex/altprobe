@@ -47,39 +47,27 @@ char CollectorObject::suri_socket[OS_BUFFER_SIZE];
 bool CollectorObject::suriSocketStatus;
 char CollectorObject::docker_socket[OS_BUFFER_SIZE];
 bool CollectorObject::dockerSocketStatus;
-char CollectorObject::k8s_namespace[OS_BUFFER_SIZE];
+char CollectorObject::k8s_control[OS_BUFFER_SIZE];
 bool CollectorObject::k8sStatus;
 
 // scanners
-char CollectorObject::dependencycheck_result[OS_BUFFER_SIZE];
-char CollectorObject::dockerbench_result[OS_BUFFER_SIZE]; 
-char CollectorObject::kubebench_result[OS_BUFFER_SIZE]; 
-char CollectorObject::kubehunter_result[OS_BUFFER_SIZE]; 
-char CollectorObject::nmap_result[OS_BUFFER_SIZE]; 
-char CollectorObject::tfsec_result[OS_BUFFER_SIZE]; 
-char CollectorObject::trivy_result[OS_BUFFER_SIZE]; 
-char CollectorObject::zap_result[OS_BUFFER_SIZE]; 
+char CollectorObject::result_path[OS_BUFFER_SIZE]; 
+char CollectorObject::trivy_path[OS_BUFFER_SIZE]; 
+char CollectorObject::kubehunter_script[OS_BUFFER_SIZE]; 
+char CollectorObject::zap_script[OS_BUFFER_SIZE]; 
 
 // sensors
 char CollectorObject::falco_log[OS_BUFFER_SIZE]; 
 int CollectorObject::falcolog_status = 1;
-char CollectorObject::falco_local[OS_BUFFER_SIZE];
-char CollectorObject::falco_rules[OS_BUFFER_SIZE];
 
 char CollectorObject::modsec_log[OS_BUFFER_SIZE];
 int CollectorObject::modseclog_status = 1;
-char CollectorObject::modsec_local[OS_BUFFER_SIZE];
-char CollectorObject::modsec_rules[OS_BUFFER_SIZE];
 
 char CollectorObject::suri_log[OS_BUFFER_SIZE]; 
 int CollectorObject::surilog_status = 1;
-char CollectorObject::suri_local[OS_BUFFER_SIZE];
-char CollectorObject::suri_rules[OS_BUFFER_SIZE];
 
 char CollectorObject::wazuh_log[OS_BUFFER_SIZE];
 int CollectorObject::wazuhlog_status = 1;
-char CollectorObject::wazuh_local[OS_BUFFER_SIZE];
-char CollectorObject::wazuh_rules[OS_BUFFER_SIZE];
 
 char CollectorObject::wazuh_host[OS_HEADER_SIZE];
 int CollectorObject::wazuh_port;
@@ -88,17 +76,13 @@ char CollectorObject::wazuh_pwd[OS_HEADER_SIZE];
 string CollectorObject::wazuh_token;
 bool CollectorObject::wazuhServerStatus;
 
-static char modsec_conf[OS_BUFFER_SIZE];
-    static char modsec_local[OS_BUFFER_SIZE];
-    static char modsec_rules[OS_BUFFER_SIZE];
-
 char CollectorObject::SysLogInfo[OS_LONG_HEADER_SIZE];
 
 int CollectorObject::GetConfig() {
     
     ConfigYaml* cy = new ConfigYaml( "collector");
     
-    cy->addKey("node");
+    cy->addKey("vrn");
     cy->addKey("host");
     
     cy->addKey("geo_db");
@@ -115,7 +99,7 @@ int CollectorObject::GetConfig() {
         
     cy->addKey("socket_suricata");
     cy->addKey("socket_docker");
-    cy->addKey("k8s_namespace");
+    cy->addKey("k8s_control");
         
     cy->addKey("wazuhapi_host");
     cy->addKey("wazuhapi_port");
@@ -124,10 +108,10 @@ int CollectorObject::GetConfig() {
                 
     cy->ParsConfig();
     
-    node_id = cy->getParameter("node");
+    node_id = cy->getParameter("vrn");
     
     if (!node_id.compare("")) {
-        SysLog("config file error: parameter node id");
+        SysLog("config file error: parameter vrn id");
         return 0;
     }
     
@@ -185,10 +169,10 @@ int CollectorObject::GetConfig() {
         SysLog("config file notification: interface to Docker socket is disabled");
     }
     
-    strncpy(k8s_namespace, (char*) cy->getParameter("k8s_namespace").c_str(), sizeof(k8s_namespace));
-    if (!strcmp (k8s_namespace, "indef")) { 
-        k8sStatus =false;
-        SysLog("config file notification: management K8s is disabled");
+    strncpy(k8s_control, (char*) cy->getParameter("k8s_control").c_str(), sizeof(k8s_control));
+    if (!strcmp (k8s_control, "true")) { 
+        k8sStatus = true;
+        SysLog("config file notification: management K8s is enabled");
     }
     
     strncpy(wazuh_host, (char*) cy->getParameter("wazuhapi_host").c_str(), sizeof(wazuh_host));
@@ -240,24 +224,16 @@ int CollectorObject::GetConfig() {
     
     cy->addKey("falco_log");
     cy->addKey("falco_conf");
-    cy->addKey("falco_local");
-    cy->addKey("falco_rules");
-    
+        
     cy->addKey("modsec_log");
     cy->addKey("modsec_conf");
-    cy->addKey("modsec_local");
-    cy->addKey("modsec_rules");
-    
+        
     cy->addKey("suri_log");
     cy->addKey("suri_conf");
-    cy->addKey("suri_local");
-    cy->addKey("suri_rules");
-    
+        
     cy->addKey("wazuh_log");
     cy->addKey("wazuh_conf");
-    cy->addKey("wazuh_local");
-    cy->addKey("wazuh_rules");
-    
+        
     cy->ParsConfig();
     
     strncpy(falco_log, (char*) cy->getParameter("falco_log").c_str(), sizeof(falco_log));
@@ -280,88 +256,29 @@ int CollectorObject::GetConfig() {
         wazuhlog_status = 0;
     } 
     
-    if (rcStatus) {
-        
-        strncpy(falco_local, (char*) cy->getParameter("falco_local").c_str(), sizeof(falco_local));
-        if (!strcmp (falco_local, "indef")) { 
-            SysLog("config file notification: falco_local update disabled");
-        }
-        
-        strncpy(falco_rules, (char*) cy->getParameter("falco_rules").c_str(), sizeof(falco_rules));
-        if (!strcmp (falco_rules, "indef")) { 
-            SysLog("config file notification: falco_rules update disabled");
-        }
-         
-        strncpy(modsec_local, (char*) cy->getParameter("modsec_local").c_str(), sizeof(modsec_local));
-        if (!strcmp (modsec_local, "indef")) { 
-            SysLog("config file notification:  modsec_local update disabled");
-        }
-        
-        strncpy(modsec_rules, (char*) cy->getParameter("modsec_rules").c_str(), sizeof(modsec_rules));
-        if (!strcmp (modsec_rules, "indef")) { 
-            SysLog("config file notification: modsec_rules disabled");
-        }
-    
-        strncpy(suri_local, (char*) cy->getParameter("suri_local").c_str(), sizeof(suri_local));
-        if (!strcmp (suri_local, "indef")) { 
-            SysLog("config file notification: suri_local update disabled");
-        }
-        
-        strncpy(suri_rules, (char*) cy->getParameter("suri_rules").c_str(), sizeof(suri_rules));
-        if (!strcmp (suri_rules, "indef")) { 
-            SysLog("config file notification: suri_rules update disabled");
-        }
-    
-        strncpy(wazuh_local, (char*) cy->getParameter("wazuh_local").c_str(), sizeof(wazuh_local));
-        if (!strcmp (wazuh_local, "indef")) { 
-            SysLog("config file notification: wazuh_local update disabled");
-        }
-        
-        strncpy(wazuh_rules, (char*) cy->getParameter("wazuh_rules").c_str(), sizeof(wazuh_rules));
-        if (!strcmp (wazuh_rules, "indef")) { 
-            SysLog("config file notification: wazuh_rules update disabled");
-        }
-    }
-    
     cy = new ConfigYaml( "scanners");
-    
-    cy->addKey("dependencycheck_result");
-    
-    cy->addKey("dockerbench_result");
-    
-    cy->addKey("kubebench_result");
-    
-    cy->addKey("kubehunter_result");
-    
-    cy->addKey("trivy_result");
-    
-    cy->addKey("zap_result");
-    
-    cy->addKey("nmap_result");
-     
-    cy->addKey("tfsec_result");
     
     cy->addKey("project_id");
     
+    cy->addKey("result_path");
+    
+    cy->addKey("trivy_path");
+    
+    cy->addKey("kubehunter_script");
+    
+    cy->addKey("zap_script");
+    
     cy->ParsConfig();
     
-    strncpy(dependencycheck_result, (char*) cy->getParameter("dependencycheck_result").c_str(), sizeof(dependencycheck_result));
-    
-    strncpy(dockerbench_result, (char*) cy->getParameter("dockerbench_result").c_str(), sizeof(dockerbench_result));
-    
-    strncpy(kubebench_result, (char*) cy->getParameter("kubebench_result").c_str(), sizeof(kubebench_result));
-    
-    strncpy(kubehunter_result, (char*) cy->getParameter("kubehunter_result").c_str(), sizeof(kubehunter_result));
-    
-    strncpy(trivy_result, (char*) cy->getParameter("trivy_result").c_str(), sizeof(trivy_result));
-    
-    strncpy(zap_result, (char*) cy->getParameter("zap_result").c_str(), sizeof(zap_result));
-    
-    strncpy(nmap_result, (char*) cy->getParameter("nmap_result").c_str(), sizeof(nmap_result));
-    
-    strncpy(tfsec_result, (char*) cy->getParameter("tfsec_result").c_str(), sizeof(tfsec_result));
-    
     project_id = cy->getParameter("project_id");
+    
+    strncpy(result_path, (char*) cy->getParameter("result_path").c_str(), sizeof(result_path));
+    
+    strncpy(trivy_path, (char*) cy->getParameter("trivy_path").c_str(), sizeof(trivy_path));
+    
+    strncpy(kubehunter_script, (char*) cy->getParameter("kubehunter_script").c_str(), sizeof(kubehunter_script));
+    
+    strncpy(zap_script, (char*) cy->getParameter("zap_script").c_str(), sizeof(zap_script));
     
     return 1;
 }

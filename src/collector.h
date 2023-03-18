@@ -85,7 +85,6 @@ public:
     string fileName;
         
     BinData bd;
-    Rule rd;
     std::stringstream strStream, comp;
     
     string ref_id;
@@ -112,15 +111,11 @@ public:
     
     void StatJob();
     
-    void UpdateFalcoRules();
-    void UpdateSuriRules();
-    void UpdateOssecRules();
-    void UpdateModsecRules();
-    
+    void UpdateSensorsStatus();
+        
     bool GetToken();
     void GetAgents(const string& url_request);
     void ParsAgents();
-    void ParsGroups ();
     void UpdateAgents();
     void PushAgents(const string& type, const string& agent);
     
@@ -128,7 +123,7 @@ public:
     void ParsContainers();
     void UpdateContainers();
     
-    bool GetPods();
+    bool GetPods(string space);
     void UpdatePods();
     
     void ResetStreams() {

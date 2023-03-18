@@ -20,7 +20,6 @@
 #include <libdaemon/dexec.h>
 
 #include "aggalerts.h"
-#include "aggnet.h"
 #include "awswaf.h"
 #include "hids.h"
 #include "crs.h"
@@ -43,22 +42,6 @@ void * thread_aggalerts(void *arg) {
     pthread_cleanup_push(exit_thread_aggalerts, exit_thread_aggalerts_arg);
     
     while (aggalerts.Go()) { }
-    
-    pthread_cleanup_pop(1);
-    pthread_exit(0);
-}
-
-AggNet aggnet;
-pthread_t pthread_aggnet;
-
-void* exit_thread_aggnet_arg;
-void exit_thread_aggnet(void* arg) { aggnet.Close(); }
-
-void * thread_aggnet(void *arg) {
-    
-    pthread_cleanup_push(exit_thread_aggnet, exit_thread_aggnet_arg);
-    
-    while (aggnet.Go()) { }
     
     pthread_cleanup_pop(1);
     pthread_exit(0);
@@ -246,9 +229,6 @@ int LoadConfig(void)
     //aggalerts
     if (!aggalerts.GetConfig()) return 0;
     
-    //aggnet
-    if (!aggnet.GetConfig()) return 0;
-    
     //misc
     if (!misc.GetConfig()) return 0;
     
@@ -304,21 +284,7 @@ int InitThreads(int mode, pid_t pid)
         }
     }
     
-    //aggnet
-    if (aggnet.GetStatus() > 0) {
-        
-        if (!aggnet.Open() > 0) {
-            daemon_log(LOG_ERR,"cannot open Aggregation net module");
-            return 0;
-        }
-            
-        if (pthread_create(&pthread_aggnet, NULL, thread_aggnet, &arg)) {
-            daemon_log(LOG_ERR,"error creating thread for aggnet");
-            return 0;
-        }
-    }
-    
-     //misc
+    //misc
     if (misc.GetStatus() > 0) {
         
         if (misc.Open() > 0) {
@@ -477,12 +443,6 @@ void KillsThreads(void)
     if (aggalerts.GetStatus()) {
         pthread_cancel(pthread_aggalerts);
         pthread_join(pthread_aggalerts, NULL);
-    }
-    
-    //aggnet
-    if (aggnet.GetStatus()) {
-        pthread_cancel(pthread_aggnet);
-        pthread_join(pthread_aggnet, NULL);
     }
     
     //misc

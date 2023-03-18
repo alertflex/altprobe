@@ -36,7 +36,6 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/aggalerts.o \
-	${OBJECTDIR}/aggnet.o \
 	${OBJECTDIR}/awswaf.o \
 	${OBJECTDIR}/cobject.o \
 	${OBJECTDIR}/collector.o \
@@ -49,7 +48,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/loclog.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/misc.o \
-	${OBJECTDIR}/netstat.o \
 	${OBJECTDIR}/nids.o \
 	${OBJECTDIR}/remlog.o \
 	${OBJECTDIR}/remstat.o \
@@ -88,11 +86,6 @@ ${OBJECTDIR}/aggalerts.o: aggalerts.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/aggalerts.o aggalerts.cpp
 
-${OBJECTDIR}/aggnet.o: aggnet.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/aggnet.o aggnet.cpp
-	
 ${OBJECTDIR}/aws.o: aws.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -152,11 +145,6 @@ ${OBJECTDIR}/misc.o: misc.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/misc.o misc.cpp
-
-${OBJECTDIR}/netstat.o: netstat.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/netstat.o netstat.cpp
 
 ${OBJECTDIR}/nids.o: nids.cpp
 	${MKDIR} -p ${OBJECTDIR}

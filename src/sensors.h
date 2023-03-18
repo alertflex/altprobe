@@ -60,6 +60,7 @@ public:
     string CreateAgentWazuh(string json);
     string DeleteAgentWazuh(string agent);
     string DockerContainer(string id, string cmd);
+    string K8sPod(string id, string space);
     
     void ResetStreams() {
         comp.str("");

@@ -297,7 +297,7 @@ new_crs_alert:
 void AggAlerts::SendCrsAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.ref_id =  r->ref_id;
-    sk.alert.sensor_id = r->ids;
+    sk.alert.probe = host_name + ".crs";
         
     if (r->rsp.new_severity != 0) sk.alert.alert_severity = r->rsp.new_severity;
     else sk.alert.alert_severity = r->severity;
@@ -425,7 +425,7 @@ new_hids_alert:
 void AggAlerts::SendHidsAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.ref_id = r->ref_id;
-    sk.alert.sensor_id = r->ids;
+    sk.alert.probe = host_name + ".hids";
         
     if (r->rsp.new_severity != 0) sk.alert.alert_severity = r->rsp.new_severity;
     else sk.alert.alert_severity = r->severity;
@@ -557,7 +557,7 @@ new_nids_alert:
 void AggAlerts::SendNidsAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.ref_id = r->ref_id;
-    sk.alert.sensor_id = r->ids;
+    sk.alert.probe = host_name + ".nids";
     
     if (r->rsp.new_severity != 0) sk.alert.alert_severity = r->rsp.new_severity;
     else sk.alert.alert_severity = r->severity;
@@ -675,7 +675,7 @@ new_waf_alert:
 void AggAlerts::SendWafAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.ref_id = r->ref_id;
-    sk.alert.sensor_id = r->ids;
+    sk.alert.probe = host_name + ".waf";
     
     if (r->rsp.new_severity != 0) sk.alert.alert_severity = r->rsp.new_severity;
     else sk.alert.alert_severity = r->severity;
@@ -793,7 +793,7 @@ new_aws_waf_alert:
 void AggAlerts::SendAwsWafAlert(std::list<IdsRecord>::iterator r, int c) {
     
     sk.alert.ref_id = r->ref_id;
-    sk.alert.sensor_id = r->ids;
+    sk.alert.probe = host_name + ".aws-waf";
     
     if (r->rsp.new_severity != 0) sk.alert.alert_severity = r->rsp.new_severity;
     else sk.alert.alert_severity = r->severity;
