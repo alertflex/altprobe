@@ -2,6 +2,6 @@ The repository includes the Alertflex Collector/Enforcer (Altprobe) source code 
 
 The Alertflex project integrates well-known free and open source software into a distributed SecOps solution for hybrid cloud IT infrastructure.
 
-The high-level design of the solution:
+The high-level design:
 ![](https://github.com/alertflex/altprobe/blob/master/img/hld-arch.png)
 
