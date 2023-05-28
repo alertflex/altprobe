@@ -56,8 +56,14 @@ public:
     // path to scanners results
     static char result_path[OS_BUFFER_SIZE]; 
     static char trivy_path[OS_BUFFER_SIZE];
-    static char kubehunter_script[OS_BUFFER_SIZE];
-    static char zap_script[OS_BUFFER_SIZE];
+    static char kubehunter_path[OS_BUFFER_SIZE];
+    static char zap_path[OS_BUFFER_SIZE];
+    static char nmap_path[OS_BUFFER_SIZE];
+    static char nuclei_path[OS_BUFFER_SIZE];
+    static char nikto_path[OS_BUFFER_SIZE];
+    static char cloudsploit_path[OS_BUFFER_SIZE];
+    static char semgrep_path[OS_BUFFER_SIZE];
+    static char sonarqube_path[OS_BUFFER_SIZE];
     
     // sensors
     
@@ -155,7 +161,7 @@ public:
 class Posture : public BinData {
 public:   
     string uuid;
-        
+            
     void Reset() {
         BinData::Reset();
         uuid.clear();

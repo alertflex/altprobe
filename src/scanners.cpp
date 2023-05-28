@@ -300,6 +300,84 @@ string Scanners::onTextMessage(const Message* message, string corr_id) {
         }
     }
     
+    if(posture_type == 16) {
+        
+        try {
+                
+            string res =  ScanNmap(project, target, delay, corr_id);
+                        
+            return res;
+            
+        } catch (const std::exception & ex) {
+            return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+        }
+    }
+    
+    if(posture_type == 17) {
+        
+        try {
+                
+            string res =  ScanNuclei(project, target, delay, corr_id);
+                        
+            return res;
+            
+        } catch (const std::exception & ex) {
+            return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+        }
+    }
+    
+    if(posture_type == 18) {
+        
+        try {
+                
+            string res =  ScanNikto(project, target, delay, corr_id);
+                        
+            return res;
+            
+        } catch (const std::exception & ex) {
+            return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+        }
+    }
+    
+    if(posture_type == 19) {
+        
+        try {
+                
+            string res =  ScanCloudsploit(project, target, delay, corr_id);
+                        
+            return res;
+            
+        } catch (const std::exception & ex) {
+            return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+        }
+    }
+    
+    if(posture_type == 20) {
+        
+        try {
+                
+            string res =  ScanSemgrep(project, target, delay, corr_id);
+                        
+            return res;
+            
+        } catch (const std::exception & ex) {
+            return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+        }
+    }
+    
+    if(posture_type == 21) {
+        
+        try {
+                
+            string res =  ScanSonarqube(project, target, delay, corr_id);
+                        
+            return res;
+            
+        } catch (const std::exception & ex) {
+            return "\"status\": 400, \"status_text\": \"wrong response\" }"; 
+        }
+    }
+    
     return "\"status\": 400, \"status_text\": \"wrong actuator or action\" }";
 }
 
@@ -310,59 +388,59 @@ string Scanners::ScanTrivy(string project, string target, int delay, int param, 
         
         string trivy_path_str(trivy_path);
         string result_path_str(result_path);
-        string trivy_result = result_path_str + "trivy.json";
+        string trivy_result = result_path_str + "/trivy.json";
         
         string cmd;
         
         switch (param) {
             
             case 4: // appSecret
-                cmd = trivy_path_str + "trivy fs --security-checks secret -f json -o " + trivy_result + " " + target;
+                cmd = trivy_path_str + "/trivy fs --security-checks secret -f json -o " + trivy_result + " " + target;
                 SysLog((char*) cmd.c_str());
                 break;
             
             case 5: // dockerConfig
-                cmd = trivy_path_str + "trivy fs --security-checks config -f json -o " + trivy_result + " " + target;
+                cmd = trivy_path_str + "/trivy fs --security-checks config -f json -o " + trivy_result + " " + target;
                 SysLog((char*) cmd.c_str());
                 break;
                 
             case 6: // k8sConfig
-                cmd = trivy_path_str + "trivy k8s --security-checks config -f json -o " + trivy_result + " cluster";
+                cmd = trivy_path_str + "/trivy k8s --security-checks config -f json -o " + trivy_result + " cluster";
                 SysLog((char*) cmd.c_str());
                 break;
                 
             case 7: // appVuln
-                cmd = trivy_path_str + "trivy fs --security-checks vuln -f json -o " + trivy_result + " " + target;
+                cmd = trivy_path_str + "/trivy fs --security-checks vuln -f json -o " + trivy_result + " " + target;
                 SysLog((char*) cmd.c_str());
                 break;
                 
             case 8: // dockerVuln
-                cmd = trivy_path_str + "trivy image --security-checks vuln -f json -o " + trivy_result + " " + target;
+                cmd = trivy_path_str + "/trivy image --security-checks vuln -f json -o " + trivy_result + " " + target;
                 SysLog((char*) cmd.c_str());
                 break;
                 
             case 9: // k8sVuln
-                cmd = trivy_path_str + "trivy k8s --security-checks vuln -f json -o " + trivy_result + " cluster";
+                cmd = trivy_path_str + "/trivy k8s --security-checks vuln -f json -o " + trivy_result + " cluster";
                 SysLog((char*) cmd.c_str());
                 break;
                 
             case 10: // appSbom
-                cmd = trivy_path_str + "trivy fs --format cyclonedx --output " + trivy_result + " " + target;
+                cmd = trivy_path_str + "/trivy fs --format cyclonedx --output " + trivy_result + " " + target;
                 SysLog((char*) cmd.c_str());
                 break;
                 
             case 11: // dockerSbom
-                cmd = trivy_path_str + "trivy image --format cyclonedx --output " + trivy_result + " " + target;
+                cmd = trivy_path_str + "/trivy image --format cyclonedx --output " + trivy_result + " " + target;
                 SysLog((char*) cmd.c_str());
                 break;
                 
             case 12: // cloudFormation
-                cmd = trivy_path_str + "trivy fs --security-checks config -f json -o " + trivy_result + " " + target;
+                cmd = trivy_path_str + "/trivy fs --security-checks config -f json -o " + trivy_result + " " + target;
                 SysLog((char*) cmd.c_str());
                 break;
                 
             case 13: // terraform
-                cmd = trivy_path_str + "trivy fs --security-checks config -f json -o " + trivy_result + " " + target;
+                cmd = trivy_path_str + "/trivy fs --security-checks config -f json -o " + trivy_result + " " + target;
                 SysLog((char*) cmd.c_str());
                 break;
                 
@@ -399,18 +477,17 @@ string Scanners::ScanTrivy(string project, string target, int delay, int param, 
     } 
     
     return "\"status\": 200 }";
-    
 }
 
 string Scanners::ScanKubeHunter(string project, string target, int delay, string corr_id) {
     
     try {
         
-        string kubehunter_script_str(kubehunter_script);
+        string kubehunter_path_str(kubehunter_path);
         string result_path_str(result_path);
-        string kubehunter_result = result_path_str + "kube-hunter.json";
+        string kubehunter_result = result_path_str + "/kube-hunter.json";
                 
-        string cmd = kubehunter_script_str + " " + "/etc/altprobe/scripts/kube-hunter.sh " + kubehunter_result + " " + target;
+        string cmd =  "/etc/altprobe/scripts/kube-hunter.sh " + result_path_str + " " + kubehunter_path_str + " " + target;
         SysLog((char*) cmd.c_str());
         system(cmd.c_str());
         
@@ -441,18 +518,17 @@ string Scanners::ScanKubeHunter(string project, string target, int delay, string
     } 
     
     return "\"status\": 200 }";
-    
 }
 
 string Scanners::ScanZap(string project, string target, int delay, string corr_id) {
     
     try {
         
-        string zap_script_str(zap_script);
+        string zap_path_str(zap_path);
         string result_path_str(result_path);
-        string zap_result = result_path_str + "zap.json";
+        string zap_result = result_path_str + "/zap.json";
         
-        string cmd = zap_script_str + " " + zap_result + " " + target;
+        string cmd = "/etc/altprobe/scripts/zap.sh " + result_path_str + " " + zap_path_str + " " + target;
         SysLog((char*) cmd.c_str());
         system(cmd.c_str());
         
@@ -483,7 +559,238 @@ string Scanners::ScanZap(string project, string target, int delay, string corr_i
     } 
     
     return "\"status\": 200 }";
+}
+
+string Scanners::ScanNmap(string project, string target, int delay, string corr_id) {
     
+    try {
+        
+        string nmap_path_str(nmap_path);
+        string result_path_str(result_path);
+        string nmap_result = result_path_str + "/nmap.xml";
+        
+        string cmd = "/etc/altprobe/scripts/nmap.sh " + result_path_str + " " + nmap_path_str + " " + target;
+        SysLog((char*) cmd.c_str());
+        system(cmd.c_str());
+        
+        std::ifstream nmap_report;
+        
+        nmap_report.open(nmap_result,ios::binary);
+        strStream << nmap_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        posture.event_type = 16;
+        posture.data = comp.str();
+        posture.ref_id = project;
+        posture.target = target;
+        posture.uuid = corr_id;
+        SendMessage(&posture);
+                
+        nmap_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "nmap: error";
+    } 
+    
+    return "\"status\": 200 }";
+}
+
+
+string Scanners::ScanNuclei(string project, string target, int delay, string corr_id) {
+    
+    try {
+        
+        string nuclei_path_str(nuclei_path);
+        string result_path_str(result_path);
+        string nuclei_result = result_path_str + "/nuclei.json";
+        
+        string cmd = "/etc/altprobe/scripts/nuclei.sh " + result_path_str + " " + nuclei_path_str + " " + target;
+        SysLog((char*) cmd.c_str());
+        system(cmd.c_str());
+        
+        std::ifstream nuclei_report;
+        
+        nuclei_report.open(nuclei_result,ios::binary);
+        strStream << nuclei_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        posture.event_type = 17;
+        posture.data = comp.str();
+        posture.ref_id = project;
+        posture.target = target;
+        posture.uuid = corr_id;
+        SendMessage(&posture);
+                
+        nuclei_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "nuclei: error";
+    } 
+    
+    return "\"status\": 200 }";
+}
+
+
+string Scanners::ScanNikto(string project, string target, int delay, string corr_id) {
+    
+    try {
+        
+        string nikto_path_str(nikto_path);
+        string result_path_str(result_path);
+        string nikto_result = result_path_str + "/nikto.json";
+        
+        string cmd = "/etc/altprobe/scripts/nikto.sh " + result_path_str + " " + nikto_path_str + " " + target;
+        SysLog((char*) cmd.c_str());
+        system(cmd.c_str());
+        
+        std::ifstream nikto_report;
+        
+        nikto_report.open(nikto_result,ios::binary);
+        strStream << nikto_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        posture.event_type = 18;
+        posture.data = comp.str();
+        posture.ref_id = project;
+        posture.target = target;
+        posture.uuid = corr_id;
+        SendMessage(&posture);
+                
+        nikto_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "nikto: error";
+    } 
+    
+    return "\"status\": 200 }";
+}
+
+string Scanners::ScanCloudsploit(string project, string target, int delay, string corr_id) {
+    
+    try {
+        
+        string cloudsploit_path_str(cloudsploit_path);
+        string result_path_str(result_path);
+        string cloudsploit_result = result_path_str + "/cloudsploit.json";
+        
+        string cmd = "/etc/altprobe/scripts/cloudsploit.sh " + result_path_str + " " + cloudsploit_path_str;
+        SysLog((char*) cmd.c_str());
+        system(cmd.c_str());
+        
+        std::ifstream cloudsploit_report;
+        
+        cloudsploit_report.open(cloudsploit_result,ios::binary);
+        strStream << cloudsploit_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        posture.event_type = 19;
+        posture.data = comp.str();
+        posture.ref_id = project;
+        posture.target = target;
+        posture.uuid = corr_id;
+        SendMessage(&posture);
+                
+        cloudsploit_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "cloudsploit: error";
+    } 
+    
+    return "\"status\": 200 }";
+}
+
+string Scanners::ScanSemgrep(string project, string target, int delay, string corr_id) {
+    
+    try {
+        
+        string semgrep_path_str(semgrep_path);
+        string result_path_str(result_path);
+        string semgrep_result = result_path_str + "/semgrep.json";
+        
+        string cmd = "/etc/altprobe/scripts/semgrep.sh " + result_path_str + " " + semgrep_path_str + " " + target;
+        SysLog((char*) cmd.c_str());
+        system(cmd.c_str());
+        
+        std::ifstream semgrep_report;
+        
+        semgrep_report.open(semgrep_result,ios::binary);
+        strStream << semgrep_report.rdbuf();
+        
+        boost::iostreams::filtering_streambuf< boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_compressor());
+        in.push(strStream);
+        boost::iostreams::copy(in, comp);
+        
+        posture.event_type = 20;
+        posture.data = comp.str();
+        posture.ref_id = project;
+        posture.target = target;
+        posture.uuid = corr_id;
+        SendMessage(&posture);
+                
+        semgrep_report.close();
+        boost::iostreams::close(in);
+        ResetStreams();
+        
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "semgrep: error";
+    } 
+    
+    return "\"status\": 200 }";
+}
+
+string Scanners::ScanSonarqube(string project, string target, int delay, string corr_id) {
+    
+    try {
+        
+        string sonarqube_path_str(sonarqube_path);
+                
+        string cmd = "/etc/altprobe/scripts/sonarqube.sh " + sonarqube_path_str + " " + target;
+        SysLog((char*) cmd.c_str());
+        system(cmd.c_str());
+        
+        posture.event_type = 21;
+        posture.data = "no data";
+        posture.ref_id = project;
+        posture.target = target;
+        posture.uuid = corr_id;
+        SendMessage(&posture);
+                
+    } catch (const std::exception & ex) {
+        SysLog((char*) ex.what());
+        return "sonarqube: error";
+    } 
+    
+    return "\"status\": 200 }";
 }
 
 

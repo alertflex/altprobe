@@ -356,7 +356,7 @@ void Collector::UpdateAgents(void) {
                                 url += "?result=failed";
             
                                 GetAgents(url);
-                                if (!agents_payload.empty()) PushAgents("sca", i->name);
+                                if (!agents_payload.empty()) PushAgents("misconfig", i->name);
                             }
                         }
                     } catch (const std::exception & ex) {
@@ -909,13 +909,23 @@ void Collector::UpdateSensorsStatus() {
     }
     
     int skubehunter = 1;
-    if (!strcmp (kubehunter_script, "indef")) { 
+    if (!strcmp (kubehunter_path, "indef")) { 
         skubehunter = 0;
     }
     
     int szap = 1;
-    if (!strcmp (zap_script, "indef")) { 
+    if (!strcmp (zap_path, "indef")) { 
         szap = 0;
+    }
+    
+    int snmap = 1;
+    if (!strcmp (nmap_path, "indef")) { 
+        snmap = 0;
+    }
+    
+    int snuclei = 1;
+    if (!strcmp (nuclei_path, "indef")) { 
+        snuclei = 0;
     }
     
     ss << "{ \"type\": \"probes-status\", \"data\": { \"crs\": ";
@@ -950,6 +960,12 @@ void Collector::UpdateSensorsStatus() {
     
     ss << ", \"zap\": ";
     ss << to_string(szap);
+    
+    ss << ", \"nmap\": ";
+    ss << to_string(snmap);
+    
+    ss << ", \"nuclei\": ";
+    ss << to_string(snuclei);
         
     ss << ", \"time_of_survey\": \"";
     ss << GetNodeTime();

@@ -120,15 +120,17 @@ help: .help-post
 # Add your post 'help' code here...
 
 install:
-	cp ./dist/Debug/GNU-Linux/collector /usr/local/bin/altprobe
+	cp ./dist/Debug/GNU-Linux/collector /usr/sbin/altprobe
 	chmod u+x ./scripts/altprobe-restart.sh
 	chmod u+x ./scripts/altprobe-start.sh
+	chmod u+x ./scripts/altprobe-redis-start.sh
 	chmod u+x ./scripts/altprobe-status.sh
 	chmod u+x ./scripts/altprobe-stop.sh
-	cp ./scripts/altprobe-restart.sh /usr/local/bin/altprobe-restart
-	cp ./scripts/altprobe-start.sh /usr/local/bin/altprobe-start
-	cp ./scripts/altprobe-stop.sh /usr/local/bin/altprobe-stop
-	cp ./scripts/altprobe-status.sh /usr/local/bin/altprobe-status
+	cp ./scripts/altprobe-restart.sh /usr/sbin/altprobe-restart
+	cp ./scripts/altprobe-start.sh /usr/sbin/altprobe-start
+	cp ./scripts/altprobe-redis-start.sh /usr/sbin/altprobe-redis-start
+	cp ./scripts/altprobe-stop.sh /usr/sbin/altprobe-stop
+	cp ./scripts/altprobe-status.sh /usr/sbin/altprobe-status
 	
 	if [ ! -d "/etc/altprobe" ]; then\
 		mkdir /etc/altprobe;\
@@ -142,8 +144,20 @@ install:
 	
 	chmod u+x ./scripts/kube-hunter.sh
 	chmod u+x ./scripts/zap.sh
+	chmod u+x ./scripts/nmap.sh
+	chmod u+x ./scripts/nuclei.sh
+	chmod u+x ./scripts/nikto.sh
+	chmod u+x ./scripts/semgrep.sh
+	chmod u+x ./scripts/cloudsploit.sh
+	chmod u+x ./scripts/sonarqube.sh
 	cp ./scripts/kube-hunter.sh /etc/altprobe/scripts/
 	cp ./scripts/zap.sh /etc/altprobe/scripts/
+	cp ./scripts/nmap.sh /etc/altprobe/scripts/
+	cp ./scripts/nuclei.sh /etc/altprobe/scripts/
+	cp ./scripts/nikto.sh /etc/altprobe/scripts/
+	cp ./scripts/semgrep.sh /etc/altprobe/scripts/
+	cp ./scripts/cloudsploit.sh /etc/altprobe/scripts/
+	cp ./scripts/sonarqube.sh /etc/altprobe/scripts/
 			
 update:
 	cp ./dist/Debug/GNU-Linux/collector /usr/local/bin/altprobe

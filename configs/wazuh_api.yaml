@@ -1,0 +1,50 @@
+host: 127.0.0.1
+port: 55000
+
+drop_privileges: yes
+experimental_features: no
+max_upload_size: 10485760
+
+intervals:
+   request_timeout: 10
+
+https:
+   enabled: no
+   key: "server.key"
+   cert: "server.crt"
+   use_ca: False
+   ca: "ca.crt"
+   ssl_protocol: "TLSv1.2"
+   ssl_ciphers: ""
+
+logs:
+   level: "info"
+   format: "plain"
+
+cors:
+   enabled: no
+   source_route: "*"
+   expose_headers: "*"
+   allow_headers: "*"
+   allow_credentials: no
+
+cache:
+   enabled: yes
+   time: 0.750
+
+access:
+   max_login_attempts: 50
+   block_time: 300
+   max_request_per_minute: 300
+
+upload_configuration:
+   remote_commands:
+      localfile:
+         allow: yes
+         exceptions: []
+      wodle_command:
+         allow: yes
+         exceptions: []
+   limits:
+      eps:
+         allow: yes

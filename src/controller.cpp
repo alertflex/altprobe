@@ -464,6 +464,30 @@ int Controller::SendMessage(Event* e) {
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
                     break;
+                case 16 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    break;
+                case 17 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    break;
+                case 18 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    break;
+                case 19 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    break;
+                case 20 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    break;
+                case 21 :
+                    byte_message->setStringProperty("target", ((BinData*) e)->target);
+                    byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    break;
                  
                 default:
                     break;

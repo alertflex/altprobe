@@ -66,10 +66,22 @@ scanners:
   result_path: "_result_path"
   # Path to trivy scanner executable file, if value is indef trivy scan disabled
   trivy_path: "_trivy_path"
-  # Path to kube-hunter scanner script, if value is indef kube-hunter scan disabled
-  kubehunter_script: "indef"
-  # Path to zap scanner script, if value is indef zap scan disabled
-  zap_script: "indef"
+  # Path to kube-hunter scanner executable file, if value is indef kube-hunter scan disabled
+  kubehunter_path: "indef"
+  # Path to nmap scanner scanner executable file, if value is indef nmap scan disabled
+  nmap_path: "indef"
+  # Path to nuclei scanner executable file, if value is indef nuclei scan disabled
+  nuclei_path: "indef"
+  # Path to nikto scanner executable file, if value is indef nikto scan disabled
+  nikto_path: "indef"
+  # Path to zap scanner executable file (or path to docker), if value is indef zap scan disabled
+  zap_path: "indef"
+  # Path to cloudsploit scanner executable file (or path to docker), if value is indef cloudsploit scan disabled
+  cloudsploit_path: "indef"
+  # Path to semgrep scanner executable file (or path to docker), if value is indef semgrep scan disabled
+  semgrep_path: "indef"
+  # Path to scanned project, if value is indef sonarqube scan disabled
+  sonarqube_path: "indef"
 
 sensors:
   # Altprobe can read falco, suricata, wazuh events directly from log files.

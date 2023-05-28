@@ -1,0 +1,63 @@
+{
+    "filter_name": "filter_v01",
+    "ref_id": "_project_id",
+    
+    "home_net": [
+    ],
+	
+	"name_space": [
+    ],
+	
+	"agents": [
+    ],
+	
+	"hosts": [
+    ],
+
+    "sources": { 
+        "crs": {
+            "log": true,
+            "severity": {
+                "threshold": 0,
+                "level0": 2,
+                "level1": 4,
+                "level2": 5
+            },
+            "gray_list": [ 
+            ]
+        },
+        "hids": {
+            "log": true,
+            "severity": {
+                "threshold": 0,
+                "level0": 2,
+                "level1": 4,
+                "level2": 10
+            },
+            "gray_list": [ 
+            ]
+        },
+        "nids": {
+            "log": true,
+            "severity": {
+                "threshold": 0,
+                "level0": 0,
+                "level1": 1,
+                "level2": 2
+            },
+            "gray_list": [ 
+            ]
+        },
+        "waf": {
+            "log": true,
+            "severity": {
+                "threshold": 0,
+                "level0": 5,
+                "level1": 4,
+                "level2": 3
+            },
+            "gray_list": [ 
+            ]
+        }
+    }
+}

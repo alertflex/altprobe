@@ -6,7 +6,7 @@
 
 # collector
 # work directory and node id and probe id
-export INSTALL_PATH=/home/alertflex/altprobe
+export INSTALL_PATH=/home/xxxxx/altprobe
 export PROJECT_ID=xxxxx
 export VRN_ID=node01
 export HOST_NAME=alertflex

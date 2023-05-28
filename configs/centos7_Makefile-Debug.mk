@@ -62,8 +62,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/include/hiredis -I/usr/local/include/kubernetes -I/usr/include/activemq-cpp-3.9.3/ -I/usr/include/apr-1/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11
-CXXFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/include/hiredis -I/usr/local/include/kubernetes -I/usr/include/activemq-cpp-3.9.3/ -I/usr/include/apr-1/ -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11
+CCFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/local/include/hiredis -I/usr/local/include/kubernetes -I/usr/local/include/activemq-cpp-3.10.0 -I/usr/include/apr-1 -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11
+CXXFLAGS=-I/usr/include/ -I/usr/include/boost -I/usr/local/include/hiredis -I/usr/local/include/kubernetes -I/usr/local/include/activemq-cpp-3.10.0 -I/usr/include/apr-1 -DBIG_JOINS=1 -D_REENTERANT -g -Wno-write-strings -fno-strict-aliasing -pthread -std=gnu++11
 
 # Fortran Compiler Flags
 FFLAGS=

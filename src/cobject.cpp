@@ -53,8 +53,14 @@ bool CollectorObject::k8sStatus;
 // scanners
 char CollectorObject::result_path[OS_BUFFER_SIZE]; 
 char CollectorObject::trivy_path[OS_BUFFER_SIZE]; 
-char CollectorObject::kubehunter_script[OS_BUFFER_SIZE]; 
-char CollectorObject::zap_script[OS_BUFFER_SIZE]; 
+char CollectorObject::kubehunter_path[OS_BUFFER_SIZE]; 
+char CollectorObject::zap_path[OS_BUFFER_SIZE]; 
+char CollectorObject::nmap_path[OS_BUFFER_SIZE]; 
+char CollectorObject::nuclei_path[OS_BUFFER_SIZE]; 
+char CollectorObject::nikto_path[OS_BUFFER_SIZE]; 
+char CollectorObject::cloudsploit_path[OS_BUFFER_SIZE]; 
+char CollectorObject::semgrep_path[OS_BUFFER_SIZE];
+char CollectorObject::sonarqube_path[OS_BUFFER_SIZE];
 
 // sensors
 char CollectorObject::falco_log[OS_BUFFER_SIZE]; 
@@ -264,9 +270,21 @@ int CollectorObject::GetConfig() {
     
     cy->addKey("trivy_path");
     
-    cy->addKey("kubehunter_script");
+    cy->addKey("kubehunter_path");
     
-    cy->addKey("zap_script");
+    cy->addKey("zap_path");
+    
+    cy->addKey("nmap_path");
+    
+    cy->addKey("nuclei_path");
+    
+    cy->addKey("nikto_path");
+    
+    cy->addKey("cloudsploit_path");
+    
+    cy->addKey("semgrep_path");
+    
+    cy->addKey("sonarqube_path");
     
     cy->ParsConfig();
     
@@ -276,9 +294,21 @@ int CollectorObject::GetConfig() {
     
     strncpy(trivy_path, (char*) cy->getParameter("trivy_path").c_str(), sizeof(trivy_path));
     
-    strncpy(kubehunter_script, (char*) cy->getParameter("kubehunter_script").c_str(), sizeof(kubehunter_script));
+    strncpy(kubehunter_path, (char*) cy->getParameter("kubehunter_path").c_str(), sizeof(kubehunter_path));
     
-    strncpy(zap_script, (char*) cy->getParameter("zap_script").c_str(), sizeof(zap_script));
+    strncpy(zap_path, (char*) cy->getParameter("zap_path").c_str(), sizeof(zap_path));
+    
+    strncpy(nmap_path, (char*) cy->getParameter("nmap_path").c_str(), sizeof(nmap_path));
+    
+    strncpy(nuclei_path, (char*) cy->getParameter("nuclei_path").c_str(), sizeof(nuclei_path));
+    
+    strncpy(nikto_path, (char*) cy->getParameter("nikto_path").c_str(), sizeof(nikto_path));
+    
+    strncpy(cloudsploit_path, (char*) cy->getParameter("cloudsploit_path").c_str(), sizeof(cloudsploit_path));
+    
+    strncpy(semgrep_path, (char*) cy->getParameter("semgrep_path").c_str(), sizeof(semgrep_path));
+    
+    strncpy(sonarqube_path, (char*) cy->getParameter("sonarqube_path").c_str(), sizeof(sonarqube_path));
     
     return 1;
 }
