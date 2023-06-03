@@ -119,6 +119,7 @@ then
 	sudo apt-get update
 	sudo apt-get -y install linux-headers-$(uname -r)
 	sudo apt-get -y install falco
+	sudo cp ./configs/falco.yaml /etc/falco/
 fi
 
 if [[ $INSTALL_SURICATA == yes ]]
