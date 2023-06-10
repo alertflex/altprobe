@@ -1,6 +1,6 @@
-The repository includes a source code of Alertflex collector/enforcer (Altprobe) and installation scripts for Altprobe, cyber security sensors and scanners.
+The repository contains the source code for Alertflex Controller, an installation script, and configuration files for the Central node.
 
-The Alertflex project is DevSecOps orchestrator with AppSec, Posture Management and Workload Protection functionality. Project integrates well-known free and open source software into distributed solution for hybrid cloud infrastructure.
+The Alertflex project is a tool that helps manage the security of software development and operations (DevSecOps) by orchestrating various functions like application security, posture management, and workload protection. The project combines popular free and open source software to create a distributed solution for hybrid cloud infrastructure.
 
 The high-level design:
 ![](https://github.com/alertflex/altprobe/blob/master/img/arch.png)
