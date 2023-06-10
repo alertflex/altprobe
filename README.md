@@ -5,3 +5,8 @@ The Alertflex project is DevSecOps orchestrator with AppSec, Posture Management 
 The high-level design:
 ![](https://github.com/alertflex/altprobe/blob/master/img/arch.png)
 
+For more information see [Alertflex documentation](https://alertflex.github.io/doc)
+
+Please [open an issue on GitHub](https://github.com/alertflex/altprobe/issues), if you'd like to report a bug or request a feature.
+Have a question or need tech support, please send an email to address: info@alertflex.org
+
