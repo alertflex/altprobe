@@ -1,8 +1,8 @@
 The repository contains the source code for Alertflex Collector/Runner, also known as Altprobe, as well as installation scripts for Altprobe, cyber security sensors, and scanners.
 
-The Alertflex project is a tool that helps manage the security of software development and operations (DevSecOps) by orchestrating various functions like application security, posture management, and workload protection. The project combines popular free and open source software to create a distributed solution for hybrid cloud infrastructure.
+The Alertflex solution works as a Security Event Manager and DevSecOps Orchestrator for a distributed grid of security sensors and scanners in a Hybrid IT infrastructure, which includes both on-premises and cloud-based systems. Solution supports the full DevSecOps cycle. It is capable of performing vulnerability/misconfiguration scanning tasks (DAST, SAST, SCA), but also excels in continuous monitoring by aggregating and forwarding cybersecurity events from sensors (HIDS, NIDS, WAF) to Log and Incident Management systems.
 
-Alertflex has a key feature which is the support for the full DevSecOps cycle. It is capable of performing not only vulnerability/misconfiguration scanning tasks (DAST, SAST, SCA), but also excels in continuous monitoring by aggregating and forwarding cybersecurity events from open source sensors (HIDS, NIDS, WAF) to Log and Incident Management systems.
+Alertflex can monitor different platforms such as Windows, Linux, Docker, K8s, and AWS, and offers a unified interface for over cybersecurity 20 tools. These integrated tools are primarily free open-source software, which Alertflex consolidates into one or multiple projects.
 
 The high-level design:
 ![](https://github.com/alertflex/altprobe/blob/master/img/arch.png)
