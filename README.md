@@ -4,6 +4,13 @@ The Alertflex solution works as a Security Event Manager and DevSecOps Orchestra
 
 Alertflex can monitor different platforms such as Windows, Linux, Docker, K8s, and AWS, and offers a unified interface for over cybersecurity 20 tools. These integrated tools are primarily free open-source software, which Alertflex consolidates into one or multiple projects.
 
+Main benefits of using Alertflex project:
+- seamless connectivity between central node and remote nodes, without requiring the opening of ports on the remote nodes
+- the central node serves as a single point for running and collecting scans across the entire hybrid cloud infrastructure
+- each remote node can have its own unique set of policies to filter alerts from sensors and reduce the impact of false positives
+- various methods available for correlating alerts related to vulnerability and misconfiguration findings
+- direct connection to the CTI MISP database to enable fast processing and caching of IoCs for a large number of security events
+
 The high-level design:
 ![](https://github.com/alertflex/altprobe/blob/master/img/arch.png)
 
