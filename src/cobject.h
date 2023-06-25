@@ -161,16 +161,19 @@ public:
 class Posture : public BinData {
 public:   
     string uuid;
+    string alert_corr;
             
     void Reset() {
         BinData::Reset();
         uuid.clear();
+        alert_corr.clear();
     }
     
     Posture () {
         data.clear();
         uuid.clear();
         event_type = 6;
+        alert_corr.clear();
     }
 };
 

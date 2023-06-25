@@ -419,74 +419,92 @@ int Controller::SendMessage(Event* e) {
                 case 4 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 5 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 6 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 7 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 8 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 9 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 10 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 11 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 12 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 13 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 14 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 15 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 16 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 17 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 18 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 19 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 20 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                 case 21 :
                     byte_message->setStringProperty("target", ((BinData*) e)->target);
                     byte_message->setStringProperty("uuid", ((Posture*) e)->uuid);
+                    byte_message->setStringProperty("alert_corr", ((Posture*) e)->alert_corr);
                     break;
                  
                 default:

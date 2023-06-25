@@ -258,12 +258,14 @@ string Scanners::onTextMessage(const Message* message, string corr_id) {
     
     int posture_type =  pt.get<int>("args.posture_type",0);
     
+    string alert_corr =  pt.get<string>("args.alert_corr","indef");
+    
     // run trivy    
     if(posture_type > 3 && posture_type < 14) {
                     
         try {
                 
-            string res =  ScanTrivy(project, target, delay, posture_type, corr_id);
+            string res =  ScanTrivy(project, target, delay, posture_type, alert_corr, corr_id);
                         
             return res;
             
@@ -278,7 +280,7 @@ string Scanners::onTextMessage(const Message* message, string corr_id) {
         
         try {
                 
-            string res =  ScanKubeHunter(project, target, delay, corr_id);
+            string res =  ScanKubeHunter(project, target, delay, alert_corr, corr_id);
                         
             return res;
             
@@ -291,7 +293,7 @@ string Scanners::onTextMessage(const Message* message, string corr_id) {
         
         try {
                 
-            string res =  ScanZap(project, target, delay, corr_id);
+            string res =  ScanZap(project, target, delay, alert_corr, corr_id);
                         
             return res;
             
@@ -304,7 +306,7 @@ string Scanners::onTextMessage(const Message* message, string corr_id) {
         
         try {
                 
-            string res =  ScanNmap(project, target, delay, corr_id);
+            string res =  ScanNmap(project, target, delay, alert_corr, corr_id);
                         
             return res;
             
@@ -317,7 +319,7 @@ string Scanners::onTextMessage(const Message* message, string corr_id) {
         
         try {
                 
-            string res =  ScanNuclei(project, target, delay, corr_id);
+            string res =  ScanNuclei(project, target, delay, alert_corr, corr_id);
                         
             return res;
             
@@ -330,7 +332,7 @@ string Scanners::onTextMessage(const Message* message, string corr_id) {
         
         try {
                 
-            string res =  ScanNikto(project, target, delay, corr_id);
+            string res =  ScanNikto(project, target, delay, alert_corr, corr_id);
                         
             return res;
             
@@ -343,7 +345,7 @@ string Scanners::onTextMessage(const Message* message, string corr_id) {
         
         try {
                 
-            string res =  ScanCloudsploit(project, target, delay, corr_id);
+            string res =  ScanCloudsploit(project, target, delay, alert_corr, corr_id);
                         
             return res;
             
@@ -356,7 +358,7 @@ string Scanners::onTextMessage(const Message* message, string corr_id) {
         
         try {
                 
-            string res =  ScanSemgrep(project, target, delay, corr_id);
+            string res =  ScanSemgrep(project, target, delay, alert_corr, corr_id);
                         
             return res;
             
@@ -369,7 +371,7 @@ string Scanners::onTextMessage(const Message* message, string corr_id) {
         
         try {
                 
-            string res =  ScanSonarqube(project, target, delay, corr_id);
+            string res =  ScanSonarqube(project, target, delay, alert_corr, corr_id);
                         
             return res;
             
@@ -382,7 +384,7 @@ string Scanners::onTextMessage(const Message* message, string corr_id) {
 }
 
 
-string Scanners::ScanTrivy(string project, string target, int delay, int param, string corr_id) {
+string Scanners::ScanTrivy(string project, string target, int delay, int param, string alert_corr, string corr_id) {
     
     try {
         
@@ -465,6 +467,7 @@ string Scanners::ScanTrivy(string project, string target, int delay, int param, 
         posture.ref_id = project;
         posture.target = target;
         posture.uuid = corr_id;
+        posture.alert_corr = alert_corr;
         SendMessage(&posture);
                 
         trivy_report.close();
@@ -479,7 +482,7 @@ string Scanners::ScanTrivy(string project, string target, int delay, int param, 
     return "\"status\": 200 }";
 }
 
-string Scanners::ScanKubeHunter(string project, string target, int delay, string corr_id) {
+string Scanners::ScanKubeHunter(string project, string target, int delay, string alert_corr, string corr_id) {
     
     try {
         
@@ -506,6 +509,7 @@ string Scanners::ScanKubeHunter(string project, string target, int delay, string
         posture.ref_id = project;
         posture.target = target;
         posture.uuid = corr_id;
+        posture.alert_corr = alert_corr;
         SendMessage(&posture);
                 
         kubehunter_report.close();
@@ -520,7 +524,7 @@ string Scanners::ScanKubeHunter(string project, string target, int delay, string
     return "\"status\": 200 }";
 }
 
-string Scanners::ScanZap(string project, string target, int delay, string corr_id) {
+string Scanners::ScanZap(string project, string target, int delay, string alert_corr, string corr_id) {
     
     try {
         
@@ -547,6 +551,7 @@ string Scanners::ScanZap(string project, string target, int delay, string corr_i
         posture.ref_id = project;
         posture.target = target;
         posture.uuid = corr_id;
+        posture.alert_corr = alert_corr;
         SendMessage(&posture);
                 
         zap_report.close();
@@ -561,7 +566,7 @@ string Scanners::ScanZap(string project, string target, int delay, string corr_i
     return "\"status\": 200 }";
 }
 
-string Scanners::ScanNmap(string project, string target, int delay, string corr_id) {
+string Scanners::ScanNmap(string project, string target, int delay, string alert_corr, string corr_id) {
     
     try {
         
@@ -588,6 +593,7 @@ string Scanners::ScanNmap(string project, string target, int delay, string corr_
         posture.ref_id = project;
         posture.target = target;
         posture.uuid = corr_id;
+        posture.alert_corr = alert_corr;
         SendMessage(&posture);
                 
         nmap_report.close();
@@ -603,7 +609,7 @@ string Scanners::ScanNmap(string project, string target, int delay, string corr_
 }
 
 
-string Scanners::ScanNuclei(string project, string target, int delay, string corr_id) {
+string Scanners::ScanNuclei(string project, string target, int delay, string alert_corr, string corr_id) {
     
     try {
         
@@ -630,6 +636,7 @@ string Scanners::ScanNuclei(string project, string target, int delay, string cor
         posture.ref_id = project;
         posture.target = target;
         posture.uuid = corr_id;
+        posture.alert_corr = alert_corr;
         SendMessage(&posture);
                 
         nuclei_report.close();
@@ -645,7 +652,7 @@ string Scanners::ScanNuclei(string project, string target, int delay, string cor
 }
 
 
-string Scanners::ScanNikto(string project, string target, int delay, string corr_id) {
+string Scanners::ScanNikto(string project, string target, int delay, string alert_corr, string corr_id) {
     
     try {
         
@@ -672,6 +679,7 @@ string Scanners::ScanNikto(string project, string target, int delay, string corr
         posture.ref_id = project;
         posture.target = target;
         posture.uuid = corr_id;
+        posture.alert_corr = alert_corr;
         SendMessage(&posture);
                 
         nikto_report.close();
@@ -686,7 +694,7 @@ string Scanners::ScanNikto(string project, string target, int delay, string corr
     return "\"status\": 200 }";
 }
 
-string Scanners::ScanCloudsploit(string project, string target, int delay, string corr_id) {
+string Scanners::ScanCloudsploit(string project, string target, int delay, string alert_corr, string corr_id) {
     
     try {
         
@@ -713,6 +721,7 @@ string Scanners::ScanCloudsploit(string project, string target, int delay, strin
         posture.ref_id = project;
         posture.target = target;
         posture.uuid = corr_id;
+        posture.alert_corr = alert_corr;
         SendMessage(&posture);
                 
         cloudsploit_report.close();
@@ -727,7 +736,7 @@ string Scanners::ScanCloudsploit(string project, string target, int delay, strin
     return "\"status\": 200 }";
 }
 
-string Scanners::ScanSemgrep(string project, string target, int delay, string corr_id) {
+string Scanners::ScanSemgrep(string project, string target, int delay, string alert_corr, string corr_id) {
     
     try {
         
@@ -754,6 +763,7 @@ string Scanners::ScanSemgrep(string project, string target, int delay, string co
         posture.ref_id = project;
         posture.target = target;
         posture.uuid = corr_id;
+        posture.alert_corr = alert_corr;
         SendMessage(&posture);
                 
         semgrep_report.close();
@@ -768,7 +778,7 @@ string Scanners::ScanSemgrep(string project, string target, int delay, string co
     return "\"status\": 200 }";
 }
 
-string Scanners::ScanSonarqube(string project, string target, int delay, string corr_id) {
+string Scanners::ScanSonarqube(string project, string target, int delay, string alert_corr, string corr_id) {
     
     try {
         
@@ -783,6 +793,7 @@ string Scanners::ScanSonarqube(string project, string target, int delay, string 
         posture.ref_id = project;
         posture.target = target;
         posture.uuid = corr_id;
+        posture.alert_corr = alert_corr;
         SendMessage(&posture);
                 
     } catch (const std::exception & ex) {

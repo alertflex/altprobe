@@ -55,15 +55,15 @@ public:
     void onException(const CMSException& ex AMQCPP_UNUSED);
     string onTextMessage(const Message* message, string corr_id);
    
-    string ScanKubeHunter(string project, string target, int delay, string corr_id);
-    string ScanTrivy(string project, string target, int delay, int param, string corr_id);
-    string ScanZap(string project, string target, int delay, string corr_id);
-    string ScanNmap(string project, string target, int delay, string corr_id);
-    string ScanNuclei(string project, string target, int delay, string corr_id);
-    string ScanNikto(string project, string target, int delay, string corr_id);
-    string ScanCloudsploit(string project, string target, int delay, string corr_id);
-    string ScanSemgrep(string project, string target, int delay, string corr_id);
-    string ScanSonarqube(string project, string target, int delay, string corr_id);
+    string ScanKubeHunter(string project, string target, int delay, string alert_corr, string corr_id);
+    string ScanTrivy(string project, string target, int delay, int param, string alert_corr, string corr_id);
+    string ScanZap(string project, string target, int delay, string alert_corr, string corr_id);
+    string ScanNmap(string project, string target, int delay, string alert_corr, string corr_id);
+    string ScanNuclei(string project, string target, int delay, string alert_corr, string corr_id);
+    string ScanNikto(string project, string target, int delay, string alert_corr, string corr_id);
+    string ScanCloudsploit(string project, string target, int delay, string alert_corr, string corr_id);
+    string ScanSemgrep(string project, string target, int delay, string alert_corr, string corr_id);
+    string ScanSonarqube(string project, string target, int delay, string alert_corr, string corr_id);
         
     void ResetStreams() {
         comp.str("");
