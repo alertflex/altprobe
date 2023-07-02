@@ -17,6 +17,7 @@ export AMQ_URL='ssl:\/\/af-ctrl:61617'
 export AMQ_USER=admin
 export AMQ_PWD=Pwd12345
 export AMQ_CERT='\/etc\/altprobe\/Broker.pem'
+# in case problem with SSL it can be set to false as temporary solution
 export CERT_VERIFY=true
 export AMQ_KEY=indef
 export KEY_PWD=indef
