@@ -22,7 +22,7 @@ export AMQ_KEY=indef
 export KEY_PWD=indef
 
 # probes
-export RESULT_PATH='\/home\/xxxxx\/reports\/'
+export RESULT_PATH='\/home\/xxxxx\/reports'
 export TRIVY_PATH=indef
 export FALCO_LOG=indef
 export MODSEC_LOG=indef

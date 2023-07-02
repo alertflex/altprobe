@@ -6,9 +6,9 @@
 
 # collector
 # work directory and node id and probe id
-export INSTALL_PATH=/home/xxxxx/altprobe
+export INSTALL_PATH=/home/ubuntu/altprobe
 export PROJECT_ID=xxxxx
-export VRN_ID=node01
+export VRN_ID=vrn01
 export HOST_NAME=alertflex
 
 # controller
@@ -22,8 +22,8 @@ export AMQ_KEY=indef
 export KEY_PWD=indef
 
 # probes
-export RESULT_PATH='\/home\/alertflex\/altprobe\/reports\/'
-export TRIVY_PATH='\/usr\/local\/bin\/'
+export RESULT_PATH='\/home\/ubuntu\/altprobe\/reports'
+export TRIVY_PATH='\/usr\/bin'
 export FALCO_LOG=indef
 export MODSEC_LOG=indef
 export SURI_LOG=indef

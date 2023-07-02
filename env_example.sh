@@ -8,7 +8,7 @@
 # work directory and node id and probe id
 export INSTALL_PATH=/home/alertflex/altprobe
 export PROJECT_ID=0ca7e3b3-1a0c-407a-957d-aab039165217
-export VRN_ID=node01
+export VRN_ID=vrn01
 export HOST_NAME=collr01
 
 # controller
@@ -23,8 +23,8 @@ export AMQ_KEY=indef
 export KEY_PWD=indef
 
 # probes
-export RESULT_PATH='\/home\/alertflex\/reports\/'
-export TRIVY_PATH='\/usr\/local\/bin\/'
+export RESULT_PATH='\/home\/alertflex\/reports'
+export TRIVY_PATH='\/usr\/bin'
 export FALCO_LOG='\/var\/log\/falco.json'
 export MODSEC_LOG=indef
 export SURI_LOG='\/var\/log\/suricata\/eve.json'
