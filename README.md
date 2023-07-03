@@ -4,6 +4,8 @@ The Alertflex solution works as a Security Event Manager and DevSecOps Orchestra
 
 Alertflex can monitor different platforms such as Windows, Linux, Docker, K8s, and AWS, and offers a unified interface for over cybersecurity 20 tools. These integrated tools are primarily free open-source software, which Alertflex consolidates into one or multiple projects.
 
+For more information see [Alertflex documentation](https://alertflex.github.io/doc) and [Test cases](https://github.com/alertflex/altprobe/blob/master/test-cases.md)
+
 Main benefits of using Alertflex project:
 - seamless connectivity between central node and remote nodes, without requiring the opening of ports on the remote nodes
 - the central node serves as a single point for running and collecting scans across the entire hybrid cloud infrastructure
@@ -40,8 +42,6 @@ List of supported scanners:
 - Zap (DAST)
 - Semgrep (SAST)
 - SonarQube (SAST)
-
-For more information see [Alertflex documentation](https://alertflex.github.io/doc) and [Test cases](https://github.com/alertflex/altprobe/blob/master/test-cases.md)
 
 Please [open an issue on GitHub](https://github.com/alertflex/altprobe/issues), if you'd like to report a bug or request a feature.
 Have a question or need tech support, please send an email to address: info@alertflex.org
